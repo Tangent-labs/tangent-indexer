@@ -1,0 +1,10 @@
+node_modules
+.env
+ethers-contracts
+build
+.nyc_output
+coverage
+src/typechain
+# Sentry Config File
+.sentryclirc
+.vscode
