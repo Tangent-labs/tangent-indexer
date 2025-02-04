@@ -6,19 +6,12 @@ import { ProfilingIntegration } from '@sentry/profiling-node';
 import * as contractRegistry from '../contractRegistry.json';
 
 // TYPECHAIN
-import {
-    BondDepositoryV1__factory,
-    BondDepositoryV2__factory,
-    CloneFactoryV2__factory,
-    GaugeController__factory,
-    IERC20__factory,
-    LockingPositionService__factory,
-    SdtStakingPositionService__factory,
-} from './typechain';
+
 import { PrismaClient } from '@prisma/client';
-import { BondService } from './services/BondService';
+
 import { RetryProvider } from './utils/RetryProvider';
-import { TransactionPrisma } from 'types/prisma';
+import { BlockRepository } from './db/BlockRepository';
+import { BlockService } from './services/BlockService';
 
 const prismaClient = new PrismaClient();
 const sentrySdn = process.env.SENTRY_SDN;
@@ -58,61 +51,17 @@ if (!process.env.LAST_BLOCK_INDEXED) {
 }
 
 // Formatter
-const contractFormatter = new ContractFormatter(provider);
-const bondFormatter = new BondFormatter(provider);
-const lockingFormatter = new LockingFormatter(provider);
-const gaugeFormatter = new GaugeFormatter(provider);
-const stakingFormatter = new StakingFormatter(provider);
 
 // Repositories
-const contractsRepository = new ContractRepository(prismaClient);
-const gaugeRepository = new GaugeRepository(prismaClient);
-const bondRepository = new BondRepository(prismaClient);
+
 const blockRepository = new BlockRepository(prismaClient);
-const cycleRepository = new CyclesRepository(prismaClient);
-const rewardRepository = new RewardRepository(prismaClient);
-const transferRepository = new TransferEventRepository(prismaClient);
-const lockingRepository = new LockingRepository(prismaClient);
-const stakingRepository = new StakingRepository(prismaClient);
 
 // Contracts
 
 // Services
-const controlTowerService = new ControlTowerService(provider, contractsRepository);
 const blockService = new BlockService(blockRepository);
 
-const eventService = new TransferEventService(provider, contractsRepository, transferRepository);
-
 async function main() {
-    // Fetch contract to database OR create database from CvgControlTower blockchain fetching
-    await controlTowerService.initialize();
-
-    const cloneFactoryV2Contract = CloneFactoryV2__factory.connect(contractRegistry.global.CloneFactory, provider);
-    const gaugeControllerContract = GaugeController__factory.connect(contractRegistry.global.GaugeController, provider);
-
-    const bondDepositoryContract = BondDepositoryV1__factory.connect(contractRegistry.global.BondDepository, provider);
-    const bondDepositoryV2Contract = BondDepositoryV2__factory.connect(contractRegistry.global.BondDepository, provider);
-
-    const lockingPositionServiceContract = LockingPositionService__factory.connect(
-        contractRegistry.global.LockingPositionService,
-        provider
-    );
-
-    const cvgSdtContract = IERC20__factory.connect(contractRegistry.stakeDao.cvgSDT, provider);
-    const cvgSdtStakingContract = SdtStakingPositionService__factory.connect(contractRegistry.stakeDao.cvgSdtStaking, provider);
-
-    const cloneFactoryService = new CloneFactoryService(contractsRepository, contractFormatter, cloneFactoryV2Contract);
-    const gaugeService = new GaugeService(provider, gaugeFormatter, gaugeRepository, gaugeControllerContract, lockingRepository);
-    const bondService = new BondService(bondRepository, bondFormatter, bondDepositoryContract, bondDepositoryV2Contract);
-    const lockingService = new LockingService(lockingFormatter, lockingRepository, lockingPositionServiceContract);
-    const stakingService = new StakingService(
-        provider,
-        stakingFormatter,
-        stakingRepository,
-        contractsRepository,
-        cvgSdtContract,
-        cvgSdtStakingContract
-    );
     let newLastIndexedBlock: number;
 
     // Get last block indexed & actual block
@@ -133,21 +82,10 @@ async function main() {
         await prismaClient.$transaction(
             async (tx: TransactionPrisma) => {
                 // Update in all repository the client as the actual transaction
-                contractsRepository.setClient(tx);
-                bondRepository.setClient(tx);
+
                 blockRepository.setClient(tx);
-                rewardRepository.setClient(tx);
-                cycleRepository.setClient(tx);
-                gaugeRepository.setClient(tx);
-                lockingRepository.setClient(tx);
 
-                await cloneFactoryService.mainProcess(blockFrom, newLastIndexedBlock);
-                await bondService.mainProcess(blockFrom, newLastIndexedBlock);
-
-                await eventService.mainProcess(blockFrom, newLastIndexedBlock);
-                await lockingService.mainProcess(blockFrom, newLastIndexedBlock);
-                await stakingService.mainProcess(blockFrom, newLastIndexedBlock);
-                await gaugeService.mainProcess(blockFrom, newLastIndexedBlock);
+                // await bondService.mainProcess(blockFrom, newLastIndexedBlock);
 
                 // Update the last block from the range
                 await blockService.updateLastBlockIndexed(newLastIndexedBlock);
