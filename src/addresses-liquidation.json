@@ -1,0 +1,46 @@
+{
+  "utilities": {
+    "controlTower": "0xe3EF345391654121f385679613Cea79A692C2Dd8",
+    "rewardAccumulator": "0x1F585372F116E1055AF2bED81a808DDf9638dCCD",
+    "zapper": "0x103416cfCD0D0a32b904Ab4fb69dF6E5B5aaDf2b",
+    "marketCreator": "0x3Aa338c8d5E6cefE95831cD0322b558677abA0f1"
+  },
+  "tokens": {
+    "tgUSD": "0xC070A317F23E9A4e982e356485416251dd3Ed944",
+    "sgUSD": "0x2bd3d373b3be20c829e695ce9849d3770a6506dd"
+  },
+  "markets": [
+    {
+      "marketAddress": "0x6209A04CE6Ae1ecAAC52cbA6d8AeC96e35CDc0D1",
+      "collatName": "crvUSD_USDC",
+      "collatAddress": "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+      "marketType": "Convex_CRV"
+    },
+    {
+      "marketAddress": "0x08629ad3F23526841e1D20Cfb8109539496a5371",
+      "collatName": "crvUSD_USDT",
+      "collatAddress": "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+      "marketType": "Convex_CRV"
+    },
+    {
+      "marketAddress": "0x0d80aC39494FB70232DcCbc36C2EE7343eeeDcFd",
+      "collatName": "USDC_fxUSD",
+      "collatAddress": "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
+      "marketType": "Convex_FXN"
+    }
+  ],
+  "oracles": {
+    "crvUSD": "0xEEf0C605546958c1f899b6fB336C20671f9cD49F",
+    "USDC": "0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6",
+    "USDT": "0x3E7d1eAB13ad0104d2750B8863b489D65364e32D",
+    "tgUSD": "0xABc84968376556B5e5B3C3bda750D091a06De536",
+    "fxUSD": "0xFf8FA9381caf61cB3368a6ec0b3F5C788028D0Cd",
+    "crvUSD_USDC": "0xE55cc27460B55c8aC7E73043F38b537758C9E51e",
+    "crvUSD_USDT": "0x69eB226983E10D7318816134cd44BE3023dC74cd",
+    "USDC_fxUSD": "0x29e95B6bbCd23fbF66e9d8ee2029564A734560De",
+    "frxETH_WETH": "0xD8fE7c45330c8b12cA0D4728D75557b9e7BeB24F"
+  },
+  "lps": {
+    "tgUSD_USDC_LP": "0xeB83B63B9F943A2fE15A72Dfac1a9e35858884D4"
+  }
+}

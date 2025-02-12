@@ -1,14 +1,14 @@
-import { PrismaClient } from '@prisma/client';
-import { TransactionPrisma } from '../types/prisma';
+import { PrismaClient } from "@prisma/client"
+import { TransactionPrisma } from "type/prisma"
 
 export class AbstractRepository {
-    prismaClient: PrismaClient | TransactionPrisma;
+  prismaClient: PrismaClient | TransactionPrisma
 
-    constructor(prismaClient: PrismaClient) {
-        this.prismaClient = prismaClient;
-    }
+  constructor(prismaClient: PrismaClient) {
+    this.prismaClient = prismaClient
+  }
 
-    setClient(transaction: TransactionPrisma) {
-        this.prismaClient = transaction;
-    }
+  setClient(transaction: TransactionPrisma) {
+    this.prismaClient = transaction
+  }
 }
