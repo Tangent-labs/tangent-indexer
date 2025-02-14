@@ -1,9 +1,9 @@
 import { JsonRpcProvider } from "ethers"
 
 import * as dotenv from "dotenv"
-import addresses from "./addresses-liquidation.json"
+import addresses from "../../addresses-liquidation.json"
 
-import { fetchMarketCreationLogs } from "./eventFectcher/marketCreationEventFectcher"
+import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher"
 dotenv.config()
 
 async function main() {

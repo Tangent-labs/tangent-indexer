@@ -1,5 +1,5 @@
-import { BlockService } from "./services/BlockService"
-import { setUpIndexer, setUpIndexerServices } from "./config/indexer_setup"
+import { BlockService } from "../services/BlockService"
+import { setUpIndexer, setUpIndexerServices } from "../config/indexer_setup"
 import { TransactionPrisma } from "type/prisma"
 
 async function main() {

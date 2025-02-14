@@ -1,5 +1,5 @@
 import { JsonRpcProvider } from "ethers"
-import { fetchErc20Logs } from "./services/Erc20TransfertService"
+import { fetchErc20Logs } from "../../services/Erc20TransfertService"
 import * as dotenv from "dotenv"
 dotenv.config()
 
