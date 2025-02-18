@@ -1,7 +1,13 @@
 import { AddressLike } from "ethers"
 import { AbstractRepository } from "./AbstractRepository"
+import { MarketBorrower } from "type/prisma"
 
 export class MarketBorrowerRepository extends AbstractRepository {
+  async getList(): Promise<MarketBorrower[]> {
+    const prisma = this.prismaClient
+    return await prisma.market_borrower.findMany()
+  }
+
   async deleteMarketBorrowers(data: { borrower: string; market: string }[]) {
     const prisma = this.prismaClient
 

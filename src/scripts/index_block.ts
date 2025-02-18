@@ -1,10 +1,16 @@
 import { BlockService } from "../services/BlockService"
-import { setUpIndexer, setUpIndexerServices } from "../config/indexer_setup"
+import { setUpIndexer } from "../config/indexer_setup"
 import { TransactionPrisma } from "type/prisma"
+import { PrismaClient } from "@prisma/client"
+import { BlockRepository } from "db/BlockRepository"
+import { MarketBorrowerRepository } from "db/MarketBorrowerRepository"
+import { MarketContractsRepository } from "db/MarketContractsRepository"
+import { MarketBorrowerService } from "services/MarketBorrowerService"
+import { MarketCreationService } from "services/MarketCreationService"
 
 async function main() {
   const { provider, handleError } = setUpIndexer()
-  const { prismaClient, marketBorrowerService, marketCreationService, blockService, setTransation } = setUpIndexerServices()
+  const { prismaClient, marketBorrowerService, marketCreationService, blockService, setTransation } = setUpIndexerBlockServices()
 
   try {
     const { startBlock, endBlock, actualBlock } = await BlockService.getIndexerBlockInfo(provider, blockService)
@@ -39,3 +45,29 @@ async function main() {
 }
 
 main().then(() => console.log("Block indexation updated"))
+
+function setUpIndexerBlockServices() {
+  const prismaClient = new PrismaClient()
+  // Setup the repositories
+  const blockRepository = new BlockRepository(prismaClient)
+  const marketContractsRepository = new MarketContractsRepository(prismaClient)
+  const marketBorrowerRepository = new MarketBorrowerRepository(prismaClient)
+  const setTransation = (dbTransaction: TransactionPrisma): void => {
+    blockRepository.setClient(dbTransaction)
+    marketContractsRepository.setClient(dbTransaction)
+    marketBorrowerRepository.setClient(dbTransaction)
+  }
+
+  // set up the services
+  const blockService = new BlockService(blockRepository)
+  const marketCreationService = new MarketCreationService(marketContractsRepository)
+  const marketBorrowerService = new MarketBorrowerService(marketBorrowerRepository, marketCreationService.marketContractsRepository)
+
+  return {
+    prismaClient,
+    marketCreationService,
+    marketBorrowerService,
+    blockService,
+    setTransation,
+  }
+}

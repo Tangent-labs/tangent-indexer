@@ -10,3 +10,4 @@ export type TransactionPrisma = Omit<
 
 export type GlobalBlock = Prisma.global_blocksCreateInput
 export type MarketContract = Prisma.market_contractsCreateInput
+export type MarketBorrower = Prisma.market_borrowerCreateInput

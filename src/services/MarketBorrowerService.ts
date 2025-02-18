@@ -4,14 +4,17 @@ import { MarketBorrowerRepository } from "../db/MarketBorrowerRepository"
 import { MarketContractsRepository } from "../db/MarketContractsRepository"
 import { fetchBorrowLogs } from "../eventFectcher/marketBorrowerEventFetcher"
 import { EventDetectionService } from "../type/service"
+import { LiquidationService } from "./LiquidationService"
 
 export class MarketBorrowerService implements EventDetectionService {
   marketBorrowerRepository: MarketBorrowerRepository
   marketContractsRepository: MarketContractsRepository
+  liquidationService: LiquidationService
 
   constructor(marketBorrowerRepository: MarketBorrowerRepository, marketContractsRepository: MarketContractsRepository) {
     this.marketContractsRepository = marketContractsRepository
     this.marketBorrowerRepository = marketBorrowerRepository
+    this.liquidationService = new LiquidationService(marketBorrowerRepository)
   }
 
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {

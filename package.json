@@ -5,7 +5,8 @@
   "description": "Will index data in a DB when some event &amp; transactions are detected",
   "main": "index.ts",
   "scripts": {
-    "indexer:block": "tsx src/scripts/index_block.ts",
+    "tangent:indexer-block": "tsx src/scripts/index_block.ts",
+    "tangent:check-liquidation": "tsx src/scripts/check_liquidation.ts",
     "format": "prettier --write --list-different . ",
     "db:truncate": "tsx src/scripts/truncate_tables.ts",
     "test": "vitest",
