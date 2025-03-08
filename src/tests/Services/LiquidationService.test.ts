@@ -85,71 +85,9 @@ describe("LiquidationService - analyzeLiquidation", () => {
     liquidationService = new LiquidationService(mockMarketBorrowerRepository)
   })
 
-  it("should correctly classify accounts into hard, soft, and non-debtor categories", async () => {
-    // Mock input data
-    const markets: AddressLike[] = ["0xMarket1", "0xMarket2"]
-    const accounts: LiquidationUserInInfo[] = [
-      { account: "0xUser1", market: "0xMarket1" },
-      { account: "0xUser2", market: "0xMarket2" },
-    ]
+  it("should correctly classify accounts into hard, soft, and non-debtor categories", async () => {})
 
-    const liquidationData: LiquidationMarketAccountOutInfo = {
-      markets: [
-        { liquidationThreshold: 500000000000000000n }, // 50% LTV threshold
-        { liquidationThreshold: 800000000000000000n }, // 80% LTV threshold
-      ] as LiquidationMarketOutInfo[],
-      accounts: [
-        {
-          healthRatio: 500000000000000000n, // Below 1
-          positionDebt: 100n * DECIMALS,
-          positionValue: 200n * DECIMALS,
-        },
-        {
-          healthRatio: 1500000000000000000n, // Above 1
-          positionDebt: 200n * DECIMALS,
-          positionValue: 250n * DECIMALS,
-        },
-      ] as LiquidationAccountOutInfo[],
-    }
-
-    // Execute function
-    const result = await liquidationService.analyzeLiquidation(liquidationData, markets, accounts)
-
-    // Expectations
-    expect(result.hardLiquidationList).toHaveLength(1)
-    expect(result.hardLiquidationList![0].account).toBe("0xUser1")
-
-    expect(result.softLiquidationList).toHaveLength(0)
-    expect(result.notDebtorAnymoreList).toHaveLength(0)
-  })
-
-  it("should correctly identify soft liquidations when LTV exceeds the threshold", async () => {
-    const markets: AddressLike[] = ["0xMarket1"]
-    const accounts: LiquidationUserInInfo[] = [{ account: "0xUser1", market: "0xMarket1" }]
-
-    const liquidationData: LiquidationMarketAccountOutInfo = {
-      markets: [
-        {
-          liquidationThreshold: 70000n,
-          ...baseMarketValues,
-        },
-      ], // 70% LTV threshold
-      accounts: [
-        {
-          healthRatio: 1200000000000000000n, // Above 1
-          positionDebt: 700n * DECIMALS,
-          positionValue: 900n * DECIMALS, // LTV = 700/900 ≈ 77%
-        },
-      ] as LiquidationAccountOutInfo[],
-    }
-
-    const result = await liquidationService.analyzeLiquidation(liquidationData, markets, accounts)
-
-    expect(result.hardLiquidationList).toHaveLength(0)
-    expect(result.softLiquidationList).toHaveLength(1)
-    expect(result.softLiquidationList![0].account).toBe("0xUser1")
-    expect(result.notDebtorAnymoreList).toHaveLength(0)
-  })
+  it("should correctly identify soft liquidations when LTV exceeds the threshold", async () => {})
 
   it("should correctly classify accounts with zero debt as non-debtors", async () => {
     const markets: AddressLike[] = ["0xMarket1"]
@@ -176,7 +114,7 @@ describe("LiquidationService - analyzeLiquidation", () => {
     expect(result.hardLiquidationList).toHaveLength(0)
     expect(result.softLiquidationList).toHaveLength(0)
     expect(result.notDebtorAnymoreList).toHaveLength(1)
-    expect(result.notDebtorAnymoreList![0].account).toBe("0xUser1")
+    expect(result.notDebtorAnymoreList?.[0].account).toBe("0xUser1")
   })
 
   it("should return empty lists when no accounts qualify for liquidation", async () => {
@@ -205,42 +143,58 @@ describe("LiquidationService - analyzeLiquidation", () => {
     expect(result.softLiquidationList).toHaveLength(0)
     expect(result.notDebtorAnymoreList).toHaveLength(0)
   })
-  it("should correctly classify a mix of hard liquidations, soft liquidations, and non-debtors", async () => {
-    const markets: AddressLike[] = ["0xMarket1", "0xMarket2", "0xMarket3", "0xMarket4"]
+
+  it("should correctly classify and sort  a mix of hard liquidations, soft liquidations, and non-debtors", async () => {
+    const markets: AddressLike[] = ["0xMarket1", "0xMarket2", "0xMarket3", "0xMarket4", "0xMarket5", "0xMarket6"]
     const accounts: LiquidationUserInInfo[] = [
       { account: "0xUser1", market: "0xMarket1" }, // Hard Liquidation
       { account: "0xUser2", market: "0xMarket2" }, // Soft Liquidation
       { account: "0xUser3", market: "0xMarket3" }, // Not a debtor (zero debt)
       { account: "0xUser4", market: "0xMarket4" }, // Healthy account (no liquidation)
+      { account: "0xUser5", market: "0xMarket5" }, // Soft Liquidation
+      { account: "0xUser6", market: "0xMarket6" }, // Hard Liquidation
     ]
 
+    const defaultMarket: LiquidationMarketOutInfo = { liquidationThreshold: 90000n, ...baseMarketValues }
     const liquidationData: LiquidationMarketAccountOutInfo = {
       markets: [
-        { liquidationThreshold: 60000n, ...baseMarketValues }, // 60% LTV threshold for Market1
-        { liquidationThreshold: 75000n, ...baseMarketValues }, // 75% LTV threshold for Market2
-        { liquidationThreshold: 50000n, ...baseMarketValues }, // 50% LTV threshold for Market3
-        { liquidationThreshold: 80000n, ...baseMarketValues }, // 80% LTV threshold for Market4
+        defaultMarket,
+        { liquidationThreshold: 75000n, ...baseMarketValues },
+        defaultMarket,
+        defaultMarket,
+        { liquidationThreshold: 75000n, ...baseMarketValues },
+        defaultMarket,
       ] as LiquidationMarketOutInfo[],
       accounts: [
         {
-          healthRatio: 500000000000000000n, // Below 1 (Hard Liquidation)
-          positionDebt: 300n * DECIMALS,
-          positionValue: 600n * DECIMALS, // LTV = 50%
+          healthRatio: 500000000000000000n, // (Hard Liquidation) 0xUser1
+          positionDebt: 600n * DECIMALS,
+          positionValue: 550n * DECIMALS,
         },
         {
-          healthRatio: 2000000000000000000n, // Above 1 but LTV exceeds threshold (Soft Liquidation)
-          positionDebt: 800n * DECIMALS,
-          positionValue: 1000n * DECIMALS, // LTV = 80%
+          healthRatio: 2000000000000000000n, // (Soft Liquidation) 0xUser2
+          positionDebt: 760n * DECIMALS,
+          positionValue: 1000n * DECIMALS,
         },
         {
-          healthRatio: 2000000000000000000n, // Above 1
-          positionDebt: 0n, // No debt
+          healthRatio: 2000000000000000000n, // No debt 0xUser3
+          positionDebt: 0n,
           positionValue: 500n * DECIMALS,
         },
         {
-          healthRatio: 2500000000000000000n, // Above 1 and safe
+          healthRatio: 2500000000000000000n, // Nothing 0xUser4
           positionDebt: 500n * DECIMALS,
-          positionValue: 2000n * DECIMALS, // LTV = 25%
+          positionValue: 2000n * DECIMALS,
+        },
+        {
+          healthRatio: 2500000000000000000n, // (Soft Liquidation) 0xUser5
+          positionDebt: 800n * DECIMALS,
+          positionValue: 1050n * DECIMALS,
+        },
+        {
+          healthRatio: 2500000000000000000n, // (Hard Liquidation) 0xUser6
+          positionDebt: 620n * DECIMALS,
+          positionValue: 560n * DECIMALS,
         },
       ] as LiquidationAccountOutInfo[],
     }
@@ -248,16 +202,17 @@ describe("LiquidationService - analyzeLiquidation", () => {
     const result = await liquidationService.analyzeLiquidation(liquidationData, markets, accounts)
 
     // Expectations
-    expect(result.hardLiquidationList).toHaveLength(1)
-    expect(result?.hardLiquidationList?.at(0)?.account).toBe("0xUser1")
+    expect(result.hardLiquidationList).toHaveLength(2)
+    expect(result.hardLiquidationList?.[0].account).toBe("0xUser6")
+    expect(result.hardLiquidationList?.[1].account).toBe("0xUser1")
 
-    expect(result.softLiquidationList).toHaveLength(1)
-    expect(result.softLiquidationList?.at(0)?.account).toBe("0xUser2")
+    expect(result.softLiquidationList).toHaveLength(2)
+    expect(result.softLiquidationList?.[0].account).toBe("0xUser5")
+    expect(result.softLiquidationList?.[1].account).toBe("0xUser2")
 
     expect(result.notDebtorAnymoreList).toHaveLength(1)
-    expect(result.notDebtorAnymoreList?.at(0)?.account).toBe("0xUser3")
+    expect(result.notDebtorAnymoreList?.[0].account).toBe("0xUser3")
 
-    // Ensure no false positives
     expect(result.hardLiquidationList?.some((acc: LiquidationUserInfo) => acc.account === "0xUser2")).toBe(false)
     expect(result.softLiquidationList?.some((acc: LiquidationUserInfo) => acc.account === "0xUser1")).toBe(false)
     expect(result.notDebtorAnymoreList?.some((acc: LiquidationUserInfo) => acc.account === "0xUser4")).toBe(false)

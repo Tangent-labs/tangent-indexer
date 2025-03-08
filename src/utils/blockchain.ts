@@ -8,9 +8,6 @@ export const getBlockTimestamp = async (provider: JsonRpcProvider, blockTag: num
     while (block === undefined) {
       block = await provider.getBlock(blockTag)
     }
-    // } else {
-    //   block = await RetryProvider.call(provider, 'getBlock', [blockTag, false])
-    // }
   }
   return block!.timestamp
 }

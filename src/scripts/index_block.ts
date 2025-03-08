@@ -7,6 +7,8 @@ import { MarketBorrowerRepository } from "db/MarketBorrowerRepository"
 import { MarketContractsRepository } from "db/MarketContractsRepository"
 import { MarketBorrowerService } from "services/MarketBorrowerService"
 import { MarketCreationService } from "services/MarketCreationService"
+import * as dotenv from "dotenv"
+dotenv.config()
 
 async function main() {
   const { provider, handleError } = setUpIndexer()
@@ -16,7 +18,7 @@ async function main() {
     const { startBlock, endBlock, actualBlock } = await BlockService.getIndexerBlockInfo(provider, blockService)
     // If the last block indexed is smaller than the actual =>
     if (startBlock && endBlock) {
-      console.log(startBlock, "<----------------->", endBlock)
+      // console.log(startBlock, "<----------------->", endBlock)
       await prismaClient.$transaction(
         async (dbTransaction: TransactionPrisma) => {
           // Set the database transaction to the repositories

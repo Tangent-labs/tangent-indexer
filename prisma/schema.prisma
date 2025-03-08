@@ -1,19 +1,15 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["multiSchema"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["public"]
 }
 
 model global_blocks {
   block_id   BigInt    @id(map: "blocks_pkey") @default(autoincrement())
   created_at DateTime? @db.Timestamptz(6)
-
-  @@schema("public")
 }
 
 model market_contracts {
@@ -22,14 +18,23 @@ model market_contracts {
   contract_address String? @db.VarChar
   contract_type    String? @db.VarChar
 
-  @@schema("public")
+  @@index([contract_address], map: "markets_contracts_contract_address_idx")
 }
 
 model market_borrower {
   id               BigInt   @id(map: "markets_borrower_pkey") @default(autoincrement())
   contract_address String?  @db.VarChar
   borrower_address String?  @db.VarChar
-  check_date       DateTime @db.Timestamptz(6)
+  check_date       DateTime @default(now())
+}
 
-  @@schema("public")
+model liquidation_bot_log {
+  id            BigInt   @id(map: "liquidation_bot_log_pkey") @default(autoincrement())
+  execution_key String   @db.Uuid
+  is_error      Boolean  @default(false)
+  action        String
+  data          Json
+  date          DateTime @default(now())
+
+  @@index([execution_key], map: "liquidation_bot_log_execution_key_idx")
 }

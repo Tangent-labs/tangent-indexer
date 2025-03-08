@@ -28,3 +28,11 @@ export type LiquidationAnalyseInfo = {
   softLiquidationList?: LiquidationUserInfo[]
   notDebtorAnymoreList?: LiquidationUserInfo[]
 }
+
+export type LiquidationBotLogAction =
+  | "liquidation_params"
+  | "liquidation_bad_debt_execution"
+  | "on_chain_data"
+  | "liquidation_analysis"
+  | "clean_debtors"
+  | "liquidation_execution"

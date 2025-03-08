@@ -5,10 +5,12 @@
   "description": "Will index data in a DB when some event &amp; transactions are detected",
   "main": "index.ts",
   "scripts": {
+    "tangent:reset-liquidation-test": "npm run db:truncate &  npm run tangent:indexer-block & npm run tangent:check-liquidation",
     "tangent:indexer-block": "tsx src/scripts/index_block.ts",
     "tangent:check-liquidation": "tsx src/scripts/check_liquidation.ts",
     "format": "prettier --write --list-different . ",
-    "db:truncate": "tsx src/scripts/truncate_tables.ts",
+    "db:truncate": "tsx src/scripts/utils/truncate_tables.ts",
+    "db:push": "npx prisma db push",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
@@ -27,8 +29,10 @@
     "@sentry/cli": "^2.26.0",
     "@sentry/node": "^7.98.0",
     "@sentry/profiling-node": "^1.3.5",
+    "axios": "^1.7.9",
     "dotenv": "^16.4.7",
-    "ethers": "^6.11.1"
+    "ethers": "^6.11.1",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",

@@ -1,6 +1,9 @@
 /**
  * This service is responsible for handling liquidations of market borrowers.
  */
+import fs from "fs"
+import path from "path"
+
 import MarketExternalActionsAbi from "../abis/MarketExternalActions.json"
 import MarketAccountLiquidationBotInfoAbi from "../abis/MarketAccountLiquidationBotInfo.json"
 
@@ -16,9 +19,9 @@ import {
   LiquidationUserInInfo,
 } from "../type/data"
 import { chainView } from "../utils/chainView"
+import { LiquidationExecutionContext } from "./LiquidationExecutionContext"
 
 const DENOMINATOR = 100_000n
-const DECIMALS = BigInt(10 ** 18)
 
 type WithToObject<T> = T & {
   toObject: () => T
@@ -26,16 +29,49 @@ type WithToObject<T> = T & {
 
 export class LiquidationService {
   marketBorrowerRepository: MarketBorrowerRepository
+  context: LiquidationExecutionContext
 
-  constructor(marketBorrowerRepository: MarketBorrowerRepository) {
+  constructor(marketBorrowerRepository: MarketBorrowerRepository, context: LiquidationExecutionContext) {
     this.marketBorrowerRepository = marketBorrowerRepository
+    this.context = context
+  }
+
+  async getLiquidationParams(): Promise<{ markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }> {
+    try {
+      if (this.context.isDbAlive) {
+        const data = await this.getLiquidationParamsFromDb()
+        return data
+      } else {
+        const data = await this.getLiquidationParamsFromFile()
+        return data
+      }
+    } catch (error) {
+      console.error("Failed to get liquidation params:", error)
+      return { markets: [], borrowers: [] } // Return an empty array if the data cannot be retrieved
+    }
+  }
+
+  async getLiquidationParamsFromFile(): Promise<{ markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }> {
+    // Read the file synchronously (you can also use async methods)
+    // eslint-disable-next-line no-undef
+    const filePath = path.resolve(__dirname!, "./src/data/borrowers.json")
+    const data = fs.readFileSync(filePath, "utf-8")
+
+    // Parse the JSON content
+    const parsedData = JSON.parse(data)
+
+    // Return the expected structure
+    return {
+      markets: parsedData.markets, // Assuming the markets field is an array of AddressLike
+      borrowers: parsedData.borrowers, // Assuming borrowers field is an array of LiquidationUserInInfo
+    }
   }
 
   /**
    * Retrieves the parameters required for liquidation.
    * @returns An object containing the markets and borrowers to be liquidated.
    */
-  async getLiquidationParams(): Promise<{ markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }> {
+  async getLiquidationParamsFromDb(): Promise<{ markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }> {
     const borrowersRawList = await this.marketBorrowerRepository.getList()
 
     const markets = new Set<AddressLike>()
@@ -84,12 +120,10 @@ export class LiquidationService {
    * @returns LiquidationAnalyseInfo.
    */
   async analyzeLiquidation(datas: LiquidationMarketAccountOutInfo, markets: AddressLike[], accounts: LiquidationUserInInfo[]): Promise<LiquidationAnalyseInfo> {
-    const healthRatioMin = 1n * DECIMALS
-
     const hydratedAccounts = datas.accounts.map((accountData, index) => ({
       ...accountData,
       ...accounts[index],
-      ltv: (accountData.positionDebt * DENOMINATOR) / accountData.positionValue,
+      ltv: accountData.positionValue === 0n ? 0n : (accountData.positionDebt * DENOMINATOR) / accountData.positionValue,
     }))
 
     // get the liquidation threshold for each market
@@ -98,17 +132,34 @@ export class LiquidationService {
       return agg
     }, {})
 
-    console.log({ hydratedAccounts, thresholds })
-    // check all borrower with healthRatio >=1
-    const hardLiquidationList = hydratedAccounts.filter((account) => account.healthRatio <= healthRatioMin)
+    const notDebtorAnymoreList: LiquidationUserInfo[] = [] // borrower with 0 debt
+    let hardLiquidationList: LiquidationUserInfo[] = [] // borrower with positionvalue > debt
+    let softLiquidationList: LiquidationUserInfo[] = [] // borrower with healthRatio >=1
 
-    // check all borrower with ltv > threshold
-    const softLiquidationList = hydratedAccounts.filter(
-      (account) => account.healthRatio >= healthRatioMin && account.ltv > thresholds[account.market as string]
-    )
+    // We detect the potential actions we have to do
+    hydratedAccounts.forEach((account) => {
+      if (account.positionDebt === 0n) {
+        notDebtorAnymoreList.push(account)
+        return
+      }
 
-    // check all borrower with 0 debt
-    const notDebtorAnymoreList = hydratedAccounts.filter((account) => account.positionDebt === 0n)
+      if (account.positionDebt >= account.positionValue) {
+        hardLiquidationList.push(account)
+
+        return
+      }
+
+      if (account.ltv > thresholds[account.market as string]) {
+        softLiquidationList.push(account)
+      }
+    })
+
+    const sortFn: (a: LiquidationUserInfo, b: LiquidationUserInfo) => number = (a, b) => Number(b.positionValue) - Number(a.positionValue)
+
+    hardLiquidationList = hardLiquidationList.sort(sortFn)
+    softLiquidationList = softLiquidationList.sort(sortFn)
+
+    console.log(hydratedAccounts, thresholds)
 
     return { hardLiquidationList, softLiquidationList, notDebtorAnymoreList }
   }
@@ -127,7 +178,7 @@ export class LiquidationService {
     }, {})
 
     // Iterate over each market and perform liquidations
-    const signer = new Wallet(process.env.PRIVATE_KEY as string, provider)
+    const signer = new Wallet(process.env.PK_WALLET as string, provider)
 
     for (const market of Object.keys(groupedAccounts)) {
       const marketContract = new Contract(market, MarketExternalActionsAbi.abi, signer)

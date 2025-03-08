@@ -3,7 +3,9 @@ import { MarketBorrowerRepository } from "db/MarketBorrowerRepository"
 
 import { setUpIndexer } from "config/indexer_setup"
 import { LiquidationService } from "services/LiquidationService"
-
+import * as dotenv from "dotenv"
+import { LiquidationExecutionContext } from "services/LiquidationExecutionContext"
+dotenv.config()
 const { provider, handleError } = setUpIndexer()
 const { liquidationService } = setUpCheckLiquidationServices()
 
@@ -26,6 +28,10 @@ async function main() {
     // Analysis
     const { hardLiquidationList, softLiquidationList, notDebtorAnymoreList } = await liquidationService.analyzeLiquidation(onChainData, markets, borrowers)
 
+    console.log("hardLiquidationList", hardLiquidationList?.length)
+    console.log("softLiquidationList", softLiquidationList?.length)
+    console.log("notDebtorAnymoreList", notDebtorAnymoreList?.length)
+
     // Actions
     if (hardLiquidationList && hardLiquidationList.length > 0) {
       await liquidationService.processHardLiquidations(provider, hardLiquidationList)
@@ -45,12 +51,15 @@ main().then(() => console.log("Done"))
 
 function setUpCheckLiquidationServices() {
   const prismaClient = new PrismaClient()
+
+  const context = new LiquidationExecutionContext()
   // Setup the repositories
   const marketBorrowerRepository = new MarketBorrowerRepository(prismaClient)
   // set up the services
-  const liquidationService = new LiquidationService(marketBorrowerRepository)
+  const liquidationService = new LiquidationService(marketBorrowerRepository, context)
 
   return {
     liquidationService,
+    context,
   }
 }

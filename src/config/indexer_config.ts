@@ -23,6 +23,9 @@ export type IndexerConfig = {
   constracts: {
     marketCreatorAddress: AddressLike
   }
+  enso: {
+    baseUrl: string
+  }
 }
 
 const { blockRange, chainId, chainRpc, startingBlock } = _initEnv()
@@ -46,6 +49,9 @@ export const indexerConfig = {
   },
   constracts: {
     marketCreatorAddress: addresses.utilities.marketCreator as AddressLike,
+  },
+  enso: {
+    baseUrl: "https://api.enso.finance/api/v1/shortcuts/route",
   },
 } as IndexerConfig
 
