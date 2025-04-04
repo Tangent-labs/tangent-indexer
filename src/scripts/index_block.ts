@@ -15,8 +15,14 @@ async function main() {
   const { prismaClient, marketBorrowerService, marketCreationService, blockService, setTransation } = setUpIndexerBlockServices()
 
   try {
-    const { startBlock, endBlock, actualBlock } = await BlockService.getIndexerBlockInfo(provider, blockService)
-    // If the last block indexed is smaller than the actual =>
+    const blockInfo = await BlockService.getIndexerBlockInfo(provider, blockService)
+    if (blockInfo === false) {
+      console.log("Nothing to index")
+      return
+    }
+
+    const { startBlock, endBlock, actualBlock } = blockInfo
+
     if (startBlock && endBlock) {
       // console.log(startBlock, "<----------------->", endBlock)
       await prismaClient.$transaction(
@@ -46,7 +52,7 @@ async function main() {
   }
 }
 
-main().then(() => console.log("Block indexation updated"))
+main().then()
 
 function setUpIndexerBlockServices() {
   const prismaClient = new PrismaClient()

@@ -1,56 +1,58 @@
 import { LiquidationBotLogRepository } from "db/LiquidationBotLogRepository"
 import { AddressLike } from "ethers"
 import { LiquidationBotLogAction, LiquidationMarketAccountOutInfo, LiquidationUserInInfo } from "type/data"
+import { LiquidationExecutionContext } from "./LiquidationExecutionContext"
+import { prepareSerialize } from "utils/jsonSerializer"
 
 export class LiquidationBotService {
   liquidationBotLogRepository: LiquidationBotLogRepository
-  executionKey: string
 
   constructor(LiquidationBotLogRepository: LiquidationBotLogRepository) {
     this.liquidationBotLogRepository = LiquidationBotLogRepository
-    this.executionKey = uuidv4()
   }
 
-  async _logAction(action: LiquidationBotLogAction, data?: unknown, isError?: boolean) {
+  async _logAction(action: LiquidationBotLogAction, context: LiquidationExecutionContext, data?: unknown, isError?: boolean) {
+    const dataToLog = { context, data: data || { no_data: true } }
+
     await this.liquidationBotLogRepository.insertLiquidationLog({
       action: action as string,
-      execution_key: this.executionKey,
-      data: data ? JSON.stringify(data) : '{"no_data":true}',
+      execution_key: context.executionKey,
+      data: prepareSerialize(dataToLog),
       is_error: isError,
     })
   }
 
-  async logError(action: LiquidationBotLogAction, error: Error) {
-    await this._logAction(action, error, true)
+  async logError(action: LiquidationBotLogAction, error: Error, context: LiquidationExecutionContext) {
+    await this._logAction(action, context, error, true)
   }
 
-  async logLiquidationParams(data: { markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }) {
+  async logLiquidationParams(data: { markets: AddressLike[] | null; borrowers: LiquidationUserInInfo[] | null }, context: LiquidationExecutionContext) {
     const action: LiquidationBotLogAction = "liquidation_params"
-    await this._logAction(action, data)
+    await this._logAction(action, context, data)
   }
 
-  async logOnchainData(data?: LiquidationMarketAccountOutInfo) {
+  async logOnchainData(data: LiquidationMarketAccountOutInfo | null, context: LiquidationExecutionContext) {
     const action: LiquidationBotLogAction = "on_chain_data"
-    await this._logAction(action, data)
+    await this._logAction(action, context, data)
   }
 
-  async logLiquidationAnalysis(data?: LiquidationMarketAccountOutInfo) {
+  async logLiquidationAnalysis(data: LiquidationMarketAccountOutInfo | null, context: LiquidationExecutionContext) {
     const action: LiquidationBotLogAction = "liquidation_analysis"
-    await this._logAction(action, data)
+    await this._logAction(action, context, data)
   }
 
-  async logCleanDebtors(data?: LiquidationUserInInfo[]) {
+  async logCleanDebtors(data: LiquidationUserInInfo[] | null, context: LiquidationExecutionContext) {
     const action: LiquidationBotLogAction = "clean_debtors"
-    await this._logAction(action, data)
+    await this._logAction(action, context, data)
   }
 
-  async logLiquidationExecution(data?: LiquidationUserInInfo) {
+  async logLiquidationExecution(data: LiquidationUserInInfo | null, context: LiquidationExecutionContext) {
     const action: LiquidationBotLogAction = "liquidation_execution"
-    await this._logAction(action, data)
+    await this._logAction(action, context, data)
   }
 
-  async logLiquidationBadDebtExecution(data?: LiquidationUserInInfo) {
+  async logLiquidationBadDebtExecution(data: LiquidationUserInInfo | null, context: LiquidationExecutionContext) {
     const action: LiquidationBotLogAction = "liquidation_bad_debt_execution"
-    await this._logAction(action, data)
+    await this._logAction(action, context, data)
   }
 }

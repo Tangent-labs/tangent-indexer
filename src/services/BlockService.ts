@@ -24,6 +24,11 @@ export class BlockService {
     let endBlock: number
     const actualBlock = await provider.getBlockNumber()
 
+    // no block to index
+    if (startBlock === actualBlock + 1) {
+      return false
+    }
+
     if (startBlock + blockRange > actualBlock!) {
       // If the actual block is closed enough to the lastBlockIndexed we can use it
       endBlock = actualBlock
