@@ -14,7 +14,7 @@ export class MarketBorrowerService implements EventDetectionService {
   constructor(marketBorrowerRepository: MarketBorrowerRepository, marketContractsRepository: MarketContractsRepository) {
     this.marketContractsRepository = marketContractsRepository
     this.marketBorrowerRepository = marketBorrowerRepository
-    this.liquidationService = new LiquidationService(marketBorrowerRepository)
+    this.liquidationService = new LiquidationService(marketBorrowerRepository, {} as any)
   }
 
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {

@@ -1,0 +1,89 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ICurveRouter",
+  "sourceName": "src/interfaces/externals/Curve/ICurveRouter.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address[11]",
+          "name": "_route",
+          "type": "address[11]"
+        },
+        {
+          "internalType": "uint256[5][5]",
+          "name": "_swap_params",
+          "type": "uint256[5][5]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_min_dy",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address[5]",
+          "name": "_pools",
+          "type": "address[5]"
+        },
+        {
+          "internalType": "address",
+          "name": "_receiver",
+          "type": "address"
+        }
+      ],
+      "name": "exchange",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address[11]",
+          "name": "_route",
+          "type": "address[11]"
+        },
+        {
+          "internalType": "uint256[5][5]",
+          "name": "_swap_params",
+          "type": "uint256[5][5]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address[5]",
+          "name": "_pools",
+          "type": "address[5]"
+        }
+      ],
+      "name": "get_dy",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

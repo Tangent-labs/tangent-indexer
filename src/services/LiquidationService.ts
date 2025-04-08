@@ -1,13 +1,11 @@
-/**
- * This service is responsible for handling liquidations of market borrowers.
- */
 import fs from "fs"
-import path from "path"
 
 import MarketExternalActionsAbi from "../abis/MarketExternalActions.json"
 import MarketAccountLiquidationBotInfoAbi from "../abis/MarketAccountLiquidationBotInfo.json"
+import QuoteLiquidationRouterAbi from "../abis/QuoteLiquidationRouter.json"
+import successRoutes from "../SuccessRoutes.json"
 
-import { AddressLike, Contract, JsonRpcProvider, Wallet } from "ethers"
+import { AddressLike, Contract, JsonRpcProvider, Wallet, ZeroAddress } from "ethers"
 import { MarketBorrowerRepository } from "../db/MarketBorrowerRepository"
 
 import {
@@ -15,11 +13,14 @@ import {
   LiquidationAnalyseInfo,
   LiquidationMarketAccountOutInfo,
   LiquidationMarketOutInfo,
+  LiquidationUserFullInfo,
   LiquidationUserInfo,
   LiquidationUserInInfo,
+  QuoteLiquidationRouterIn,
 } from "../type/data"
 import { chainView } from "../utils/chainView"
 import { LiquidationExecutionContext } from "./LiquidationExecutionContext"
+import { BlockRepository } from "../db/BlockRepository"
 
 const DENOMINATOR = 100_000n
 
@@ -30,6 +31,21 @@ type WithToObject<T> = T & {
 export class LiquidationService {
   marketBorrowerRepository: MarketBorrowerRepository
   context: LiquidationExecutionContext
+  marketBorrowerFilePath: string = "./src/data/market_borrowers.json"
+
+  async checkContext() {
+    const blockRepository = new BlockRepository(null!)
+    blockRepository.setClient(this.marketBorrowerRepository.prismaClient)
+
+    // try the database connectivty
+    try {
+      await blockRepository.getLastBlockIndexed()
+    } catch (error) {
+      this.context.isDbAlive = false
+    }
+    this.context.isDbAlive = false
+    // TODO : check the RPCs , and set the rpcIndex on context
+  }
 
   constructor(marketBorrowerRepository: MarketBorrowerRepository, context: LiquidationExecutionContext) {
     this.marketBorrowerRepository = marketBorrowerRepository
@@ -53,9 +69,7 @@ export class LiquidationService {
 
   async getLiquidationParamsFromFile(): Promise<{ markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }> {
     // Read the file synchronously (you can also use async methods)
-    // eslint-disable-next-line no-undef
-    const filePath = path.resolve(__dirname!, "./src/data/borrowers.json")
-    const data = fs.readFileSync(filePath, "utf-8")
+    const data = fs.readFileSync(this.marketBorrowerFilePath, "utf-8")
 
     // Parse the JSON content
     const parsedData = JSON.parse(data)
@@ -72,17 +86,22 @@ export class LiquidationService {
    * @returns An object containing the markets and borrowers to be liquidated.
    */
   async getLiquidationParamsFromDb(): Promise<{ markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }> {
-    const borrowersRawList = await this.marketBorrowerRepository.getList()
+    if (this.context.isDbAlive) {
+      const borrowersRawList = await this.marketBorrowerRepository.getList()
 
-    const markets = new Set<AddressLike>()
-    const borrowers = borrowersRawList.map((borrower) => {
-      markets.add(borrower.contract_address as AddressLike)
-      return {
-        account: borrower.borrower_address as AddressLike,
-        market: borrower.contract_address as AddressLike,
-      }
-    })
-    return { markets: Array.from(markets), borrowers }
+      const markets = new Set<AddressLike>()
+      const borrowers = borrowersRawList.map((borrower) => {
+        markets.add(borrower.contract_address as AddressLike)
+        return {
+          account: borrower.borrower_address as AddressLike,
+          market: borrower.contract_address as AddressLike,
+        }
+      })
+      return { markets: Array.from(markets), borrowers }
+    } else {
+      const data = fs.readFileSync(this.marketBorrowerFilePath, "utf-8")
+      return JSON.parse(data)
+    }
   }
 
   /**
@@ -119,22 +138,21 @@ export class LiquidationService {
    * @param accounts The accounts to be analyzed.
    * @returns LiquidationAnalyseInfo.
    */
-  async analyzeLiquidation(datas: LiquidationMarketAccountOutInfo, markets: AddressLike[], accounts: LiquidationUserInInfo[]): Promise<LiquidationAnalyseInfo> {
-    const hydratedAccounts = datas.accounts.map((accountData, index) => ({
-      ...accountData,
-      ...accounts[index],
-      ltv: accountData.positionValue === 0n ? 0n : (accountData.positionDebt * DENOMINATOR) / accountData.positionValue,
-    }))
-
-    // get the liquidation threshold for each market
-    const thresholds = datas.markets.reduce<Record<string, bigint>>((agg, market, index) => {
-      agg[markets[index] as string] = market.liquidationThreshold
-      return agg
-    }, {})
+  async analyzeLiquidation(datas: LiquidationMarketAccountOutInfo, accounts: LiquidationUserInInfo[]): Promise<LiquidationAnalyseInfo> {
+    const hydratedAccounts = datas.accounts.map((accountData, index) => {
+      const account = accounts[index]
+      const market = datas.markets.find((m) => (m.market as string).toLowerCase() === (accountData.market as string).toLowerCase())
+      return {
+        ...accountData,
+        ...account,
+        ...market,
+        ltv: accountData.positionValue === 0n ? 0n : (accountData.positionDebt * DENOMINATOR) / accountData.positionValue,
+      }
+    })
 
     const notDebtorAnymoreList: LiquidationUserInfo[] = [] // borrower with 0 debt
     let hardLiquidationList: LiquidationUserInfo[] = [] // borrower with positionvalue > debt
-    let softLiquidationList: LiquidationUserInfo[] = [] // borrower with healthRatio >=1
+    let softLiquidationList: LiquidationUserFullInfo[] = [] // borrower with healthRatio >=1
 
     // We detect the potential actions we have to do
     hydratedAccounts.forEach((account) => {
@@ -145,21 +163,18 @@ export class LiquidationService {
 
       if (account.positionDebt >= account.positionValue) {
         hardLiquidationList.push(account)
-
         return
       }
-
-      if (account.ltv > thresholds[account.market as string]) {
-        softLiquidationList.push(account)
+      if (account.ltv > account.liquidationThreshold!) {
+        softLiquidationList.push(account as LiquidationUserFullInfo)
       }
     })
 
-    const sortFn: (a: LiquidationUserInfo, b: LiquidationUserInfo) => number = (a, b) => Number(b.positionValue) - Number(a.positionValue)
+    const sortFn: (a: LiquidationUserInfo | LiquidationUserFullInfo, b: LiquidationUserInfo | LiquidationUserFullInfo) => number = (a, b) =>
+      Number(b.positionValue) - Number(a.positionValue)
 
     hardLiquidationList = hardLiquidationList.sort(sortFn)
     softLiquidationList = softLiquidationList.sort(sortFn)
-
-    console.log(hydratedAccounts, thresholds)
 
     return { hardLiquidationList, softLiquidationList, notDebtorAnymoreList }
   }
@@ -186,7 +201,6 @@ export class LiquidationService {
       for (const account of groupedAccounts[market]) {
         try {
           const tx = await marketContract.liquidateBadDebt(account)
-          console.log(`Liquidation tx for ${account} on ${market}:`, tx.hash)
           await tx.wait() // Wait for the transaction to be mined
         } catch (error) {
           console.error(`Failed to liquidate ${account} on ${market}:`, error)
@@ -200,7 +214,43 @@ export class LiquidationService {
    * @param provider The JSON RPC provider.
    * @param accounts The accounts to be liquidated.
    */
-  async processSoftLiquidations(provider: JsonRpcProvider, accounts: LiquidationUserInfo[]) {}
+  async processSoftLiquidations(provider: JsonRpcProvider, accounts: LiquidationUserFullInfo[]) {
+    // console.log(accounts)
+    for (const account of accounts) {
+      const route = await this._getBestRoute(provider, account)
+      if (route) {
+        console.log(route)
+      } else {
+        console.log("No route found")
+      }
+    }
+  }
+
+  async _getBestRoute(provider: JsonRpcProvider, account: LiquidationUserFullInfo) {
+    const matchingROutes = successRoutes.filter((route) => route.start.toLowerCase() === (account.collatToken as string).toLowerCase())
+    if (!matchingROutes.length) {
+      return null
+    }
+
+    const routeParams = matchingROutes.map((route) => ({
+      curveQuote: {
+        _route: route.params.routeAddresses,
+        _swap_params: route.params.swapParams,
+        _amount: account.positionValue,
+        _pools: [ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress],
+      },
+      wStableQuote: {
+        stablePools: ZeroAddress,
+        i: 0,
+        j: 1,
+      },
+    }))
+
+    const routesCheck = await chainView<[QuoteLiquidationRouterIn[]], [any]>(provider, QuoteLiquidationRouterAbi.abi, QuoteLiquidationRouterAbi.bytecode, [
+      routeParams,
+    ])
+    console.log(routesCheck)
+  }
 
   /**
    * Processes clean debtors.
@@ -213,5 +263,13 @@ export class LiquidationService {
         market: acc.market as string,
       }))
     )
+  }
+
+  /**
+   * Save the files to the database
+   * @param data The markets and borrowers to be saved.
+   */
+  saveFiles(data: { markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }) {
+    fs.writeFileSync(this.marketBorrowerFilePath, JSON.stringify(data, null, 2))
   }
 }

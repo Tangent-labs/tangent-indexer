@@ -9,12 +9,15 @@ export type LiquidationMarketOutInfo = {
   liquidationThreshold: bigint
   collateralUSDPrice: bigint
   oracleDecimals: bigint
+  collatToken: AddressLike
+  market: AddressLike
 }
 
 export type LiquidationAccountOutInfo = {
   healthRatio: bigint
   positionDebt: bigint
   positionValue: bigint
+  market: AddressLike
 }
 export type LiquidationMarketAccountOutInfo = {
   markets: LiquidationMarketOutInfo[]
@@ -22,10 +25,11 @@ export type LiquidationMarketAccountOutInfo = {
 }
 
 export type LiquidationUserInfo = LiquidationAccountOutInfo & LiquidationUserInInfo
+export type LiquidationUserFullInfo = LiquidationUserInfo & { collatToken: AddressLike }
 
 export type LiquidationAnalyseInfo = {
   hardLiquidationList?: LiquidationUserInfo[]
-  softLiquidationList?: LiquidationUserInfo[]
+  softLiquidationList?: LiquidationUserFullInfo[]
   notDebtorAnymoreList?: LiquidationUserInfo[]
 }
 
@@ -36,3 +40,13 @@ export type LiquidationBotLogAction =
   | "liquidation_analysis"
   | "clean_debtors"
   | "liquidation_execution"
+
+export type CurveQuote = {
+  _route: string[] // address[11]
+  _swap_params: number[][]
+  _amount: bigint
+}
+
+export type QuoteLiquidationRouterIn = {
+  curveQuote: CurveQuote
+}

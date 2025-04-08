@@ -27,7 +27,6 @@ export const fetchBorrowLogs = async (
 ): Promise<BorrowEvent[]> => {
   try {
     const logs = await getEthLogs(provider, startingBlock, endingBlock, contracts, Object.values(BORROW_EVENT_SIGNATURES))
-    console.log("fetchBorrowLogs", { contracts, startingBlock, endingBlock }, logs)
     return logs.map((log) => parseBorrowEvent(log))
   } catch (error) {
     console.error("Error fetching logs:", error)

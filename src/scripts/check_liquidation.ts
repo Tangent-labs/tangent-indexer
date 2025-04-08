@@ -13,6 +13,9 @@ const { provider, handleError } = setUpIndexer()
 const { liquidationService, context, liquidationBotService } = setUpCheckLiquidationServices()
 
 async function main() {
+  //  Adapt the params accordlingly to the connectivity
+  await liquidationService.checkContext()
+
   // keep track of the current action in case of an error
   let currentAction: LiquidationBotLogAction = "liquidation_params"
   try {
@@ -22,6 +25,9 @@ async function main() {
     if (!borrowers.length) {
       // TODO
       return
+    }
+    if (context.isDbAlive) {
+      liquidationService.saveFiles({ markets, borrowers })
     }
     currentAction = "on_chain_data"
     // Get the data
@@ -33,7 +39,7 @@ async function main() {
     }
     currentAction = "liquidation_analysis"
     // Analysis
-    const { hardLiquidationList, softLiquidationList, notDebtorAnymoreList } = await liquidationService.analyzeLiquidation(onChainData, markets, borrowers)
+    const { hardLiquidationList, softLiquidationList, notDebtorAnymoreList } = await liquidationService.analyzeLiquidation(onChainData, borrowers)
     await liquidationBotService.logLiquidationAnalysis(onChainData || null, context)
 
     // Actions
