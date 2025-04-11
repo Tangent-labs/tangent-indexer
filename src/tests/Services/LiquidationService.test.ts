@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
+import fs from "fs"
 
 import { LiquidationService } from "../../../src/services/LiquidationService"
 import { MarketBorrowerRepository } from "../../../src/db/MarketBorrowerRepository"
@@ -73,6 +74,72 @@ describe("LiquidationService", () => {
       {
         account: "0x789",
         market: "0x456",
+      },
+    ])
+  })
+
+  it("should get liquidation parameters from database when isDbAlive is true", async () => {
+    const mockBorrowers = [
+      {
+        borrower_address: "0x123" as AddressLike,
+        contract_address: "0x456" as AddressLike,
+      },
+    ] as any
+
+    const mockMarketBorrowerRepository = {
+      getList: vi.fn().mockResolvedValue(mockBorrowers),
+    }
+
+    const context = { ...nominalContext, isDbAlive: true }
+    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as MarketBorrowerRepository, context)
+
+    const { markets, borrowers } = await liquidationService.getLiquidationParams()
+
+    expect(mockMarketBorrowerRepository.getList).toHaveBeenCalled()
+    expect(markets).toEqual(["0x456"])
+    expect(borrowers).toEqual([
+      {
+        account: "0x123",
+        market: "0x456",
+      },
+    ])
+  })
+
+  it("should get liquidation parameters from file when isDbAlive is false", async () => {
+    const mockBorrowers = [
+      {
+        borrower_address: "0x123" as AddressLike,
+        contract_address: "0x456" as AddressLike,
+      },
+    ] as any
+
+    const mockMarketBorrowerRepository = {
+      getList: vi.fn().mockResolvedValue(mockBorrowers),
+    }
+
+    const context = { ...nominalContext, isDbAlive: false }
+    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as MarketBorrowerRepository, context)
+
+    // Mock fs.readFileSync
+    const mockFileData = {
+      markets: ["0x789"],
+      borrowers: [
+        {
+          account: "0xABC",
+          market: "0x789",
+        },
+      ],
+    }
+    vi.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify(mockFileData))
+
+    const { markets, borrowers } = await liquidationService.getLiquidationParams()
+
+    expect(mockMarketBorrowerRepository.getList).not.toHaveBeenCalled()
+    expect(markets).toEqual(["0x789"])
+    expect(borrowers).toEqual([
+      {
+        account: "0xABC",
+        market: "0x789",
       },
     ])
   })
