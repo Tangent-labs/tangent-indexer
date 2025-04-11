@@ -1,6 +1,6 @@
 import { LiquidationBotLogRepository } from "db/LiquidationBotLogRepository"
 import { AddressLike } from "ethers"
-import { LiquidationBotLogAction, LiquidationMarketAccountOutInfo, LiquidationUserInInfo } from "type/data"
+import { LiquidationBotLogAction, LiquidationMarketAccountOutInfo, LiquidationUserInfo, LiquidationUserInInfo } from "type/data"
 import { LiquidationExecutionContext } from "./LiquidationExecutionContext"
 import { prepareSerialize } from "utils/jsonSerializer"
 
@@ -51,7 +51,7 @@ export class LiquidationBotService {
     await this._logAction(action, context, data)
   }
 
-  async logLiquidationBadDebtExecution(data: LiquidationUserInInfo | null, context: LiquidationExecutionContext) {
+  async logLiquidationBadDebtExecution(data: LiquidationUserInfo | null, context: LiquidationExecutionContext) {
     const action: LiquidationBotLogAction = "liquidation_bad_debt_execution"
     await this._logAction(action, context, data)
   }

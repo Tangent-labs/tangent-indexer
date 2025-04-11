@@ -1,0 +1,74 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "LiquidatorProxy",
+  "sourceName": "src/tgUSD/Utilities/LiquidatorProxy.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "_tgUSD",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "LiquidatorCallError",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "MinAmountOutNotReached",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "liquidator",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "receiver",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20",
+          "name": "assetToLiquidate",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "minTgUSDReceived",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "routerCall",
+          "type": "bytes"
+        }
+      ],
+      "name": "callLiquidate",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "tgUSD",
+      "outputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}

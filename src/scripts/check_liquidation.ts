@@ -46,12 +46,10 @@ async function main() {
     if (hardLiquidationList && hardLiquidationList.length > 0) {
       currentAction = "liquidation_bad_debt_execution"
       await liquidationService.processHardLiquidations(provider, hardLiquidationList)
-      await liquidationBotService.logLiquidationBadDebtExecution(hardLiquidationList[0] || null, context)
     }
     if (softLiquidationList && softLiquidationList.length > 0) {
       currentAction = "liquidation_execution"
       await liquidationService.processSoftLiquidations(provider, softLiquidationList)
-      await liquidationBotService.logLiquidationExecution(softLiquidationList[0] || null, context)
     }
     if (notDebtorAnymoreList && notDebtorAnymoreList.length > 0) {
       currentAction = "clean_debtors"
@@ -70,11 +68,11 @@ function setUpCheckLiquidationServices() {
 
   const context = new LiquidationExecutionContext()
 
-  const marketBorrowerRepository = new MarketBorrowerRepository(prismaClient)
-  const liquidationService = new LiquidationService(marketBorrowerRepository, context)
-
   const liquidationBotLogRepository = new LiquidationBotLogRepository(prismaClient)
   const liquidationBotService = new LiquidationBotService(liquidationBotLogRepository)
+
+  const marketBorrowerRepository = new MarketBorrowerRepository(prismaClient)
+  const liquidationService = new LiquidationService(marketBorrowerRepository, context, liquidationBotService)
 
   return {
     liquidationService,

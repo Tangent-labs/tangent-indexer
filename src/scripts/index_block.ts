@@ -24,7 +24,7 @@ async function main() {
     const { startBlock, endBlock, actualBlock } = blockInfo
 
     if (startBlock && endBlock) {
-      // console.log(startBlock, "<----------------->", endBlock)
+      console.log("indexing :", startBlock, "<----------------->", endBlock)
       await prismaClient.$transaction(
         async (dbTransaction: TransactionPrisma) => {
           // Set the database transaction to the repositories

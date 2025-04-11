@@ -15,7 +15,7 @@ export class MarketCreationService implements EventDetectionService {
 
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
     // get the constant from the config
-    const marketCreatorAddress: AddressLike = indexerConfig.constracts.marketCreatorAddress
+    const marketCreatorAddress: AddressLike = indexerConfig.contracts.marketCreatorAddress
 
     // fetch the logs
     const logs = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, marketCreatorAddress)

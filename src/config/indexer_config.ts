@@ -20,8 +20,10 @@ export type IndexerConfig = {
   sentry: {
     dsn: string
   }
-  constracts: {
+  contracts: {
     marketCreatorAddress: AddressLike
+    liquidatorProxyAddress: AddressLike
+    liquidatorAddress: AddressLike
   }
   enso: {
     baseUrl: string
@@ -47,8 +49,9 @@ export const indexerConfig = {
   sentry: {
     dsn: process.env.SENTRY_SDN || "",
   },
-  constracts: {
+  contracts: {
     marketCreatorAddress: addresses.utilities.marketCreator as AddressLike,
+    liquidatorProxyAddress: addresses.utilities.liquidatorProxy as AddressLike,
   },
   enso: {
     baseUrl: "https://api.enso.finance/api/v1/shortcuts/route",

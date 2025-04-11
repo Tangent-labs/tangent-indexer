@@ -14,10 +14,10 @@ export type LiquidationMarketOutInfo = {
 }
 
 export type LiquidationAccountOutInfo = {
+  market: AddressLike
   healthRatio: bigint
   positionDebt: bigint
   positionValue: bigint
-  market: AddressLike
 }
 export type LiquidationMarketAccountOutInfo = {
   markets: LiquidationMarketOutInfo[]
@@ -45,8 +45,9 @@ export type CurveQuote = {
   _route: string[] // address[11]
   _swap_params: number[][]
   _amount: bigint
+  _pools: string[] // address[5]
 }
 
 export type QuoteLiquidationRouterIn = {
-  curveQuote: CurveQuote
+  quotes: CurveQuote[]
 }

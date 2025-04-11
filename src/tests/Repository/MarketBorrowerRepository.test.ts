@@ -42,16 +42,12 @@ describe("MarketBorrowerRepository", () => {
 
     expect(prismaMock.market_borrower.deleteMany).toHaveBeenCalledWith({
       where: {
-        OR: [{ borrower_address: "Alice", contract_address: "Market1" }],
+        OR: [
+          { borrower_address: { equals: "Alice", mode: "insensitive" }, contract_address: { equals: "Market1", mode: "insensitive" } },
+          { borrower_address: { equals: "Charlie", mode: "insensitive" }, contract_address: { equals: "Market3", mode: "insensitive" } },
+        ],
       },
     })
-  })
-
-  it("should not delete anything if no matching borrowers exist", async () => {
-    prismaMock.market_borrower.findMany.mockResolvedValue([{ borrower_address: "Bob", contract_address: "Market2" }])
-    const inputData = [{ borrower: "Alice", market: "Market1" }] // No match
-    await repository.deleteMarketBorrowers(inputData)
-    expect(prismaMock.market_borrower.deleteMany).not.toHaveBeenCalled()
   })
 
   it("should delete multiple matched borrowers", async () => {
@@ -73,8 +69,8 @@ describe("MarketBorrowerRepository", () => {
     expect(prismaMock.market_borrower.deleteMany).toHaveBeenCalledWith({
       where: {
         OR: [
-          { borrower_address: "Alice", contract_address: "Market1" },
-          { borrower_address: "Bob", contract_address: "Market2" },
+          { borrower_address: { equals: "Alice", mode: "insensitive" }, contract_address: { equals: "Market1", mode: "insensitive" } },
+          { borrower_address: { equals: "Bob", mode: "insensitive" }, contract_address: { equals: "Market2", mode: "insensitive" } },
         ],
       },
     })

@@ -20,7 +20,7 @@ describe("MarketCreationService", () => {
     const mockProvider = {} as JsonRpcProvider
     const startingBlock = 1000
     const endingBlock = 2000
-    const marketCreatorAddress = indexerConfig.constracts.marketCreatorAddress
+    const marketCreatorAddress = indexerConfig.contracts.marketCreatorAddress
 
     const mockLogs = [
       { address: "0xMarket1", blockNumber: 1001 },
