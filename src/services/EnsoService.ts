@@ -58,7 +58,7 @@ export const getTokenOutQuote = async (amount: bigint | undefined, fromAddress: 
   try {
     const url = `${baseURl}&fromAddress=${fromAddress}&amountIn=${amount}&tokenIn=${inToken}&tokenOut=${outToken}`
 
-    const response = await await axios.get(url, {
+    const response = await axios.get(url, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.NEXT_ENSO_API_KEY}`,
