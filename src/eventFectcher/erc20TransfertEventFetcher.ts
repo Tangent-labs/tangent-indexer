@@ -2,7 +2,7 @@ import { AddressLike, ethers, JsonRpcProvider } from "ethers"
 import { getEthLogs } from "./_baseFectcher"
 
 // Define Event Signatures
-const TRANSFERT_SIGNATURES = {
+const TRANSFER_SIGNATURES = {
   transfer: ethers.id("transfer(address,address,uint256)"),
 }
 
@@ -14,6 +14,6 @@ export const fetchTransfertLogs = async (
   endingBlock: number,
   contract: AddressLike = "0x6B175474E89094C44Da98b954EedeAC495271d0F" // DAI // Single contract address
 ): Promise<any[]> => {
-  const logs = await getEthLogs(provider, startingBlock, endingBlock, [contract], Object.values(TRANSFERT_SIGNATURES))
+  const logs = await getEthLogs(provider, startingBlock, endingBlock, [contract], Object.values(TRANSFER_SIGNATURES))
   return logs
 }

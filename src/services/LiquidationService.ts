@@ -160,8 +160,8 @@ export class LiquidationService {
     })
 
     const notDebtorAnymoreList: LiquidationUserInInfo[] = [] // borrower with 0 debt
-    let hardLiquidationList: LiquidationUserInfo[] = [] // borrower with positionvalue > debt
-    let softLiquidationList: LiquidationUserFullInfo[] = [] // borrower with healthRatio >=1
+    let hardLiquidationList: LiquidationUserInfo[] = [] // borrower with positionvalue < debt
+    let softLiquidationList: LiquidationUserFullInfo[] = [] // borrower with ltv > liquidationThreshold
 
     // We detect the potential actions we have to do
     hydratedAccounts.forEach((account) => {
@@ -240,8 +240,8 @@ export class LiquidationService {
           const swapParams = {
             _route: route.params.routeAddresses,
             _swap_params: route.params.swapParams,
-            _amount: amount - amount / 100n,
-            _min_dy: 0n,
+            _amount: amount,
+            _min_dy: amount - amount / 100n,
             _pools: [ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress],
             _receiver: await signer.getAddress(),
           }
