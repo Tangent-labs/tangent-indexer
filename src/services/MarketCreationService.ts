@@ -21,7 +21,21 @@ export class MarketCreationService implements EventDetectionService {
     const logs = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, marketCreatorAddress)
     if (!logs.length) return
 
+    const addresses = logs.map((log) => log.address) as string[]
+    const existingContracts = await this.marketContractsRepository.getContractsInList(addresses)
+    const newContracts = addresses.filter((address) => !existingContracts.some((contract) => contract.contract_address === address))
     // Insert the new contracts
-    await this.marketContractsRepository.insertNonExistingContractsFromLogs(logs)
+
+    if (newContracts.length) {
+      const newData = newContracts
+        .map((contract) => {
+          return {
+            ...logs.find((log) => log.address === contract),
+          }
+        })
+        .map((log) => ({ contract_address: log.address, contract_type: log.marketType }))
+
+      await this.marketContractsRepository.insertContracts(newData as { contract_address: string; contract_type: string }[])
+    }
   }
 }
