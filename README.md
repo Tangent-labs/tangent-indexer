@@ -67,3 +67,76 @@ Pull database to Prisma schema
 Create database tables from Prisma schema
 
 `npx prisma migrate dev --name init`
+
+## Liquidation Bot
+
+The Liquidation Bot is a critical component that monitors and processes liquidations in the Convergence protocol. It performs the following functions:
+
+1. **Parameter Collection**
+
+   - Validates the execution context
+   - Gathers market and borrower data
+
+2. **On-chain Data Analysis**
+
+   - Retrieves real-time on-chain data for markets and borrowers
+   - Analyzes positions for potential liquidations
+
+3. **Liquidation Processing**
+
+   - Handles two types of liquidations:
+     - Hard Liquidations: For positions that are severely undercollateralized
+     - Soft Liquidations: For positions that are slightly undercollateralized
+   - Cleans up debtors who are no longer in debt
+
+4. **Logging and Error Handling**
+   - Maintains detailed logs of all liquidation actions
+   - Tracks errors and execution context
+   - Provides audit trail for all liquidation activities
+
+The bot can be run using:
+
+```sh
+$ npm run check-liquidation
+```
+
+This will execute the liquidation checks and process any necessary liquidations while maintaining comprehensive logs of all actions.
+
+### Execution Flow
+
+```mermaid
+flowchart TD
+    A[Start Liquidation Check]
+    A --> B[Check Context - Check RPC - Check wallet - Check DB]
+    B --> C{Is RPC Alive?}
+    C -->|No| D[End Process]
+    C -->|Yes| E{Is DB Alive?}
+    E -->|No| F[Get Borrower/Market from File]
+    E -->|Yes| G[Get Borrower/Marketfrom DB]
+    G -->x[Save Market & Borrower Data in file]
+    x --> H[Get liquidation data from chainview]
+    F --> H
+    H --> L{Is alid?}
+    L -->|No| D
+    L -->|Yes| M[Analyze Liquidations]
+    M --> N[Process Hard Liquidations]
+    M --> O[Process Soft Liquidations]
+    M --> P[Clean Debtors]
+    N --> Q[Log Actions]
+    O --> Q
+    P --> Q
+    Q --> D
+
+    subgraph Error Handling
+    R[Error Occurs] --> S[Log Error]
+    S --> T[Handle Error]
+    T --> D
+    end
+
+    style A fill:#edd,stroke:#333,stroke-width:2px
+    style D fill:#f9f,stroke:#333,stroke-width:2px
+    style R fill:#f96,stroke:#333,stroke-width:2px
+    style C fill:#f66,stroke:#333,stroke-width:2px
+    style E fill:#bbf,stroke:#333,stroke-width:2px
+    style I fill:#bbf,stroke:#333,stroke-width:2px
+```
