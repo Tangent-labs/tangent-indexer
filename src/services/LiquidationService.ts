@@ -148,7 +148,6 @@ export class LiquidationService {
    * @returns LiquidationAnalyseInfo.
    */
   async analyzeLiquidation(datas: LiquidationMarketAccountOutInfo, accounts: LiquidationUserInInfo[]): Promise<LiquidationAnalyseInfo> {
-    console.log(datas)
     const hydratedAccounts = datas.accounts.map((accountData, index) => {
       const account = accounts[index]
       const market = datas.markets.find((m) => (m.market as string).toLowerCase() === (accountData.market as string).toLowerCase())
@@ -160,14 +159,14 @@ export class LiquidationService {
       }
     })
 
-    const notDebtorAnymoreList: LiquidationUserInfo[] = [] // borrower with 0 debt
+    const notDebtorAnymoreList: LiquidationUserInInfo[] = [] // borrower with 0 debt
     let hardLiquidationList: LiquidationUserInfo[] = [] // borrower with positionvalue > debt
     let softLiquidationList: LiquidationUserFullInfo[] = [] // borrower with healthRatio >=1
 
     // We detect the potential actions we have to do
     hydratedAccounts.forEach((account) => {
       if (account.positionDebt === 0n) {
-        notDebtorAnymoreList.push(account)
+        notDebtorAnymoreList.push({ account: account.account, market: account.market })
         return
       }
 
@@ -304,7 +303,7 @@ export class LiquidationService {
    * Processes clean debtors.
    * @param accounts The accounts to be cleaned.
    */
-  async processCleanDebtors(accounts: LiquidationUserInfo[]) {
+  async processCleanDebtors(accounts: LiquidationUserInInfo[]) {
     console.log(
       "processCleanDebtors",
       accounts.map((acc) => ({

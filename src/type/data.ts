@@ -30,7 +30,7 @@ export type LiquidationUserFullInfo = LiquidationUserInfo & { collatToken: Addre
 export type LiquidationAnalyseInfo = {
   hardLiquidationList?: LiquidationUserInfo[]
   softLiquidationList?: LiquidationUserFullInfo[]
-  notDebtorAnymoreList?: LiquidationUserInfo[]
+  notDebtorAnymoreList?: LiquidationUserInInfo[]
 }
 
 export type LiquidationBotLogAction =

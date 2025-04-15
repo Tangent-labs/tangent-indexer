@@ -8,62 +8,75 @@ import { LiquidationExecutionContext } from "services/LiquidationExecutionContex
 import { LiquidationBotService } from "services/LiquidationBotLogService"
 import { LiquidationBotLogRepository } from "db/LiquidationBotLogRepository"
 import { LiquidationBotLogAction } from "type/data"
+
 dotenv.config()
 const { provider, handleError } = setUpIndexer()
 const { liquidationService, context, liquidationBotService } = setUpCheckLiquidationServices()
 
-async function main() {
+export async function checkLiquidationRun(
+  testLiquidationService?: LiquidationService,
+  testContext?: LiquidationExecutionContext,
+  testLiquidationBotService?: LiquidationBotService
+) {
+  const currentLiquidationService = testLiquidationService || liquidationService
+  const currentContext = testContext || context
+  const currentLiquidationBotService = testLiquidationBotService || liquidationBotService
+
   //  Adapt the params accordlingly to the connectivity
-  await liquidationService.checkContext()
+  await currentLiquidationService.checkContext()
 
   // keep track of the current action in case of an error
   let currentAction: LiquidationBotLogAction = "liquidation_params"
   try {
     // Get the parameters
-    const { markets, borrowers } = await liquidationService.getLiquidationParams()
-    await liquidationBotService.logLiquidationParams({ markets, borrowers }, context)
+    const { markets, borrowers } = await currentLiquidationService.getLiquidationParams()
+    await currentLiquidationBotService.logLiquidationParams({ markets, borrowers }, currentContext)
     if (!borrowers.length) {
       // TODO
       return
     }
-    if (context.isDbAlive) {
-      liquidationService.saveFiles({ markets, borrowers })
+    if (currentContext.isDbAlive) {
+      currentLiquidationService.saveFiles({ markets, borrowers })
     }
     currentAction = "on_chain_data"
     // Get the data
-    const onChainData = await liquidationService.getOnchainData(provider, markets, borrowers)
-    await liquidationBotService.logOnchainData(onChainData || null, context)
+    const onChainData = await currentLiquidationService.getOnchainData(provider, markets, borrowers)
+    await currentLiquidationBotService.logOnchainData(onChainData || null, currentContext)
     if (!onChainData) {
       // TODO
       return
     }
     currentAction = "liquidation_analysis"
     // Analysis
-    const { hardLiquidationList, softLiquidationList, notDebtorAnymoreList } = await liquidationService.analyzeLiquidation(onChainData, borrowers)
-    await liquidationBotService.logLiquidationAnalysis(onChainData || null, context)
+    const { hardLiquidationList, softLiquidationList, notDebtorAnymoreList } = await currentLiquidationService.analyzeLiquidation(onChainData, borrowers)
+    await currentLiquidationBotService.logLiquidationAnalysis(onChainData || null, currentContext)
 
     // Actions
     if (hardLiquidationList && hardLiquidationList.length > 0) {
       currentAction = "liquidation_bad_debt_execution"
-      await liquidationService.processHardLiquidations(provider, hardLiquidationList)
+      await currentLiquidationService.processHardLiquidations(provider, hardLiquidationList)
     }
     if (softLiquidationList && softLiquidationList.length > 0) {
       currentAction = "liquidation_execution"
-      await liquidationService.processSoftLiquidations(provider, softLiquidationList)
+      await currentLiquidationService.processSoftLiquidations(provider, softLiquidationList)
     }
     if (notDebtorAnymoreList && notDebtorAnymoreList.length > 0) {
       currentAction = "clean_debtors"
-      await liquidationService.processCleanDebtors(notDebtorAnymoreList)
-      await liquidationBotService.logCleanDebtors(notDebtorAnymoreList || null, context)
+      await currentLiquidationService.processCleanDebtors(notDebtorAnymoreList)
+      await currentLiquidationBotService.logCleanDebtors(notDebtorAnymoreList || null, currentContext)
     }
   } catch (e) {
-    await liquidationBotService.logError(currentAction, e as Error, context)
+    await currentLiquidationBotService.logError(currentAction, e as Error, currentContext)
     handleError(e as Error)
   }
 }
-main().then(() => console.log("Done"))
 
-function setUpCheckLiquidationServices() {
+// Run main function if this file is being run directly
+if (process.env.NODE_ENV !== "test") {
+  checkLiquidationRun().then(() => console.log("Done"))
+}
+
+export function setUpCheckLiquidationServices() {
   const prismaClient = new PrismaClient()
 
   const context = new LiquidationExecutionContext()

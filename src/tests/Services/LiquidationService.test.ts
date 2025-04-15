@@ -304,6 +304,6 @@ describe("LiquidationService - analyzeLiquidation", () => {
 
     expect(result.hardLiquidationList?.some((acc: LiquidationUserInfo) => acc.account === "0xUser2")).toBe(false)
     expect(result.softLiquidationList?.some((acc: LiquidationUserInfo) => acc.account === "0xUser1")).toBe(false)
-    expect(result.notDebtorAnymoreList?.some((acc: LiquidationUserInfo) => acc.account === "0xUser4")).toBe(false)
+    expect(result.notDebtorAnymoreList?.some((acc: LiquidationUserInInfo) => acc.account === "0xUser4")).toBe(false)
   })
 })
