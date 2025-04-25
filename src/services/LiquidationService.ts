@@ -2,11 +2,11 @@ import fs from "fs"
 
 import MarketExternalActionsAbi from "../abis/MarketExternalActions.json"
 import MarketAccountLiquidationBotInfoAbi from "../abis/MarketAccountLiquidationBotInfo.json"
+import ICurveRouterAbi from "../abis/ICurveRouter.json"
 import QuoteLiquidationRouterAbi from "../abis/QuoteLiquidationRouter.json"
-import LiquidatorProxyAbi from "../abis/LiquidatorProxy.json"
 import successRoutes from "../hydratedRoute.json"
 
-import { AbiCoder, AddressLike, Contract, JsonRpcProvider, Wallet, ZeroAddress } from "ethers"
+import { Addressable, AddressLike, Contract, Interface, JsonRpcProvider, MaxUint256, Wallet, ZeroAddress } from "ethers"
 import { MarketBorrowerRepository } from "../db/MarketBorrowerRepository"
 
 import {
@@ -38,7 +38,7 @@ export class LiquidationService {
   liquidationBotService?: LiquidationBotService
   marketBorrowerFilePath: string = "./src/data/market_borrowers.json"
 
-  async checkContext() {
+  async checkContext(providers: JsonRpcProvider[]) {
     const blockRepository = new BlockRepository(null!)
     blockRepository.setClient(this.marketBorrowerRepository.prismaClient)
 
@@ -46,12 +46,28 @@ export class LiquidationService {
     try {
       await blockRepository.getLastBlockIndexed()
     } catch (error) {
-      this.context.isDbAlive = false
+      this.context.isDbAlive = true
     }
     // this.context.isDbAlive = false
     // TODO : check the RPCs , and set the rpcIndex on context
 
-    // check balance of the wallets
+    // get the current block from all rpcs, do not throw an error if one fails
+    const currentBlocks = await Promise.all(
+      providers.map((provider) =>
+        provider.getBlockNumber().catch(() => {
+          return 0
+        })
+      )
+    )
+
+    // get max block index
+    const maxBlockIndex = currentBlocks.indexOf(Math.max(...currentBlocks))
+    if (maxBlockIndex === -1 || currentBlocks[maxBlockIndex] === 0) {
+      throw new Error("No block index found")
+    }
+
+    this.context.currentRpcIndex = maxBlockIndex
+    this.context.currentBlock = Number(currentBlocks[maxBlockIndex])
   }
 
   constructor(marketBorrowerRepository: MarketBorrowerRepository, context: LiquidationExecutionContext, LiquidationBotService?: LiquidationBotService) {
@@ -120,24 +136,50 @@ export class LiquidationService {
    * @returns LiquidationMarketAccountOutInfo or undefined.
    */
   async getOnchainData(
-    provider: JsonRpcProvider,
+    providers: JsonRpcProvider[],
     markets: AddressLike[],
     borrowers: LiquidationUserInInfo[]
   ): Promise<LiquidationMarketAccountOutInfo | undefined> {
-    console.log([markets, borrowers])
-    const userAccountsData = await chainView<[AddressLike[], LiquidationUserInInfo[]], [LiquidationMarketAccountOutInfo]>(
-      provider,
-      MarketAccountLiquidationBotInfoAbi.abi,
-      MarketAccountLiquidationBotInfoAbi.bytecode,
-      [markets, borrowers]
+    // get the data from the  all the providers
+    const calls = providers.map((provider, index) =>
+      chainView<[AddressLike[], LiquidationUserInInfo[]], [LiquidationMarketAccountOutInfo]>(
+        provider,
+        MarketAccountLiquidationBotInfoAbi.abi,
+        MarketAccountLiquidationBotInfoAbi.bytecode,
+        [markets, borrowers]
+      )
     )
-    const d = userAccountsData?.at(0)
-    if (d) {
-      return {
-        markets: d.markets.map((m) => (m as unknown as WithToObject<LiquidationMarketOutInfo>).toObject()),
-        accounts: d.accounts.map((a) => (a as unknown as WithToObject<LiquidationAccountOutInfo>).toObject()),
-      } as LiquidationMarketAccountOutInfo
+
+    const results = await Promise.all(calls)
+    const datas = results.map((result, callIndex) => {
+      const d = result?.at(0)
+      if (d) {
+        return {
+          markets: d.markets.map((m) => (m as unknown as WithToObject<LiquidationMarketOutInfo>).toObject()),
+          accounts: d.accounts.map((a, index) => ({ ...(a as unknown as WithToObject<LiquidationAccountOutInfo>).toObject(), callIndex, index })),
+        }
+      }
+      return undefined
+    })
+
+    // remove duplicates in markets
+    const marketsResult = datas
+      .map((d) => d?.markets || [])
+      .flat()
+      .filter((m, index, self) => self.findIndex((t) => t.market === m.market) === index)
+
+    // remove duplicates in accounts and keep the one with the highest healthRatio
+    const finalAccounts = []
+    const accountLength = datas?.at(0)?.accounts?.length || 0
+    const accountsFlat = datas.map((d) => d?.accounts || []).flat()
+    for (let i = 0; i < accountLength; i++) {
+      const results = accountsFlat.filter((a) => a.index === i)
+      const minHealthRatio = results.reduce((acc, curr) => (acc < curr.healthRatio ? acc : curr.healthRatio), 0n)
+      const row = results.find((a) => a.healthRatio === minHealthRatio)
+      finalAccounts.push(row)
     }
+    const finalAccountsResult = finalAccounts.filter((a) => a !== undefined)
+    return { markets: marketsResult, accounts: finalAccountsResult as LiquidationAccountOutInfo[] }
   }
 
   /**
@@ -149,13 +191,14 @@ export class LiquidationService {
    */
   async analyzeLiquidation(datas: LiquidationMarketAccountOutInfo, accounts: LiquidationUserInInfo[]): Promise<LiquidationAnalyseInfo> {
     const hydratedAccounts = datas.accounts.map((accountData, index) => {
+      console.log(accountData, accountData.userDebt, DENOMINATOR, accountData.positionValue)
       const account = accounts[index]
       const market = datas.markets.find((m) => (m.market as string).toLowerCase() === (accountData.market as string).toLowerCase())
       return {
         ...accountData,
         ...account,
         ...market,
-        ltv: accountData.positionValue === 0n ? 0n : (accountData.positionDebt * DENOMINATOR) / accountData.positionValue,
+        ltv: accountData.positionValue === 0n ? 0n : (accountData.userDebt * DENOMINATOR) / accountData.positionValue,
       }
     })
 
@@ -165,12 +208,12 @@ export class LiquidationService {
 
     // We detect the potential actions we have to do
     hydratedAccounts.forEach((account) => {
-      if (account.positionDebt === 0n) {
+      if (account.userDebt === 0n) {
         notDebtorAnymoreList.push({ account: account.account, market: account.market })
         return
       }
 
-      if (account.positionDebt >= account.positionValue) {
+      if (account.userDebt >= account.positionValue) {
         hardLiquidationList.push(account)
         return
       }
@@ -184,7 +227,11 @@ export class LiquidationService {
 
     hardLiquidationList = hardLiquidationList.sort(sortFn)
     softLiquidationList = softLiquidationList.sort(sortFn)
-
+    console.log("analyzeLiquidation", {
+      hardLiquidationList: hardLiquidationList.length,
+      softLiquidationList: softLiquidationList.length,
+      notDebtorAnymoreList: notDebtorAnymoreList.length,
+    })
     return { hardLiquidationList, softLiquidationList, notDebtorAnymoreList }
   }
 
@@ -193,7 +240,7 @@ export class LiquidationService {
    * @param provider The JSON RPC provider.
    * @param accounts The accounts to be liquidated.
    */
-  async processHardLiquidations(provider: JsonRpcProvider, accounts: LiquidationUserInfo[]) {
+  async processHardLiquidations(providers: JsonRpcProvider[], accounts: LiquidationUserInfo[]) {
     // Group accounts by market
     const groupedAccounts = accounts.reduce<Record<string, AddressLike[]>>((agg, account) => {
       agg[account.market as string] = agg[account.market as string] || []
@@ -202,7 +249,7 @@ export class LiquidationService {
     }, {})
 
     // Iterate over each market and perform liquidations
-    const signer = new Wallet(process.env.PK_WALLET as string, provider)
+    const signer = new Wallet(process.env.PK_WALLET as string, providers[this.context.currentRpcIndex])
 
     for (const market of Object.keys(groupedAccounts)) {
       const marketContract = new Contract(market, MarketExternalActionsAbi.abi, signer)
@@ -227,41 +274,32 @@ export class LiquidationService {
    * @param provider The JSON RPC provider.
    * @param accounts The accounts to be liquidated.
    */
-  async processSoftLiquidations(provider: JsonRpcProvider, accounts: LiquidationUserFullInfo[]) {
-    // console.log(accounts)
+  async processSoftLiquidations(providers: JsonRpcProvider[], accounts: LiquidationUserFullInfo[]) {
+    console.log("processSoftLiquidations", accounts)
     for (const account of accounts) {
-      const { route, amount } = await this._getBestRoute(provider, account)
+      const { route, amount } = await this._getBestRoute(providers, account)
+      console.log(route)
       if (route) {
         try {
-          const signer = new Wallet(process.env.PK_WALLET as string, provider)
+          const signer = new Wallet(process.env.PK_WALLET as string, providers[this.context.currentRpcIndex])
+          console.log("processSoftLiquidations", account, await signer.getAddress())
+          const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
 
-          const liquidator = new Contract(indexerConfig.contracts.liquidatorProxyAddress as string, LiquidatorProxyAbi.abi, signer)
+          const iface = new Interface(ICurveRouterAbi.abi)
+          const data = iface.encodeFunctionData("exchange", [
+            route.params.routeAddresses,
+            route.params.swapParamsFull,
+            account.collateralBalance,
+            amount,
+            [ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress],
+            await signer.getAddress(),
+          ])
 
-          const swapParams = {
-            _route: route.params.routeAddresses,
-            _swap_params: route.params.swapParams,
-            _amount: amount,
-            _min_dy: amount - amount / 100n,
-            _pools: [ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress],
-            _receiver: await signer.getAddress(),
-          }
-          const abiCoder = AbiCoder.defaultAbiCoder()
-          console.log({ action: "callLiquidate", route: route.display })
-          await liquidator.callLiquidate(
-            "0x45312ea0eFf7E09C83CBE249fa1d7598c4C8cd4e",
-            swapParams._receiver,
-            route.start,
-            swapParams._min_dy,
-            abiCoder.encode(
-              ["address[]", "uint256[][]", "uint256", "uint256", "address[5]", "address"],
-              [swapParams._route, swapParams._swap_params, swapParams._amount, swapParams._min_dy, swapParams._pools, swapParams._receiver]
-            )
-          )
+          await marketContract.liquidate(account.account, MaxUint256, indexerConfig.contracts.curveRouterAddress, 0n, data)
 
-          console.log({ liquidationBotService: this.liquidationBotService })
+          //   console.log({ liquidationBotService: this.liquidationBotService })
           await this.liquidationBotService?.logLiquidationExecution(account || null, this.context)
         } catch (error) {
-          console.log({ action: "callLiquidate error", route: route.display, error })
           await this.liquidationBotService?.logError("liquidation_execution", error as Error, this.context)
           console.error(`Failed to liquidate ${account.account} on ${account.market}:`, error)
         }
@@ -272,27 +310,31 @@ export class LiquidationService {
     }
   }
 
-  async _getBestRoute(provider: JsonRpcProvider, account: LiquidationUserFullInfo) {
+  async _getBestRoute(providers: JsonRpcProvider[], account: LiquidationUserFullInfo) {
     const matchingROutes = successRoutes.filter((route) => route.start.toLowerCase() === (account.collatToken as string).toLowerCase())
     if (!matchingROutes.length) {
       return { route: null, amount: 0n }
     }
 
     // find duplicates in the routes by display
-    const uniqueRoutes = matchingROutes.filter((route, index, self) => self.findIndex((t) => t.display === route.display) === index)
+    const uniqueRoutes = matchingROutes.filter((route, index, self) => self.findIndex((t) => t.route === route.route) === index)
     const routeParams = uniqueRoutes.map(
       (route) =>
         ({
-          display: route.display,
+          display: route.route,
           _route: route.params.routeAddresses,
-          _swap_params: route.params.swapParams,
+          _swap_params: route.params.swapParamsFull,
           _amount: account.positionValue,
           _pools: [ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress],
         }) as CurveQuote
     )
-    //  console.log(routeParams)
 
-    const routesCheck = await chainView<[CurveQuote[]], [[bigint]]>(provider, QuoteLiquidationRouterAbi.abi, QuoteLiquidationRouterAbi.bytecode, [routeParams])
+    const routesCheck = await chainView<[CurveQuote[]], [[bigint]]>(
+      providers[this.context.currentRpcIndex],
+      QuoteLiquidationRouterAbi.abi,
+      QuoteLiquidationRouterAbi.bytecode,
+      [routeParams]
+    )
     const results = routesCheck.map((v) => Number(v?.at(0) || 0n))
     const maxValueIndex = results.indexOf(Math.max(...results))
     // TODO check if the max is enough
@@ -304,20 +346,12 @@ export class LiquidationService {
    * @param accounts The accounts to be cleaned.
    */
   async processCleanDebtors(accounts: LiquidationUserInInfo[]) {
-    console.log(
-      "processCleanDebtors",
+    await this.marketBorrowerRepository.deleteMarketBorrowers(
       accounts.map((acc) => ({
         borrower: acc.account as string,
         market: acc.market as string,
       }))
     )
-    const result = await this.marketBorrowerRepository.deleteMarketBorrowers(
-      accounts.map((acc) => ({
-        borrower: acc.account as string,
-        market: acc.market as string,
-      }))
-    )
-    console.log(result)
   }
 
   /**

@@ -20,11 +20,6 @@
     },
     {
       "inputs": [],
-      "name": "HarvesterFeeToHigh",
-      "type": "error"
-    },
-    {
-      "inputs": [],
       "name": "LeveragePaused",
       "type": "error"
     },
@@ -59,6 +54,11 @@
       "type": "error"
     },
     {
+      "inputs": [],
+      "name": "NotRewardAccumulator",
+      "type": "error"
+    },
+    {
       "inputs": [
         {
           "internalType": "address",
@@ -67,11 +67,6 @@
         }
       ],
       "name": "NotZapper",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "NothingToProcess",
       "type": "error"
     },
     {
@@ -98,21 +93,6 @@
     },
     {
       "inputs": [],
-      "name": "PositionDebtTooHigh",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "PositionDebtTooLow",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "PositionDebtZero",
-      "type": "error"
-    },
-    {
-      "inputs": [],
       "name": "PositionWithoutBadDebt",
       "type": "error"
     },
@@ -122,19 +102,23 @@
       "type": "error"
     },
     {
-      "inputs": [
-        {
-          "internalType": "contract IERC20",
-          "name": "erc20",
-          "type": "address"
-        }
-      ],
-      "name": "RewardAlreadyAdded",
+      "inputs": [],
+      "name": "TotalDebtTooHigh",
       "type": "error"
     },
     {
       "inputs": [],
-      "name": "TotalDebtTooHigh",
+      "name": "UserDebtTooHigh",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "UserDebtTooLow",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "UserDebtZero",
       "type": "error"
     },
     {
@@ -325,25 +309,6 @@
       "anonymous": false,
       "inputs": [
         {
-          "indexed": false,
-          "internalType": "contract IERC20",
-          "name": "_token",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "_amount",
-          "type": "uint256"
-        }
-      ],
-      "name": "Recovered",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
           "indexed": true,
           "internalType": "address",
           "name": "account",
@@ -376,81 +341,30 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "contract IERC20",
-          "name": "_rewardToken",
-          "type": "address"
-        }
-      ],
-      "name": "RewardAdded",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "contract IERC20",
-          "name": "_reward",
-          "type": "address"
-        },
-        {
-          "indexed": true,
           "internalType": "address",
-          "name": "_distributor",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "bool",
-          "name": "_state",
-          "type": "bool"
-        }
-      ],
-      "name": "RewardDistributorApproved",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "contract IERC20",
-          "name": "_token",
+          "name": "account",
           "type": "address"
         },
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_reward",
+          "name": "repaidAmount",
           "type": "uint256"
-        }
-      ],
-      "name": "RewardNotified",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "_user",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "contract IERC20",
-          "name": "_rewardToken",
-          "type": "address"
         },
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_reward",
+          "name": "collateralLiquidated",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "liquidator",
+          "type": "address"
         }
       ],
-      "name": "RewardPaid",
+      "name": "SelfLiquidate",
       "type": "event"
     },
     {
@@ -531,46 +445,7 @@
     },
     {
       "inputs": [],
-      "name": "REWARDS_DURATION",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "contract IERC20",
-          "name": "_newRewardToken",
-          "type": "address"
-        }
-      ],
-      "name": "addNewReward",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
       "name": "badDebt",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "blockLastIRTimestamp",
       "outputs": [
         {
           "internalType": "uint256",
@@ -600,21 +475,14 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "checkpointIR",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
       "inputs": [
         {
-          "internalType": "address",
-          "name": "_account",
-          "type": "address"
+          "internalType": "contract IERC20[]",
+          "name": "_rewardTokens",
+          "type": "address[]"
         }
       ],
-      "name": "claimableRewards",
+      "name": "claimUnderlyingRewards",
       "outputs": [
         {
           "components": [
@@ -629,12 +497,12 @@
               "type": "uint256"
             }
           ],
-          "internalType": "struct ICommonStruct.TokenAmount[]",
-          "name": "userRewards",
+          "internalType": "struct TokenAmount[]",
+          "name": "",
           "type": "tuple[]"
         }
       ],
-      "stateMutability": "view",
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -696,19 +564,6 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "debtIndex",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [
         {
           "internalType": "address",
@@ -763,69 +618,17 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_address",
+          "name": "account",
           "type": "address"
         }
       ],
-      "name": "getAndUpdateRewards",
-      "outputs": [
-        {
-          "components": [
-            {
-              "internalType": "contract IERC20",
-              "name": "token",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "amount",
-              "type": "uint256"
-            }
-          ],
-          "internalType": "struct ICommonStruct.TokenAmount[]",
-          "name": "",
-          "type": "tuple[]"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "contract IERC20",
-          "name": "_rewardToken",
-          "type": "address"
-        }
-      ],
-      "name": "getRewardForDuration",
+      "name": "getBalanceAndTotalCollateral",
       "outputs": [
         {
           "internalType": "uint256",
           "name": "",
           "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "getRewardTokens",
-      "outputs": [
-        {
-          "internalType": "contract IERC20[]",
-          "name": "",
-          "type": "address[]"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "harvesterFeePercentage",
-      "outputs": [
+        },
         {
           "internalType": "uint256",
           "name": "",
@@ -914,51 +717,6 @@
           "internalType": "bool",
           "name": "",
           "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "lastDebt",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "lastIR",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "contract IERC20",
-          "name": "_rewardToken",
-          "type": "address"
-        }
-      ],
-      "name": "lastTimeRewardApplicable",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -1185,44 +943,6 @@
           "type": "address"
         }
       ],
-      "name": "positionDebt",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "positionDebtIndex",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
       "name": "positionValue",
       "outputs": [
         {
@@ -1232,19 +952,6 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "harvestFeeReceiver",
-          "type": "address"
-        }
-      ],
-      "name": "processRewards",
-      "outputs": [],
-      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -1304,116 +1011,12 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "rewardCutPercentage",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [
         {
-          "internalType": "contract IERC20",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "rewardData",
-      "outputs": [
-        {
-          "internalType": "uint128",
-          "name": "lastUpdateTime",
-          "type": "uint128"
-        },
-        {
-          "internalType": "uint128",
-          "name": "periodFinish",
-          "type": "uint128"
-        },
-        {
           "internalType": "uint256",
-          "name": "rewardRate",
+          "name": "collatAmountToLiquidate",
           "type": "uint256"
         },
-        {
-          "internalType": "uint256",
-          "name": "rewardPerTokenStored",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "contract IERC20",
-          "name": "_rewardToken",
-          "type": "address"
-        }
-      ],
-      "name": "rewardPerToken",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "rewardTokens",
-      "outputs": [
-        {
-          "internalType": "contract IERC20",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        },
-        {
-          "internalType": "contract IERC20",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "rewards",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
         {
           "internalType": "uint256",
           "name": "tgUSDToRepay",
@@ -1449,19 +1052,6 @@
         }
       ],
       "name": "setCollatOracle",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_harvesterFeePercentage",
-          "type": "uint256"
-        }
-      ],
-      "name": "setHarvesterFeePercentage",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -1597,6 +1187,19 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "totalDebtShares",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "address",
@@ -1613,16 +1216,30 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "",
+          "name": "account",
           "type": "address"
-        },
+        }
+      ],
+      "name": "userDebt",
+      "outputs": [
         {
-          "internalType": "contract IERC20",
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
           "name": "",
           "type": "address"
         }
       ],
-      "name": "userRewardPerTokenPaid",
+      "name": "userDebtShares",
       "outputs": [
         {
           "internalType": "uint256",

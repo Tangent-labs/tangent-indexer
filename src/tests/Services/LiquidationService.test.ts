@@ -26,6 +26,7 @@ const nominalContext = {
   currentRpcIndex: 0,
   currentWalletIndex: 0,
   executionKey: "test",
+  currentBlock: 0,
 }
 
 describe("LiquidationService", () => {
@@ -90,7 +91,7 @@ describe("LiquidationService", () => {
       getList: vi.fn().mockResolvedValue(mockBorrowers),
     }
 
-    const context = { ...nominalContext, isDbAlive: true }
+    const context = { ...nominalContext, isDbAlive: true, currentBlock: 0 }
     liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as MarketBorrowerRepository, context)
 
     const { markets, borrowers } = await liquidationService.getLiquidationParams()
@@ -117,7 +118,7 @@ describe("LiquidationService", () => {
       getList: vi.fn().mockResolvedValue(mockBorrowers),
     }
 
-    const context = { ...nominalContext, isDbAlive: false }
+    const context = { ...nominalContext, isDbAlive: false, currentBlock: 0 }
     liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as MarketBorrowerRepository, context)
 
     // Mock fs.readFileSync
@@ -179,7 +180,7 @@ describe("LiquidationService - analyzeLiquidation", () => {
       accounts: [
         {
           healthRatio: 1200000000000000000n, // Above 1
-          positionDebt: 0n, // No debt
+          userDebt: 0n, // No debt
           positionValue: 500n * DECIMALS,
           market: "0xMarket1",
         },
@@ -209,7 +210,7 @@ describe("LiquidationService - analyzeLiquidation", () => {
       accounts: [
         {
           healthRatio: 2000000000000000000n, // Well above 1
-          positionDebt: 200n * DECIMALS,
+          userDebt: 200n * DECIMALS,
           positionValue: 1000n * DECIMALS,
           market: "0xMarket1",
         },
@@ -251,37 +252,37 @@ describe("LiquidationService - analyzeLiquidation", () => {
       accounts: [
         {
           healthRatio: 500000000000000000n, // (Hard Liquidation) 0xUser1
-          positionDebt: 600n * DECIMALS,
+          userDebt: 600n * DECIMALS,
           positionValue: 550n * DECIMALS,
           market: "0xMarket1",
         },
         {
           healthRatio: 2000000000000000000n, // (Soft Liquidation) 0xUser2
-          positionDebt: 760n * DECIMALS,
+          userDebt: 760n * DECIMALS,
           positionValue: 1000n * DECIMALS,
           market: "0xMarket2",
         },
         {
           healthRatio: 2000000000000000000n, // No debt 0xUser3
-          positionDebt: 0n,
+          userDebt: 0n,
           positionValue: 500n * DECIMALS,
           market: "0xMarket3",
         },
         {
           healthRatio: 2500000000000000000n, // Nothing 0xUser4
-          positionDebt: 500n * DECIMALS,
+          userDebt: 500n * DECIMALS,
           positionValue: 2000n * DECIMALS,
           market: "0xMarket4",
         },
         {
           healthRatio: 2500000000000000000n, // (Soft Liquidation) 0xUser5
-          positionDebt: 800n * DECIMALS,
+          userDebt: 800n * DECIMALS,
           positionValue: 1050n * DECIMALS,
           market: "0xMarket5",
         },
         {
           healthRatio: 2500000000000000000n, // (Hard Liquidation) 0xUser6
-          positionDebt: 620n * DECIMALS,
+          userDebt: 620n * DECIMALS,
           positionValue: 560n * DECIMALS,
           market: "0xMarket6",
         },

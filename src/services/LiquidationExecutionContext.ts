@@ -5,6 +5,7 @@ export class LiquidationExecutionContext {
   isDbAlive: boolean
   currentRpcIndex: number = 0
   currentWalletIndex: number = 0
+  currentBlock: number = 0
 
   constructor() {
     this.executionKey = uuidv4()

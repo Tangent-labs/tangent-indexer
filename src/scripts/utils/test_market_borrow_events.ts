@@ -1,7 +1,7 @@
 import { JsonRpcProvider } from "ethers"
 
 import * as dotenv from "dotenv"
-import addresses from "../../addresses-liquidation.json"
+import addresses from "../../addresses.json"
 
 import { fetchBorrowLogs } from "../../eventFectcher/marketBorrowerEventFetcher"
 dotenv.config()

@@ -11,17 +11,17 @@ import * as dotenv from "dotenv"
 dotenv.config()
 
 async function main() {
-  const { provider, handleError } = setUpIndexer()
+  const { providers, handleError } = setUpIndexer()
   const { prismaClient, marketBorrowerService, marketCreationService, blockService, setTransation } = setUpIndexerBlockServices()
 
   try {
-    const blockInfo = await BlockService.getIndexerBlockInfo(provider, blockService)
+    const blockInfo = await BlockService.getIndexerBlockInfo(providers, blockService)
     if (blockInfo === false) {
       console.log("Nothing to index")
       return
     }
 
-    const { startBlock, endBlock, actualBlock } = blockInfo
+    const { startBlock, endBlock, actualBlock, bestProvider } = blockInfo
 
     if (startBlock && endBlock) {
       console.log("indexing :", startBlock, "<----------------->", endBlock)
@@ -31,10 +31,10 @@ async function main() {
           setTransation(dbTransaction)
 
           // Detect  new markets
-          await marketCreationService.runDetection(provider, startBlock, endBlock)
+          await marketCreationService.runDetection(bestProvider, startBlock, endBlock)
 
           // Detect new borrowers
-          await marketBorrowerService.runDetection(provider, startBlock, endBlock)
+          await marketBorrowerService.runDetection(bestProvider, startBlock, endBlock)
 
           // Update the last indexed block
           await blockService.updateLastBlockIndexed(endBlock)

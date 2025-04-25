@@ -18,11 +18,13 @@ export class BlockService {
     return !blocks ? Number(process.env.LAST_BLOCK_INDEXED) : blocks.block_id
   }
 
-  static async getIndexerBlockInfo(provider: JsonRpcProvider, blockService: BlockService) {
+  static async getIndexerBlockInfo(providers: JsonRpcProvider[], blockService: BlockService) {
     const { startingBlock, blockRange } = indexerConfig
     const startBlock = Number(await blockService.getLastBlockIndexed()) + 1 || startingBlock
     let endBlock: number
-    const actualBlock = await provider.getBlockNumber()
+    const actualBlocks = await Promise.all(providers.map((provider) => provider.getBlockNumber()))
+    const actualBlock = Math.max(...actualBlocks)
+    const bestProvider = providers[actualBlocks.indexOf(actualBlock)]
 
     // no block to index
     if (startBlock === actualBlock + 1) {
@@ -36,6 +38,6 @@ export class BlockService {
       // Else we get a step toward it
       endBlock = startBlock + blockRange
     }
-    return { startBlock, endBlock, actualBlock }
+    return { startBlock, endBlock, actualBlock, bestProvider }
   }
 }

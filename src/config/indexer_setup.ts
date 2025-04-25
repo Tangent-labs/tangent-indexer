@@ -2,14 +2,10 @@ import "dotenv/config"
 import { JsonRpcProvider, Network } from "ethers"
 import * as Sentry from "@sentry/node"
 import { ProfilingIntegration } from "@sentry/profiling-node"
-
-import { RetryProvider } from "../utils/RetryProvider"
 import { indexerConfig } from "./indexer_config"
 
 export type setUpIndexerType = {
-  provider: JsonRpcProvider
-  fallbackProvider?: JsonRpcProvider
-  retryProvider: RetryProvider
+  providers: JsonRpcProvider[]
   handleError: (e: Error) => void
 }
 
@@ -20,23 +16,21 @@ export function setUpIndexer(): setUpIndexerType {
 
   const handleError = _intSentry(sentrySdn)
 
-  const { provider, fallbackProvider } = _initNetwork()
+  const { providers } = _initNetwork()
   return {
-    provider,
-    fallbackProvider,
-    retryProvider: new RetryProvider(),
+    providers,
     handleError,
   }
 }
 
 function _initNetwork() {
   const {
-    provider: { chainId, chainRpc, fallbackRpc },
+    provider: { chainId, chainRpc },
   } = indexerConfig
   const network = Network.from(parseInt(chainId))
-  const provider = new JsonRpcProvider(chainRpc, network, { staticNetwork: true, batchMaxSize: 1 })
-  const fallbackProvider = fallbackRpc ? new JsonRpcProvider(fallbackRpc, network, { staticNetwork: true, batchMaxSize: 1 }) : undefined
-  return { provider, fallbackProvider }
+  const providers = chainRpc.map((rpc) => new JsonRpcProvider(rpc, network, { staticNetwork: true, batchMaxSize: 1 }))
+
+  return { providers }
 }
 
 function _intSentry(sentrySdn: string): (e: Error) => void {

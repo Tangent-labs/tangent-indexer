@@ -16,8 +16,9 @@ export type LiquidationMarketOutInfo = {
 export type LiquidationAccountOutInfo = {
   market: AddressLike
   healthRatio: bigint
-  positionDebt: bigint
+  userDebt: bigint
   positionValue: bigint
+  collateralBalance: bigint
 }
 export type LiquidationMarketAccountOutInfo = {
   markets: LiquidationMarketOutInfo[]

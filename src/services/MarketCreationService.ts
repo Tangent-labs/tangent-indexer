@@ -19,7 +19,10 @@ export class MarketCreationService implements EventDetectionService {
 
     // fetch the logs
     const logs = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, marketCreatorAddress)
-    if (!logs.length) return
+    if (!logs.length) {
+      console.log("No market creation logs found")
+      return
+    }
 
     const addresses = logs.map((log) => log.address) as string[]
     const existingContracts = await this.marketContractsRepository.getContractsInList(addresses)

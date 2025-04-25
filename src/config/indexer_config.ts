@@ -1,5 +1,5 @@
 import { AddressLike } from "ethers"
-import addresses from "../addresses-liquidation.json"
+import addresses from "../addresses.json"
 import * as dotenv from "dotenv"
 dotenv.config()
 
@@ -11,8 +11,7 @@ export type IndexerConfig = {
     maxRetries: number
     timeOutMs: number
     switchRpcTimeoutMs: number
-    chainRpc: string
-    fallbackRpc?: string
+    chainRpc: string[]
   }
   db: {
     maxRetries: number
@@ -24,6 +23,7 @@ export type IndexerConfig = {
     marketCreatorAddress: AddressLike
     liquidatorProxyAddress: AddressLike
     liquidatorAddress: AddressLike
+    curveRouterAddress: AddressLike
   }
   enso: {
     baseUrl: string
@@ -43,8 +43,7 @@ export const indexerConfig = {
     maxRetries: 2,
     timeOutMs: 2000,
     switchRpcTimeoutMs: 10000,
-    chainRpc,
-    fallbackRpc: undefined,
+    chainRpc: chainRpc.split(","),
   },
   sentry: {
     dsn: process.env.SENTRY_SDN || "",
@@ -52,6 +51,7 @@ export const indexerConfig = {
   contracts: {
     marketCreatorAddress: addresses.utilities.marketCreator as AddressLike,
     liquidatorProxyAddress: addresses.utilities.liquidatorProxy as AddressLike,
+    curveRouterAddress: "0x45312ea0eFf7E09C83CBE249fa1d7598c4C8cd4e",
   },
   enso: {
     baseUrl: "https://api.enso.finance/api/v1/shortcuts/route",

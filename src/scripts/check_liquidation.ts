@@ -10,7 +10,7 @@ import { LiquidationBotLogRepository } from "db/LiquidationBotLogRepository"
 import { LiquidationBotLogAction } from "type/data"
 
 dotenv.config()
-const { provider, handleError } = setUpIndexer()
+const { providers, handleError } = setUpIndexer()
 const { liquidationService, context, liquidationBotService } = setUpCheckLiquidationServices()
 
 export async function checkLiquidationRun(
@@ -23,7 +23,7 @@ export async function checkLiquidationRun(
   const currentLiquidationBotService = testLiquidationBotService || liquidationBotService
 
   //  Adapt the params accordlingly to the connectivity
-  await currentLiquidationService.checkContext()
+  await currentLiquidationService.checkContext(providers)
 
   // keep track of the current action in case of an error
   let currentAction: LiquidationBotLogAction = "liquidation_params"
@@ -40,7 +40,7 @@ export async function checkLiquidationRun(
     }
     currentAction = "on_chain_data"
     // Get the data
-    const onChainData = await currentLiquidationService.getOnchainData(provider, markets, borrowers)
+    const onChainData = await currentLiquidationService.getOnchainData(providers, markets, borrowers)
     await currentLiquidationBotService.logOnchainData(onChainData || null, currentContext)
     if (!onChainData) {
       // TODO
@@ -51,14 +51,16 @@ export async function checkLiquidationRun(
     const { hardLiquidationList, softLiquidationList, notDebtorAnymoreList } = await currentLiquidationService.analyzeLiquidation(onChainData, borrowers)
     await currentLiquidationBotService.logLiquidationAnalysis(onChainData || null, currentContext)
 
+    // Parallel liquidations utiliser des wallets diff pour chaque transactions
+
     // Actions
     if (hardLiquidationList && hardLiquidationList.length > 0) {
       currentAction = "liquidation_bad_debt_execution"
-      await currentLiquidationService.processHardLiquidations(provider, hardLiquidationList)
+      await currentLiquidationService.processHardLiquidations(providers, hardLiquidationList)
     }
     if (softLiquidationList && softLiquidationList.length > 0) {
       currentAction = "liquidation_execution"
-      await currentLiquidationService.processSoftLiquidations(provider, softLiquidationList)
+      await currentLiquidationService.processSoftLiquidations(providers, softLiquidationList)
     }
     if (notDebtorAnymoreList && notDebtorAnymoreList.length > 0) {
       currentAction = "clean_debtors"
