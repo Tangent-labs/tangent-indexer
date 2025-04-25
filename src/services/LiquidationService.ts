@@ -63,7 +63,7 @@ export class LiquidationService {
     // get max block index
     const maxBlockIndex = currentBlocks.indexOf(Math.max(...currentBlocks))
     if (maxBlockIndex === -1 || currentBlocks[maxBlockIndex] === 0) {
-      throw new Error("No block index found")
+      throw new Error("NO_RPC_CONNECTED")
     }
 
     this.context.currentRpcIndex = maxBlockIndex

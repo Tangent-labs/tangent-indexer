@@ -3,7 +3,7 @@ import fs from "fs"
 
 import { LiquidationService } from "../../../src/services/LiquidationService"
 import { MarketBorrowerRepository } from "../../../src/db/MarketBorrowerRepository"
-import { AddressLike } from "ethers"
+import { AddressLike, JsonRpcProvider } from "ethers"
 import {
   LiquidationAccountOutInfo,
   LiquidationMarketAccountOutInfo,
@@ -11,6 +11,7 @@ import {
   LiquidationUserInfo,
   LiquidationUserInInfo,
 } from "../../../src/type/data"
+import { BlockRepository } from "../../../src/db/BlockRepository"
 
 const DECIMALS = BigInt(10 ** 18)
 
@@ -32,10 +33,60 @@ const nominalContext = {
 describe("LiquidationService", () => {
   let liquidationService: LiquidationService
   let marketBorrowerRepository: MarketBorrowerRepository
+  let mockBlockRepository: any
 
   beforeEach(() => {
     marketBorrowerRepository = new MarketBorrowerRepository({} as any) // Mock Prisma client
     liquidationService = new LiquidationService(marketBorrowerRepository, nominalContext)
+
+    // Mock BlockRepository
+    mockBlockRepository = {
+      getLastBlockIndexed: vi.fn(),
+      setClient: vi.fn(),
+    }
+    vi.spyOn(BlockRepository.prototype, "getLastBlockIndexed").mockImplementation(mockBlockRepository.getLastBlockIndexed)
+    vi.spyOn(BlockRepository.prototype, "setClient").mockImplementation(mockBlockRepository.setClient)
+  })
+
+  describe("checkContext", () => {
+    it("should handle RPC errors and select the working RPC with highest block", async () => {
+      // Mock providers with different block numbers and one failing RPC
+      const mockProviders = [
+        { getBlockNumber: vi.fn().mockRejectedValue(new Error("RPC 1 failed")) },
+        { getBlockNumber: vi.fn().mockResolvedValue(1000) },
+        { getBlockNumber: vi.fn().mockResolvedValue(2000) },
+      ] as unknown as JsonRpcProvider[]
+
+      await liquidationService.checkContext(mockProviders)
+
+      // Verify context was updated correctly
+      expect(liquidationService.context.currentRpcIndex).toBe(2) // Should select the RPC with block 2000
+      expect(liquidationService.context.currentBlock).toBe(2000)
+    })
+
+    it("should throw error when no working RPCs are available", async () => {
+      // Mock all providers failing
+      const mockProviders = [
+        { getBlockNumber: vi.fn().mockRejectedValue(new Error("RPC 1 failed")) },
+        { getBlockNumber: vi.fn().mockRejectedValue(new Error("RPC 2 failed")) },
+      ] as unknown as JsonRpcProvider[]
+
+      await expect(liquidationService.checkContext(mockProviders)).rejects.toThrow("NO_RPC_CONNECTED")
+    })
+
+    it("should handle database connectivity check", async () => {
+      const mockProviders = [{ getBlockNumber: vi.fn().mockResolvedValue(1000) }] as unknown as JsonRpcProvider[]
+
+      // Test when database check fails
+      mockBlockRepository.getLastBlockIndexed.mockRejectedValueOnce(new Error("DB connection failed"))
+      await liquidationService.checkContext(mockProviders)
+      expect(liquidationService.context.isDbAlive).toBe(true)
+
+      // Test when database check succeeds
+      mockBlockRepository.getLastBlockIndexed.mockResolvedValueOnce(1000)
+      await liquidationService.checkContext(mockProviders)
+      expect(liquidationService.context.isDbAlive).toBe(true)
+    })
   })
 
   it("should get liquidation parameters", async () => {

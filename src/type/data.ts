@@ -35,6 +35,7 @@ export type LiquidationAnalyseInfo = {
 }
 
 export type LiquidationBotLogAction =
+  | "check_context"
   | "liquidation_params"
   | "liquidation_bad_debt_execution"
   | "on_chain_data"

@@ -8,6 +8,7 @@ import { LiquidationExecutionContext } from "services/LiquidationExecutionContex
 import { JsonRpcProvider } from "ethers"
 import { checkLiquidationRun } from "scripts/check_liquidation"
 import { LiquidationUserInInfo } from "type/data"
+import NotificationService from "services/NotificationService"
 
 // Mock dependencies
 vi.mock("@prisma/client", () => ({
@@ -27,10 +28,12 @@ vi.mock("services/LiquidationService")
 vi.mock("services/LiquidationBotLogService")
 vi.mock("config/indexer_setup", () => ({
   setUpIndexer: vi.fn(() => ({
-    provider: {} as JsonRpcProvider,
+    providers: [{} as JsonRpcProvider],
     handleError: vi.fn(),
   })),
 }))
+
+let mockSendImmediateNotification: any
 
 describe("check_liquidation.ts", () => {
   let mockMarketBorrowerRepository: MarketBorrowerRepository
@@ -38,7 +41,7 @@ describe("check_liquidation.ts", () => {
   let mockLiquidationBotService: LiquidationBotService
   let mockLiquidationService: LiquidationService
   let mockContext: LiquidationExecutionContext
-
+  let mockNotificationService: NotificationService
   beforeEach(() => {
     // Reset all mocks
     vi.resetAllMocks()
@@ -54,6 +57,8 @@ describe("check_liquidation.ts", () => {
     // Setup mock services
     mockLiquidationBotService = new LiquidationBotService(mockLiquidationBotLogRepository)
     mockLiquidationService = new LiquidationService(mockMarketBorrowerRepository, mockContext, mockLiquidationBotService)
+    mockNotificationService = new NotificationService()
+    vi.spyOn(mockNotificationService, "sendImmediateNotification").mockResolvedValue(undefined)
 
     // Mock service methods
     vi.spyOn(mockLiquidationService, "checkContext").mockResolvedValue(undefined)
@@ -145,5 +150,25 @@ describe("check_liquidation.ts", () => {
     await checkLiquidationRun(mockLiquidationService, mockContext, mockLiquidationBotService)
 
     expect(mockLiquidationBotService.logCleanDebtors).not.toHaveBeenCalled()
+  })
+
+  it("should send notification when an error occurs", async () => {
+    const error = new Error("Test error")
+    vi.spyOn(mockLiquidationService, "checkContext").mockRejectedValue(error)
+
+    await checkLiquidationRun(mockLiquidationService, mockContext, mockLiquidationBotService, mockNotificationService)
+
+    expect(mockNotificationService.sendImmediateNotification).toHaveBeenCalledWith(error.message)
+    expect(mockLiquidationBotService.logError).toHaveBeenCalledWith("check_context", error, mockContext)
+  })
+
+  it("should send notification with specific error message when no RPCs are connected", async () => {
+    const error = new Error("NO_RPC_CONNECTED")
+    vi.spyOn(mockLiquidationService, "checkContext").mockRejectedValue(error)
+
+    await checkLiquidationRun(mockLiquidationService, mockContext, mockLiquidationBotService, mockNotificationService)
+
+    expect(mockNotificationService.sendImmediateNotification).toHaveBeenCalledWith("NO_RPC_CONNECTED")
+    expect(mockLiquidationBotService.logError).toHaveBeenCalledWith("check_context", error, mockContext)
   })
 })

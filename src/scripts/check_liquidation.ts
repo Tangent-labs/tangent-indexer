@@ -8,22 +8,31 @@ import { LiquidationExecutionContext } from "services/LiquidationExecutionContex
 import { LiquidationBotService } from "services/LiquidationBotLogService"
 import { LiquidationBotLogRepository } from "db/LiquidationBotLogRepository"
 import { LiquidationBotLogAction } from "type/data"
+import NotificationService from "services/NotificationService"
 
 dotenv.config()
 const { providers, handleError } = setUpIndexer()
-const { liquidationService, context, liquidationBotService } = setUpCheckLiquidationServices()
+const { liquidationService, context, liquidationBotService, notificationService } = setUpCheckLiquidationServices()
 
 export async function checkLiquidationRun(
   testLiquidationService?: LiquidationService,
   testContext?: LiquidationExecutionContext,
-  testLiquidationBotService?: LiquidationBotService
+  testLiquidationBotService?: LiquidationBotService,
+  testNotificationService?: NotificationService
 ) {
   const currentLiquidationService = testLiquidationService || liquidationService
   const currentContext = testContext || context
   const currentLiquidationBotService = testLiquidationBotService || liquidationBotService
-
+  const currentNotificationService = testNotificationService || notificationService
   //  Adapt the params accordlingly to the connectivity
-  await currentLiquidationService.checkContext(providers)
+  try {
+    await currentLiquidationService.checkContext(providers)
+  } catch (e) {
+    await currentLiquidationBotService.logError("check_context", e as Error, currentContext)
+    handleError(e as Error)
+    await currentNotificationService.sendImmediateNotification((e as Error).message)
+    return
+  }
 
   // keep track of the current action in case of an error
   let currentAction: LiquidationBotLogAction = "liquidation_params"
@@ -89,9 +98,12 @@ export function setUpCheckLiquidationServices() {
   const marketBorrowerRepository = new MarketBorrowerRepository(prismaClient)
   const liquidationService = new LiquidationService(marketBorrowerRepository, context, liquidationBotService)
 
+  const notificationService = new NotificationService()
+
   return {
     liquidationService,
     context,
     liquidationBotService,
+    notificationService,
   }
 }
