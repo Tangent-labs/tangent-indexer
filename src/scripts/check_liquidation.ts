@@ -7,84 +7,20 @@ import * as dotenv from "dotenv"
 import { LiquidationExecutionContext } from "services/LiquidationExecutionContext"
 import { LiquidationBotService } from "services/LiquidationBotLogService"
 import { LiquidationBotLogRepository } from "db/LiquidationBotLogRepository"
-import { LiquidationBotLogAction } from "type/data"
 import NotificationService from "services/NotificationService"
+import { CheckLiquidationService } from "services/CheckLiquidationService"
 
 dotenv.config()
 const { providers, handleError } = setUpIndexer()
 const { liquidationService, context, liquidationBotService, notificationService } = setUpCheckLiquidationServices()
 
-export async function checkLiquidationRun(
-  testLiquidationService?: LiquidationService,
-  testContext?: LiquidationExecutionContext,
-  testLiquidationBotService?: LiquidationBotService,
-  testNotificationService?: NotificationService
-) {
-  const currentLiquidationService = testLiquidationService || liquidationService
-  const currentContext = testContext || context
-  const currentLiquidationBotService = testLiquidationBotService || liquidationBotService
-  const currentNotificationService = testNotificationService || notificationService
-  //  Adapt the params accordlingly to the connectivity
-  try {
-    await currentLiquidationService.checkContext(providers)
-  } catch (e) {
-    await currentLiquidationBotService.logError("check_context", e as Error, currentContext)
-    handleError(e as Error)
-    await currentNotificationService.sendImmediateNotification((e as Error).message)
-    return
-  }
-
-  // keep track of the current action in case of an error
-  let currentAction: LiquidationBotLogAction = "liquidation_params"
-  try {
-    // Get the parameters
-    const { markets, borrowers } = await currentLiquidationService.getLiquidationParams()
-    await currentLiquidationBotService.logLiquidationParams({ markets, borrowers }, currentContext)
-    if (!borrowers.length) {
-      // TODO
-      return
-    }
-    if (currentContext.isDbAlive) {
-      currentLiquidationService.saveFiles({ markets, borrowers })
-    }
-    currentAction = "on_chain_data"
-    // Get the data
-    const onChainData = await currentLiquidationService.getOnchainData(providers, markets, borrowers)
-    await currentLiquidationBotService.logOnchainData(onChainData || null, currentContext)
-    if (!onChainData) {
-      // TODO
-      return
-    }
-    currentAction = "liquidation_analysis"
-    // Analysis
-    const { hardLiquidationList, softLiquidationList, notDebtorAnymoreList } = await currentLiquidationService.analyzeLiquidation(onChainData, borrowers)
-    await currentLiquidationBotService.logLiquidationAnalysis(onChainData || null, currentContext)
-
-    // Parallel liquidations utiliser des wallets diff pour chaque transactions
-
-    // Actions
-    if (hardLiquidationList && hardLiquidationList.length > 0) {
-      currentAction = "liquidation_bad_debt_execution"
-      await currentLiquidationService.processHardLiquidations(providers, hardLiquidationList)
-    }
-    if (softLiquidationList && softLiquidationList.length > 0) {
-      currentAction = "liquidation_execution"
-      await currentLiquidationService.processSoftLiquidations(providers, softLiquidationList)
-    }
-    if (notDebtorAnymoreList && notDebtorAnymoreList.length > 0) {
-      currentAction = "clean_debtors"
-      await currentLiquidationService.processCleanDebtors(notDebtorAnymoreList)
-      await currentLiquidationBotService.logCleanDebtors(notDebtorAnymoreList || null, currentContext)
-    }
-  } catch (e) {
-    await currentLiquidationBotService.logError(currentAction, e as Error, currentContext)
-    handleError(e as Error)
-  }
-}
-
 // Run main function if this file is being run directly
 if (process.env.NODE_ENV !== "test") {
-  checkLiquidationRun().then(() => console.log("Done"))
+  const checkLiquidationService = new CheckLiquidationService(liquidationService, context, liquidationBotService, notificationService, providers)
+  checkLiquidationService
+    .run()
+    .then(() => console.log("Done"))
+    .catch(handleError)
 }
 
 export function setUpCheckLiquidationServices() {
