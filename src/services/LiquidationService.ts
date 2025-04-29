@@ -291,17 +291,20 @@ export class LiquidationService {
         const signer = new Wallet(this.context.walletsPks[pkIndex], this.context.providers[this.context.currentRpcIndex])
         const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
 
+        const slippage = 10n //  /100n
+        const minAmount = amount - (amount * slippage) / 100n
+
         const iface = new Interface(ICurveRouterAbi.abi)
         const data = iface.encodeFunctionData("exchange", [
           route.params.routeAddresses,
           route.params.swapParamsFull,
           account.collateralBalance,
-          amount,
+          minAmount,
           [ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress],
           await signer.getAddress(),
         ])
 
-        await marketContract.liquidate(account.account, MaxUint256, this.curveRouterAddress, 0n, data)
+        await marketContract.liquidate(account.account, MaxUint256, this.curveRouterAddress, minAmount, data)
 
         await this.liquidationBotService?.logLiquidationExecution(account || null, this.context)
       } catch (error) {

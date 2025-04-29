@@ -8,4 +8,4 @@ src/typechain
 # Sentry Config File
 .sentryclirc
 .vscode
-/data/*.json
+/src/data/*.json
