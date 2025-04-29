@@ -247,13 +247,16 @@ export class LiquidationService {
   prioritizeActions(
     hardLiquidationList: LiquidationUserFullInfo[],
     softLiquidationList: LiquidationUserFullInfo[]
-  ): LiquidationUserFullInfo & { type: "hard" | "soft" }[] {
+  ): (LiquidationUserFullInfo & { type: "hard" | "soft" })[] {
     const actionsCount = this.context.walletsPks.length
 
     // Select the actions by amount desc
-    const liquidationList = [...hardLiquidationList.map((a) => ({ ...a, type: "hard" })), ...softLiquidationList.map((b) => ({ ...b, type: "soft" }))]
+    const liquidationList = [
+      ...hardLiquidationList.map((a) => ({ ...a, type: "hard" as const })),
+      ...softLiquidationList.map((b) => ({ ...b, type: "soft" as const })),
+    ]
     const sortedLiquidationList = liquidationList.sort((a, b) => Number(b.positionValue) - Number(a.positionValue))
-    const prioritizedLiquidationList = sortedLiquidationList.slice(0, actionsCount)
+    const prioritizedLiquidationList: (LiquidationUserFullInfo & { type: "hard" | "soft" })[] = sortedLiquidationList.slice(0, actionsCount)
 
     return prioritizedLiquidationList || []
   }

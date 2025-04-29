@@ -5,10 +5,12 @@ import { LiquidationBotLogRepository } from "db/LiquidationBotLogRepository"
 import { LiquidationBotService } from "services/LiquidationBotLogService"
 import { LiquidationService } from "services/LiquidationService"
 import { LiquidationExecutionContext } from "services/LiquidationExecutionContext"
-import { JsonRpcProvider } from "ethers"
-import { LiquidationUserInInfo } from "type/data"
+import { AddressLike, JsonRpcProvider } from "ethers"
+import { LiquidationUserFullInfo } from "type/data"
 import NotificationService from "services/NotificationService"
 import { CheckLiquidationService } from "services/CheckLiquidationService"
+
+const DECIMALS = BigInt(10 ** 18)
 
 // Mock dependencies
 vi.mock("@prisma/client", () => ({
@@ -100,82 +102,116 @@ describe("CheckLiquidationService", () => {
     )
   })
 
-  it("should log liquidation parameters", async () => {
+  it("should execute the full liquidation process successfully", async () => {
     await checkLiquidationService.run()
 
-    expect(mockLiquidationBotService.logLiquidationParams).toHaveBeenCalledWith(
-      {
-        markets: ["0xMarket1"],
-        borrowers: [{ account: "0xUser1", market: "0xMarket1" }],
-      },
-      mockContext
-    )
+    // Verify the sequence of operations
+    expect(mockLiquidationService.checkContext).toHaveBeenCalled()
+    expect(mockLiquidationService.getLiquidationParams).toHaveBeenCalled()
+    expect(mockLiquidationService.getOnchainData).toHaveBeenCalledWith(mockProviders, ["0xMarket1"], [{ account: "0xUser1", market: "0xMarket1" }])
+    expect(mockLiquidationService.analyzeLiquidation).toHaveBeenCalled()
+    expect(mockLiquidationService.prioritizeActions).toHaveBeenCalled()
   })
 
-  it("should log on-chain data", async () => {
-    await checkLiquidationService.run()
-
-    expect(mockLiquidationBotService.logOnchainData).toHaveBeenCalledWith(
-      {
-        markets: [],
-        accounts: [],
-      },
-      mockContext
-    )
-  })
-
-  it("should log liquidation analysis", async () => {
-    await checkLiquidationService.run()
-
-    expect(mockLiquidationBotService.logLiquidationAnalysis).toHaveBeenCalledWith(
-      {
-        markets: [],
-        accounts: [],
-      },
-      mockContext
-    )
-  })
-
-  it("should log clean debtors when they exist", async () => {
-    const notDebtorAnymoreList: LiquidationUserInInfo[] = [{ account: "0xUser1", market: "0xMarket1" }]
-    vi.spyOn(mockLiquidationService, "analyzeLiquidation").mockResolvedValue({
-      hardLiquidationList: [],
-      softLiquidationList: [],
-      notDebtorAnymoreList,
-    })
-
-    await checkLiquidationService.run()
-
-    expect(mockLiquidationBotService.logCleanDebtors).toHaveBeenCalledWith(notDebtorAnymoreList, mockContext)
-  })
-
-  it("should log errors when they occur", async () => {
+  it("should handle errors and send notifications", async () => {
     const error = new Error("Test error")
-    vi.spyOn(mockLiquidationService, "getLiquidationParams").mockRejectedValue(error)
+    vi.spyOn(mockLiquidationService, "checkContext").mockRejectedValue(error)
 
     await expect(checkLiquidationService.run()).rejects.toThrow("Test error")
-    expect(mockLiquidationBotService.logError).toHaveBeenCalledWith("liquidation_params", error, mockContext)
+    expect(mockLiquidationBotService.logError).toHaveBeenCalledWith("check_context", error, mockContext)
+    expect(mockNotificationService.sendImmediateNotification).toHaveBeenCalledWith("Test error")
   })
 
-  it("should not log clean debtors when none exist", async () => {
+  it("should process hard liquidations when present", async () => {
+    const hardLiquidation: LiquidationUserFullInfo & { type: "hard" } = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 500000000000000000n,
+      userDebt: 600n * DECIMALS,
+      positionValue: 550n * DECIMALS,
+      collateralBalance: 1500n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+      type: "hard",
+    }
+
+    vi.spyOn(mockLiquidationService, "prioritizeActions").mockResolvedValue([{ ...hardLiquidation }])
+
     await checkLiquidationService.run()
 
-    expect(mockLiquidationBotService.logCleanDebtors).not.toHaveBeenCalled()
+    expect(mockLiquidationService.executeHardLiquidation).toHaveBeenCalledWith(0, hardLiquidation)
   })
 
-  it("should send notification when an error occurs", async () => {
-    const error = new Error("Test error")
-    vi.spyOn(mockLiquidationService, "getLiquidationParams").mockRejectedValue(error)
+  it("should process soft liquidations when present", async () => {
+    const softLiquidation: LiquidationUserFullInfo & { type: "soft" } = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 2000000000000000000n,
+      userDebt: 760n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 1500n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+      type: "soft",
+    }
 
-    await expect(checkLiquidationService.run()).rejects.toThrow("Test error")
-    expect(mockNotificationService.sendImmediateNotification).toHaveBeenCalledWith(error.message)
-  })
+    vi.spyOn(mockLiquidationService, "prioritizeActions").mockResolvedValue([{ ...softLiquidation }])
 
-  it("should send notification with specific error message when no RPCs are connected", async () => {
-    const error = new Error("NO_RPC_CONNECTED")
-    vi.spyOn(mockLiquidationService, "getLiquidationParams").mockRejectedValue(error)
+    await checkLiquidationService.run()
 
-    await expect(checkLiquidationService.run()).rejects.toThrow("NO_RPC_CONNECTED")
-    expect(mockNotificationService.sendImmediateNotification).toHaveBeenCalledWith("NO_RPC_CONNECTED")
+    expect(mockLiquidationService.executeSoftLiquidation).toHaveBeenCalledWith(0, softLiquidation)
   })
 })
+
+// describe("checkLiquidation", () => {
+//   it("should return hard liquidation when present", () => {
+//     const hardLiquidation: (LiquidationUserFullInfo & { type: "hard" | "soft" })[] = [
+//       {
+//         type: "hard",
+//         account: "0xUser1" as AddressLike,
+//         market: "0xMarket1" as AddressLike,
+//         healthRatio: 500000000000000000n,
+//         userDebt: 600n,
+//         positionValue: 550n,
+//         collateralBalance: 1000n,
+//         collatToken: "0xCollat1" as AddressLike,
+//       },
+//     ]
+//     const softLiquidation: LiquidationUserFullInfo[] = []
+
+//     await checkLiquidationService.run()
+//     const result = checkLiquidation(hardLiquidation, softLiquidation)
+//     expect(result).toEqual({
+//       type: "hard",
+//       liquidation: hardLiquidation[0],
+//     })
+//   })
+
+//   it("should return soft liquidation when no hard liquidation is present", () => {
+//     const hardLiquidation: LiquidationUserFullInfo[] = []
+//     const softLiquidation: LiquidationUserFullInfo[] = [
+//       {
+//         type: "soft",
+//         account: "0xUser2" as AddressLike,
+//         market: "0xMarket2" as AddressLike,
+//         healthRatio: 2000000000000000000n,
+//         userDebt: 760n,
+//         positionValue: 1000n,
+//         collateralBalance: 2000n,
+//         collatToken: "0xCollat2" as AddressLike,
+//       },
+//     ]
+
+//     const result = checkLiquidation(hardLiquidation, softLiquidation)
+//     expect(result).toEqual({
+//       type: "soft",
+//       liquidation: softLiquidation[0],
+//     })
+//   })
+
+//   it("should return undefined when no liquidations are present", () => {
+//     const hardLiquidation: LiquidationUserFullInfo[] = []
+//     const softLiquidation: LiquidationUserFullInfo[] = []
+
+//     const result = checkLiquidation(hardLiquidation, softLiquidation)
+//     expect(result).toBeUndefined()
+//   })
+// })

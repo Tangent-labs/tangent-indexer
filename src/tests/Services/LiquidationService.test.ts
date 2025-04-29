@@ -10,6 +10,7 @@ import {
   LiquidationMarketOutInfo,
   LiquidationUserInfo,
   LiquidationUserInInfo,
+  LiquidationUserFullInfo,
 } from "../../../src/type/data"
 import { BlockRepository } from "../../../src/db/BlockRepository"
 
@@ -359,5 +360,182 @@ describe("LiquidationService - analyzeLiquidation", () => {
     expect(result.hardLiquidationList?.some((acc: LiquidationUserInfo) => acc.account === "0xUser2")).toBe(false)
     expect(result.softLiquidationList?.some((acc: LiquidationUserInfo) => acc.account === "0xUser1")).toBe(false)
     expect(result.notDebtorAnymoreList?.some((acc: LiquidationUserInInfo) => acc.account === "0xUser4")).toBe(false)
+  })
+})
+
+describe("LiquidationService - prioritizeActions", () => {
+  let liquidationService: LiquidationService
+  let mockMarketBorrowerRepository: MarketBorrowerRepository
+
+  beforeEach(() => {
+    mockMarketBorrowerRepository = new MarketBorrowerRepository({} as any)
+    liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext)
+  })
+
+  it("should prioritize actions based on position value and wallet count", () => {
+    // Setup context with 2 PK wallets
+    liquidationService.context.walletsPks = ["pk1", "pk2"]
+
+    // Create positions with different amounts
+    const hardLiquidation1: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 500000000000000000n,
+      userDebt: 1000n * DECIMALS, // Larger position
+      positionValue: 1200n * DECIMALS,
+      collateralBalance: 1500n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    const hardLiquidation2: LiquidationUserFullInfo = {
+      account: "0xUser2" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 600000000000000000n,
+      userDebt: 500n * DECIMALS, // Smaller position
+      positionValue: 600n * DECIMALS,
+      collateralBalance: 800n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    const softLiquidation1: LiquidationUserFullInfo = {
+      account: "0xUser3" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 700000000000000000n,
+      userDebt: 300n * DECIMALS, // Smallest position
+      positionValue: 400n * DECIMALS,
+      collateralBalance: 500n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    const result = liquidationService.prioritizeActions([hardLiquidation1, hardLiquidation2], [softLiquidation1])
+
+    // Verify the result
+    expect(result).toHaveLength(2) // Limited by wallet count
+    expect(result[0].type).toBe("hard")
+    expect(result[0].account).toBe("0xUser1") // Highest position value
+    expect(result[1].type).toBe("hard")
+    expect(result[1].account).toBe("0xUser2") // Second highest position value
+  })
+
+  it("should mix hard and soft liquidations based on position value", () => {
+    // Setup context with 3 PK wallets
+    liquidationService.context.walletsPks = ["pk1", "pk2", "pk3"]
+
+    // Create positions with different amounts
+    const hardLiquidation1: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 500000000000000000n,
+      userDebt: 1000n * DECIMALS,
+      positionValue: 1200n * DECIMALS,
+      collateralBalance: 1500n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    const softLiquidation1: LiquidationUserFullInfo = {
+      account: "0xUser2" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 600000000000000000n,
+      userDebt: 800n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 1200n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    const hardLiquidation2: LiquidationUserFullInfo = {
+      account: "0xUser3" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 700000000000000000n,
+      userDebt: 500n * DECIMALS,
+      positionValue: 600n * DECIMALS,
+      collateralBalance: 800n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    const result = liquidationService.prioritizeActions([hardLiquidation1, hardLiquidation2], [softLiquidation1])
+
+    // Verify the result
+    expect(result).toHaveLength(3) // All positions included
+    expect(result[0].type).toBe("hard")
+    expect(result[0].account).toBe("0xUser1") // Highest position value
+    expect(result[1].type).toBe("soft")
+    expect(result[1].account).toBe("0xUser2") // Second highest position value
+    expect(result[2].type).toBe("hard")
+    expect(result[2].account).toBe("0xUser3") // Third highest position value
+  })
+
+  it("should return empty array when no liquidations are provided", () => {
+    const result = liquidationService.prioritizeActions([], [])
+    expect(result).toHaveLength(0)
+  })
+
+  it("should handle more input liquidations than available wallets", () => {
+    // Setup context with only 2 PK wallets
+    liquidationService.context.walletsPks = ["pk1", "pk2"]
+
+    // Create 5 positions with different amounts
+    const hardLiquidation1: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 500000000000000000n,
+      userDebt: 1000n * DECIMALS,
+      positionValue: 1200n * DECIMALS, // Highest value
+      collateralBalance: 1500n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    const softLiquidation1: LiquidationUserFullInfo = {
+      account: "0xUser2" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 600000000000000000n,
+      userDebt: 800n * DECIMALS,
+      positionValue: 1000n * DECIMALS, // Second highest value
+      collateralBalance: 1200n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    const hardLiquidation2: LiquidationUserFullInfo = {
+      account: "0xUser3" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 700000000000000000n,
+      userDebt: 500n * DECIMALS,
+      positionValue: 600n * DECIMALS, // Third highest value
+      collateralBalance: 800n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    const softLiquidation2: LiquidationUserFullInfo = {
+      account: "0xUser4" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 800000000000000000n,
+      userDebt: 400n * DECIMALS,
+      positionValue: 500n * DECIMALS, // Fourth highest value
+      collateralBalance: 700n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    const hardLiquidation3: LiquidationUserFullInfo = {
+      account: "0xUser5" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 900000000000000000n,
+      userDebt: 300n * DECIMALS,
+      positionValue: 400n * DECIMALS, // Fifth highest value
+      collateralBalance: 600n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    const result = liquidationService.prioritizeActions([hardLiquidation1, hardLiquidation2, hardLiquidation3], [softLiquidation1, softLiquidation2])
+
+    // Verify the result
+    expect(result).toHaveLength(2) // Limited by wallet count
+    expect(result[0].type).toBe("hard")
+    expect(result[0].account).toBe("0xUser1") // Highest position value
+    expect(result[1].type).toBe("soft")
+    expect(result[1].account).toBe("0xUser2") // Second highest position value
+
+    // Verify that lower value positions were not included
+    expect(result.some((r) => r.account === "0xUser3")).toBe(false)
+    expect(result.some((r) => r.account === "0xUser4")).toBe(false)
+    expect(result.some((r) => r.account === "0xUser5")).toBe(false)
   })
 })
