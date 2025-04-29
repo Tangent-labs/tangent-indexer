@@ -9,6 +9,7 @@ import { LiquidationBotService } from "services/LiquidationBotLogService"
 import { LiquidationBotLogRepository } from "db/LiquidationBotLogRepository"
 import NotificationService from "services/NotificationService"
 import { CheckLiquidationService } from "services/CheckLiquidationService"
+import { indexerConfig } from "config/indexer_config"
 
 dotenv.config()
 const { providers, walletsPks, handleError } = setUpIndexer()
@@ -35,7 +36,8 @@ export function setUpCheckLiquidationServices() {
 
   const marketBorrowerRepository = new MarketBorrowerRepository(prismaClient)
   const liquidationService = new LiquidationService(marketBorrowerRepository, context, liquidationBotService)
-
+  liquidationService.minEthBalance = indexerConfig.minEthBalance
+  liquidationService.curveRouterAddress = indexerConfig.contracts.curveRouterAddress
   const notificationService = new NotificationService()
 
   return {

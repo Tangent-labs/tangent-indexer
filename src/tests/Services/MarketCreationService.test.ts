@@ -2,9 +2,9 @@ import { describe, it, expect, vi } from "vitest"
 import { MarketCreationService } from "../../services/MarketCreationService"
 import { MarketContractsRepository } from "../../db/MarketContractsRepository"
 import { JsonRpcProvider } from "ethers"
-import { indexerConfig } from "../../config/indexer_config"
-import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher"
 
+import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher"
+const marketCreatorAddress = "0xCreator"
 vi.mock("../../eventFectcher/marketCreationEventFectcher", () => ({
   fetchMarketCreationLogs: vi.fn(),
 }))
@@ -16,12 +16,11 @@ describe("MarketCreationService", () => {
       insertContracts: vi.fn(),
     }
 
-    const marketCreationService = new MarketCreationService(mockMarketContractsRepository as any as MarketContractsRepository)
+    const marketCreationService = new MarketCreationService(mockMarketContractsRepository as any as MarketContractsRepository, marketCreatorAddress)
 
     const mockProvider = {} as JsonRpcProvider
     const startingBlock = 1000
     const endingBlock = 2000
-    const marketCreatorAddress = indexerConfig.contracts.marketCreatorAddress
 
     const mockLogs = [
       { address: "0xMarket1", blockNumber: 1001, marketType: "ConvexCrv" },
@@ -46,7 +45,7 @@ describe("MarketCreationService", () => {
       insertContracts: vi.fn(),
     }
 
-    const marketCreationService = new MarketCreationService(mockMarketContractsRepository as any as MarketContractsRepository)
+    const marketCreationService = new MarketCreationService(mockMarketContractsRepository as any as MarketContractsRepository, marketCreatorAddress)
 
     const mockProvider = {} as JsonRpcProvider
     const startingBlock = 1000
@@ -66,7 +65,7 @@ describe("MarketCreationService", () => {
       insertContracts: vi.fn(),
     }
 
-    const marketCreationService = new MarketCreationService(mockMarketContractsRepository as any as MarketContractsRepository)
+    const marketCreationService = new MarketCreationService(mockMarketContractsRepository as any as MarketContractsRepository, marketCreatorAddress)
 
     const mockProvider = {} as JsonRpcProvider
     const startingBlock = 1000

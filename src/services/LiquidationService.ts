@@ -21,8 +21,6 @@ import {
 import { chainView } from "../utils/chainView"
 import { LiquidationExecutionContext } from "./LiquidationExecutionContext"
 import { BlockRepository } from "../db/BlockRepository"
-
-import { indexerConfig } from "../config/indexer_config"
 import { LiquidationBotService } from "./LiquidationBotLogService"
 
 const DENOMINATOR = 100_000n
@@ -36,6 +34,8 @@ export class LiquidationService {
   context: LiquidationExecutionContext
   liquidationBotService?: LiquidationBotService
   marketBorrowerFilePath: string = "./src/data/market_borrowers.json"
+  minEthBalance: number = 0.1
+  curveRouterAddress: AddressLike | undefined
 
   async checkContext() {
     const providers = this.context.providers
@@ -74,7 +74,7 @@ export class LiquidationService {
     this.context.walletsPks = this.context.walletsPks.filter(async (pk) => {
       const signer = new Wallet(pk, providers[this.context.currentRpcIndex])
       const balance = await providers[this.context.currentRpcIndex].getBalance(await signer.getAddress())
-      return balance > BigInt(indexerConfig.minEthBalance * 10 ** 18)
+      return balance > BigInt(this.minEthBalance * 10 ** 18)
     })
   }
 
@@ -301,15 +301,15 @@ export class LiquidationService {
           await signer.getAddress(),
         ])
 
-        await marketContract.liquidate(account.account, MaxUint256, indexerConfig.contracts.curveRouterAddress, 0n, data)
+        await marketContract.liquidate(account.account, MaxUint256, this.curveRouterAddress, 0n, data)
 
         await this.liquidationBotService?.logLiquidationExecution(account || null, this.context)
       } catch (error) {
-        await this.liquidationBotService?.logError("liquidation_execution", error as Error, this.context)
+        await this.liquidationBotService?.logError("liquidation_execution", error as Error, this.context, { route, account })
       }
     } else {
       const error = new Error(`No route found for collat :  ${account.collatToken} `)
-      await this.liquidationBotService?.logError("liquidation_execution", error as Error, this.context)
+      await this.liquidationBotService?.logError("liquidation_execution", error as Error, this.context, { account })
     }
   }
 

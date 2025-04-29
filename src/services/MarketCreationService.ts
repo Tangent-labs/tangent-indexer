@@ -1,6 +1,5 @@
 import { AddressLike, JsonRpcProvider } from "ethers"
 
-import { indexerConfig } from "../config/indexer_config"
 import { MarketContractsRepository } from "../db/MarketContractsRepository"
 import { fetchMarketCreationLogs } from "../eventFectcher/marketCreationEventFectcher"
 
@@ -8,17 +7,18 @@ import { EventDetectionService } from "../type/service"
 
 export class MarketCreationService implements EventDetectionService {
   marketContractsRepository: MarketContractsRepository
+  marketCreatorAddress: AddressLike
 
-  constructor(marketContractsRepository: MarketContractsRepository) {
+  constructor(marketContractsRepository: MarketContractsRepository, marketCreatorAddress: AddressLike) {
     this.marketContractsRepository = marketContractsRepository
+    this.marketCreatorAddress = marketCreatorAddress
   }
 
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
     // get the constant from the config
-    const marketCreatorAddress: AddressLike = indexerConfig.contracts.marketCreatorAddress
 
     // fetch the logs
-    const logs = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, marketCreatorAddress)
+    const logs = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, this.marketCreatorAddress)
     if (!logs.length) {
       console.log("No market creation logs found")
       return

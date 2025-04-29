@@ -30,8 +30,8 @@ export class LiquidationBotService {
     })
   }
 
-  async logError(action: LiquidationBotLogAction, error: Error, context: LiquidationExecutionContext) {
-    await this._logAction(action, context, error, true)
+  async logError(action: LiquidationBotLogAction, error: Error, context: LiquidationExecutionContext, additionalData?: any) {
+    await this._logAction(action, context, { ...error, ...additionalData }, true)
   }
 
   async logLiquidationParams(data: { markets: AddressLike[] | null; borrowers: LiquidationUserInInfo[] | null }, context: LiquidationExecutionContext) {

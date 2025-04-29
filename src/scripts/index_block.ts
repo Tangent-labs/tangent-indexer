@@ -8,6 +8,7 @@ import { MarketContractsRepository } from "db/MarketContractsRepository"
 import { MarketBorrowerService } from "services/MarketBorrowerService"
 import { MarketCreationService } from "services/MarketCreationService"
 import * as dotenv from "dotenv"
+import { indexerConfig } from "config/indexer_config"
 dotenv.config()
 
 async function main() {
@@ -68,7 +69,7 @@ function setUpIndexerBlockServices() {
 
   // set up the services
   const blockService = new BlockService(blockRepository)
-  const marketCreationService = new MarketCreationService(marketContractsRepository)
+  const marketCreationService = new MarketCreationService(marketContractsRepository, indexerConfig.contracts.marketCreatorAddress)
   const marketBorrowerService = new MarketBorrowerService(marketBorrowerRepository, marketCreationService.marketContractsRepository)
 
   return {
