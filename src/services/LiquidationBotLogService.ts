@@ -11,8 +11,16 @@ export class LiquidationBotService {
     this.liquidationBotLogRepository = LiquidationBotLogRepository
   }
 
+  private _cleanContext(context: LiquidationExecutionContext) {
+    // we replace the wallets pks by PK0x0, PK0x1, PK0x2, ... for database storage
+    const newContext = { ...context }
+    newContext.walletsPks = newContext.walletsPks.map((_, index) => `PK0x${index}`)
+    return newContext
+  }
+
   async _logAction(action: LiquidationBotLogAction, context: LiquidationExecutionContext, data?: unknown, isError?: boolean) {
-    const dataToLog = { context, data: data || { no_data: true } }
+    const loggedContext = this._cleanContext(context)
+    const dataToLog = { context: loggedContext, data: data || { no_data: true } }
 
     await this.liquidationBotLogRepository.insertLiquidationLog({
       action: action as string,
@@ -49,6 +57,11 @@ export class LiquidationBotService {
   async logLiquidationExecution(data: LiquidationUserInInfo | null, context: LiquidationExecutionContext) {
     const action: LiquidationBotLogAction = "liquidation_execution"
     await this._logAction(action, context, data)
+  }
+
+  async logEndExecution(context: LiquidationExecutionContext) {
+    const action: LiquidationBotLogAction = "end_execution"
+    await this._logAction(action, context, null)
   }
 
   async logLiquidationBadDebtExecution(data: LiquidationUserInfo | null, context: LiquidationExecutionContext) {

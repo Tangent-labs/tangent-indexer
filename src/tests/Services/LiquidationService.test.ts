@@ -28,6 +28,8 @@ const nominalContext = {
   currentWalletIndex: 0,
   executionKey: "test",
   currentBlock: 0,
+  providers: [],
+  walletsPks: [],
 }
 
 describe("LiquidationService", () => {
@@ -51,13 +53,13 @@ describe("LiquidationService", () => {
   describe("checkContext", () => {
     it("should handle RPC errors and select the working RPC with highest block", async () => {
       // Mock providers with different block numbers and one failing RPC
-      const mockProviders = [
+      liquidationService.context.providers = [
         { getBlockNumber: vi.fn().mockRejectedValue(new Error("RPC 1 failed")) },
         { getBlockNumber: vi.fn().mockResolvedValue(1000) },
         { getBlockNumber: vi.fn().mockResolvedValue(2000) },
       ] as unknown as JsonRpcProvider[]
 
-      await liquidationService.checkContext(mockProviders)
+      await liquidationService.checkContext()
 
       // Verify context was updated correctly
       expect(liquidationService.context.currentRpcIndex).toBe(2) // Should select the RPC with block 2000
@@ -66,25 +68,25 @@ describe("LiquidationService", () => {
 
     it("should throw error when no working RPCs are available", async () => {
       // Mock all providers failing
-      const mockProviders = [
+      liquidationService.context.providers = [
         { getBlockNumber: vi.fn().mockRejectedValue(new Error("RPC 1 failed")) },
         { getBlockNumber: vi.fn().mockRejectedValue(new Error("RPC 2 failed")) },
       ] as unknown as JsonRpcProvider[]
 
-      await expect(liquidationService.checkContext(mockProviders)).rejects.toThrow("NO_RPC_CONNECTED")
+      await expect(liquidationService.checkContext()).rejects.toThrow("NO_RPC_CONNECTED")
     })
 
     it("should handle database connectivity check", async () => {
-      const mockProviders = [{ getBlockNumber: vi.fn().mockResolvedValue(1000) }] as unknown as JsonRpcProvider[]
+      liquidationService.context.providers = [{ getBlockNumber: vi.fn().mockResolvedValue(1000) }] as unknown as JsonRpcProvider[]
 
       // Test when database check fails
       mockBlockRepository.getLastBlockIndexed.mockRejectedValueOnce(new Error("DB connection failed"))
-      await liquidationService.checkContext(mockProviders)
+      await liquidationService.checkContext()
       expect(liquidationService.context.isDbAlive).toBe(true)
 
       // Test when database check succeeds
       mockBlockRepository.getLastBlockIndexed.mockResolvedValueOnce(1000)
-      await liquidationService.checkContext(mockProviders)
+      await liquidationService.checkContext()
       expect(liquidationService.context.isDbAlive).toBe(true)
     })
   })
@@ -142,7 +144,7 @@ describe("LiquidationService", () => {
       getList: vi.fn().mockResolvedValue(mockBorrowers),
     }
 
-    const context = { ...nominalContext, isDbAlive: true, currentBlock: 0 }
+    const context = { ...nominalContext, isDbAlive: true, currentBlock: 0, providers: [], walletsPks: [] }
     liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as MarketBorrowerRepository, context)
 
     const { markets, borrowers } = await liquidationService.getLiquidationParams()
@@ -169,7 +171,7 @@ describe("LiquidationService", () => {
       getList: vi.fn().mockResolvedValue(mockBorrowers),
     }
 
-    const context = { ...nominalContext, isDbAlive: false, currentBlock: 0 }
+    const context = { ...nominalContext, isDbAlive: false, currentBlock: 0, providers: [], walletsPks: [] }
     liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as MarketBorrowerRepository, context)
 
     // Mock fs.readFileSync

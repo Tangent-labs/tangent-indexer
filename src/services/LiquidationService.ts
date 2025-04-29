@@ -16,7 +16,6 @@ import {
   LiquidationMarketAccountOutInfo,
   LiquidationMarketOutInfo,
   LiquidationUserFullInfo,
-  LiquidationUserInfo,
   LiquidationUserInInfo,
 } from "../type/data"
 import { chainView } from "../utils/chainView"
@@ -38,7 +37,9 @@ export class LiquidationService {
   liquidationBotService?: LiquidationBotService
   marketBorrowerFilePath: string = "./src/data/market_borrowers.json"
 
-  async checkContext(providers: JsonRpcProvider[]) {
+  async checkContext() {
+    const providers = this.context.providers
+
     const blockRepository = new BlockRepository(null!)
     blockRepository.setClient(this.marketBorrowerRepository.prismaClient)
 
@@ -68,6 +69,13 @@ export class LiquidationService {
 
     this.context.currentRpcIndex = maxBlockIndex
     this.context.currentBlock = Number(currentBlocks[maxBlockIndex])
+
+    // check all wallets balance remove under the limit
+    this.context.walletsPks = this.context.walletsPks.filter(async (pk) => {
+      const signer = new Wallet(pk, providers[this.context.currentRpcIndex])
+      const balance = await providers[this.context.currentRpcIndex].getBalance(await signer.getAddress())
+      return balance > BigInt(indexerConfig.minEthBalance * 10 ** 18)
+    })
   }
 
   constructor(marketBorrowerRepository: MarketBorrowerRepository, context: LiquidationExecutionContext, LiquidationBotService?: LiquidationBotService) {
@@ -77,17 +85,12 @@ export class LiquidationService {
   }
 
   async getLiquidationParams(): Promise<{ markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }> {
-    try {
-      if (this.context.isDbAlive) {
-        const data = await this.getLiquidationParamsFromDb()
-        return data
-      } else {
-        const data = await this.getLiquidationParamsFromFile()
-        return data
-      }
-    } catch (error) {
-      console.error("Failed to get liquidation params:", error)
-      return { markets: [], borrowers: [] } // Return an empty array if the data cannot be retrieved
+    if (this.context.isDbAlive) {
+      const data = await this.getLiquidationParamsFromDb()
+      return data
+    } else {
+      const data = await this.getLiquidationParamsFromFile()
+      return data
     }
   }
 
@@ -174,7 +177,8 @@ export class LiquidationService {
     const accountsFlat = datas.map((d) => d?.accounts || []).flat()
     for (let i = 0; i < accountLength; i++) {
       const results = accountsFlat.filter((a) => a.index === i)
-      const minHealthRatio = results.reduce((acc, curr) => (acc < curr.healthRatio ? acc : curr.healthRatio), 0n)
+      const minHealthRatio = results.reduce<bigint | undefined>((acc, curr) => (acc && acc < curr.healthRatio ? acc : curr.healthRatio), undefined)
+
       const row = results.find((a) => a.healthRatio === minHealthRatio)
       finalAccounts.push(row)
     }
@@ -191,7 +195,6 @@ export class LiquidationService {
    */
   async analyzeLiquidation(datas: LiquidationMarketAccountOutInfo, accounts: LiquidationUserInInfo[]): Promise<LiquidationAnalyseInfo> {
     const hydratedAccounts = datas.accounts.map((accountData, index) => {
-      console.log(accountData, accountData.userDebt, DENOMINATOR, accountData.positionValue)
       const account = accounts[index]
       const market = datas.markets.find((m) => (m.market as string).toLowerCase() === (accountData.market as string).toLowerCase())
       return {
@@ -203,7 +206,7 @@ export class LiquidationService {
     })
 
     const notDebtorAnymoreList: LiquidationUserInInfo[] = [] // borrower with 0 debt
-    let hardLiquidationList: LiquidationUserInfo[] = [] // borrower with positionvalue < debt
+    let hardLiquidationList: LiquidationUserFullInfo[] = [] // borrower with positionvalue < debt
     let softLiquidationList: LiquidationUserFullInfo[] = [] // borrower with ltv > liquidationThreshold
 
     // We detect the potential actions we have to do
@@ -214,7 +217,7 @@ export class LiquidationService {
       }
 
       if (account.userDebt >= account.positionValue) {
-        hardLiquidationList.push(account)
+        hardLiquidationList.push(account as LiquidationUserFullInfo)
         return
       }
       if (account.ltv > account.liquidationThreshold!) {
@@ -222,8 +225,7 @@ export class LiquidationService {
       }
     })
 
-    const sortFn: (a: LiquidationUserInfo | LiquidationUserFullInfo, b: LiquidationUserInfo | LiquidationUserFullInfo) => number = (a, b) =>
-      Number(b.positionValue) - Number(a.positionValue)
+    const sortFn: (a: LiquidationUserFullInfo, b: LiquidationUserFullInfo) => number = (a, b) => Number(b.positionValue) - Number(a.positionValue)
 
     hardLiquidationList = hardLiquidationList.sort(sortFn)
     softLiquidationList = softLiquidationList.sort(sortFn)
@@ -235,78 +237,76 @@ export class LiquidationService {
     return { hardLiquidationList, softLiquidationList, notDebtorAnymoreList }
   }
 
+  //
   /**
-   * Processes hard liquidations.
-   * @param provider The JSON RPC provider.
-   * @param accounts The accounts to be liquidated.
+   * Prioritizes the liquidation actions.
+   * @param hardLiquidationList The list of hard liquidation actions.
+   * @param softLiquidationList The list of soft liquidation actions.
+   * @returns The prioritized liquidation actions.
    */
-  async processHardLiquidations(providers: JsonRpcProvider[], accounts: LiquidationUserInfo[]) {
-    // Group accounts by market
-    const groupedAccounts = accounts.reduce<Record<string, AddressLike[]>>((agg, account) => {
-      agg[account.market as string] = agg[account.market as string] || []
-      agg[account.market as string].push(account.account)
-      return agg
-    }, {})
+  prioritizeActions(
+    hardLiquidationList: LiquidationUserFullInfo[],
+    softLiquidationList: LiquidationUserFullInfo[]
+  ): LiquidationUserFullInfo & { type: "hard" | "soft" }[] {
+    const actionsCount = this.context.walletsPks.length
 
-    // Iterate over each market and perform liquidations
-    const signer = new Wallet(process.env.PK_WALLET as string, providers[this.context.currentRpcIndex])
+    // Select the actions by amount desc
+    const liquidationList = [...hardLiquidationList.map((a) => ({ ...a, type: "hard" })), ...softLiquidationList.map((b) => ({ ...b, type: "soft" }))]
+    const sortedLiquidationList = liquidationList.sort((a, b) => Number(b.positionValue) - Number(a.positionValue))
+    const prioritizedLiquidationList = sortedLiquidationList.slice(0, actionsCount)
 
-    for (const market of Object.keys(groupedAccounts)) {
-      const marketContract = new Contract(market, MarketExternalActionsAbi.abi, signer)
+    return prioritizedLiquidationList || []
+  }
 
-      for (const account of groupedAccounts[market]) {
-        try {
-          const tx = await marketContract.liquidateBadDebt(account)
-          await tx.wait() // Wait for the transaction to be mined
+  /**
+   * Executes a single hard liquidation for a given market and account
+   * @param pkIndex  the index of the wallet in the context
+   * @param account The account/market address to liquidate
+   */
+  public async executeHardLiquidation(pkIndex: number, account: LiquidationUserFullInfo) {
+    const signer = new Wallet(this.context.walletsPks[pkIndex], this.context.providers[this.context.currentRpcIndex])
+    const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
 
-          const acc = accounts.find((a) => a.account === account && a.market === market)
-          await this.liquidationBotService?.logLiquidationBadDebtExecution(acc || null, this.context)
-        } catch (error) {
-          console.error(`Failed to liquidate ${account} on ${market}:`, error)
-          await this.liquidationBotService?.logError("liquidation_bad_debt_execution", error as Error, this.context)
-        }
-      }
+    try {
+      const tx = await marketContract.liquidateBadDebt(account.account)
+      await tx.wait() // Wait for the transaction to be mined
+      await this.liquidationBotService?.logLiquidationBadDebtExecution(account, this.context)
+    } catch (error) {
+      await this.liquidationBotService?.logError("liquidation_bad_debt_execution", error as Error, this.context)
     }
   }
 
   /**
-   * Processes soft liquidations.
-   * @param provider The JSON RPC provider.
-   * @param accounts The accounts to be liquidated.
+   * Processes a single soft liquidation for a given account
+   * @param pkIndex  the index of the wallet in the context
+   * @param account The account to be liquidated
    */
-  async processSoftLiquidations(providers: JsonRpcProvider[], accounts: LiquidationUserFullInfo[]) {
-    console.log("processSoftLiquidations", accounts)
-    for (const account of accounts) {
-      const { route, amount } = await this._getBestRoute(providers, account)
-      console.log(route)
-      if (route) {
-        try {
-          const signer = new Wallet(process.env.PK_WALLET as string, providers[this.context.currentRpcIndex])
-          console.log("processSoftLiquidations", account, await signer.getAddress())
-          const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
+  public async executeSoftLiquidation(pkIndex: number, account: LiquidationUserFullInfo) {
+    const { route, amount } = await this._getBestRoute(this.context.providers, account)
+    if (route) {
+      try {
+        const signer = new Wallet(this.context.walletsPks[pkIndex], this.context.providers[this.context.currentRpcIndex])
+        const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
 
-          const iface = new Interface(ICurveRouterAbi.abi)
-          const data = iface.encodeFunctionData("exchange", [
-            route.params.routeAddresses,
-            route.params.swapParamsFull,
-            account.collateralBalance,
-            amount,
-            [ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress],
-            await signer.getAddress(),
-          ])
+        const iface = new Interface(ICurveRouterAbi.abi)
+        const data = iface.encodeFunctionData("exchange", [
+          route.params.routeAddresses,
+          route.params.swapParamsFull,
+          account.collateralBalance,
+          amount,
+          [ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress],
+          await signer.getAddress(),
+        ])
 
-          await marketContract.liquidate(account.account, MaxUint256, indexerConfig.contracts.curveRouterAddress, 0n, data)
+        await marketContract.liquidate(account.account, MaxUint256, indexerConfig.contracts.curveRouterAddress, 0n, data)
 
-          //   console.log({ liquidationBotService: this.liquidationBotService })
-          await this.liquidationBotService?.logLiquidationExecution(account || null, this.context)
-        } catch (error) {
-          await this.liquidationBotService?.logError("liquidation_execution", error as Error, this.context)
-          console.error(`Failed to liquidate ${account.account} on ${account.market}:`, error)
-        }
-      } else {
-        const error = new Error(`No route found for collat :  ${account.collatToken} `)
+        await this.liquidationBotService?.logLiquidationExecution(account || null, this.context)
+      } catch (error) {
         await this.liquidationBotService?.logError("liquidation_execution", error as Error, this.context)
       }
+    } else {
+      const error = new Error(`No route found for collat :  ${account.collatToken} `)
+      await this.liquidationBotService?.logError("liquidation_execution", error as Error, this.context)
     }
   }
 

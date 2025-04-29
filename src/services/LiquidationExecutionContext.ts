@@ -1,3 +1,4 @@
+import { JsonRpcProvider } from "ethers"
 import { v4 as uuidv4 } from "uuid"
 
 export class LiquidationExecutionContext {
@@ -6,7 +7,8 @@ export class LiquidationExecutionContext {
   currentRpcIndex: number = 0
   currentWalletIndex: number = 0
   currentBlock: number = 0
-
+  providers: JsonRpcProvider[] = []
+  walletsPks: string[] = []
   constructor() {
     this.executionKey = uuidv4()
     this.isDbAlive = true

@@ -6,6 +6,7 @@ import { indexerConfig } from "./indexer_config"
 
 export type setUpIndexerType = {
   providers: JsonRpcProvider[]
+  walletsPks: string[]
   handleError: (e: Error) => void
 }
 
@@ -19,6 +20,7 @@ export function setUpIndexer(): setUpIndexerType {
   const { providers } = _initNetwork()
   return {
     providers,
+    walletsPks: indexerConfig.walletsPk,
     handleError,
   }
 }

@@ -13,6 +13,8 @@ export type IndexerConfig = {
     switchRpcTimeoutMs: number
     chainRpc: string[]
   }
+  walletsPk: string[]
+  minEthBalance: number
   db: {
     maxRetries: number
   }
@@ -30,7 +32,7 @@ export type IndexerConfig = {
   }
 }
 
-const { blockRange, chainId, chainRpc, startingBlock } = _initEnv()
+const { blockRange, chainId, chainRpcs, walletPks, startingBlock } = _initEnv()
 
 export const indexerConfig = {
   blockRange,
@@ -43,8 +45,10 @@ export const indexerConfig = {
     maxRetries: 2,
     timeOutMs: 2000,
     switchRpcTimeoutMs: 10000,
-    chainRpc: chainRpc.split(","),
+    chainRpc: chainRpcs?.split(",") || [],
   },
+  walletsPk: walletPks?.split(",") || [],
+  minEthBalance: Number(process.env.MIN_ETH_BALANCE) || 0.01,
   sentry: {
     dsn: process.env.SENTRY_SDN || "",
   },
@@ -69,9 +73,14 @@ function _initEnv() {
     throw new Error("CHAIN_ID_NOT_SET")
   }
 
-  const chainRpc = process.env.CHAIN_RPC
-  if (!chainRpc) {
-    throw new Error("CHAIN_RPC_NOT_SET")
+  const chainRpcs = process.env.CHAIN_RPCS
+  if (!chainRpcs) {
+    throw new Error("CHAIN_RPCS_NOT_SET")
+  }
+
+  const walletPks = process.env.WALLET_PKS
+  if (!walletPks) {
+    throw new Error("WALLET_PKS_NOT_SET")
   }
 
   const startingBlock = process.env.STARTING_BLOCK
@@ -79,5 +88,5 @@ function _initEnv() {
     throw new Error("STARTING_BLOCK_NOT_SET")
   }
 
-  return { blockRange: Number(blockRangeEnv), chainId, chainRpc, startingBlock: Number(startingBlock) }
+  return { blockRange: Number(blockRangeEnv), chainId, chainRpcs, walletPks, startingBlock: Number(startingBlock) }
 }

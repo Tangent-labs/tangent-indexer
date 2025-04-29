@@ -11,7 +11,7 @@ import NotificationService from "services/NotificationService"
 import { CheckLiquidationService } from "services/CheckLiquidationService"
 
 dotenv.config()
-const { providers, handleError } = setUpIndexer()
+const { providers, walletsPks, handleError } = setUpIndexer()
 const { liquidationService, context, liquidationBotService, notificationService } = setUpCheckLiquidationServices()
 
 // Run main function if this file is being run directly
@@ -27,6 +27,8 @@ export function setUpCheckLiquidationServices() {
   const prismaClient = new PrismaClient()
 
   const context = new LiquidationExecutionContext()
+  context.providers = providers
+  context.walletsPks = walletsPks
 
   const liquidationBotLogRepository = new LiquidationBotLogRepository(prismaClient)
   const liquidationBotService = new LiquidationBotService(liquidationBotLogRepository)

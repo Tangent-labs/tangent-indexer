@@ -29,7 +29,7 @@ export type LiquidationUserInfo = LiquidationAccountOutInfo & LiquidationUserInI
 export type LiquidationUserFullInfo = LiquidationUserInfo & { collatToken: AddressLike }
 
 export type LiquidationAnalyseInfo = {
-  hardLiquidationList?: LiquidationUserInfo[]
+  hardLiquidationList?: LiquidationUserFullInfo[]
   softLiquidationList?: LiquidationUserFullInfo[]
   notDebtorAnymoreList?: LiquidationUserInInfo[]
 }
@@ -40,8 +40,10 @@ export type LiquidationBotLogAction =
   | "liquidation_bad_debt_execution"
   | "on_chain_data"
   | "liquidation_analysis"
+  | "liquidation_prioritization"
   | "clean_debtors"
   | "liquidation_execution"
+  | "end_execution"
 
 export type CurveQuote = {
   _route: string[] // address[11]

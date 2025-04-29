@@ -76,8 +76,9 @@ describe("CheckLiquidationService", () => {
       softLiquidationList: [],
       notDebtorAnymoreList: [],
     })
-    vi.spyOn(mockLiquidationService, "processHardLiquidations").mockResolvedValue(undefined)
-    vi.spyOn(mockLiquidationService, "processSoftLiquidations").mockResolvedValue(undefined)
+    vi.spyOn(mockLiquidationService, "prioritizeActions").mockResolvedValue([])
+    vi.spyOn(mockLiquidationService, "executeHardLiquidation").mockResolvedValue(undefined)
+    vi.spyOn(mockLiquidationService, "executeSoftLiquidation").mockResolvedValue(undefined)
     vi.spyOn(mockLiquidationService, "processCleanDebtors").mockResolvedValue(undefined)
     vi.spyOn(mockLiquidationService, "saveFiles").mockResolvedValue(undefined)
 

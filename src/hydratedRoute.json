@@ -168,33 +168,6 @@
       "routeAddresses": [
         "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
         "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
-        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-        "0x1136adf5A338CC8C1461ec26C969952c3Fea5c28",
-        "0x831C6C334f8DDeE62246a5c81B82c8e18008b38f",
-        "0x0000000000000000000000000000000000000000",
-        "0x0000000000000000000000000000000000000000",
-        "0x0000000000000000000000000000000000000000",
-        "0x0000000000000000000000000000000000000000",
-        "0x0000000000000000000000000000000000000000",
-        "0x0000000000000000000000000000000000000000"
-      ],
-      "swapParamsFull": [
-        [0, 0, 6, 1, 2],
-        [0, 1, 1, 1, 2],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0]
-      ]
-    },
-    "route": "USDC/crvUSD >> USDC/crvUSD >> USDC  >> USDC >> tgUSD-USDC* >> tgUSD* "
-  },
-  {
-    "start": "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
-    "end": "0x831C6C334f8DDeE62246a5c81B82c8e18008b38f",
-    "params": {
-      "routeAddresses": [
-        "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
-        "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
         "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
         "0x8272E1A3dBef607C04AA6e5BD3a1A134c8ac063B",
         "0x865377367054516e17014CcdED1e7d814EDC9ce4",
@@ -214,6 +187,33 @@
       ]
     },
     "route": "USDC/crvUSD >> USDC/crvUSD >> crvUSD  >> crvUSD >> crvUSD/DOLA >> DOLA  >> DOLA >> wDOLA* >> wDOLA*  >> wDOLA* >> tgUSD-wDOLA* >> tgUSD* "
+  },
+  {
+    "start": "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+    "end": "0x831C6C334f8DDeE62246a5c81B82c8e18008b38f",
+    "params": {
+      "routeAddresses": [
+        "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+        "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "0x1136adf5A338CC8C1461ec26C969952c3Fea5c28",
+        "0x831C6C334f8DDeE62246a5c81B82c8e18008b38f",
+        "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000"
+      ],
+      "swapParamsFull": [
+        [0, 0, 6, 1, 2],
+        [0, 1, 1, 1, 2],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0]
+      ]
+    },
+    "route": "USDC/crvUSD >> USDC/crvUSD >> USDC  >> USDC >> tgUSD-USDC* >> tgUSD* "
   },
   {
     "start": "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
@@ -763,33 +763,6 @@
         "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
         "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
         "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
-        "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
-        "0x865377367054516e17014CcdED1e7d814EDC9ce4",
-        "0x37e2156B0d78098F06F8075a18d7E3a09483048e",
-        "0x37e2156B0d78098F06F8075a18d7E3a09483048e",
-        "0x07558Dc7df9A162C0a74db6aAe4e110D8EB7FA2f",
-        "0x831C6C334f8DDeE62246a5c81B82c8e18008b38f",
-        "0x0000000000000000000000000000000000000000",
-        "0x0000000000000000000000000000000000000000"
-      ],
-      "swapParamsFull": [
-        [0, 0, 6, 2, 2],
-        [1, 0, 1, 1, 2],
-        [0, 0, 9, 1, 0],
-        [0, 1, 1, 1, 2],
-        [0, 0, 0, 0, 0]
-      ]
-    },
-    "route": "USR/RLP >> USR/RLP >> USR  >> USR >> DOLA/USR >> DOLA  >> DOLA >> wDOLA* >> wDOLA*  >> wDOLA* >> tgUSD-wDOLA* >> tgUSD* "
-  },
-  {
-    "start": "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
-    "end": "0x831C6C334f8DDeE62246a5c81B82c8e18008b38f",
-    "params": {
-      "routeAddresses": [
-        "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
-        "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
-        "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
         "0x3ee841f47947fefbe510366e4bbb49e145484195",
         "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
         "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
@@ -808,6 +781,33 @@
       ]
     },
     "route": "USR/RLP >> USR/RLP >> USR  >> USR >> USR/USDC >> USDC  >> USDC >> crvUSD/USDC >> crvUSD  >> crvUSD >> wcrvUSD* >> wcrvUSD*  >> wcrvUSD* >> tgUSD-wcrvUSD* >> tgUSD* "
+  },
+  {
+    "start": "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
+    "end": "0x831C6C334f8DDeE62246a5c81B82c8e18008b38f",
+    "params": {
+      "routeAddresses": [
+        "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
+        "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
+        "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
+        "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
+        "0x865377367054516e17014CcdED1e7d814EDC9ce4",
+        "0x37e2156B0d78098F06F8075a18d7E3a09483048e",
+        "0x37e2156B0d78098F06F8075a18d7E3a09483048e",
+        "0x07558Dc7df9A162C0a74db6aAe4e110D8EB7FA2f",
+        "0x831C6C334f8DDeE62246a5c81B82c8e18008b38f",
+        "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000"
+      ],
+      "swapParamsFull": [
+        [0, 0, 6, 2, 2],
+        [1, 0, 1, 1, 2],
+        [0, 0, 9, 1, 0],
+        [0, 1, 1, 1, 2],
+        [0, 0, 0, 0, 0]
+      ]
+    },
+    "route": "USR/RLP >> USR/RLP >> USR  >> USR >> DOLA/USR >> DOLA  >> DOLA >> wDOLA* >> wDOLA*  >> wDOLA* >> tgUSD-wDOLA* >> tgUSD* "
   },
   {
     "start": "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
@@ -1167,33 +1167,6 @@
       "routeAddresses": [
         "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
         "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
-        "0x9d39a5de30e57443bff2a8307a4256c8797a3497",
-        "0x744793B5110f6ca9cC7CDfe1CE16677c3Eb192ef",
-        "0x865377367054516e17014CcdED1e7d814EDC9ce4",
-        "0x37e2156B0d78098F06F8075a18d7E3a09483048e",
-        "0x37e2156B0d78098F06F8075a18d7E3a09483048e",
-        "0x07558Dc7df9A162C0a74db6aAe4e110D8EB7FA2f",
-        "0x831C6C334f8DDeE62246a5c81B82c8e18008b38f",
-        "0x0000000000000000000000000000000000000000",
-        "0x0000000000000000000000000000000000000000"
-      ],
-      "swapParamsFull": [
-        [0, 1, 6, 1, 2],
-        [1, 0, 1, 1, 2],
-        [0, 0, 9, 1, 0],
-        [0, 1, 1, 1, 2],
-        [0, 0, 0, 0, 0]
-      ]
-    },
-    "route": "scrvUSD/sUSDe >> scrvUSD/sUSDe >> sUSDe  >> sUSDe >> DOLA/sUSDe >> DOLA  >> DOLA >> wDOLA* >> wDOLA*  >> wDOLA* >> tgUSD-wDOLA* >> tgUSD* "
-  },
-  {
-    "start": "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
-    "end": "0x831C6C334f8DDeE62246a5c81B82c8e18008b38f",
-    "params": {
-      "routeAddresses": [
-        "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
-        "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
         "0x0655977feb2f289a4ab78af67bab0d17aab84367",
         "0x0655977feb2f289a4ab78af67bab0d17aab84367",
         "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -1213,6 +1186,33 @@
       ]
     },
     "route": "scrvUSD/sUSDe >> scrvUSD/sUSDe >> scrvUSD  >> scrvUSD >> scrvUSD >> crvUSD  >> crvUSD >> wcrvUSD* >> wcrvUSD*  >> wcrvUSD* >> tgUSD-wcrvUSD* >> tgUSD* "
+  },
+  {
+    "start": "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
+    "end": "0x831C6C334f8DDeE62246a5c81B82c8e18008b38f",
+    "params": {
+      "routeAddresses": [
+        "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
+        "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
+        "0x9d39a5de30e57443bff2a8307a4256c8797a3497",
+        "0x744793B5110f6ca9cC7CDfe1CE16677c3Eb192ef",
+        "0x865377367054516e17014CcdED1e7d814EDC9ce4",
+        "0x37e2156B0d78098F06F8075a18d7E3a09483048e",
+        "0x37e2156B0d78098F06F8075a18d7E3a09483048e",
+        "0x07558Dc7df9A162C0a74db6aAe4e110D8EB7FA2f",
+        "0x831C6C334f8DDeE62246a5c81B82c8e18008b38f",
+        "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000"
+      ],
+      "swapParamsFull": [
+        [0, 1, 6, 1, 2],
+        [1, 0, 1, 1, 2],
+        [0, 0, 9, 1, 0],
+        [0, 1, 1, 1, 2],
+        [0, 0, 0, 0, 0]
+      ]
+    },
+    "route": "scrvUSD/sUSDe >> scrvUSD/sUSDe >> sUSDe  >> sUSDe >> DOLA/sUSDe >> DOLA  >> DOLA >> wDOLA* >> wDOLA*  >> wDOLA* >> tgUSD-wDOLA* >> tgUSD* "
   },
   {
     "start": "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
