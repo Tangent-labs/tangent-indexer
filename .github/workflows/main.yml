@@ -1,24 +1,35 @@
 name: Node.js CI
 on:
-    pull_request:
-        branches:
-            - main
-            - staging
+  pull_request:
+    branches:
+      - main
+      - staging
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
 
-        strategy:
-            matrix:
-                node-version: [16.x]
+    strategy:
+      matrix:
+        node-version: [20.x]
 
-        steps:
-            - uses: actions/checkout@v3
-            - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v3
-              with:
-                  node-version: ${{ matrix.node-version }}
-            - run: npm install
-            - run: npm run compile
-            - run: npm run test
+    env:
+      INDEXING_BLOCK_RANGE: 10
+      STARTING_BLOCK: 21822210
+      CHAIN_ID: 31337
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Clean install
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install
+
+      - run: npm run validate
+      - run: npm run test

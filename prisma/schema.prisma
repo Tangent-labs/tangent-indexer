@@ -1,388 +1,40 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["multiSchema"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["airdrop", "public"]
-}
-
-model bonding_events_deposit {
-  id                   Int       @id @default(autoincrement())
-  token_id             Int
-  amount_deposited     String
-  depositor            String
-  cvg_minted           String
-  vesting_end          DateTime? @db.Timestamptz(6)
-  amount_deposited_usd String
-  block_timestamp      DateTime  @db.Timestamptz(6)
-  tx_hash              String
-  block_id             BigInt
-  bond_id              BigInt
-  is_locked            Boolean
-
-  @@schema("public")
-}
-
-model bonding_events_redeem {
-  id              Int       @id @default(autoincrement())
-  token_id        Int?
-  vesting_left    BigInt
-  operator        String?
-  payout          String?
-  recipient       String?
-  block_timestamp DateTime? @db.Timestamptz(6)
-  tx_hash         String
-  block_id        BigInt?
-
-  @@schema("public")
-}
-
-model bonding_tracking {
-  address          String @id
-  deposited_asset  String
-  deposited_stable String
-  deposited_total  String
-  cvg_minted       String
-  cvg_redeemed     String
-  cvg_locked       String
-
-  @@index([address], map: "bonding_tracking_address")
-  @@schema("public")
-}
-
-model cvg_price_tracking {
-  id        BigInt  @id @default(autoincrement())
-  price     Float
-  timestamp BigInt?
-
-  @@schema("public")
-}
-
-model debank_data {
-  id                 BigInt   @id @default(autoincrement())
-  pod_raw_data       Json
-  pod_formatted_data Json
-  pdd_raw_data       Json
-  pdd_formatted_data Json
-  date               DateTime @db.Timestamptz(6)
-
-  @@index([date], map: "debank_data_timestamp")
-  @@schema("public")
-}
-
-model farmed_ys_rewards {
-  id            BigInt   @id @default(autoincrement())
-  harvest_date  DateTime @db.Date
-  token_address String
-  amount        String
-  cycle         BigInt
-
-  @@index([cycle], map: "farmed_ys_rewards_harvest_cycle")
-  @@index([harvest_date], map: "farmed_ys_rewards_harvest_date")
-  @@schema("public")
-}
-
-model gauge_votes {
-  id              BigInt @id @default(autoincrement())
-  token_id        BigInt
-  from            String
-  gauge_address   String
-  weight          String
-  ve_cvg_voted    Float
-  block_id        BigInt
-  block_timestamp BigInt
-  tx_hash         String
-
-  @@index([gauge_address], map: "gauge_votes_gauge_address")
-  @@index([token_id], map: "gauge_votes_token_id")
-  @@schema("public")
-}
-
-model gauges_total_votes_cvg_history {
-  id           BigInt   @id @default(autoincrement())
-  cycle_id     BigInt
-  total_weight String
-  date         DateTime @db.Timestamptz(6)
-
-  @@index([cycle_id], map: "gauges_total_votes_history_cvg_cycle")
-  @@schema("public")
-}
-
-model gauges_weights_cvg_history {
-  id                 BigInt @id @default(autoincrement())
-  amount_distributed String
-  cycle_id           BigInt
-  gauge_address      String
-  gauge_weight       String
-
-  @@index([cycle_id], map: "gauges_weights_history_cvg_cycle")
-  @@schema("public")
 }
 
 model global_blocks {
   block_id   BigInt    @id(map: "blocks_pkey") @default(autoincrement())
   created_at DateTime? @db.Timestamptz(6)
-
-  @@schema("public")
 }
 
-model global_contracts {
-  id               BigInt  @id(map: "contracts_pkey") @default(autoincrement())
+model market_contracts {
+  id               BigInt  @id(map: "markets_contracts_pkey") @default(autoincrement())
   contract_name    String? @db.VarChar
   contract_address String? @db.VarChar
+  contract_type    String? @db.VarChar
 
-  @@schema("public")
+  @@index([contract_address], map: "markets_contracts_contract_address_idx")
 }
 
-model locking_delegate_ys {
-  token_id         BigInt    @id
-  delegate_address String?
-  block_id         BigInt?
-  block_timestamp  DateTime? @db.Timestamptz(6)
-  tx_hash          String
-
-  @@index([delegate_address], map: "address_ys_delegate")
-  @@index([delegate_address], map: "locking_delegate_ys_address")
-  @@schema("public")
+model market_borrower {
+  id               BigInt   @id(map: "markets_borrower_pkey") @default(autoincrement())
+  contract_address String?  @db.VarChar
+  borrower_address String?  @db.VarChar
+  check_date       DateTime @default(now())
 }
 
-model locking_events_burn {
-  token_id        Int      @id
-  block_id        BigInt
-  block_timestamp DateTime @db.Timestamptz(6)
-  tx_hash         String
+model liquidation_bot_log {
+  id            BigInt   @id(map: "liquidation_bot_log_pkey") @default(autoincrement())
+  execution_key String   @db.Uuid
+  is_error      Boolean  @default(false)
+  action        String
+  data          Json
+  date          DateTime @default(now())
 
-  @@schema("public")
-}
-
-model locking_events_increase_amount {
-  id               Int    @id @default(autoincrement())
-  token_id         Int
-  total_cvg_locked String
-  mg_cvg_amount    String
-  block_id         Int
-  block_timestamp  Int
-  tx_hash          String
-
-  @@schema("public")
-}
-
-model locking_events_increase_time {
-  id              Int    @id @default(autoincrement())
-  token_id        Int
-  last_end_cycle  Int
-  block_id        Int
-  block_timestamp Int
-  tx_hash         String
-
-  @@schema("public")
-}
-
-model locking_events_increase_time_and_amount {
-  id               Int    @id @default(autoincrement())
-  token_id         Int
-  last_end_cycle   Int
-  total_cvg_locked String
-  mg_cvg_amount    String
-  block_id         Int
-  block_timestamp  Int
-  tx_hash          String
-
-  @@schema("public")
-}
-
-model locking_events_mint {
-  token_id         Int    @id
-  address          String
-  start_cycle      Int
-  last_end_cycle   Int
-  ys_percentage    Int
-  total_cvg_locked String
-  mg_cvg_amount    String
-  block_id         Int
-  block_timestamp  Int
-  tx_hash          String
-
-  @@schema("public")
-}
-
-model locking_events_update_total_supplies {
-  cycle           Int       @id
-  new_ys_supply   String?
-  vecvg_supply    String?
-  block_id        BigInt?
-  block_timestamp DateTime? @db.Timestamptz(6)
-  tx_hash         String
-
-  @@schema("public")
-}
-
-model locking_events_ys_rewards_claim {
-  id              Int       @id @default(autoincrement())
-  token_id        BigInt?
-  cycle           Int?
-  share           String?
-  block_id        BigInt?
-  block_timestamp DateTime? @db.Timestamptz(6)
-  tx_hash         String
-
-  @@schema("public")
-}
-
-model locking_token {
-  token_id             BigInt  @id
-  created_at           BigInt
-  updated_at           BigInt
-  amount_locked        String
-  ys_percentage        BigInt
-  start_cycle          Int
-  end_cycle            Int
-  is_active            Boolean
-  delegated_ys_address String
-  a_ve                 Float?
-  b_ve                 Float?
-
-  @@schema("public")
-}
-
-model locking_tracking {
-  cycle_id               Int     @id
-  mg_supply              String?
-  cvg_ys_amount          String?
-  cvg_ve_amount          String?
-  locking_time_average   Float?
-  locking_amount_average Float?
-  locking_amount_total   Float?  @db.Real
-
-  @@schema("public")
-}
-
-model asset_prices {
-  id                   BigInt  @id @default(autoincrement())
-  liquid_locker_prices Json?
-  lp_token_prices      Json?
-  token_prices         Json?
-  timestamp            BigInt?
-
-  @@schema("public")
-}
-
-model sdt_staking_contracts {
-  id                  BigInt    @id(map: "sdasset_staking_contracts_pkey") @default(autoincrement())
-  created_at          DateTime? @db.Timestamptz(6)
-  sdt_staking_address String?
-  gauge_asset         String?   @unique(map: "sdasset_staking_contracts_unique_gauge")
-  sdt_buffer          String
-  is_lp               Boolean?
-
-  @@index([gauge_asset], map: "sdt_staking_contracts_gauge")
-  @@schema("public")
-}
-
-model transfer_events_tracking {
-  id        BigInt @id @default(autoincrement())
-  contract  String
-  sender    String
-  receiver  String
-  amount    Float
-  timestamp BigInt
-  block_id  BigInt
-
-  @@index([contract], map: "transfer_events_tracking_contract")
-  @@index([receiver], map: "transfer_events_tracking_receiver")
-  @@index([sender], map: "transfer_events_tracking_sender")
-  @@index([timestamp], map: "transfer_events_tracking_timestamp")
-  @@schema("public")
-}
-
-model sdt_staking_apr {
-  id             BigInt @id @default(autoincrement())
-  actual_data    Json
-  projected_data Json
-  timestamp      BigInt
-  boosts         Json
-  tvls           Json
-
-  @@schema("public")
-}
-
-model convex_staking_apr_tvls {
-  id             BigInt @id @default(autoincrement())
-  actual_data    Json
-  projected_data Json
-  tvls           Json
-  timestamp      BigInt
-
-  @@schema("public")
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model bonding_bonds_created {
-  bond_id              BigInt @id @default(autoincrement())
-  block_id             BigInt
-  block_timestamp      BigInt
-  tx_hash              String
-  token                String
-  gamma                BigInt
-  bond_duration        BigInt
-  scale                BigInt
-  vesting_term         BigInt
-  cvg_to_sell          String
-  start_bond_timestamp BigInt
-
-  @@schema("public")
-}
-
-model quests_results {
-  address     String @id
-  quests      Json
-  last_update BigInt
-  points      Int
-  position    Int
-
-  @@index([address], map: "quests_results_address")
-  @@index([position], map: "quests_results_position")
-  @@schema("airdrop")
-}
-
-model cvgsdt_events_mint {
-  id              Int    @id @default(autoincrement())
-  address         String
-  amount          String
-  block_id        Int
-  block_timestamp Int
-  tx_hash         String
-
-  @@schema("public")
-}
-
-model staking_deposit_events {
-  id              Int    @id @default(autoincrement())
-  token_id        Int
-  staking         String
-  account         String
-  amount          String
-  cycle_id        Int
-  block_id        Int
-  block_timestamp Int
-  tx_hash         String
-
-  @@schema("public")
-}
-
-model staking_withdraw_events {
-  id              Int    @id @default(autoincrement())
-  token_id        Int
-  staking         String
-  account         String
-  amount          String
-  cycle_id        Int
-  block_id        Int
-  block_timestamp Int
-  tx_hash         String
-
-  @@schema("public")
+  @@index([execution_key], map: "liquidation_bot_log_execution_key_idx")
 }

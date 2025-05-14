@@ -1,24 +1,21 @@
 {
-    "compilerOptions": {
-        "strict": true,
-        "module": "commonjs",
-        "target": "es2020",
-        "outDir": "build",
-        "sourceMap": true,
-        "resolveJsonModule": true,
-        "downlevelIteration": true,
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "skipLibCheck": true,
-        "rootDirs": ["./"],
-        "baseUrl": "./src",
-        "inlineSources": true,
-
-        // Set `sourceRoot` to  "/" to strip the build path prefix
-        // from generated source code references.
-        // This improves issue grouping in Sentry.
-        "sourceRoot": "/"
-    },
-    "exclude": ["build"],
-    "include": ["src"]
+  "compilerOptions": {
+    "strict": true,
+    "module": "commonjs",
+    "target": "es2020",
+    "outDir": "build",
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "downlevelIteration": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "rootDirs": ["./"],
+    "baseUrl": "./src",
+    "inlineSources": true,
+    "sourceRoot": "/",
+    "types": ["node"]
+  },
+  "exclude": ["build"],
+  "include": ["src"]
 }
