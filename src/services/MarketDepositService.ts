@@ -2,7 +2,7 @@ import { JsonRpcProvider, AddressLike } from "ethers"
 import { MarketContractsRepository } from "../db/MarketContractsRepository"
 import { EventDetectionService } from "../type/service"
 import { MarketDepositRepository } from "../db/MarketDepositRepository"
-import { fetchDepositLogs, fetchZapDepositLogs } from "eventFectcher/marketDepositEventFetcher"
+import { fetchMarketDepositLogs } from "eventFectcher/marketDepositEventFetcher"
 
 export class MarketDepositService implements EventDetectionService {
   marketDepositRepository: MarketDepositRepository
@@ -17,11 +17,7 @@ export class MarketDepositService implements EventDetectionService {
     try {
       const marketContracts: AddressLike[] = (await this.marketContractsRepository.getContracts()).map((contract) => contract.contract_address as AddressLike)
 
-      const depositLogs = await fetchDepositLogs(provider, startingBlock, endingBlock, marketContracts)
-
-      const zapDepositLogs = await fetchZapDepositLogs(provider, startingBlock, endingBlock, marketContracts)
-
-      if (zapDepositLogs.length === 0 || depositLogs.length === 0) return
+      const { depositLogs, zapDepositLogs } = await fetchMarketDepositLogs(provider, startingBlock, endingBlock, marketContracts)
 
       await this.marketDepositRepository.updateZapDeposits(
         zapDepositLogs.map((log) => ({
