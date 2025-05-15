@@ -1,0 +1,47 @@
+import { JsonRpcProvider, AddressLike } from "ethers"
+import { MarketContractsRepository } from "../db/MarketContractsRepository"
+import { EventDetectionService } from "../type/service"
+import { MarketDepositRepository } from "../db/MarketDepositRepository"
+import { fetchDepositLogs, fetchZapDepositLogs } from "eventFectcher/marketDepositEventFetcher"
+
+export class MarketDepositService implements EventDetectionService {
+  marketDepositRepository: MarketDepositRepository
+  marketContractsRepository: MarketContractsRepository
+
+  constructor(MarketDepositRepository: MarketDepositRepository, marketContractsRepository: MarketContractsRepository) {
+    this.marketDepositRepository = MarketDepositRepository
+    this.marketContractsRepository = marketContractsRepository
+  }
+
+  async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
+    try {
+      const marketContracts: AddressLike[] = (await this.marketContractsRepository.getContracts()).map((contract) => contract.contract_address as AddressLike)
+
+      const depositLogs = await fetchDepositLogs(provider, startingBlock, endingBlock, marketContracts)
+
+      const zapDepositLogs = await fetchZapDepositLogs(provider, startingBlock, endingBlock, marketContracts)
+
+      if (zapDepositLogs.length === 0 || depositLogs.length === 0) return
+
+      await this.marketDepositRepository.updateZapDeposits(
+        zapDepositLogs.map((log) => ({
+          depositer: log.depositer,
+          market: log.market,
+          stakedAmount: log.stakedAmount,
+          tokenIn: log.tokenIn,
+          amountIn: log.amountIn,
+        }))
+      )
+
+      await this.marketDepositRepository.updateDeposits(
+        depositLogs.map((log) => ({
+          depositer: log.depositer,
+          market: log.market,
+          stakedAmount: log.stakedAmount,
+        }))
+      )
+    } catch (error) {
+      throw new Error(`Failed to detect deposit actions: ${(error as Error).message}`)
+    }
+  }
+}

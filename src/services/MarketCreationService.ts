@@ -1,9 +1,8 @@
 import { AddressLike, JsonRpcProvider } from "ethers"
-
 import { MarketContractsRepository } from "../db/MarketContractsRepository"
 import { fetchMarketCreationLogs } from "../eventFectcher/marketCreationEventFectcher"
-
 import { EventDetectionService } from "../type/service"
+import { market_contracts } from "@prisma/client"
 
 export class MarketCreationService implements EventDetectionService {
   marketContractsRepository: MarketContractsRepository
@@ -38,7 +37,7 @@ export class MarketCreationService implements EventDetectionService {
         })
         .map((log) => ({ contract_address: log.address, contract_type: log.marketType }))
 
-      await this.marketContractsRepository.insertContracts(newData as { contract_address: string; contract_type: string }[])
+      await this.marketContractsRepository.insertContracts(newData as market_contracts[])
     }
   }
 }
