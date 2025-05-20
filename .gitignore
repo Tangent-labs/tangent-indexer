@@ -9,3 +9,4 @@ src/typechain
 .sentryclirc
 .vscode
 /src/data/*.json
+prisma/migrations

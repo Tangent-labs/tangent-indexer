@@ -5,6 +5,7 @@ interface DepositEvent {
   depositer: AddressLike
   market: string
   stakedAmount: string
+  timestamp: Date
 }
 
 interface ZapDepositEvent {
@@ -13,6 +14,7 @@ interface ZapDepositEvent {
   stakedAmount: string
   tokenIn: string
   amountIn: string
+  timestamp: Date
 }
 
 const DEPOSIT_EVENT_SIGNATURES = {
@@ -31,6 +33,7 @@ const parseDepositEvent = (log: Log): DepositEvent => {
     depositer: userDepositAddress,
     market: log.address,
     stakedAmount: stakedAmount.toString(),
+    timestamp: new Date(), // placeholder
   }
 }
 
@@ -43,6 +46,7 @@ const parseZapDepositEvent = (log: Log): ZapDepositEvent => {
     stakedAmount: stakedAmount.toString(),
     tokenIn,
     amountIn: amountIn.toString(),
+    timestamp: new Date(), // placeholder
   }
 }
 
@@ -55,17 +59,28 @@ export const fetchMarketDepositLogs = async (
   try {
     const logs = await getEthLogs(provider, startingBlock, endingBlock, contracts, [DEPOSIT_EVENT_SIGNATURES.Deposit, DEPOSIT_EVENT_SIGNATURES.ZapDeposit])
 
+    const blockTimestamps = new Map<number, number>()
+    const uniqueBlockNumbers = [...new Set(logs.map((log) => log.blockNumber))]
+    for (const blockNumber of uniqueBlockNumbers) {
+      const block = await provider.getBlock(blockNumber)
+      if (block && block.timestamp) {
+        blockTimestamps.set(blockNumber, block.timestamp * 1000)
+      }
+    }
+
     const depositLogs: DepositEvent[] = []
     const zapDepositLogs: ZapDepositEvent[] = []
 
     for (const log of logs) {
-      console.log("LOG IS DEPOSIT : ", log.topics[0] === DEPOSIT_TOPIC)
-      console.log("LOG IS ZAP_DEPOSIT : ", log.topics[0] === ZAP_DEPOSIT_TOPIC)
-
+      const timestamp = blockTimestamps.get(log.blockNumber) || Date.now()
       if (log.topics[0] === DEPOSIT_TOPIC) {
-        depositLogs.push(parseDepositEvent(log))
+        const depositEvent = parseDepositEvent(log)
+        depositEvent.timestamp = new Date(timestamp)
+        depositLogs.push(depositEvent)
       } else if (log.topics[0] === ZAP_DEPOSIT_TOPIC) {
-        zapDepositLogs.push(parseZapDepositEvent(log))
+        const zapDepositEvent = parseZapDepositEvent(log)
+        zapDepositEvent.timestamp = new Date(timestamp)
+        zapDepositLogs.push(zapDepositEvent)
       }
     }
 

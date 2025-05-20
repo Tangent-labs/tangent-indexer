@@ -19,21 +19,23 @@ export class MarketDepositService implements EventDetectionService {
 
       const { depositLogs, zapDepositLogs } = await fetchMarketDepositLogs(provider, startingBlock, endingBlock, marketContracts)
 
-      await this.marketDepositRepository.updateZapDeposits(
+      await this.marketDepositRepository.insertZapDeposits(
         zapDepositLogs.map((log) => ({
           depositer: log.depositer,
           market: log.market,
           stakedAmount: log.stakedAmount,
           tokenIn: log.tokenIn,
           amountIn: log.amountIn,
+          timestamp: log.timestamp,
         }))
       )
 
-      await this.marketDepositRepository.updateDeposits(
+      await this.marketDepositRepository.insertDeposits(
         depositLogs.map((log) => ({
           depositer: log.depositer,
           market: log.market,
           stakedAmount: log.stakedAmount,
+          timestamp: log.timestamp,
         }))
       )
     } catch (error) {

@@ -41,18 +41,18 @@ model liquidation_bot_log {
 
 model market_deposit {
   id            BigInt   @id(map: "market_deposit_pkey") @default(autoincrement())
-  address       String   @db.VarChar
+  userAddress   String   @db.VarChar
   staked_amount String   @db.VarChar
   depositer     String   @db.VarChar
-  check_date    DateTime @default(now())
+  check_date    DateTime
 }
 
 model market_zap_deposit {
   id            BigInt   @id(map: "market_zap_deposit_pkey") @default(autoincrement())
-  address       String   @db.VarChar
+  userAddress   String   @db.VarChar
   staked_amount String   @db.VarChar
   depositer     String   @db.VarChar
   token_in      String   @db.VarChar
   amount_in     String   @db.VarChar
-  check_date    DateTime @default(now())
+  check_date    DateTime
 }
