@@ -2,44 +2,50 @@ import { ethers, JsonRpcProvider, Log, AddressLike } from "ethers"
 import { getEthLogs } from "./_baseFectcher"
 
 interface DepositEvent {
-  depositer: AddressLike
-  market: string
+  market: AddressLike
+  account: AddressLike
   stakedAmount: string
   timestamp: Date
+  blockId: number
 }
 
 interface BorrowEvent {
+  market: AddressLike
   account: AddressLike
   receiver: AddressLike
   borrowedAmount: string
   timestamp: Date
+  blockId: number
 }
 
 interface DepositAndBorrowEvent {
-  depositer: AddressLike
-  market: string
+  market: AddressLike
+  account: AddressLike
   stakedAmount: string
   borrowAmount: string
   timestamp: Date
+  blockId: number
 }
 
 interface ZapDepositEvent {
-  depositer: AddressLike
-  market: string
+  market: AddressLike
+  account: AddressLike
   stakedAmount: string
   tokenIn: string
   amountIn: string
   timestamp: Date
+  blockId: number
 }
 
 interface ZapDepositAndBorrowEvent {
-  depositer: AddressLike
-  market: string
+  market: AddressLike
+  account: AddressLike
   stakedAmount: string
   borrowAmount: string
   tokenIn: string
   amountIn: string
   timestamp: Date
+  blockId: number
 }
 
 const DEPOSIT_EVENT_SIGNATURES = {
@@ -60,10 +66,12 @@ const parseBorrowEvent = (log: Log): BorrowEvent => {
   const userAddress = ethers.AbiCoder.defaultAbiCoder().decode(["address"], log.topics[1])?.at(0) as AddressLike
   const [borrowedAmount] = ethers.AbiCoder.defaultAbiCoder().decode(["uint256"], log.data)
   return {
+    market: log.address,
     account: userAddress,
     receiver: userAddress,
     borrowedAmount: borrowedAmount.toString(),
     timestamp: new Date(), // placeholder
+    blockId: 22531382, // placeholder
   }
 }
 
@@ -71,10 +79,11 @@ const parseDepositEvent = (log: Log): DepositEvent => {
   const userDepositAddress = ethers.AbiCoder.defaultAbiCoder().decode(["address"], log.topics[1])?.at(0) as AddressLike
   const [stakedAmount] = ethers.AbiCoder.defaultAbiCoder().decode(["uint256"], log.data)
   return {
-    depositer: userDepositAddress,
     market: log.address,
+    account: userDepositAddress,
     stakedAmount: stakedAmount.toString(),
     timestamp: new Date(), // placeholder
+    blockId: 22531382, // placeholder
   }
 }
 
@@ -82,11 +91,12 @@ const parseDepositAndBorrowEvent = (log: Log): DepositAndBorrowEvent => {
   const userDepositAddress = ethers.AbiCoder.defaultAbiCoder().decode(["address"], log.topics[1])?.at(0) as AddressLike
   const [stakedAmount, borrowAmount] = ethers.AbiCoder.defaultAbiCoder().decode(["uint256", "uint256"], log.data)
   return {
-    depositer: userDepositAddress,
     market: log.address,
+    account: userDepositAddress,
     stakedAmount: stakedAmount.toString(),
     borrowAmount: borrowAmount.toString(),
     timestamp: new Date(), // placeholder
+    blockId: 22531382, // placeholder
   }
 }
 
@@ -94,12 +104,13 @@ const parseZapDepositEvent = (log: Log): ZapDepositEvent => {
   const userDepositAddress = ethers.AbiCoder.defaultAbiCoder().decode(["address"], log.topics[1])?.at(0) as AddressLike
   const [stakedAmount, tokenIn, amountIn] = ethers.AbiCoder.defaultAbiCoder().decode(["uint256", "address", "uint256"], log.data)
   return {
-    depositer: userDepositAddress,
     market: log.address,
+    account: userDepositAddress,
     stakedAmount: stakedAmount.toString(),
     tokenIn,
     amountIn: amountIn.toString(),
     timestamp: new Date(), // placeholder
+    blockId: 22531382, // placeholder
   }
 }
 
@@ -107,13 +118,14 @@ const parseZapDepositAndBorrowEvent = (log: Log): ZapDepositAndBorrowEvent => {
   const userDepositAddress = ethers.AbiCoder.defaultAbiCoder().decode(["address"], log.topics[1])?.at(0) as AddressLike
   const [stakedAmount, borrowAmount, tokenIn, amountIn] = ethers.AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "address", "uint256"], log.data)
   return {
-    depositer: userDepositAddress,
     market: log.address,
+    account: userDepositAddress,
     stakedAmount: stakedAmount.toString(),
     borrowAmount: borrowAmount.toString(),
     tokenIn,
     amountIn: amountIn.toString(),
     timestamp: new Date(), // placeholder
+    blockId: 22531382, // placeholder
   }
 }
 
@@ -139,11 +151,18 @@ export const fetchMarketDepositLogs = async (
     ])
 
     const blockTimestamps = new Map<number, number>()
+    const blockNumbers = new Map<number, number>()
     const uniqueBlockNumbers = [...new Set(logs.map((log) => log.blockNumber))]
+
     for (const blockNumber of uniqueBlockNumbers) {
       const block = await provider.getBlock(blockNumber)
+
       if (block && block.timestamp) {
         blockTimestamps.set(blockNumber, block.timestamp * 1000)
+      }
+
+      if (block && block.number) {
+        blockNumbers.set(blockNumber, block.number)
       }
     }
 
@@ -154,26 +173,33 @@ export const fetchMarketDepositLogs = async (
     const zapDepositAndBorrowLogs: ZapDepositAndBorrowEvent[] = []
 
     for (const log of logs) {
-      const timestamp = blockTimestamps.get(log.blockNumber) || Date.now()
+      const timestamp = blockTimestamps.get(log.blockNumber)
+      const blockNumber = blockNumbers.get(log.blockNumber)
+
       if (log.topics[0] === DEPOSIT_TOPIC) {
         const depositEvent = parseDepositEvent(log)
-        depositEvent.timestamp = new Date(timestamp)
+        depositEvent.timestamp = new Date(timestamp!)
+        depositEvent.blockId = blockNumber!
         depositLogs.push(depositEvent)
       } else if (log.topics[0] === ZAP_DEPOSIT_TOPIC) {
         const zapDepositEvent = parseZapDepositEvent(log)
-        zapDepositEvent.timestamp = new Date(timestamp)
+        zapDepositEvent.timestamp = new Date(timestamp!)
+        zapDepositEvent.blockId = blockNumber!
         zapDepositLogs.push(zapDepositEvent)
       } else if (log.topics[0] === DEPOSIT_AND_BORROW_TOPIC) {
         const depositAndBorrowEvent = parseDepositAndBorrowEvent(log)
-        depositAndBorrowEvent.timestamp = new Date(timestamp)
+        depositAndBorrowEvent.timestamp = new Date(timestamp!)
+        depositAndBorrowEvent.blockId = blockNumber!
         depositAndBorrowLogs.push(depositAndBorrowEvent)
       } else if (log.topics[0] === ZAP_DEPOSIT_AND_BORROW_TOPIC) {
         const zapDepositAndBorrowEvent = parseZapDepositAndBorrowEvent(log)
-        zapDepositAndBorrowEvent.timestamp = new Date(timestamp)
+        zapDepositAndBorrowEvent.timestamp = new Date(timestamp!)
+        zapDepositAndBorrowEvent.blockId = blockNumber!
         zapDepositAndBorrowLogs.push(zapDepositAndBorrowEvent)
       } else if (log.topics[0] === BORROW_TOPIC) {
         const borrowEvent = parseBorrowEvent(log)
-        borrowEvent.timestamp = new Date(timestamp)
+        borrowEvent.timestamp = new Date(timestamp!)
+        borrowEvent.blockId = blockNumber!
         borrowLogs.push(borrowEvent)
       }
     }

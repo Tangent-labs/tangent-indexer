@@ -2,15 +2,26 @@ import { AbstractRepository } from "./AbstractRepository"
 import { AddressLike } from "ethers"
 
 export class MarketDepositRepository extends AbstractRepository {
-  async insertBorrows(data: { account: AddressLike; borrowedAmount: string; timestamp: Date }[]) {
+  async insertBorrows(
+    data: {
+      market: AddressLike
+      account: AddressLike
+      receiver: AddressLike
+      borrowedAmount: string
+      timestamp: Date
+      blockId: number
+    }[]
+  ) {
     const prisma = this.prismaClient
 
     const toInsert = data.map((d) => {
       return {
-        account: (d.account as string).toLowerCase(),
-        receiver: (d.account as string).toLowerCase(),
-        borrowedAmount: d.borrowedAmount.toString(),
-        check_date: d.timestamp,
+        market: d.market.toString().toLowerCase(),
+        account: d.account.toString().toLowerCase(),
+        receiver: d.receiver.toString().toLowerCase(),
+        borrowed_amount: d.borrowedAmount.toString(),
+        block_date: d.timestamp,
+        block_id: d.blockId,
       }
     })
 
@@ -21,15 +32,24 @@ export class MarketDepositRepository extends AbstractRepository {
     }
   }
 
-  async insertDeposits(data: { depositer: AddressLike; market: AddressLike; stakedAmount: string; timestamp: Date }[]) {
+  async insertDeposits(
+    data: {
+      market: AddressLike
+      account: AddressLike
+      stakedAmount: string
+      timestamp: Date
+      blockId: number
+    }[]
+  ) {
     const prisma = this.prismaClient
 
     const toInsert = data.map((d) => {
       return {
-        depositer: (d.depositer as string).toLowerCase(),
-        userAddress: (d.market as string).toLowerCase(),
+        market: d.market.toString().toLowerCase(),
+        account: d.account.toString().toLowerCase(),
         staked_amount: d.stakedAmount.toString(),
-        check_date: d.timestamp,
+        block_date: d.timestamp,
+        block_id: d.blockId,
       }
     })
 
@@ -42,24 +62,26 @@ export class MarketDepositRepository extends AbstractRepository {
 
   async insertZapDeposits(
     data: {
-      depositer: AddressLike
       market: AddressLike
+      account: AddressLike
       stakedAmount: string
       tokenIn: AddressLike
       amountIn: string
       timestamp: Date
+      blockId: number
     }[]
   ) {
     const prisma = this.prismaClient
 
     const toInsert = data.map((d) => {
       return {
-        depositer: (d.depositer as string).toLowerCase(),
-        userAddress: (d.market as string).toLowerCase(),
+        market: d.market.toString().toLowerCase(),
+        account: d.account.toString().toLowerCase(),
         staked_amount: d.stakedAmount,
         token_in: (d.tokenIn as string).toLowerCase(),
         amount_in: d.amountIn,
-        check_date: d.timestamp,
+        block_date: d.timestamp,
+        block_id: d.blockId,
       }
     })
 
@@ -72,22 +94,24 @@ export class MarketDepositRepository extends AbstractRepository {
 
   async insertDepositAndBorrow(
     data: {
-      depositer: AddressLike
       market: AddressLike
+      account: AddressLike
       stakedAmount: string
       borrowAmount: string
       timestamp: Date
+      blockId: number
     }[]
   ) {
     const prisma = this.prismaClient
 
     const toInsert = data.map((d) => {
       return {
-        depositer: (d.depositer as string).toLowerCase(),
-        userAddress: (d.market as string).toLowerCase(),
+        market: d.market.toString().toLowerCase(),
+        account: d.account.toString().toLowerCase(),
         staked_amount: d.stakedAmount.toString(),
         borrow_amount: d.borrowAmount.toString(),
-        check_date: d.timestamp,
+        block_date: d.timestamp,
+        block_id: d.blockId,
       }
     })
 
@@ -100,26 +124,28 @@ export class MarketDepositRepository extends AbstractRepository {
 
   async insertZapDepositAndBorrow(
     data: {
-      depositer: AddressLike
       market: AddressLike
+      account: AddressLike
       stakedAmount: string
       borrowAmount: string
       tokenIn: AddressLike
       amountIn: string
       timestamp: Date
+      blockId: number
     }[]
   ) {
     const prisma = this.prismaClient
 
     const toInsert = data.map((d) => {
       return {
-        depositer: (d.depositer as string).toLowerCase(),
-        userAddress: (d.market as string).toLowerCase(),
+        market: d.market.toString().toLowerCase(),
+        account: d.account.toString().toLowerCase(),
         staked_amount: d.stakedAmount.toString(),
         borrow_amount: d.borrowAmount.toString(),
         token_in: (d.tokenIn as string).toLowerCase(),
         amount_in: d.amountIn.toString(),
-        check_date: d.timestamp,
+        block_date: d.timestamp,
+        block_id: d.blockId,
       }
     })
 

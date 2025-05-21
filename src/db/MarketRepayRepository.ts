@@ -2,14 +2,24 @@ import { AbstractRepository } from "./AbstractRepository"
 import { AddressLike } from "ethers"
 
 export class MarketRepayRepository extends AbstractRepository {
-  async insertWithdraws(data: { account: AddressLike; withdrawnAmount: string; timestamp: Date }[]) {
+  async insertWithdraws(
+    data: {
+      market: AddressLike
+      account: AddressLike
+      withdrawnAmount: string
+      timestamp: Date
+      blockId: number
+    }[]
+  ) {
     const prisma = this.prismaClient
 
     const toInsert = data.map((d) => {
       return {
+        market: d.market.toString().toLowerCase(),
         account: (d.account as string).toLowerCase(),
-        withdrawnAmount: d.withdrawnAmount.toString(),
-        check_date: d.timestamp,
+        withdrawn_amount: d.withdrawnAmount.toString(),
+        block_date: d.timestamp,
+        block_id: d.blockId,
       }
     })
 
@@ -20,15 +30,25 @@ export class MarketRepayRepository extends AbstractRepository {
     }
   }
 
-  async insertRepays(data: { repayer: AddressLike; repaidAmount: string; timestamp: Date }[]) {
+  async insertRepays(
+    data: {
+      market: AddressLike
+      repayer: AddressLike
+      repaidAmount: string
+      timestamp: Date
+      blockId: number
+    }[]
+  ) {
     const prisma = this.prismaClient
 
     const toInsert = data.map((d) => {
       return {
-        userAddress: (d.repayer as string).toLowerCase(),
+        market: d.market.toString().toLowerCase(),
+        account: (d.repayer as string).toLowerCase(),
         repayer: (d.repayer as string).toLowerCase(),
-        repaidAmount: d.repaidAmount.toString(),
-        check_date: d.timestamp,
+        repaid_amount: d.repaidAmount.toString(),
+        block_date: d.timestamp,
+        block_id: d.blockId,
       }
     })
 
@@ -41,20 +61,24 @@ export class MarketRepayRepository extends AbstractRepository {
 
   async insertRepayAndWithdraw(
     data: {
-      userAddress: AddressLike
+      market: AddressLike
+      account: AddressLike
       repaidAmount: string
       withdrawnAmount: string
       timestamp: Date
+      blockId: number
     }[]
   ) {
     const prisma = this.prismaClient
 
     const toInsert = data.map((d) => {
       return {
-        userAddress: d.userAddress.toString(),
-        repaidAmount: d.repaidAmount.toString(),
-        withdrawnAmount: d.withdrawnAmount.toString(),
-        check_date: d.timestamp,
+        market: d.market.toString().toLowerCase(),
+        account: d.account.toString(),
+        repaid_amount: d.repaidAmount.toString(),
+        withdrawn_amount: d.withdrawnAmount.toString(),
+        block_date: d.timestamp,
+        block_id: d.blockId,
       }
     })
 
@@ -67,23 +91,27 @@ export class MarketRepayRepository extends AbstractRepository {
 
   async insertZapRepays(
     data: {
+      market: AddressLike
       repayer: AddressLike
       repaidAmount: string
       tokenIn: AddressLike
       amountIn: string
       timestamp: Date
+      blockId: number
     }[]
   ) {
     const prisma = this.prismaClient
 
     const toInsert = data.map((d) => {
       return {
+        market: d.market.toString().toLowerCase(),
         repayer: (d.repayer as string).toLowerCase(),
-        userAddress: (d.repayer as string).toLowerCase(),
-        repaidAmount: d.repaidAmount.toString(),
+        account: (d.repayer as string).toLowerCase(),
+        repaid_amount: d.repaidAmount.toString(),
         token_in: (d.tokenIn as string).toLowerCase(),
         amount_in: d.amountIn.toString(),
-        check_date: d.timestamp,
+        block_date: d.timestamp,
+        block_id: d.blockId,
       }
     })
 
@@ -96,24 +124,28 @@ export class MarketRepayRepository extends AbstractRepository {
 
   async insertZapRepayAndWithdraw(
     data: {
+      market: AddressLike
       repayer: AddressLike
       repaidAmount: string
       withdrawnAmount: string
       tokenIn: AddressLike
       amountIn: string
       timestamp: Date
+      blockId: number
     }[]
   ) {
     const prisma = this.prismaClient
 
     const toInsert = data.map((d) => {
       return {
-        userAddress: (d.repayer as string).toLowerCase(),
-        repaidAmount: d.repaidAmount.toString(),
-        withdrawnAmount: d.withdrawnAmount.toString(),
+        market: d.market.toString().toLowerCase(),
+        account: (d.repayer as string).toLowerCase(),
+        repaid_amount: d.repaidAmount.toString(),
+        withdrawn_amount: d.withdrawnAmount.toString(),
         token_in: (d.tokenIn as string).toLowerCase(),
         amount_in: d.amountIn.toString(),
-        check_date: d.timestamp,
+        block_date: d.timestamp,
+        block_id: d.blockId,
       }
     })
 

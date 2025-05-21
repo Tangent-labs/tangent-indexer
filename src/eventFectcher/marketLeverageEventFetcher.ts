@@ -2,14 +2,17 @@ import { ethers, JsonRpcProvider, Log, AddressLike } from "ethers"
 import { getEthLogs } from "./_baseFectcher"
 
 interface LeverageEvent {
+  market: AddressLike
   account: AddressLike
   stakedAmount: string
   collatBought: string
   borrowedAmount: string
   timestamp: Date
+  blockId: number
 }
 
 interface ZapLeverageEvent {
+  market: AddressLike
   account: AddressLike
   stakedAmount: string
   collatZapDeposit: string
@@ -18,6 +21,7 @@ interface ZapLeverageEvent {
   tokenIn: string
   amountIn: string
   timestamp: Date
+  blockId: number
 }
 
 const LEVERAGE_EVENT_SIGNATURES = {
@@ -32,11 +36,13 @@ const parseLeverageEvent = (log: Log): LeverageEvent => {
   const account = ethers.AbiCoder.defaultAbiCoder().decode(["address"], log.topics[1])?.at(0) as AddressLike
   const [stakedAmount, collatBought, borrowedAmount] = ethers.AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "uint256"], log.data)
   return {
+    market: log.address,
     account,
     stakedAmount: stakedAmount.toString(),
     collatBought: collatBought.toString(),
     borrowedAmount: borrowedAmount.toString(),
     timestamp: new Date(), // placeholder
+    blockId: 22531382, // placeholder
   }
 }
 
@@ -47,6 +53,7 @@ const parseZapLeverageEvent = (log: Log): ZapLeverageEvent => {
     log.data
   )
   return {
+    market: log.address,
     account,
     stakedAmount: stakedAmount.toString(),
     collatZapDeposit: collatZapDeposit.toString(),
@@ -55,6 +62,7 @@ const parseZapLeverageEvent = (log: Log): ZapLeverageEvent => {
     tokenIn: tokenIn.toString(),
     amountIn: amountIn.toString(),
     timestamp: new Date(), // placeholder
+    blockId: 22531382, // placeholder
   }
 }
 
@@ -71,11 +79,18 @@ export const fetchMarketLeverageLogs = async (
     const logs = await getEthLogs(provider, startingBlock, endingBlock, contracts, [LEVERAGE_EVENT_SIGNATURES.Leverage, LEVERAGE_EVENT_SIGNATURES.ZapLeverage])
 
     const blockTimestamps = new Map<number, number>()
+    const blockNumbers = new Map<number, number>()
     const uniqueBlockNumbers = [...new Set(logs.map((log) => log.blockNumber))]
+
     for (const blockNumber of uniqueBlockNumbers) {
       const block = await provider.getBlock(blockNumber)
+
       if (block && block.timestamp) {
         blockTimestamps.set(blockNumber, block.timestamp * 1000)
+      }
+
+      if (block && block.number) {
+        blockNumbers.set(blockNumber, block.number)
       }
     }
 
@@ -83,14 +98,17 @@ export const fetchMarketLeverageLogs = async (
     const zapLeverageLogs: ZapLeverageEvent[] = []
 
     for (const log of logs) {
-      const timestamp = blockTimestamps.get(log.blockNumber) || Date.now()
+      const timestamp = blockTimestamps.get(log.blockNumber)
+      const blockNumber = blockNumbers.get(log.blockNumber)
       if (log.topics[0] === LEVERAGE_TOPIC) {
         const leverageEvent = parseLeverageEvent(log)
-        leverageEvent.timestamp = new Date(timestamp)
+        leverageEvent.timestamp = new Date(timestamp!)
+        leverageEvent.blockId = blockNumber!
         leverageLogs.push(leverageEvent)
       } else if (log.topics[0] === ZAP_LEVERAGE_TOPIC) {
         const zapLeverageEvent = parseZapLeverageEvent(log)
-        zapLeverageEvent.timestamp = new Date(timestamp)
+        zapLeverageEvent.timestamp = new Date(timestamp!)
+        zapLeverageEvent.blockId = blockNumber!
         zapLeverageLogs.push(zapLeverageEvent)
       }
     }

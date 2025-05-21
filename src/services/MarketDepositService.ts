@@ -24,56 +24,11 @@ export class MarketDepositService implements EventDetectionService {
         marketContracts
       )
 
-      await this.marketDepositRepository.insertBorrows(
-        borrowLogs.map((log) => ({
-          account: log.account,
-          receiver: log.receiver,
-          borrowedAmount: log.borrowedAmount,
-          timestamp: log.timestamp,
-        }))
-      )
-
-      await this.marketDepositRepository.insertZapDeposits(
-        zapDepositLogs.map((log) => ({
-          depositer: log.depositer,
-          market: log.market,
-          stakedAmount: log.stakedAmount,
-          tokenIn: log.tokenIn,
-          amountIn: log.amountIn,
-          timestamp: log.timestamp,
-        }))
-      )
-
-      await this.marketDepositRepository.insertDeposits(
-        depositLogs.map((log) => ({
-          depositer: log.depositer,
-          market: log.market,
-          stakedAmount: log.stakedAmount,
-          timestamp: log.timestamp,
-        }))
-      )
-
-      await this.marketDepositRepository.insertDepositAndBorrow(
-        depositAndBorrowLogs.map((log) => ({
-          depositer: log.depositer,
-          market: log.market,
-          stakedAmount: log.stakedAmount,
-          borrowAmount: log.borrowAmount,
-          timestamp: log.timestamp,
-        }))
-      )
-
-      await this.marketDepositRepository.insertZapDepositAndBorrow(
-        zapDepositAndBorrowLogs.map((log) => ({
-          depositer: log.depositer,
-          market: log.market,
-          stakedAmount: log.stakedAmount,
-          borrowAmount: log.borrowAmount,
-          tokenIn: log.tokenIn,
-          amountIn: log.amountIn,
-          timestamp: log.timestamp,
-        }))
-      )
+      await this.marketDepositRepository.insertBorrows(borrowLogs)
+      await this.marketDepositRepository.insertZapDeposits(zapDepositLogs)
+      await this.marketDepositRepository.insertDeposits(depositLogs)
+      await this.marketDepositRepository.insertDepositAndBorrow(depositAndBorrowLogs)
+      await this.marketDepositRepository.insertZapDepositAndBorrow(zapDepositAndBorrowLogs)
     } catch (error) {
       throw new Error(`Failed to detect deposit actions: ${(error as Error).message}`)
     }

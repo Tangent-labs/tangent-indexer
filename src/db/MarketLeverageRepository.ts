@@ -4,22 +4,26 @@ import { AddressLike } from "ethers"
 export class MarketLeverageRepository extends AbstractRepository {
   async insertLeverages(
     data: {
+      market: AddressLike
       account: AddressLike
       stakedAmount: string
       collatBought: string
       borrowedAmount: string
       timestamp: Date
+      blockId: number
     }[]
   ) {
     const prisma = this.prismaClient
 
     const toInsert = data.map((d) => {
       return {
+        market: d.market.toString().toLowerCase(),
         account: (d.account as string).toLowerCase(),
-        stakedAmount: d.stakedAmount,
-        collatBought: d.collatBought,
-        borrowedAmount: d.borrowedAmount,
-        check_date: d.timestamp,
+        staked_amount: d.stakedAmount,
+        collat_bought: d.collatBought,
+        borrowed_amount: d.borrowedAmount,
+        block_date: d.timestamp,
+        block_id: d.blockId,
       }
     })
 
@@ -32,6 +36,7 @@ export class MarketLeverageRepository extends AbstractRepository {
 
   async insertZapLeverages(
     data: {
+      market: AddressLike
       account: AddressLike
       stakedAmount: string
       collatZapDeposit: string
@@ -40,20 +45,23 @@ export class MarketLeverageRepository extends AbstractRepository {
       tokenIn: string
       amountIn: string
       timestamp: Date
+      blockId: number
     }[]
   ) {
     const prisma = this.prismaClient
 
     const toInsert = data.map((d) => {
       return {
+        market: d.market.toString().toLowerCase(),
         account: (d.account as string).toLowerCase(),
-        stakedAmount: d.stakedAmount.toString(),
-        collatZapDeposit: d.collatZapDeposit.toString(),
-        collatLeverage: d.collatLeverage.toString(),
-        borrowedAmount: d.borrowedAmount.toString(),
-        tokenIn: (d.tokenIn as string).toString(),
-        amountIn: d.amountIn.toString(),
-        check_date: d.timestamp,
+        staked_amount: d.stakedAmount.toString(),
+        collat_zap_deposit: d.collatZapDeposit.toString(),
+        collat_leverage: d.collatLeverage.toString(),
+        borrowed_amount: d.borrowedAmount.toString(),
+        token_in: (d.tokenIn as string).toString(),
+        amount_in: d.amountIn.toString(),
+        block_date: d.timestamp,
+        block_id: d.blockId,
       }
     })
 
