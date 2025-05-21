@@ -127,3 +127,24 @@ model market_zap_repay_and_withdraw {
   amount_in       String   @db.VarChar
   check_date      DateTime
 }
+
+model market_leverage {
+  id             BigInt   @id(map: "market_leverage_pkey") @default(autoincrement())
+  account        String   @db.VarChar
+  stakedAmount   String   @db.VarChar
+  collatBought   String   @db.VarChar
+  borrowedAmount String   @db.VarChar
+  check_date     DateTime
+}
+
+model market_zap_leverage {
+  id               BigInt   @id(map: "market_zap_leverage_pkey") @default(autoincrement())
+  account          String   @db.VarChar
+  stakedAmount     String   @db.VarChar
+  collatZapDeposit String   @db.VarChar
+  collatLeverage   String   @db.VarChar
+  borrowedAmount   String   @db.VarChar
+  tokenIn          String   @db.VarChar
+  amountIn         String   @db.VarChar
+  check_date       DateTime
+}
