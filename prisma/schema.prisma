@@ -39,6 +39,14 @@ model liquidation_bot_log {
   @@index([execution_key], map: "liquidation_bot_log_execution_key_idx")
 }
 
+model market_borrow {
+  id             BigInt   @id(map: "market_borrow_pkey") @default(autoincrement())
+  account        String   @db.VarChar
+  receiver       String   @db.VarChar
+  borrowedAmount String   @db.VarChar
+  check_date     DateTime
+}
+
 model market_deposit {
   id            BigInt   @id(map: "market_deposit_pkey") @default(autoincrement())
   userAddress   String   @db.VarChar
@@ -55,4 +63,67 @@ model market_zap_deposit {
   token_in      String   @db.VarChar
   amount_in     String   @db.VarChar
   check_date    DateTime
+}
+
+model market_deposit_and_borrow {
+  id            BigInt   @id(map: "market_deposit_and_borrow_pkey") @default(autoincrement())
+  userAddress   String   @db.VarChar
+  staked_amount String   @db.VarChar
+  borrow_amount String   @db.VarChar
+  depositer     String   @db.VarChar
+  check_date    DateTime
+}
+
+model market_zap_deposit_and_borrow {
+  id            BigInt   @id(map: "market_zap_deposit_and_borrow_pkey") @default(autoincrement())
+  userAddress   String   @db.VarChar
+  staked_amount String   @db.VarChar
+  borrow_amount String   @db.VarChar
+  depositer     String   @db.VarChar
+  token_in      String   @db.VarChar
+  amount_in     String   @db.VarChar
+  check_date    DateTime
+}
+
+model market_withdraw {
+  id              BigInt   @id(map: "market_withdraw_pkey") @default(autoincrement())
+  account         String   @db.VarChar
+  withdrawnAmount String   @db.VarChar
+  check_date      DateTime
+}
+
+model market_repay {
+  id           BigInt   @id(map: "market_repay_pkey") @default(autoincrement())
+  userAddress  String   @db.VarChar
+  repayer      String   @db.VarChar
+  repaidAmount String   @db.VarChar
+  check_date   DateTime
+}
+
+model market_repay_and_withdraw {
+  id              BigInt   @id(map: "market_repay_and_withdraw_pkey") @default(autoincrement())
+  userAddress     String   @db.VarChar
+  withdrawnAmount String   @db.VarChar
+  repaidAmount    String   @db.VarChar
+  check_date      DateTime
+}
+
+model market_zap_repay {
+  id           BigInt   @id(map: "market_zap_repay_pkey") @default(autoincrement())
+  userAddress  String   @db.VarChar
+  repayer      String   @db.VarChar
+  repaidAmount String   @db.VarChar
+  token_in     String   @db.VarChar
+  amount_in    String   @db.VarChar
+  check_date   DateTime
+}
+
+model market_zap_repay_and_withdraw {
+  id              BigInt   @id(map: "market_zap_repay_and_withdraw_pkey") @default(autoincrement())
+  userAddress     String   @db.VarChar
+  withdrawnAmount String   @db.VarChar
+  repaidAmount    String   @db.VarChar
+  token_in        String   @db.VarChar
+  amount_in       String   @db.VarChar
+  check_date      DateTime
 }
