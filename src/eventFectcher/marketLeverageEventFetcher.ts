@@ -9,6 +9,7 @@ interface LeverageEvent {
   borrowedAmount: string
   timestamp: Date
   blockId: number
+  txHash: string
 }
 
 interface ZapLeverageEvent {
@@ -22,6 +23,7 @@ interface ZapLeverageEvent {
   amountIn: string
   timestamp: Date
   blockId: number
+  txHash: string
 }
 
 const LEVERAGE_EVENT_SIGNATURES = {
@@ -43,6 +45,7 @@ const parseLeverageEvent = (log: Log): LeverageEvent => {
     borrowedAmount: borrowedAmount.toString(),
     timestamp: new Date(), // placeholder
     blockId: 22531382, // placeholder
+    txHash: log.transactionHash,
   }
 }
 
@@ -63,6 +66,7 @@ const parseZapLeverageEvent = (log: Log): ZapLeverageEvent => {
     amountIn: amountIn.toString(),
     timestamp: new Date(), // placeholder
     blockId: 22531382, // placeholder
+    txHash: log.transactionHash,
   }
 }
 

@@ -7,6 +7,7 @@ interface DepositEvent {
   stakedAmount: string
   timestamp: Date
   blockId: number
+  txHash: string
 }
 
 interface BorrowEvent {
@@ -16,6 +17,7 @@ interface BorrowEvent {
   borrowedAmount: string
   timestamp: Date
   blockId: number
+  txHash: string
 }
 
 interface DepositAndBorrowEvent {
@@ -25,6 +27,7 @@ interface DepositAndBorrowEvent {
   borrowAmount: string
   timestamp: Date
   blockId: number
+  txHash: string
 }
 
 interface ZapDepositEvent {
@@ -35,6 +38,7 @@ interface ZapDepositEvent {
   amountIn: string
   timestamp: Date
   blockId: number
+  txHash: string
 }
 
 interface ZapDepositAndBorrowEvent {
@@ -46,6 +50,7 @@ interface ZapDepositAndBorrowEvent {
   amountIn: string
   timestamp: Date
   blockId: number
+  txHash: string
 }
 
 const DEPOSIT_EVENT_SIGNATURES = {
@@ -73,6 +78,7 @@ const parseBorrowEvent = (log: Log): BorrowEvent => {
     borrowedAmount: borrowedAmount.toString(),
     timestamp: new Date(), // placeholder
     blockId: 22531382, // placeholder
+    txHash: log.transactionHash,
   }
 }
 
@@ -85,6 +91,7 @@ const parseDepositEvent = (log: Log): DepositEvent => {
     stakedAmount: stakedAmount.toString(),
     timestamp: new Date(), // placeholder
     blockId: 22531382, // placeholder
+    txHash: log.transactionHash,
   }
 }
 
@@ -98,6 +105,7 @@ const parseDepositAndBorrowEvent = (log: Log): DepositAndBorrowEvent => {
     borrowAmount: borrowAmount.toString(),
     timestamp: new Date(), // placeholder
     blockId: 22531382, // placeholder
+    txHash: log.transactionHash,
   }
 }
 
@@ -112,6 +120,7 @@ const parseZapDepositEvent = (log: Log): ZapDepositEvent => {
     amountIn: amountIn.toString(),
     timestamp: new Date(), // placeholder
     blockId: 22531382, // placeholder
+    txHash: log.transactionHash,
   }
 }
 
@@ -127,6 +136,7 @@ const parseZapDepositAndBorrowEvent = (log: Log): ZapDepositAndBorrowEvent => {
     amountIn: amountIn.toString(),
     timestamp: new Date(), // placeholder
     blockId: 22531382, // placeholder
+    txHash: log.transactionHash,
   }
 }
 
@@ -201,7 +211,6 @@ export const fetchMarketDepositLogs = async (
         const borrowEvent = parseBorrowEvent(log)
         borrowEvent.timestamp = new Date(timestamp!)
         borrowEvent.blockId = blockNumber!
-
         borrowLogs.push(borrowEvent)
       }
     }

@@ -11,6 +11,7 @@ export class MarketLeverageRepository extends AbstractRepository {
       borrowedAmount: string
       timestamp: Date
       blockId: number
+      txHash: string
     }[]
   ) {
     const prisma = this.prismaClient
@@ -24,6 +25,7 @@ export class MarketLeverageRepository extends AbstractRepository {
         borrowed_amount: d.borrowedAmount,
         block_date: d.timestamp,
         block_id: d.blockId,
+        tx_hash: d.txHash,
       }
     })
 
@@ -46,6 +48,7 @@ export class MarketLeverageRepository extends AbstractRepository {
       amountIn: string
       timestamp: Date
       blockId: number
+      txHash: string
     }[]
   ) {
     const prisma = this.prismaClient
@@ -62,6 +65,7 @@ export class MarketLeverageRepository extends AbstractRepository {
         amount_in: d.amountIn.toString(),
         block_date: d.timestamp,
         block_id: d.blockId,
+        tx_hash: d.txHash,
       }
     })
 

@@ -9,6 +9,7 @@ export class MarketRepayRepository extends AbstractRepository {
       withdrawnAmount: string
       timestamp: Date
       blockId: number
+      txHash: string
     }[]
   ) {
     const prisma = this.prismaClient
@@ -20,6 +21,7 @@ export class MarketRepayRepository extends AbstractRepository {
         withdrawn_amount: d.withdrawnAmount.toString(),
         block_date: d.timestamp,
         block_id: d.blockId,
+        tx_hash: d.txHash,
       }
     })
 
@@ -38,6 +40,7 @@ export class MarketRepayRepository extends AbstractRepository {
       repaidAmount: string
       timestamp: Date
       blockId: number
+      txHash: string
     }[]
   ) {
     const prisma = this.prismaClient
@@ -50,6 +53,7 @@ export class MarketRepayRepository extends AbstractRepository {
         repaid_amount: d.repaidAmount.toString(),
         block_date: d.timestamp,
         block_id: d.blockId,
+        tx_hash: d.txHash,
       }
     })
 
@@ -68,6 +72,7 @@ export class MarketRepayRepository extends AbstractRepository {
       withdrawnAmount: string
       timestamp: Date
       blockId: number
+      txHash: string
     }[]
   ) {
     const prisma = this.prismaClient
@@ -80,6 +85,7 @@ export class MarketRepayRepository extends AbstractRepository {
         withdrawn_amount: d.withdrawnAmount.toString(),
         block_date: d.timestamp,
         block_id: d.blockId,
+        tx_hash: d.txHash,
       }
     })
 
@@ -100,6 +106,7 @@ export class MarketRepayRepository extends AbstractRepository {
       amountIn: string
       timestamp: Date
       blockId: number
+      txHash: string
     }[]
   ) {
     const prisma = this.prismaClient
@@ -110,10 +117,11 @@ export class MarketRepayRepository extends AbstractRepository {
         account: d.account.toString().toLowerCase(),
         repayer: d.repayer.toString().toLowerCase(),
         repaid_amount: d.repaidAmount.toString(),
-        token_in: (d.tokenIn as string).toLowerCase(),
+        token_in: d.tokenIn.toString().toLowerCase(),
         amount_in: d.amountIn.toString(),
         block_date: d.timestamp,
         block_id: d.blockId,
+        tx_hash: d.txHash,
       }
     })
 
@@ -134,6 +142,7 @@ export class MarketRepayRepository extends AbstractRepository {
       amountIn: string
       timestamp: Date
       blockId: number
+      txHash: string
     }[]
   ) {
     const prisma = this.prismaClient
@@ -148,6 +157,7 @@ export class MarketRepayRepository extends AbstractRepository {
         amount_in: d.amountIn.toString(),
         block_date: d.timestamp,
         block_id: d.blockId,
+        tx_hash: d.txHash,
       }
     })
 

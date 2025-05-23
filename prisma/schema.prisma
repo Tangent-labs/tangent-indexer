@@ -47,6 +47,7 @@ model market_borrow {
   borrowed_amount String   @db.VarChar
   block_date      DateTime
   block_id        Int
+  tx_hash         String   @db.VarChar(66)
 
   @@index([account], map: "market_borrow_account")
   @@index([market], map: "market_borrow_market_address")
@@ -59,6 +60,7 @@ model market_deposit {
   staked_amount String   @db.VarChar
   block_date    DateTime
   block_id      Int
+  tx_hash       String   @db.VarChar(66)
 
   @@index([account], map: "market_deposit_account")
   @@index([market], map: "market_deposit_market_address")
@@ -73,6 +75,7 @@ model market_zap_deposit {
   amount_in     String   @db.VarChar
   block_date    DateTime
   block_id      Int
+  tx_hash       String   @db.VarChar(66)
 
   @@index([account], map: "market_zap_deposit_account")
   @@index([market], map: "market_zap_deposit_market_address")
@@ -86,6 +89,7 @@ model market_deposit_and_borrow {
   borrow_amount String   @db.VarChar
   block_date    DateTime
   block_id      Int
+  tx_hash       String   @db.VarChar(66)
 
   @@index([account], map: "market_deposit_and_borrow_account")
   @@index([market], map: "market_deposit_and_borrow_market_address")
@@ -101,6 +105,7 @@ model market_zap_deposit_and_borrow {
   amount_in     String   @db.VarChar
   block_date    DateTime
   block_id      Int
+  tx_hash       String   @db.VarChar(66)
 
   @@index([account], map: "market_zap_deposit_and_borrow_account")
   @@index([market], map: "market_zap_deposit_and_borrow_market_address")
@@ -113,6 +118,7 @@ model market_withdraw {
   withdrawn_amount String   @db.VarChar
   block_date       DateTime
   block_id         Int
+  tx_hash          String   @db.VarChar(66)
 
   @@index([account], map: "market_withdraw_account")
   @@index([market], map: "market_withdraw_market_address")
@@ -126,6 +132,7 @@ model market_repay {
   repaid_amount String   @db.VarChar
   block_date    DateTime
   block_id      Int
+  tx_hash       String   @db.VarChar(66)
 
   @@index([account], map: "market_repay_account")
   @@index([market], map: "market_repay_market_address")
@@ -139,6 +146,7 @@ model market_repay_and_withdraw {
   withdrawn_amount String   @db.VarChar
   block_date       DateTime
   block_id         Int
+  tx_hash          String   @db.VarChar(66)
 
   @@index([account], map: "market_repay_and_withdraw_account")
   @@index([market], map: "market_repay_and_withdraw_market_address")
@@ -154,6 +162,7 @@ model market_zap_repay {
   amount_in     String   @db.VarChar
   block_date    DateTime
   block_id      Int
+  tx_hash       String   @db.VarChar(66)
 
   @@index([account], map: "market_zap_repay_account")
   @@index([market], map: "market_zap_repay_market_address")
@@ -169,6 +178,7 @@ model market_zap_repay_and_withdraw {
   amount_in        String   @db.VarChar
   block_date       DateTime
   block_id         Int
+  tx_hash          String   @db.VarChar(66)
 
   @@index([account], map: "market_zap_repay_and_withdraw_account")
   @@index([market], map: "market_zap_repay_and_withdraw_market_address")
@@ -183,6 +193,7 @@ model market_leverage {
   borrowed_amount String   @db.VarChar
   block_date      DateTime
   block_id        Int
+  tx_hash         String   @db.VarChar(66)
 
   @@index([account], map: "market_leverage_account")
   @@index([market], map: "market_leverage_market_address")
@@ -200,4 +211,5 @@ model market_zap_leverage {
   amount_in          String   @db.VarChar
   block_date         DateTime
   block_id           Int
+  tx_hash            String   @db.VarChar(66)
 }

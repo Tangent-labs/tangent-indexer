@@ -8,6 +8,7 @@ export interface RepayEvent {
   repaidAmount: string
   timestamp: Date
   blockId: number
+  txHash: string
 }
 
 export interface WithdrawEvent {
@@ -16,6 +17,7 @@ export interface WithdrawEvent {
   withdrawnAmount: string
   timestamp: Date
   blockId: number
+  txHash: string
 }
 
 export interface RepayAndWithdrawEvent {
@@ -25,6 +27,7 @@ export interface RepayAndWithdrawEvent {
   withdrawnAmount: string
   timestamp: Date
   blockId: number
+  txHash: string
 }
 
 export interface ZapRepayEvent {
@@ -36,6 +39,7 @@ export interface ZapRepayEvent {
   amountIn: string
   timestamp: Date
   blockId: number
+  txHash: string
 }
 
 export interface ZapRepayAndWithdrawEvent {
@@ -47,6 +51,7 @@ export interface ZapRepayAndWithdrawEvent {
   amountIn: string
   timestamp: Date
   blockId: number
+  txHash: string
 }
 
 // Event signatures and topics
@@ -73,6 +78,7 @@ export const parseWithdrawEvent = (log: Log): WithdrawEvent => {
     withdrawnAmount: withdrawnAmount.toString(),
     timestamp: new Date(), // placeholder
     blockId: 22531382, // placeholder
+    txHash: log.transactionHash,
   }
 }
 
@@ -86,6 +92,7 @@ export const parseRepayEvent = (log: Log): RepayEvent => {
     repaidAmount: repaidAmount.toString(),
     timestamp: new Date(), // placeholder
     blockId: 22531382, // placeholder
+    txHash: log.transactionHash,
   }
 }
 
@@ -99,6 +106,7 @@ export const parseRepayAndWithdrawEvent = (log: Log): RepayAndWithdrawEvent => {
     withdrawnAmount: withdrawnAmount.toString(),
     timestamp: new Date(), // placeholder
     blockId: 22531382, // placeholder
+    txHash: log.transactionHash,
   }
 }
 
@@ -114,6 +122,7 @@ export const parseZapRepayEvent = (log: Log): ZapRepayEvent => {
     amountIn: amountIn.toString(),
     timestamp: new Date(), // placeholder
     blockId: 22531382, // placeholder
+    txHash: log.transactionHash,
   }
 }
 
@@ -129,6 +138,7 @@ export const parseZapRepayAndWithdrawEvent = (log: Log): ZapRepayAndWithdrawEven
     amountIn: amountIn.toString(),
     timestamp: new Date(), // placeholder
     blockId: 22531382, // placeholder
+    txHash: log.transactionHash,
   }
 }
 

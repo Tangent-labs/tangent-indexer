@@ -10,6 +10,7 @@ export class MarketDepositRepository extends AbstractRepository {
       borrowedAmount: string
       timestamp: Date
       blockId: number
+      txHash: string
     }[]
   ) {
     const prisma = this.prismaClient
@@ -22,6 +23,7 @@ export class MarketDepositRepository extends AbstractRepository {
         borrowed_amount: d.borrowedAmount.toString(),
         block_date: d.timestamp,
         block_id: d.blockId,
+        tx_hash: d.txHash,
       }
     })
 
@@ -39,6 +41,7 @@ export class MarketDepositRepository extends AbstractRepository {
       stakedAmount: string
       timestamp: Date
       blockId: number
+      txHash: string
     }[]
   ) {
     const prisma = this.prismaClient
@@ -50,6 +53,7 @@ export class MarketDepositRepository extends AbstractRepository {
         staked_amount: d.stakedAmount.toString(),
         block_date: d.timestamp,
         block_id: d.blockId,
+        tx_hash: d.txHash,
       }
     })
 
@@ -69,6 +73,7 @@ export class MarketDepositRepository extends AbstractRepository {
       amountIn: string
       timestamp: Date
       blockId: number
+      txHash: string
     }[]
   ) {
     const prisma = this.prismaClient
@@ -78,10 +83,11 @@ export class MarketDepositRepository extends AbstractRepository {
         market: d.market.toString().toLowerCase(),
         account: d.account.toString().toLowerCase(),
         staked_amount: d.stakedAmount,
-        token_in: (d.tokenIn as string).toLowerCase(),
+        token_in: d.tokenIn.toString().toLowerCase(),
         amount_in: d.amountIn,
         block_date: d.timestamp,
         block_id: d.blockId,
+        tx_hash: d.txHash,
       }
     })
 
@@ -100,6 +106,7 @@ export class MarketDepositRepository extends AbstractRepository {
       borrowAmount: string
       timestamp: Date
       blockId: number
+      txHash: string
     }[]
   ) {
     const prisma = this.prismaClient
@@ -112,6 +119,7 @@ export class MarketDepositRepository extends AbstractRepository {
         borrow_amount: d.borrowAmount.toString(),
         block_date: d.timestamp,
         block_id: d.blockId,
+        tx_hash: d.txHash,
       }
     })
 
@@ -132,6 +140,7 @@ export class MarketDepositRepository extends AbstractRepository {
       amountIn: string
       timestamp: Date
       blockId: number
+      txHash: string
     }[]
   ) {
     const prisma = this.prismaClient
@@ -142,10 +151,11 @@ export class MarketDepositRepository extends AbstractRepository {
         account: d.account.toString().toLowerCase(),
         staked_amount: d.stakedAmount.toString(),
         borrow_amount: d.borrowAmount.toString(),
-        token_in: (d.tokenIn as string).toLowerCase(),
+        token_in: d.tokenIn.toString().toLowerCase(),
         amount_in: d.amountIn.toString(),
         block_date: d.timestamp,
         block_id: d.blockId,
+        tx_hash: d.txHash,
       }
     })
 
