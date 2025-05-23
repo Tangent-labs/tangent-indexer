@@ -33,6 +33,7 @@ export class MarketRepayRepository extends AbstractRepository {
   async insertRepays(
     data: {
       market: AddressLike
+      account: AddressLike
       repayer: AddressLike
       repaidAmount: string
       timestamp: Date
@@ -44,8 +45,8 @@ export class MarketRepayRepository extends AbstractRepository {
     const toInsert = data.map((d) => {
       return {
         market: d.market.toString().toLowerCase(),
-        account: (d.repayer as string).toLowerCase(),
-        repayer: (d.repayer as string).toLowerCase(),
+        account: d.account.toString().toLowerCase(),
+        repayer: d.repayer.toString().toLowerCase(),
         repaid_amount: d.repaidAmount.toString(),
         block_date: d.timestamp,
         block_id: d.blockId,
@@ -92,6 +93,7 @@ export class MarketRepayRepository extends AbstractRepository {
   async insertZapRepays(
     data: {
       market: AddressLike
+      account: AddressLike
       repayer: AddressLike
       repaidAmount: string
       tokenIn: AddressLike
@@ -105,8 +107,8 @@ export class MarketRepayRepository extends AbstractRepository {
     const toInsert = data.map((d) => {
       return {
         market: d.market.toString().toLowerCase(),
-        repayer: (d.repayer as string).toLowerCase(),
-        account: (d.repayer as string).toLowerCase(),
+        account: d.account.toString().toLowerCase(),
+        repayer: d.repayer.toString().toLowerCase(),
         repaid_amount: d.repaidAmount.toString(),
         token_in: (d.tokenIn as string).toLowerCase(),
         amount_in: d.amountIn.toString(),
@@ -125,7 +127,7 @@ export class MarketRepayRepository extends AbstractRepository {
   async insertZapRepayAndWithdraw(
     data: {
       market: AddressLike
-      repayer: AddressLike
+      account: AddressLike
       repaidAmount: string
       withdrawnAmount: string
       tokenIn: AddressLike
@@ -139,10 +141,10 @@ export class MarketRepayRepository extends AbstractRepository {
     const toInsert = data.map((d) => {
       return {
         market: d.market.toString().toLowerCase(),
-        account: (d.repayer as string).toLowerCase(),
+        account: d.account.toString().toLowerCase(),
         repaid_amount: d.repaidAmount.toString(),
         withdrawn_amount: d.withdrawnAmount.toString(),
-        token_in: (d.tokenIn as string).toLowerCase(),
+        token_in: d.tokenIn.toString().toLowerCase(),
         amount_in: d.amountIn.toString(),
         block_date: d.timestamp,
         block_id: d.blockId,

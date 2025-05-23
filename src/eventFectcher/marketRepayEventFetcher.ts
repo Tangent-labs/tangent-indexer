@@ -40,7 +40,7 @@ export interface ZapRepayEvent {
 
 export interface ZapRepayAndWithdrawEvent {
   market: AddressLike
-  repayer: AddressLike
+  account: AddressLike
   withdrawnAmount: string
   repaidAmount: string
   tokenIn: string
@@ -122,7 +122,7 @@ export const parseZapRepayAndWithdrawEvent = (log: Log): ZapRepayAndWithdrawEven
   const [withdrawnAmount, repaidAmount, tokenIn, amountIn] = ethers.AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "address", "uint256"], log.data)
   return {
     market: log.address,
-    repayer: account,
+    account,
     withdrawnAmount: withdrawnAmount.toString(),
     repaidAmount: repaidAmount.toString(),
     tokenIn,
