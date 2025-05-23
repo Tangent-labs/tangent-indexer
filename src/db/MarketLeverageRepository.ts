@@ -18,7 +18,7 @@ export class MarketLeverageRepository extends AbstractRepository {
     const toInsert = data.map((d) => {
       return {
         market: d.market.toString().toLowerCase(),
-        account: (d.account as string).toLowerCase(),
+        account: d.account.toString().toLowerCase(),
         staked_amount: d.stakedAmount,
         collat_bought: d.collatBought,
         borrowed_amount: d.borrowedAmount,
@@ -53,12 +53,12 @@ export class MarketLeverageRepository extends AbstractRepository {
     const toInsert = data.map((d) => {
       return {
         market: d.market.toString().toLowerCase(),
-        account: (d.account as string).toLowerCase(),
+        account: d.account.toString().toLowerCase(),
         staked_amount: d.stakedAmount.toString(),
         collat_zap_deposit: d.collatZapDeposit.toString(),
         collat_leverage: d.collatLeverage.toString(),
         borrowed_amount: d.borrowedAmount.toString(),
-        token_in: (d.tokenIn as string).toString(),
+        token_in: d.tokenIn.toString().toLowerCase(),
         amount_in: d.amountIn.toString(),
         block_date: d.timestamp,
         block_id: d.blockId,

@@ -16,7 +16,7 @@ export class MarketRepayRepository extends AbstractRepository {
     const toInsert = data.map((d) => {
       return {
         market: d.market.toString().toLowerCase(),
-        account: (d.account as string).toLowerCase(),
+        account: d.account.toString().toLowerCase(),
         withdrawn_amount: d.withdrawnAmount.toString(),
         block_date: d.timestamp,
         block_id: d.blockId,
