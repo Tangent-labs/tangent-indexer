@@ -41,7 +41,7 @@ export class MarketBorrowerRepository extends AbstractRepository {
       .map((d) => ({
         borrower_address: d.borrower as string,
         contract_address: d.market as string,
-        check_date: new Date(),
+        block_date: new Date(),
       }))
 
     if (toInsert.length > 0) {
@@ -60,7 +60,7 @@ export class MarketBorrowerRepository extends AbstractRepository {
           contract_address: entry.market as string,
         },
         data: {
-          check_date: new Date(),
+          block_date: new Date(),
         },
       })
     }

@@ -64,11 +64,12 @@ const ZAP_DEPOSIT_AND_BORROW_TOPIC = ethers.keccak256(ethers.toUtf8Bytes("ZapDep
 
 const parseBorrowEvent = (log: Log): BorrowEvent => {
   const userAddress = ethers.AbiCoder.defaultAbiCoder().decode(["address"], log.topics[1])?.at(0) as AddressLike
-  const [borrowedAmount] = ethers.AbiCoder.defaultAbiCoder().decode(["uint256"], log.data)
+  const [receiver, borrowedAmount] = ethers.AbiCoder.defaultAbiCoder().decode(["address", "uint256"], log.data)
+
   return {
     market: log.address,
     account: userAddress,
-    receiver: userAddress,
+    receiver: receiver,
     borrowedAmount: borrowedAmount.toString(),
     timestamp: new Date(), // placeholder
     blockId: 22531382, // placeholder
@@ -200,6 +201,7 @@ export const fetchMarketDepositLogs = async (
         const borrowEvent = parseBorrowEvent(log)
         borrowEvent.timestamp = new Date(timestamp!)
         borrowEvent.blockId = blockNumber!
+
         borrowLogs.push(borrowEvent)
       }
     }
