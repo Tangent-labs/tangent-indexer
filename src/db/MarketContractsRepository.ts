@@ -1,9 +1,5 @@
 import { AbstractRepository } from "./AbstractRepository"
-
-export interface MarketContract {
-  contract_address: string
-  contract_type: string
-}
+import { market_contracts } from "@prisma/client"
 
 export class MarketContractsRepository extends AbstractRepository {
   getContracts = async () => {
@@ -18,13 +14,13 @@ export class MarketContractsRepository extends AbstractRepository {
     return contracts
   }
 
-  insertContract = async (contract: MarketContract) => {
+  insertContract = async (contract: market_contracts) => {
     await this.prismaClient.market_contracts.create({
       data: contract,
     })
   }
 
-  insertContracts = async (contracts: MarketContract[]) => {
+  insertContracts = async (contracts: market_contracts[]) => {
     await this.prismaClient.market_contracts.createMany({
       data: contracts,
       skipDuplicates: true,

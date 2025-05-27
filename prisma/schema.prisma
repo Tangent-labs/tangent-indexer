@@ -25,7 +25,7 @@ model market_borrower {
   id               BigInt   @id(map: "markets_borrower_pkey") @default(autoincrement())
   contract_address String?  @db.VarChar
   borrower_address String?  @db.VarChar
-  check_date       DateTime @default(now())
+  block_date       DateTime @default(now())
 }
 
 model liquidation_bot_log {
@@ -37,4 +37,182 @@ model liquidation_bot_log {
   date          DateTime @default(now())
 
   @@index([execution_key], map: "liquidation_bot_log_execution_key_idx")
+}
+
+model market_borrow {
+  id              BigInt   @id(map: "market_borrow_pkey") @default(autoincrement())
+  market          String   @db.VarChar
+  account         String   @db.VarChar
+  receiver        String   @db.VarChar
+  borrowed_amount String   @db.VarChar
+  block_date      DateTime
+  block_id        Int
+  tx_hash         String   @db.VarChar(66)
+
+  @@index([account], map: "market_borrow_account")
+  @@index([market], map: "market_borrow_market_address")
+}
+
+model market_deposit {
+  id            BigInt   @id(map: "market_deposit_pkey") @default(autoincrement())
+  market        String   @db.VarChar
+  account       String   @db.VarChar
+  staked_amount String   @db.VarChar
+  block_date    DateTime
+  block_id      Int
+  tx_hash       String   @db.VarChar(66)
+
+  @@index([account], map: "market_deposit_account")
+  @@index([market], map: "market_deposit_market_address")
+}
+
+model market_zap_deposit {
+  id            BigInt   @id(map: "market_zap_deposit_pkey") @default(autoincrement())
+  market        String   @db.VarChar
+  account       String   @db.VarChar
+  staked_amount String   @db.VarChar
+  token_in      String   @db.VarChar
+  amount_in     String   @db.VarChar
+  block_date    DateTime
+  block_id      Int
+  tx_hash       String   @db.VarChar(66)
+
+  @@index([account], map: "market_zap_deposit_account")
+  @@index([market], map: "market_zap_deposit_market_address")
+}
+
+model market_deposit_and_borrow {
+  id            BigInt   @id(map: "market_deposit_and_borrow_pkey") @default(autoincrement())
+  market        String   @db.VarChar
+  account       String   @db.VarChar
+  staked_amount String   @db.VarChar
+  borrow_amount String   @db.VarChar
+  block_date    DateTime
+  block_id      Int
+  tx_hash       String   @db.VarChar(66)
+
+  @@index([account], map: "market_deposit_and_borrow_account")
+  @@index([market], map: "market_deposit_and_borrow_market_address")
+}
+
+model market_zap_deposit_and_borrow {
+  id            BigInt   @id(map: "market_zap_deposit_and_borrow_pkey") @default(autoincrement())
+  market        String   @db.VarChar
+  account       String   @db.VarChar
+  staked_amount String   @db.VarChar
+  borrow_amount String   @db.VarChar
+  token_in      String   @db.VarChar
+  amount_in     String   @db.VarChar
+  block_date    DateTime
+  block_id      Int
+  tx_hash       String   @db.VarChar(66)
+
+  @@index([account], map: "market_zap_deposit_and_borrow_account")
+  @@index([market], map: "market_zap_deposit_and_borrow_market_address")
+}
+
+model market_withdraw {
+  id               BigInt   @id(map: "market_withdraw_pkey") @default(autoincrement())
+  market           String   @db.VarChar
+  account          String   @db.VarChar
+  withdrawn_amount String   @db.VarChar
+  block_date       DateTime
+  block_id         Int
+  tx_hash          String   @db.VarChar(66)
+
+  @@index([account], map: "market_withdraw_account")
+  @@index([market], map: "market_withdraw_market_address")
+}
+
+model market_repay {
+  id            BigInt   @id(map: "market_repay_pkey") @default(autoincrement())
+  market        String   @db.VarChar
+  account       String   @db.VarChar
+  repayer       String   @db.VarChar
+  repaid_amount String   @db.VarChar
+  block_date    DateTime
+  block_id      Int
+  tx_hash       String   @db.VarChar(66)
+
+  @@index([account], map: "market_repay_account")
+  @@index([market], map: "market_repay_market_address")
+}
+
+model market_repay_and_withdraw {
+  id               BigInt   @id(map: "market_repay_and_withdraw_pkey") @default(autoincrement())
+  market           String   @db.VarChar
+  account          String   @db.VarChar
+  repaid_amount    String   @db.VarChar
+  withdrawn_amount String   @db.VarChar
+  block_date       DateTime
+  block_id         Int
+  tx_hash          String   @db.VarChar(66)
+
+  @@index([account], map: "market_repay_and_withdraw_account")
+  @@index([market], map: "market_repay_and_withdraw_market_address")
+}
+
+model market_zap_repay {
+  id            BigInt   @id(map: "market_zap_repay_pkey") @default(autoincrement())
+  market        String   @db.VarChar
+  account       String   @db.VarChar
+  repayer       String   @db.VarChar
+  repaid_amount String   @db.VarChar
+  token_in      String   @db.VarChar
+  amount_in     String   @db.VarChar
+  block_date    DateTime
+  block_id      Int
+  tx_hash       String   @db.VarChar(66)
+
+  @@index([account], map: "market_zap_repay_account")
+  @@index([market], map: "market_zap_repay_market_address")
+}
+
+model market_zap_repay_and_withdraw {
+  id               BigInt   @id(map: "market_zap_repay_and_withdraw_pkey") @default(autoincrement())
+  market           String   @db.VarChar
+  account          String   @db.VarChar
+  withdrawn_amount String   @db.VarChar
+  repaid_amount    String   @db.VarChar
+  token_in         String   @db.VarChar
+  amount_in        String   @db.VarChar
+  block_date       DateTime
+  block_id         Int
+  tx_hash          String   @db.VarChar(66)
+
+  @@index([account], map: "market_zap_repay_and_withdraw_account")
+  @@index([market], map: "market_zap_repay_and_withdraw_market_address")
+}
+
+model market_leverage {
+  id              BigInt   @id(map: "market_leverage_pkey") @default(autoincrement())
+  market          String   @db.VarChar
+  account         String   @db.VarChar
+  staked_amount   String   @db.VarChar
+  collat_bought   String   @db.VarChar
+  borrowed_amount String   @db.VarChar
+  block_date      DateTime
+  block_id        Int
+  tx_hash         String   @db.VarChar(66)
+
+  @@index([account], map: "market_leverage_account")
+  @@index([market], map: "market_leverage_market_address")
+}
+
+model market_zap_leverage {
+  id                 BigInt   @id(map: "market_zap_leverage_pkey") @default(autoincrement())
+  market             String   @db.VarChar
+  account            String   @db.VarChar
+  staked_amount      String   @db.VarChar
+  collat_zap_deposit String   @db.VarChar
+  collat_leverage    String   @db.VarChar
+  borrowed_amount    String   @db.VarChar
+  token_in           String   @db.VarChar
+  amount_in          String   @db.VarChar
+  block_date         DateTime
+  block_id           Int
+  tx_hash            String   @db.VarChar(66)
+
+  @@index([account], map: "market_zap_leverage_account")
+  @@index([market], map: "market_zap_leverage_market_address")
 }

@@ -4,7 +4,7 @@ import { GlobalBlock } from "type/prisma"
 export class BlockRepository extends AbstractRepository {
   // GET
   async getLastBlockIndexed(): Promise<GlobalBlock> {
-    const lastBlock = this.prismaClient.global_blocks.findFirst({
+    const lastBlock = await this.prismaClient.global_blocks.findFirst({
       orderBy: {
         block_id: "desc",
       },
@@ -15,7 +15,7 @@ export class BlockRepository extends AbstractRepository {
 
   // STORE
   async storeBlockTracking(blockId: number) {
-    this.prismaClient.global_blocks.create({
+    await this.prismaClient.global_blocks.create({
       data: {
         block_id: blockId,
         created_at: new Date(),

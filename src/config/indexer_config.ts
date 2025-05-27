@@ -54,7 +54,6 @@ export const indexerConfig = {
   },
   contracts: {
     marketCreatorAddress: addresses.utilities.marketCreator as AddressLike,
-    liquidatorProxyAddress: addresses.utilities.liquidatorProxy as AddressLike,
     curveRouterAddress: "0x45312ea0eFf7E09C83CBE249fa1d7598c4C8cd4e",
   },
   enso: {
