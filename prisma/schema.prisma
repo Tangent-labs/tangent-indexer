@@ -212,4 +212,7 @@ model market_zap_leverage {
   block_date         DateTime
   block_id           Int
   tx_hash            String   @db.VarChar(66)
+
+  @@index([account], map: "market_zap_leverage_account")
+  @@index([market], map: "market_zap_leverage_market_address")
 }
