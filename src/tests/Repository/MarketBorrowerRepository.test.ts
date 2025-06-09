@@ -89,13 +89,13 @@ describe("MarketBorrowerRepository", () => {
 
     // Expect createMany to be called for new borrowers
     expect(prismaMock.market_borrower.createMany).toHaveBeenCalledWith({
-      data: [{ borrower_address: "Bob", contract_address: "Market2", check_date: expect.any(Date) }],
+      data: [{ borrower_address: "Bob", contract_address: "Market2", block_date: expect.any(Date) }],
     })
 
     // Expect updateMany to be called for existing borrowers
     expect(prismaMock.market_borrower.updateMany).toHaveBeenCalledWith({
       where: { borrower_address: "Alice", contract_address: "Market1" },
-      data: { check_date: expect.any(Date) },
+      data: { block_date: expect.any(Date) },
     })
   })
 
@@ -120,11 +120,11 @@ describe("MarketBorrowerRepository", () => {
     expect(prismaMock.market_borrower.updateMany).toHaveBeenCalledTimes(2)
     expect(prismaMock.market_borrower.updateMany).toHaveBeenCalledWith({
       where: { borrower_address: "Alice", contract_address: "Market1" },
-      data: { check_date: expect.any(Date) },
+      data: { block_date: expect.any(Date) },
     })
     expect(prismaMock.market_borrower.updateMany).toHaveBeenCalledWith({
       where: { borrower_address: "Bob", contract_address: "Market2" },
-      data: { check_date: expect.any(Date) },
+      data: { block_date: expect.any(Date) },
     })
   })
 })
