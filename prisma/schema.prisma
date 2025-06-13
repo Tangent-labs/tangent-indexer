@@ -14,9 +14,9 @@ model global_blocks {
 
 model market_contracts {
   id               BigInt  @id(map: "markets_contracts_pkey") @default(autoincrement())
-  contract_name    String? @db.VarChar
-  contract_address String? @db.VarChar
-  contract_type    String? @db.VarChar
+  contract_name    String @db.VarChar
+  contract_address String @db.VarChar
+  contract_type    String @db.VarChar
 
   @@index([contract_address], map: "markets_contracts_contract_address_idx")
 }

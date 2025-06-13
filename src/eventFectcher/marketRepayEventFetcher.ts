@@ -84,7 +84,7 @@ export const parseWithdrawEvent = (log: Log): WithdrawEvent => {
 
 export const parseRepayEvent = (log: Log): RepayEvent => {
   const account = ethers.AbiCoder.defaultAbiCoder().decode(["address"], log.topics[1])?.at(0) as AddressLike
-  const [repayer, repaidAmount] = ethers.AbiCoder.defaultAbiCoder().decode(["address, uint256"], log.data)
+  const [repayer, repaidAmount] = ethers.AbiCoder.defaultAbiCoder().decode(["address", "uint256"], log.data)
   return {
     market: log.address,
     account,
