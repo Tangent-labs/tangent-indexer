@@ -115,12 +115,8 @@ export const parseRepayAndWithdrawEvent = (log: Log): RepayAndWithdrawEvent => {
 export const parseZapRepayEvent = (log: Log): ZapRepayEvent => {
   const account = ethers.AbiCoder.defaultAbiCoder().decode(["address"], log.topics[1])?.at(0) as AddressLike
 
-  console.log("account : ", account)
-
   const [repayer, repaidAmount, tokenIn, amountIn] = ethers.AbiCoder.defaultAbiCoder().decode(["address", "uint256", "address", "uint256"], log.data)
-  console.log("repayer : ", repayer)
-  console.log("repaidAmount : ", repaidAmount)
-  console.log("tokenIn : ", tokenIn)
+
   return {
     market: log.address,
     account,

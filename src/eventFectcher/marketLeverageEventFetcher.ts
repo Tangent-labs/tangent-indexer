@@ -43,8 +43,8 @@ const parseLeverageEvent = (log: Log): LeverageEvent => {
     stakedAmount: stakedAmount.toString(),
     collatBought: collatBought.toString(),
     borrowedAmount: borrowedAmount.toString(),
-    timestamp: new Date(), // placeholder
-    blockId: 22531382, // placeholder
+    timestamp: new Date(),
+    blockId: 22531382,
     txHash: log.transactionHash,
   }
 }
@@ -64,8 +64,8 @@ const parseZapLeverageEvent = (log: Log): ZapLeverageEvent => {
     borrowedAmount: borrowedAmount.toString(),
     tokenIn: tokenIn.toString(),
     amountIn: amountIn.toString(),
-    timestamp: new Date(), // placeholder
-    blockId: 22531382, // placeholder
+    timestamp: new Date(),
+    blockId: 22531382,
     txHash: log.transactionHash,
   }
 }

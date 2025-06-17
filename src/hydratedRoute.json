@@ -3,14 +3,14 @@
     {
       "display": "USDC/fxUSD >> USDC/fxUSD >> USDC >> tgUSD-USDC* >> tgUSD*",
       "in": "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
           "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
@@ -29,12 +29,12 @@
     },
     {
       "display": "tgUSD* >> tgUSD-USDC* >> USDC >> USDC/fxUSD >> USDC/fxUSD",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
           "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
           "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
@@ -57,7 +57,7 @@
     {
       "display": "USDC/fxUSD >> USDC/fxUSD >> USDC >> FRAX/USDC >> FRAX >> FRAX/frxUSD >> frxUSD >> wfrxUSD* >> wfrxUSD* >> tgUSD-wfrxUSD* >> tgUSD*",
       "in": "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
@@ -67,10 +67,10 @@
           "0x853d955aCEf822Db058eb8505911ED77F175b99e",
           "0xbbaf8b2837cbbc7146f5bc978d6f84db0be1cacc",
           "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0xDb41F6d9e40298ba00E3AC9D4851F2C80DFdA326",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31"
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x9Cd4762a0e701B4cCf69cc8848E8fE495398D5b5",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64"
         ],
         "swapParamsFull": [
           [0, 0, 6, 1, 2],
@@ -83,14 +83,14 @@
     },
     {
       "display": "tgUSD* >> tgUSD-wfrxUSD* >> wfrxUSD* >> wfrxUSD* >> frxUSD >> FRAX/frxUSD >> FRAX >> FRAX/USDC >> USDC >> USDC/fxUSD >> USDC/fxUSD",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0xDb41F6d9e40298ba00E3AC9D4851F2C80DFdA326",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0x9Cd4762a0e701B4cCf69cc8848E8fE495398D5b5",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
           "0xcacd6fd266af91b8aed52accc382b4e165586e29",
           "0xbbaf8b2837cbbc7146f5bc978d6f84db0be1cacc",
           "0x853d955aCEf822Db058eb8505911ED77F175b99e",
@@ -111,14 +111,14 @@
     {
       "display": "USDC/crvUSD >> USDC/crvUSD >> USDC >> tgUSD-USDC* >> tgUSD*",
       "in": "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
           "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
@@ -137,12 +137,12 @@
     },
     {
       "display": "tgUSD* >> tgUSD-USDC* >> USDC >> USDC/crvUSD >> USDC/crvUSD",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
           "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
           "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
@@ -165,7 +165,7 @@
     {
       "display": "USDC/crvUSD >> USDC/crvUSD >> USDC >> FRAX/USDC >> FRAX >> FRAX/frxUSD >> frxUSD >> wfrxUSD* >> wfrxUSD* >> tgUSD-wfrxUSD* >> tgUSD*",
       "in": "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
@@ -175,10 +175,10 @@
           "0x853d955aCEf822Db058eb8505911ED77F175b99e",
           "0xbbaf8b2837cbbc7146f5bc978d6f84db0be1cacc",
           "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0xDb41F6d9e40298ba00E3AC9D4851F2C80DFdA326",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31"
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x9Cd4762a0e701B4cCf69cc8848E8fE495398D5b5",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64"
         ],
         "swapParamsFull": [
           [0, 0, 6, 1, 2],
@@ -191,14 +191,14 @@
     },
     {
       "display": "tgUSD* >> tgUSD-wfrxUSD* >> wfrxUSD* >> wfrxUSD* >> frxUSD >> FRAX/frxUSD >> FRAX >> FRAX/USDC >> USDC >> USDC/crvUSD >> USDC/crvUSD",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0xDb41F6d9e40298ba00E3AC9D4851F2C80DFdA326",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0x9Cd4762a0e701B4cCf69cc8848E8fE495398D5b5",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
           "0xcacd6fd266af91b8aed52accc382b4e165586e29",
           "0xbbaf8b2837cbbc7146f5bc978d6f84db0be1cacc",
           "0x853d955aCEf822Db058eb8505911ED77F175b99e",
@@ -219,7 +219,7 @@
     {
       "display": "USDT/crvUSD >> USDT/crvUSD >> USDT >> USDC/USDT >> USDC >> tgUSD-USDC* >> tgUSD*",
       "in": "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
@@ -227,8 +227,8 @@
           "0xdac17f958d2ee523a2206206994597c13d831ec7",
           "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
@@ -245,12 +245,12 @@
     },
     {
       "display": "tgUSD* >> tgUSD-USDC* >> USDC >> USDC/USDT >> USDT >> USDT/crvUSD >> USDT/crvUSD",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
           "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
           "0xdac17f958d2ee523a2206206994597c13d831ec7",
@@ -273,7 +273,7 @@
     {
       "display": "USDT/crvUSD >> USDT/crvUSD >> crvUSD >> crvUSD/FRAX >> FRAX >> FRAX/frxUSD >> frxUSD >> wfrxUSD* >> wfrxUSD* >> tgUSD-wfrxUSD* >> tgUSD*",
       "in": "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
@@ -283,10 +283,10 @@
           "0x853d955aCEf822Db058eb8505911ED77F175b99e",
           "0xbbaf8b2837cbbc7146f5bc978d6f84db0be1cacc",
           "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0xDb41F6d9e40298ba00E3AC9D4851F2C80DFdA326",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31"
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x9Cd4762a0e701B4cCf69cc8848E8fE495398D5b5",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64"
         ],
         "swapParamsFull": [
           [0, 1, 6, 1, 2],
@@ -299,14 +299,14 @@
     },
     {
       "display": "tgUSD* >> tgUSD-wfrxUSD* >> wfrxUSD* >> wfrxUSD* >> frxUSD >> FRAX/frxUSD >> FRAX >> crvUSD/FRAX >> crvUSD >> USDT/crvUSD >> USDT/crvUSD",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0xDb41F6d9e40298ba00E3AC9D4851F2C80DFdA326",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0x9Cd4762a0e701B4cCf69cc8848E8fE495398D5b5",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
           "0xcacd6fd266af91b8aed52accc382b4e165586e29",
           "0xbbaf8b2837cbbc7146f5bc978d6f84db0be1cacc",
           "0x853d955aCEf822Db058eb8505911ED77F175b99e",
@@ -327,7 +327,7 @@
     {
       "display": "sDAI/sUSDe >> sDAI/sUSDe >> sDAI >> sDAI/FRAX >> FRAX >> FRAX/frxUSD >> frxUSD >> wfrxUSD* >> wfrxUSD* >> tgUSD-wfrxUSD* >> tgUSD*",
       "in": "0x167478921b907422f8e88b43c4af2b8bea278d3a",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0x167478921b907422f8e88b43c4af2b8bea278d3a",
@@ -337,10 +337,10 @@
           "0x853d955aCEf822Db058eb8505911ED77F175b99e",
           "0xbbaf8b2837cbbc7146f5bc978d6f84db0be1cacc",
           "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0xDb41F6d9e40298ba00E3AC9D4851F2C80DFdA326",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31"
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x9Cd4762a0e701B4cCf69cc8848E8fE495398D5b5",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64"
         ],
         "swapParamsFull": [
           [0, 0, 6, 1, 2],
@@ -353,14 +353,14 @@
     },
     {
       "display": "tgUSD* >> tgUSD-wfrxUSD* >> wfrxUSD* >> wfrxUSD* >> frxUSD >> FRAX/frxUSD >> FRAX >> sDAI/FRAX >> sDAI >> sDAI/sUSDe >> sDAI/sUSDe",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0x167478921b907422f8e88b43c4af2b8bea278d3a",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0xDb41F6d9e40298ba00E3AC9D4851F2C80DFdA326",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0x9Cd4762a0e701B4cCf69cc8848E8fE495398D5b5",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
           "0xcacd6fd266af91b8aed52accc382b4e165586e29",
           "0xbbaf8b2837cbbc7146f5bc978d6f84db0be1cacc",
           "0x853d955aCEf822Db058eb8505911ED77F175b99e",
@@ -381,7 +381,7 @@
     {
       "display": "sDAI/sUSDe >> sDAI/sUSDe >> sDAI >> sDAI/FRAX >> FRAX >> FRAX/USDC >> USDC >> tgUSD-USDC* >> tgUSD*",
       "in": "0x167478921b907422f8e88b43c4af2b8bea278d3a",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0x167478921b907422f8e88b43c4af2b8bea278d3a",
@@ -391,8 +391,8 @@
           "0x853d955aCEf822Db058eb8505911ED77F175b99e",
           "0xDcEF968d416a41Cdac0ED8702fAC8128A64241A2",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000"
         ],
@@ -407,12 +407,12 @@
     },
     {
       "display": "tgUSD* >> tgUSD-USDC* >> USDC >> FRAX/USDC >> FRAX >> sDAI/FRAX >> sDAI >> sDAI/sUSDe >> sDAI/sUSDe",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0x167478921b907422f8e88b43c4af2b8bea278d3a",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
           "0xDcEF968d416a41Cdac0ED8702fAC8128A64241A2",
           "0x853d955aCEf822Db058eb8505911ED77F175b99e",
@@ -435,14 +435,14 @@
     {
       "display": "USDC/USDT >> USDC/USDT >> USDC >> tgUSD-USDC* >> tgUSD*",
       "in": "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
           "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
@@ -461,12 +461,12 @@
     },
     {
       "display": "tgUSD* >> tgUSD-USDC* >> USDC >> USDC/USDT >> USDC/USDT",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
           "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
           "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
@@ -489,7 +489,7 @@
     {
       "display": "USDC/USDT >> USDC/USDT >> USDC >> FRAX/USDC >> FRAX >> FRAX/frxUSD >> frxUSD >> wfrxUSD* >> wfrxUSD* >> tgUSD-wfrxUSD* >> tgUSD*",
       "in": "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
@@ -499,10 +499,10 @@
           "0x853d955aCEf822Db058eb8505911ED77F175b99e",
           "0xbbaf8b2837cbbc7146f5bc978d6f84db0be1cacc",
           "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0xDb41F6d9e40298ba00E3AC9D4851F2C80DFdA326",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31"
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x9Cd4762a0e701B4cCf69cc8848E8fE495398D5b5",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64"
         ],
         "swapParamsFull": [
           [0, 0, 6, 1, 2],
@@ -515,14 +515,14 @@
     },
     {
       "display": "tgUSD* >> tgUSD-wfrxUSD* >> wfrxUSD* >> wfrxUSD* >> frxUSD >> FRAX/frxUSD >> FRAX >> FRAX/USDC >> USDC >> USDC/USDT >> USDC/USDT",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0xDb41F6d9e40298ba00E3AC9D4851F2C80DFdA326",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0x9Cd4762a0e701B4cCf69cc8848E8fE495398D5b5",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
           "0xcacd6fd266af91b8aed52accc382b4e165586e29",
           "0xbbaf8b2837cbbc7146f5bc978d6f84db0be1cacc",
           "0x853d955aCEf822Db058eb8505911ED77F175b99e",
@@ -543,7 +543,7 @@
     {
       "display": "USR/RLP >> USR/RLP >> USR >> USR/USDC >> USDC >> tgUSD-USDC* >> tgUSD*",
       "in": "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
@@ -551,8 +551,8 @@
           "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
           "0x3ee841f47947fefbe510366e4bbb49e145484195",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
@@ -569,12 +569,12 @@
     },
     {
       "display": "tgUSD* >> tgUSD-USDC* >> USDC >> USR/USDC >> USR >> USR/RLP >> USR/RLP",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
           "0x3ee841f47947fefbe510366e4bbb49e145484195",
           "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
@@ -597,7 +597,7 @@
     {
       "display": "frxUSD/USDe >> frxUSD/USDe >> USDe >> USDC/USDe >> USDC >> tgUSD-USDC* >> tgUSD*",
       "in": "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
@@ -605,8 +605,8 @@
           "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
           "0x02950460e2b9529d0e00284a5fa2d7bdf3fa4d72",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
@@ -623,12 +623,12 @@
     },
     {
       "display": "tgUSD* >> tgUSD-USDC* >> USDC >> USDC/USDe >> USDe >> frxUSD/USDe >> frxUSD/USDe",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
           "0x02950460e2b9529d0e00284a5fa2d7bdf3fa4d72",
           "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
@@ -651,16 +651,16 @@
     {
       "display": "frxUSD/USDe >> frxUSD/USDe >> frxUSD >> wfrxUSD* >> wfrxUSD* >> tgUSD-wfrxUSD* >> tgUSD*",
       "in": "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
           "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
           "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0xDb41F6d9e40298ba00E3AC9D4851F2C80DFdA326",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x9Cd4762a0e701B4cCf69cc8848E8fE495398D5b5",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
@@ -677,14 +677,14 @@
     },
     {
       "display": "tgUSD* >> tgUSD-wfrxUSD* >> wfrxUSD* >> wfrxUSD* >> frxUSD >> frxUSD/USDe >> frxUSD/USDe",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0xDb41F6d9e40298ba00E3AC9D4851F2C80DFdA326",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0x9Cd4762a0e701B4cCf69cc8848E8fE495398D5b5",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
           "0xcacd6fd266af91b8aed52accc382b4e165586e29",
           "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
           "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
@@ -705,7 +705,7 @@
     {
       "display": "DOLA/USR >> DOLA/USR >> USR >> USR/USDC >> USDC >> tgUSD-USDC* >> tgUSD*",
       "in": "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
@@ -713,8 +713,8 @@
           "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
           "0x3ee841f47947fefbe510366e4bbb49e145484195",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
@@ -731,12 +731,12 @@
     },
     {
       "display": "tgUSD* >> tgUSD-USDC* >> USDC >> USR/USDC >> USR >> DOLA/USR >> DOLA/USR",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
           "0x3ee841f47947fefbe510366e4bbb49e145484195",
           "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
@@ -759,7 +759,7 @@
     {
       "display": "DOLA/USR >> DOLA/USR >> DOLA >> DOLA/sUSDS >> sUSDS >> sUSDS/frxUSD >> frxUSD >> wfrxUSD* >> wfrxUSD* >> tgUSD-wfrxUSD* >> tgUSD*",
       "in": "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
@@ -769,10 +769,10 @@
           "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
           "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
           "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0xDb41F6d9e40298ba00E3AC9D4851F2C80DFdA326",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31"
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x9Cd4762a0e701B4cCf69cc8848E8fE495398D5b5",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64"
         ],
         "swapParamsFull": [
           [0, 0, 6, 1, 2],
@@ -785,14 +785,14 @@
     },
     {
       "display": "tgUSD* >> tgUSD-wfrxUSD* >> wfrxUSD* >> wfrxUSD* >> frxUSD >> sUSDS/frxUSD >> sUSDS >> DOLA/sUSDS >> DOLA >> DOLA/USR >> DOLA/USR",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0xDb41F6d9e40298ba00E3AC9D4851F2C80DFdA326",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0x9Cd4762a0e701B4cCf69cc8848E8fE495398D5b5",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
           "0xcacd6fd266af91b8aed52accc382b4e165586e29",
           "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
           "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
@@ -813,7 +813,7 @@
     {
       "display": "scrvUSD/sUSDe >> scrvUSD/sUSDe >> sUSDe >> DOLA/sUSDe >> DOLA >> DOLA/USR >> USR >> USR/USDC >> USDC >> tgUSD-USDC* >> tgUSD*",
       "in": "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
@@ -825,8 +825,8 @@
           "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
           "0x3ee841f47947fefbe510366e4bbb49e145484195",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31"
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64"
         ],
         "swapParamsFull": [
           [0, 1, 6, 1, 2],
@@ -839,12 +839,12 @@
     },
     {
       "display": "tgUSD* >> tgUSD-USDC* >> USDC >> USR/USDC >> USR >> DOLA/USR >> DOLA >> DOLA/sUSDe >> sUSDe >> scrvUSD/sUSDe >> scrvUSD/sUSDe",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
           "0x3ee841f47947fefbe510366e4bbb49e145484195",
           "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
@@ -867,7 +867,7 @@
     {
       "display": "scrvUSD/sUSDe >> scrvUSD/sUSDe >> scrvUSD >> scrvUSD/sUSDS >> sUSDS >> sUSDS/frxUSD >> frxUSD >> wfrxUSD* >> wfrxUSD* >> tgUSD-wfrxUSD* >> tgUSD*",
       "in": "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
@@ -877,10 +877,10 @@
           "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
           "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
           "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0xDb41F6d9e40298ba00E3AC9D4851F2C80DFdA326",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31"
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x9Cd4762a0e701B4cCf69cc8848E8fE495398D5b5",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64"
         ],
         "swapParamsFull": [
           [0, 0, 6, 1, 2],
@@ -893,14 +893,14 @@
     },
     {
       "display": "tgUSD* >> tgUSD-wfrxUSD* >> wfrxUSD* >> wfrxUSD* >> frxUSD >> sUSDS/frxUSD >> sUSDS >> scrvUSD/sUSDS >> scrvUSD >> scrvUSD/sUSDe >> scrvUSD/sUSDe",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0xDb41F6d9e40298ba00E3AC9D4851F2C80DFdA326",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
-          "0x5F3456C9DF6e9233A7fFB51495F5cfF6C74f20D8",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0x9Cd4762a0e701B4cCf69cc8848E8fE495398D5b5",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
+          "0x2F1448a525117262408e4b6c24C3161037067D5d",
           "0xcacd6fd266af91b8aed52accc382b4e165586e29",
           "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
           "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
@@ -921,7 +921,7 @@
     {
       "display": "pxETH/stETH >> pxETH/stETH >> stETH >> stETH/ETH >> ETH >> WBTC/ETH/USDC >> USDC >> tgUSD-USDC* >> tgUSD*",
       "in": "0x6951bDC4734b9f7F3E1B74afeBC670c736A0EDB6",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0x6951bDC4734b9f7F3E1B74afeBC670c736A0EDB6",
@@ -931,8 +931,8 @@
           "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
           "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000"
         ],
@@ -947,12 +947,12 @@
     },
     {
       "display": "tgUSD* >> tgUSD-USDC* >> USDC >> WBTC/ETH/USDC >> ETH >> stETH/ETH >> stETH >> pxETH/stETH >> pxETH/stETH",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0x6951bDC4734b9f7F3E1B74afeBC670c736A0EDB6",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
           "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
           "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
@@ -975,7 +975,7 @@
     {
       "display": "WBTC/cbBTC >> WBTC/cbBTC >> WBTC >> WBTC/ETH/USDC >> USDC >> tgUSD-USDC* >> tgUSD*",
       "in": "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
@@ -983,8 +983,8 @@
           "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
           "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
@@ -1001,12 +1001,12 @@
     },
     {
       "display": "tgUSD* >> tgUSD-USDC* >> USDC >> WBTC/ETH/USDC >> WBTC >> WBTC/cbBTC >> WBTC/cbBTC",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
           "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
           "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
@@ -1029,12 +1029,12 @@
     {
       "display": "USDC >> tgUSD-USDC* >> tgUSD*",
       "in": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
@@ -1055,12 +1055,12 @@
     },
     {
       "display": "tgUSD* >> tgUSD-USDC* >> USDC",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
@@ -1083,14 +1083,14 @@
     {
       "display": "WBTC >> WBTC/ETH/USDC >> USDC >> tgUSD-USDC* >> tgUSD*",
       "in": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-      "out": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "out": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "params": {
         "routeAddresses": [
           "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
           "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
           "0x0000000000000000000000000000000000000000",
@@ -1109,12 +1109,12 @@
     },
     {
       "display": "tgUSD* >> tgUSD-USDC* >> USDC >> WBTC/ETH/USDC >> WBTC",
-      "in": "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
+      "in": "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
       "out": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
       "params": {
         "routeAddresses": [
-          "0x25bDeB03a8f9f02928Bf035730363eBdef9bdA31",
-          "0x0Cf79227F5996b645Ec094e1391549B3000a199D",
+          "0xD9cA22646bDbB0772ff1B15CC139e229f0AA7b64",
+          "0xEF9bEc072b2157C78bBfA3Bbf4B074E6CB859cc1",
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
           "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
           "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",

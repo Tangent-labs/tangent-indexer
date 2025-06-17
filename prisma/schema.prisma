@@ -216,3 +216,34 @@ model market_zap_leverage {
   @@index([account], map: "market_zap_leverage_account")
   @@index([market], map: "market_zap_leverage_market_address")
 }
+
+model market_liquidate {
+  id                    BigInt   @id(map: "market_liquidate_pkey") @default(autoincrement())
+  market                String   @db.VarChar
+  account               String   @db.VarChar
+  repaid_amount         String   @db.VarChar
+  fee                   String   @db.VarChar
+  collateral_liquidated String   @db.VarChar
+  liquidator            String   @db.VarChar
+  block_date            DateTime
+  block_id              Int
+  tx_hash               String   @db.VarChar(66)
+
+  @@index([account], map: "market_liquidate_account")
+  @@index([market], map: "market_liquidate_market_address")
+}
+
+model market_self_liquidate {
+  id                    BigInt   @id(map: "market_self_liquidate_pkey") @default(autoincrement())
+  market                String   @db.VarChar
+  account               String   @db.VarChar
+  repaid_amount         String   @db.VarChar
+  collateral_liquidated String   @db.VarChar
+  liquidator            String   @db.VarChar
+  block_date            DateTime
+  block_id              Int
+  tx_hash               String   @db.VarChar(66)
+
+  @@index([account], map: "market_self_liquidate_account")
+  @@index([market], map: "market_self_liquidate_market_address")
+}
