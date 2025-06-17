@@ -76,22 +76,24 @@ export const parseWithdrawEvent = (log: Log): WithdrawEvent => {
     market: log.address,
     account: userRepayAddress,
     withdrawnAmount: withdrawnAmount.toString(),
-    timestamp: new Date(), // placeholder
-    blockId: 22531382, // placeholder
+    timestamp: new Date(),
+    blockId: 22531382,
     txHash: log.transactionHash,
   }
 }
 
 export const parseRepayEvent = (log: Log): RepayEvent => {
   const account = ethers.AbiCoder.defaultAbiCoder().decode(["address"], log.topics[1])?.at(0) as AddressLike
-  const [repayer, repaidAmount] = ethers.AbiCoder.defaultAbiCoder().decode(["address, uint256"], log.data)
+
+  const [repayer, repaidAmount] = ethers.AbiCoder.defaultAbiCoder().decode(["address", "uint256"], log.data)
+
   return {
     market: log.address,
     account,
     repayer,
     repaidAmount: repaidAmount.toString(),
-    timestamp: new Date(), // placeholder
-    blockId: 22531382, // placeholder
+    timestamp: new Date(),
+    blockId: 22531382,
     txHash: log.transactionHash,
   }
 }
@@ -104,15 +106,21 @@ export const parseRepayAndWithdrawEvent = (log: Log): RepayAndWithdrawEvent => {
     account,
     repaidAmount: repaidAmount.toString(),
     withdrawnAmount: withdrawnAmount.toString(),
-    timestamp: new Date(), // placeholder
-    blockId: 22531382, // placeholder
+    timestamp: new Date(),
+    blockId: 22531382,
     txHash: log.transactionHash,
   }
 }
 
 export const parseZapRepayEvent = (log: Log): ZapRepayEvent => {
   const account = ethers.AbiCoder.defaultAbiCoder().decode(["address"], log.topics[1])?.at(0) as AddressLike
+
+  console.log("account : ", account)
+
   const [repayer, repaidAmount, tokenIn, amountIn] = ethers.AbiCoder.defaultAbiCoder().decode(["address", "uint256", "address", "uint256"], log.data)
+  console.log("repayer : ", repayer)
+  console.log("repaidAmount : ", repaidAmount)
+  console.log("tokenIn : ", tokenIn)
   return {
     market: log.address,
     account,
@@ -120,8 +128,8 @@ export const parseZapRepayEvent = (log: Log): ZapRepayEvent => {
     repaidAmount: repaidAmount.toString(),
     tokenIn,
     amountIn: amountIn.toString(),
-    timestamp: new Date(), // placeholder
-    blockId: 22531382, // placeholder
+    timestamp: new Date(),
+    blockId: 22531382,
     txHash: log.transactionHash,
   }
 }
@@ -136,8 +144,8 @@ export const parseZapRepayAndWithdrawEvent = (log: Log): ZapRepayAndWithdrawEven
     repaidAmount: repaidAmount.toString(),
     tokenIn,
     amountIn: amountIn.toString(),
-    timestamp: new Date(), // placeholder
-    blockId: 22531382, // placeholder
+    timestamp: new Date(),
+    blockId: 22531382,
     txHash: log.transactionHash,
   }
 }
