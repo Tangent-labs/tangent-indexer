@@ -1,12 +1,14 @@
 import { AddressLike, ethers, JsonRpcProvider, Log } from "ethers"
 import { getEthLogs } from "./_baseFectcher"
 import { MarketType } from "type/data"
+import { market_contracts } from "@prisma/client"
 
 // Define Event Signatures
+
 const MARKET_CREATION_EVENT_SIGNATURES = {
-  MarketConvexCrvCreated: ethers.id("MarketConvexCrvCreated(address)"),
-  MarketConvexFxnCreated: ethers.id("MarketConvexFxnCreated(address)"),
-  MarketNoSociabilizationCreated: ethers.id("MarketNoSociabilizationCreated(address)"),
+  MarketConvexCrvCreated: ethers.id("MarketConvexCrvCreated(address,string)"),
+  MarketConvexFxnCreated: ethers.id("MarketConvexFxnCreated(address,string)"),
+  MarketNoSociabilizationCreated: ethers.id("MarketNoSociabilizationCreated(address,string)"),
 }
 
 const marketTypes = {
@@ -19,6 +21,7 @@ const marketTypes = {
 export type MarketCreationEvent = {
   address: AddressLike
   blockNumber: number
+  name: string
   marketType: MarketType
 }
 
@@ -26,18 +29,21 @@ export const fetchMarketCreationLogs = async (
   provider: JsonRpcProvider,
   startingBlock: number,
   endingBlock: number,
-  contract: AddressLike // Single contract address
-): Promise<MarketCreationEvent[]> => {
-  const logs = await getEthLogs(provider, startingBlock, endingBlock, [contract], Object.values(MARKET_CREATION_EVENT_SIGNATURES))
+  marketCreator: AddressLike
+): Promise<market_contracts[]> => {
+  const logs = await getEthLogs(provider, startingBlock, endingBlock, [marketCreator], Object.values(MARKET_CREATION_EVENT_SIGNATURES))
   return logs.map((log) => parseMarketEvent(log))
 }
 
-const parseMarketEvent = (log: Log): MarketCreationEvent => {
+const parseMarketEvent = (log: Log): market_contracts => {
   // all events have the same signature
-  const decoded = ethers.AbiCoder.defaultAbiCoder().decode(["address"], log.data)
+  const decoded = ethers.AbiCoder.defaultAbiCoder().decode(["address", "string"], log.data)
+  const name = decoded[1]
+  const type = name.split("-")[0].trim()
+
   return {
-    blockNumber: log.blockNumber,
-    address: decoded[0],
-    marketType: marketTypes[log.topics[0]] as MarketType,
-  }
+    contract_name: name,
+    contract_address: decoded[0],
+    contract_type: type,
+  } as market_contracts
 }

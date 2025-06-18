@@ -8,14 +8,14 @@ export const getEthLogs = async (
   topics: string[]
 ): Promise<Log[]> => {
   try {
-    const logs = await provider.send("eth_getLogs", [
-      {
-        fromBlock: toBeHex(startingBlock),
-        toBlock: toBeHex(endingBlock),
-        address: contracts,
-        topics: [topics], // Match either event
-      },
-    ])
+    const params = {
+      fromBlock: toBeHex(startingBlock),
+      toBlock: toBeHex(endingBlock),
+      address: contracts,
+      topics: [topics],
+    }
+
+    const logs = await provider.send("eth_getLogs", [params])
 
     return logs
   } catch (error) {

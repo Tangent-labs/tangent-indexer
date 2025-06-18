@@ -1,6 +1,6 @@
 import { AddressLike } from "ethers"
 
-export type MarketType = "ConvexFxn" | "ConvexCrv" | "NoSociabilization"
+export type MarketType = "ConvexFxn" | "ConvexCrv" | "Pendle PT"
 
 export type LiquidationUserInInfo = { account: AddressLike; market: AddressLike }
 

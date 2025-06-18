@@ -155,13 +155,15 @@ export const fetchMarketRepayLogs = async (
   zapRepayAndWithdrawLogs: ZapRepayAndWithdrawEvent[]
 }> => {
   try {
-    const logs = await getEthLogs(provider, startingBlock, endingBlock, contracts, [
+    const repayTopics = [
       REPAY_EVENT_SIGNATURES.Repay,
       REPAY_EVENT_SIGNATURES.RepayAndWithdraw,
       REPAY_EVENT_SIGNATURES.ZapRepay,
       REPAY_EVENT_SIGNATURES.ZapRepayAndWithdraw,
       REPAY_EVENT_SIGNATURES.Withdraw,
-    ])
+    ]
+
+    const logs = await getEthLogs(provider, startingBlock, endingBlock, contracts, repayTopics)
 
     const blockTimestamps = new Map<number, number>()
     const blockNumbers = new Map<number, number>()

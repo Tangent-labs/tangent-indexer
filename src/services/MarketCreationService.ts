@@ -2,7 +2,7 @@ import { AddressLike, JsonRpcProvider } from "ethers"
 import { MarketContractsRepository } from "../db/MarketContractsRepository"
 import { fetchMarketCreationLogs } from "../eventFectcher/marketCreationEventFectcher"
 import { EventDetectionService } from "../type/service"
-import { market_contracts } from "@prisma/client"
+import * as usgContractAddresses from "../addresses.json"
 
 export class MarketCreationService implements EventDetectionService {
   marketContractsRepository: MarketContractsRepository
@@ -14,30 +14,12 @@ export class MarketCreationService implements EventDetectionService {
   }
 
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
-    // get the constant from the config
+    // Fetch logs from MarketCreator
+    const marketsCreated = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, usgContractAddresses.utilities.marketCreator)
 
-    // fetch the logs
-    const logs = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, this.marketCreatorAddress)
-    if (!logs.length) {
-      console.log("No market creation logs found")
-      return
-    }
-
-    const addresses = logs.map((log) => log.address) as string[]
-    const existingContracts = await this.marketContractsRepository.getContractsInList(addresses)
-    const newContracts = addresses.filter((address) => !existingContracts.some((contract) => contract.contract_address === address))
-    // Insert the new contracts
-
-    if (newContracts.length) {
-      const newData = newContracts
-        .map((contract) => {
-          return {
-            ...logs.find((log) => log.address === contract),
-          }
-        })
-        .map((log) => ({ contract_address: log.address, contract_type: log.marketType }))
-
-      await this.marketContractsRepository.insertContracts(newData as market_contracts[])
+    // If some logs are coming from MarketCreator, we insert them in db
+    if (marketsCreated.length) {
+      await this.marketContractsRepository.insertContracts(marketsCreated)
     }
   }
 }

@@ -153,13 +153,14 @@ export const fetchMarketDepositLogs = async (
   zapDepositAndBorrowLogs: ZapDepositAndBorrowEvent[]
 }> => {
   try {
-    const logs = await getEthLogs(provider, startingBlock, endingBlock, contracts, [
+    const depositTopics = [
       DEPOSIT_EVENT_SIGNATURES.Deposit,
       DEPOSIT_EVENT_SIGNATURES.Borrow,
       DEPOSIT_EVENT_SIGNATURES.ZapDeposit,
       DEPOSIT_EVENT_SIGNATURES.DepositAndBorrow,
       DEPOSIT_EVENT_SIGNATURES.ZapDepositAndBorrow,
-    ])
+    ]
+    const logs = await getEthLogs(provider, startingBlock, endingBlock, contracts, depositTopics)
 
     const blockTimestamps = new Map<number, number>()
     const blockNumbers = new Map<number, number>()
@@ -182,7 +183,7 @@ export const fetchMarketDepositLogs = async (
     const zapDepositLogs: ZapDepositEvent[] = []
     const depositAndBorrowLogs: DepositAndBorrowEvent[] = []
     const zapDepositAndBorrowLogs: ZapDepositAndBorrowEvent[] = []
-
+    console.log(logs)
     for (const log of logs) {
       const timestamp = blockTimestamps.get(log.blockNumber)
       const blockNumber = blockNumbers.get(log.blockNumber)

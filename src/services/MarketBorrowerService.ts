@@ -18,8 +18,9 @@ export class MarketBorrowerService implements EventDetectionService {
   }
 
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
+    const marketsContracts = await this.marketContractsRepository.getContracts()
     // laod the markets from the database
-    const marketContracts: AddressLike[] = (await this.marketContractsRepository.getContracts()).map((contract) => contract.contract_address as AddressLike)
+    const marketContracts: AddressLike[] = marketsContracts.map((market) => market.contract_address as AddressLike)
 
     // fetch the logs
     const logs = await fetchBorrowLogs(provider, startingBlock, endingBlock, marketContracts)

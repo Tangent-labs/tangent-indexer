@@ -80,7 +80,8 @@ export const fetchMarketLeverageLogs = async (
   zapLeverageLogs: ZapLeverageEvent[]
 }> => {
   try {
-    const logs = await getEthLogs(provider, startingBlock, endingBlock, contracts, [LEVERAGE_EVENT_SIGNATURES.Leverage, LEVERAGE_EVENT_SIGNATURES.ZapLeverage])
+    const leverageTopics = [LEVERAGE_EVENT_SIGNATURES.Leverage, LEVERAGE_EVENT_SIGNATURES.ZapLeverage]
+    const logs = await getEthLogs(provider, startingBlock, endingBlock, contracts, leverageTopics)
 
     const blockTimestamps = new Map<number, number>()
     const blockNumbers = new Map<number, number>()
