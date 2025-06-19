@@ -15,6 +15,8 @@ import { indexerConfig } from "config/indexer_config"
 import { MarketRepayService } from "services/MarketRepayService"
 import { MarketRepayRepository } from "db/MarketRepayRepository"
 import { MarketLeverageRepository } from "db/MarketLeverageRepository"
+import { MarketLiquidateRepository } from "db/MarketLiquidateRepository"
+import { MarketLiquidationService } from "services/MarketLiquidationService"
 dotenv.config()
 
 async function main() {
@@ -25,6 +27,7 @@ async function main() {
     marketCreationService,
     marketDepositService,
     marketLeverageService,
+    marketLiquidateService,
     marketRepayService,
     blockService,
     setTransation,
@@ -58,8 +61,11 @@ async function main() {
           // Detect repay events
           await marketRepayService.runDetection(bestProvider, startBlock, endBlock)
 
-          // Detect repay events
+          // Detect leverage events
           await marketLeverageService.runDetection(bestProvider, startBlock, endBlock)
+
+          // Detect liquidate events
+          await marketLiquidateService.runDetection(bestProvider, startBlock, endBlock)
 
           // Update the last indexed block
           await blockService.updateLastBlockIndexed(endBlock)
@@ -88,6 +94,7 @@ function setUpIndexerBlockServices() {
   const marketDepositRepository = new MarketDepositRepository(prismaClient)
   const marketRepayRepository = new MarketRepayRepository(prismaClient)
   const marketLeverageRepository = new MarketLeverageRepository(prismaClient)
+  const marketLiquidateRepository = new MarketLiquidateRepository(prismaClient)
 
   const setTransation = (dbTransaction: TransactionPrisma): void => {
     blockRepository.setClient(dbTransaction)
@@ -96,6 +103,7 @@ function setUpIndexerBlockServices() {
     marketDepositRepository.setClient(dbTransaction)
     marketRepayRepository.setClient(dbTransaction)
     marketLeverageRepository.setClient(dbTransaction)
+    marketLiquidateRepository.setClient(dbTransaction)
   }
 
   // Set up the services
@@ -105,6 +113,7 @@ function setUpIndexerBlockServices() {
   const marketDepositService = new MarketDepositService(marketDepositRepository, marketContractsRepository)
   const marketRepayService = new MarketRepayService(marketRepayRepository, marketContractsRepository)
   const marketLeverageService = new MarketLeverageService(marketLeverageRepository, marketContractsRepository)
+  const marketLiquidateService = new MarketLiquidationService(marketLiquidateRepository, marketContractsRepository)
 
   return {
     prismaClient,
@@ -113,6 +122,7 @@ function setUpIndexerBlockServices() {
     marketDepositService,
     marketRepayService,
     marketLeverageService,
+    marketLiquidateService,
     blockService,
     setTransation,
   }

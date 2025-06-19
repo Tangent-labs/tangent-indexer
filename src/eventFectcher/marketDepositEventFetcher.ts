@@ -76,8 +76,8 @@ const parseBorrowEvent = (log: Log): BorrowEvent => {
     account: userAddress,
     receiver: receiver,
     borrowedAmount: borrowedAmount.toString(),
-    timestamp: new Date(), // placeholder
-    blockId: 22531382, // placeholder
+    timestamp: new Date(),
+    blockId: 22531382,
     txHash: log.transactionHash,
   }
 }
@@ -89,8 +89,8 @@ const parseDepositEvent = (log: Log): DepositEvent => {
     market: log.address,
     account: userDepositAddress,
     stakedAmount: stakedAmount.toString(),
-    timestamp: new Date(), // placeholder
-    blockId: 22531382, // placeholder
+    timestamp: new Date(),
+    blockId: 22531382,
     txHash: log.transactionHash,
   }
 }
@@ -103,8 +103,8 @@ const parseDepositAndBorrowEvent = (log: Log): DepositAndBorrowEvent => {
     account: userDepositAddress,
     stakedAmount: stakedAmount.toString(),
     borrowAmount: borrowAmount.toString(),
-    timestamp: new Date(), // placeholder
-    blockId: 22531382, // placeholder
+    timestamp: new Date(),
+    blockId: 22531382,
     txHash: log.transactionHash,
   }
 }
@@ -118,8 +118,8 @@ const parseZapDepositEvent = (log: Log): ZapDepositEvent => {
     stakedAmount: stakedAmount.toString(),
     tokenIn,
     amountIn: amountIn.toString(),
-    timestamp: new Date(), // placeholder
-    blockId: 22531382, // placeholder
+    timestamp: new Date(),
+    blockId: 22531382,
     txHash: log.transactionHash,
   }
 }
@@ -134,8 +134,8 @@ const parseZapDepositAndBorrowEvent = (log: Log): ZapDepositAndBorrowEvent => {
     borrowAmount: borrowAmount.toString(),
     tokenIn,
     amountIn: amountIn.toString(),
-    timestamp: new Date(), // placeholder
-    blockId: 22531382, // placeholder
+    timestamp: new Date(),
+    blockId: 22531382,
     txHash: log.transactionHash,
   }
 }
