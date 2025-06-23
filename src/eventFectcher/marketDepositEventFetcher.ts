@@ -74,7 +74,7 @@ const parseBorrowEvent = (log: Log): BorrowEvent => {
   return {
     market: log.address,
     account: userAddress,
-    receiver: receiver,
+    receiver,
     borrowedAmount: borrowedAmount.toString(),
     timestamp: new Date(),
     blockId: 22531382,
