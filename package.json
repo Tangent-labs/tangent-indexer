@@ -8,6 +8,7 @@
     "tangent:reset-liquidation-test": "npm run db:truncate &  npm run tangent:indexer-block & npm run tangent:check-liquidation",
     "tangent:indexer-block": "tsx src/scripts/index_block.ts",
     "tangent:check-liquidation": "tsx src/scripts/check_liquidation.ts",
+    "tangent:check-votes": "tsx src/scripts/check_votes.ts",
     "format": "prettier --write --list-different . ",
     "db:truncate": "tsx src/scripts/utils/truncate_tables.ts",
     "db:push": "npx prisma db push",
