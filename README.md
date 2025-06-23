@@ -140,3 +140,5 @@ flowchart TD
     style E fill:#bbf,stroke:#333,stroke-width:2px
     style I fill:#bbf,stroke:#333,stroke-width:2px
 ```
+
+## Snapshot Vote ( TODO )
