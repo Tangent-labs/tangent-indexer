@@ -1,5 +1,5 @@
 import { AbstractRepository } from "./AbstractRepository"
-import { market_contracts } from "@prisma/client"
+import { market_contracts as MarketContracts } from "@prisma/client"
 
 export class MarketContractsRepository extends AbstractRepository {
   getContracts = async () => {
@@ -14,13 +14,13 @@ export class MarketContractsRepository extends AbstractRepository {
     return contracts
   }
 
-  insertContract = async (contract: market_contracts) => {
+  insertContract = async (contract: MarketContracts) => {
     await this.prismaClient.market_contracts.create({
       data: contract,
     })
   }
 
-  insertContracts = async (contracts: market_contracts[]) => {
+  insertContracts = async (contracts: MarketContracts[]) => {
     await this.prismaClient.market_contracts.createMany({
       data: contracts,
       skipDuplicates: true,

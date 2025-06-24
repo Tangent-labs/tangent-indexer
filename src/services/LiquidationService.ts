@@ -317,17 +317,17 @@ export class LiquidationService {
   }
 
   async _getBestRoute(providers: JsonRpcProvider[], account: LiquidationUserFullInfo) {
-    const matchingROutes = successRoutes.filter((route) => route.start.toLowerCase() === (account.collatToken as string).toLowerCase())
+    const matchingROutes = successRoutes.success.filter((route) => route.in.toLowerCase() === (account.collatToken as string).toLowerCase())
     if (!matchingROutes.length) {
       return { route: null, amount: 0n }
     }
 
     // find duplicates in the routes by display
-    const uniqueRoutes = matchingROutes.filter((route, index, self) => self.findIndex((t) => t.route === route.route) === index)
+    const uniqueRoutes = matchingROutes.filter((route, index, self) => self.findIndex((t) => t.display === route.display) === index)
     const routeParams = uniqueRoutes.map(
       (route) =>
         ({
-          display: route.route,
+          display: route.display,
           _route: route.params.routeAddresses,
           _swap_params: route.params.swapParamsFull,
           _amount: account.positionValue,
