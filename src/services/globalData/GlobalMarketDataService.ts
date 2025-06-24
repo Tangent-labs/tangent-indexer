@@ -22,7 +22,7 @@ const rewardTokens = [
   { symbol: "wstETH", address: commonERC20.wstETH },
 ]
 
-export class TVLAprMarketService {
+export class GlobalMarketDataService {
   marketContractsRepo: MarketContractsRepository
   provider: JsonRpcProvider
 

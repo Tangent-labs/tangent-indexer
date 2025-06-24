@@ -183,7 +183,6 @@ export const fetchMarketDepositLogs = async (
     const zapDepositLogs: ZapDepositEvent[] = []
     const depositAndBorrowLogs: DepositAndBorrowEvent[] = []
     const zapDepositAndBorrowLogs: ZapDepositAndBorrowEvent[] = []
-    console.log(logs)
     for (const log of logs) {
       const timestamp = blockTimestamps.get(log.blockNumber)
       const blockNumber = blockNumbers.get(log.blockNumber)
