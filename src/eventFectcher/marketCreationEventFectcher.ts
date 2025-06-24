@@ -1,4 +1,4 @@
-import { AddressLike, ethers, JsonRpcProvider, Log } from "ethers"
+import { AddressLike, Contract, ethers, JsonRpcProvider, Log } from "ethers"
 import { getEthLogs } from "./_baseFectcher"
 import { MarketType } from "type/data"
 import { market_contracts } from "@prisma/client"
@@ -32,18 +32,40 @@ export const fetchMarketCreationLogs = async (
   marketCreator: AddressLike
 ): Promise<market_contracts[]> => {
   const logs = await getEthLogs(provider, startingBlock, endingBlock, [marketCreator], Object.values(MARKET_CREATION_EVENT_SIGNATURES))
-  return logs.map((log) => parseMarketEvent(log))
+  return await Promise.all(logs.map((log) => parseMarketEvent(log, provider)))
 }
 
-const parseMarketEvent = (log: Log): market_contracts => {
+const parseMarketEvent = async (log: Log, provider: JsonRpcProvider): Promise<market_contracts> => {
   // all events have the same signature
   const decoded = ethers.AbiCoder.defaultAbiCoder().decode(["address", "string"], log.data)
   const name = decoded[1]
   const type = name.split("-")[0].trim()
+  const marketAddress = decoded[0]
+
+  const marketContract = new Contract(
+    marketAddress,
+    [
+      {
+        inputs: [],
+        name: "collatToken",
+        outputs: [
+          {
+            internalType: "contract IERC20Metadata",
+            name: "",
+            type: "address",
+          },
+        ],
+        stateMutability: "view",
+        type: "function",
+      },
+    ],
+    provider
+  )
 
   return {
     contract_name: name,
-    contract_address: decoded[0],
+    contract_address: marketAddress,
     contract_type: type,
+    collateral_address: await marketContract.collatToken(),
   } as market_contracts
 }

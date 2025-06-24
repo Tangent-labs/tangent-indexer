@@ -20,14 +20,14 @@
     "lint:tsc": "npx tsc --noEmit",
     "lint:prettier": "prettier --check .",
     "prepare": "husky",
-    "validate": "npm run lint &  npm run lint:tsc &   npm run lint:prettier",
+    "validate": "npm run lint & npm run lint:tsc & npm run lint:prettier",
     "compile:prod": "npm run compile && npm run sentry:sourcemaps",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org cvg-mb --project indexer ./build && sentry-cli sourcemaps upload --org cvg-mb --project indexer ./build"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^6.7.0",
+    "@prisma/client": "^6.10.1",
     "@sentry/cli": "^2.26.0",
     "@sentry/core": "^8.54.0",
     "@sentry/node": "^7.98.0",
@@ -36,7 +36,6 @@
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "ethers": "^6.14.0",
-    "prisma": "^5.11.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "uuid": "^11.1.0"
@@ -45,6 +44,7 @@
     "@eslint/js": "^9.20.0",
     "@typescript-eslint/eslint-plugin": "^8.24.0",
     "@typescript-eslint/parser": "^8.24.0",
+    "defi-resources": "https://github.com/Tangent-labs/defi-resources.git#main",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^10.0.1",
     "eslint-config-standard": "^17.1.0",
@@ -54,6 +54,7 @@
     "eslint-plugin-promise": "^6.6.0",
     "husky": "^9.1.7",
     "prettier": "^3.5.0",
+    "prisma": "^6.10.1",
     "source-map-support": "^0.5.21",
     "vitest": "^3.0.5"
   }

@@ -16,7 +16,6 @@ import { MarketRepayService } from "services/MarketRepayService"
 import { MarketRepayRepository } from "db/MarketRepayRepository"
 import { MarketLeverageRepository } from "db/MarketLeverageRepository"
 dotenv.config()
-
 async function main() {
   const { providers, handleError } = setUpIndexer()
   const {
