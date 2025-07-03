@@ -13,10 +13,12 @@ model global_blocks {
 }
 
 model market_contracts {
-  id               BigInt  @id(map: "markets_contracts_pkey") @default(autoincrement())
-  contract_name    String @db.VarChar
-  contract_address String @db.VarChar
-  contract_type    String @db.VarChar
+  id                  BigInt                @id(map: "markets_contracts_pkey") @default(autoincrement())
+  contract_name       String                @db.VarChar
+  collateral_address  String                @db.VarChar
+  contract_address    String                @db.VarChar
+  contract_type       String                @db.VarChar
+  market_global_data  market_global_data[]
 
   @@index([contract_address], map: "markets_contracts_contract_address_idx")
 }
@@ -219,4 +221,20 @@ model market_zap_leverage {
 
   @@index([account], map: "market_zap_leverage_account")
   @@index([market], map: "market_zap_leverage_market_address")
+}
+
+model market_global_data {
+  id              BigInt           @id(map: "global_data_and_aprs_markets_history_pkey") @default(autoincrement())
+  market          market_contracts @relation(fields: [market_id], references: [id])
+  market_id       BigInt
+  timestamp       DateTime
+  apr_projected   Json
+  apr_current     Json
+  tvl_usd         Float
+  tvl_amount      Float
+  total_debt      Float
+  bad_debt        Float
+  oracle_price    Float
+  ir_apy          Float
+  reward_cut      Float
 }

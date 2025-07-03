@@ -1,41 +1,32 @@
 import { PrismaClient } from "@prisma/client"
+import { MarketGlobalDataRepository } from "db/MarketGlobalDataRepository"
 import * as dotenv from "dotenv"
 import { JsonRpcProvider } from "ethers"
-import { chainView } from "utils/chainView"
 
-import * as usgContractAddresses from "../addresses.json"
-import * as MarketCurrentAPR from "../abis/MarketCurrentAPR.json"
-import { MarketContractsRepository } from "db/MarketContractsRepository"
+import { GlobalMarketDataService } from "services/globalData/GlobalMarketDataService"
 dotenv.config()
 
 const prismaClient = new PrismaClient()
+const chainRpcs = process.env.CHAIN_RPCS
+if (!chainRpcs) {
+  throw new Error("CHAIN_RPCS_NOT_SET")
+}
+const provider = new JsonRpcProvider(chainRpcs.split(",")[0])
 
-export type APR = {
-  token: string
-  amountPerYear: bigint
-}
-export type TVLAprs = {
-  totalStakedAmount: bigint
-  totalStakedUSD: bigint
-  aprs: APR[]
-}
+const NEW_ROWS_FREQUENCY = 900_000
 
 async function main() {
-  const chainRpcs = process.env.CHAIN_RPCS
-  if (!chainRpcs) {
-    throw new Error("CHAIN_RPCS_NOT_SET")
+  const tvlAprMarketService = new GlobalMarketDataService(prismaClient, provider)
+  const marketGlobalDataRepo = new MarketGlobalDataRepository(prismaClient)
+
+  const data = await tvlAprMarketService.fetchAndFormatData()
+  const lastUpdate = await marketGlobalDataRepo.fetchLastExecutionTime()
+
+  if (lastUpdate && lastUpdate.getTime() + NEW_ROWS_FREQUENCY > new Date().getTime()) {
+    await marketGlobalDataRepo.updateRows(data, lastUpdate)
+  } else {
+    await marketGlobalDataRepo.insertRows(data)
   }
-  const marketContractsRepository = new MarketContractsRepository(prismaClient)
-
-  const provider = new JsonRpcProvider(chainRpcs.split(",")[0])
-
-  const markets = await marketContractsRepository.getContracts()
-
-  const APRTvlData = await chainView<[{ address: string; type: string }[], string], TVLAprs[]>(provider, MarketCurrentAPR.abi, MarketCurrentAPR.bytecode, [
-    markets.map((market) => ({ address: market.contract_address, type: market.contract_type })),
-    usgContractAddresses.utilities.rewardAccumulator,
-  ])
-  console.log(APRTvlData)
 }
 
 main().then()

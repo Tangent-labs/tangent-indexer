@@ -14,7 +14,6 @@ import { ActiveBorrowersService } from "services/ActiveBorrowersService"
 import { UserEventsRepository } from "db/UserEventsRepository"
 import { getEthLogs } from "eventFectcher/_baseFectcher"
 dotenv.config()
-
 async function main() {
   const { providers, handleError } = setUpIndexer()
   const { prismaClient, userMarketService, marketCreationService, blockService, marketContractsRepository, activeBorrowersService, setTransaction } =

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import fs from "fs"
 
 import { LiquidationService } from "../../../src/services/LiquidationService"
-import { MarketBorrowerRepository } from "../../../src/db/MarketBorrowerRepository"
+import { ActiveBorrowersRepository } from "../../../src/db/ActiveBorrowersRepository"
 import { AddressLike, JsonRpcProvider } from "ethers"
 import {
   LiquidationAccountOutInfo,
@@ -35,11 +35,11 @@ const nominalContext = {
 
 describe("LiquidationService", () => {
   let liquidationService: LiquidationService
-  let marketBorrowerRepository: MarketBorrowerRepository
+  let marketBorrowerRepository: ActiveBorrowersRepository
   let mockBlockRepository: any
 
   beforeEach(() => {
-    marketBorrowerRepository = new MarketBorrowerRepository({} as any) // Mock Prisma client
+    marketBorrowerRepository = new ActiveBorrowersRepository({} as any) // Mock Prisma client
     liquidationService = new LiquidationService(marketBorrowerRepository, nominalContext)
 
     // Mock BlockRepository
@@ -112,7 +112,7 @@ describe("LiquidationService", () => {
       getList: vi.fn().mockResolvedValue(mockBorrowers),
     }
 
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as MarketBorrowerRepository, nominalContext)
+    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as ActiveBorrowersRepository, nominalContext)
 
     const { markets, borrowers } = await liquidationService.getLiquidationParams()
 
@@ -146,7 +146,7 @@ describe("LiquidationService", () => {
     }
 
     const context = { ...nominalContext, isDbAlive: true, currentBlock: 0, providers: [], walletsPks: [] }
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as MarketBorrowerRepository, context)
+    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as ActiveBorrowersRepository, context)
 
     const { markets, borrowers } = await liquidationService.getLiquidationParams()
 
@@ -173,7 +173,7 @@ describe("LiquidationService", () => {
     }
 
     const context = { ...nominalContext, isDbAlive: false, currentBlock: 0, providers: [], walletsPks: [] }
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as MarketBorrowerRepository, context)
+    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as ActiveBorrowersRepository, context)
 
     // Mock fs.readFileSync
     const mockFileData = {
@@ -202,14 +202,14 @@ describe("LiquidationService", () => {
 
 describe("LiquidationService - analyzeLiquidation", () => {
   let liquidationService: LiquidationService
-  let mockMarketBorrowerRepository: MarketBorrowerRepository
+  let mockMarketBorrowerRepository: ActiveBorrowersRepository
 
   beforeEach(() => {
     // Mock repository
     mockMarketBorrowerRepository = {
       getList: vi.fn(),
       deleteMarketBorrowers: vi.fn(),
-    } as unknown as MarketBorrowerRepository
+    } as unknown as ActiveBorrowersRepository
 
     // Create service instance
     liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext)
@@ -365,10 +365,10 @@ describe("LiquidationService - analyzeLiquidation", () => {
 
 describe("LiquidationService - prioritizeActions", () => {
   let liquidationService: LiquidationService
-  let mockMarketBorrowerRepository: MarketBorrowerRepository
+  let mockMarketBorrowerRepository: ActiveBorrowersRepository
 
   beforeEach(() => {
-    mockMarketBorrowerRepository = new MarketBorrowerRepository({} as any)
+    mockMarketBorrowerRepository = new ActiveBorrowersRepository({} as any)
     liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext)
   })
 

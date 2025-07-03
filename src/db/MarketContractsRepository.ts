@@ -1,6 +1,6 @@
 import { AddressLike } from "ethers"
 import { AbstractRepository } from "./AbstractRepository"
-import { market_contracts } from "@prisma/client"
+import { market_contracts, Prisma } from "@prisma/client"
 
 export class MarketContractsRepository extends AbstractRepository {
   getContracts = async () => {
@@ -15,13 +15,7 @@ export class MarketContractsRepository extends AbstractRepository {
     return contracts
   }
 
-  insertContract = async (contract: market_contracts) => {
-    await this.prismaClient.market_contracts.create({
-      data: contract,
-    })
-  }
-
-  insertContracts = async (contracts: market_contracts[]) => {
+  insertContracts = async (contracts: Prisma.market_contractsCreateInput[]) => {
     await this.prismaClient.market_contracts.createMany({
       data: contracts,
     })

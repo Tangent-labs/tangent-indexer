@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { PrismaClient } from "@prisma/client"
-import { MarketBorrowerRepository } from "db/MarketBorrowerRepository"
+import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository"
 import { LiquidationBotLogRepository } from "db/LiquidationBotLogRepository"
 import { LiquidationBotService } from "services/LiquidationBotLogService"
 import { LiquidationService } from "services/LiquidationService"
@@ -36,7 +36,7 @@ vi.mock("config/indexer_setup", () => ({
 }))
 
 describe("CheckLiquidationService", () => {
-  let mockMarketBorrowerRepository: MarketBorrowerRepository
+  let mockMarketBorrowerRepository: ActiveBorrowersRepository
   let mockLiquidationBotLogRepository: LiquidationBotLogRepository
   let mockLiquidationBotService: LiquidationBotService
   let mockLiquidationService: LiquidationService
@@ -54,7 +54,7 @@ describe("CheckLiquidationService", () => {
     mockContext.isDbAlive = true
 
     // Setup mock repositories
-    mockMarketBorrowerRepository = new MarketBorrowerRepository({} as PrismaClient)
+    mockMarketBorrowerRepository = new ActiveBorrowersRepository({} as PrismaClient)
     mockLiquidationBotLogRepository = new LiquidationBotLogRepository({} as PrismaClient)
 
     // Setup mock services
