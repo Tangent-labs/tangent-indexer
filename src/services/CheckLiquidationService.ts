@@ -65,7 +65,7 @@ export class CheckLiquidationService {
       await this.liquidationBotService.logLiquidationAnalysis(onChainData || null, this.context)
 
       currentAction = "liquidation_prioritization"
-      const prioritizedLiquidationList = await this.liquidationService.prioritizeActions(hardLiquidationList || [], softLiquidationList || [])
+      const prioritizedLiquidationList = this.liquidationService.prioritizeActions(hardLiquidationList || [], softLiquidationList || [])
       const actions: Promise<void>[] = []
       if (prioritizedLiquidationList && prioritizedLiquidationList.length > 0) {
         prioritizedLiquidationList.forEach((a, index) => {

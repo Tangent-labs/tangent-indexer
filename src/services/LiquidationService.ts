@@ -303,8 +303,7 @@ export class LiquidationService {
           [ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress],
           await signer.getAddress(),
         ])
-
-        await marketContract.liquidate(account.account, MaxUint256, this.curveRouterAddress, minAmount, data)
+        await marketContract.liquidate(account.account, MaxUint256, minAmount, [this.curveRouterAddress, data])
 
         await this.liquidationBotService?.logLiquidationExecution(account || null, this.context)
       } catch (error) {
@@ -317,17 +316,16 @@ export class LiquidationService {
   }
 
   async _getBestRoute(providers: JsonRpcProvider[], account: LiquidationUserFullInfo) {
-    const matchingROutes = successRoutes.success.filter((route) => route.in.toLowerCase() === (account.collatToken as string).toLowerCase())
-    if (!matchingROutes.length) {
+    const matchingRoutes = successRoutes.success.filter((route) => route.in.toLowerCase() === (account.collatToken as string).toLowerCase())
+    if (!matchingRoutes.length) {
       return { route: null, amount: 0n }
     }
-
     // find duplicates in the routes by display
-    const uniqueRoutes = matchingROutes.filter((route, index, self) => self.findIndex((t: any) => t.route === route.display) === index)
+    const uniqueRoutes = matchingRoutes.filter((route, index, self) => self.findIndex((t: any) => t.display === route.display) === index)
     const routeParams = uniqueRoutes.map(
       (route: any) =>
         ({
-          display: route.route,
+          display: route.display,
           _route: route.params.routeAddresses,
           _swap_params: route.params.swapParamsFull,
           _amount: account.positionValue,
@@ -335,16 +333,15 @@ export class LiquidationService {
         }) as CurveQuote
     )
 
-    const routesCheck = await chainView<[CurveQuote[]], [[bigint]]>(
-      providers[this.context.currentRpcIndex],
-      QuoteLiquidationRouterAbi.abi,
-      QuoteLiquidationRouterAbi.bytecode,
-      [routeParams]
-    )
-    const results = routesCheck.map((v) => Number(v?.at(0) || 0n))
-    const maxValueIndex = results.indexOf(Math.max(...results))
+    const quotes = (
+      await chainView<[CurveQuote[]], bigint[][]>(providers[this.context.currentRpcIndex], QuoteLiquidationRouterAbi.abi, QuoteLiquidationRouterAbi.bytecode, [
+        routeParams,
+      ])
+    )[0]
+
+    const { index: maxIndex } = quotes.reduce((acc, val, idx) => (val > acc.value ? { index: idx, value: val } : acc), { index: -1, value: -1000000n })
     // TODO check if the max is enough
-    return { route: uniqueRoutes[maxValueIndex], amount: routesCheck?.at(maxValueIndex)?.at(0) || 0n }
+    return { route: uniqueRoutes[maxIndex], amount: quotes[maxIndex] }
   }
 
   /**

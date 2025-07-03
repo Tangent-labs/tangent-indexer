@@ -21,10 +21,10 @@ model market_contracts {
   @@index([contract_address], map: "markets_contracts_contract_address_idx")
 }
 
-model market_borrower {
+model active_borrowers {
   id               BigInt   @id(map: "markets_borrower_pkey") @default(autoincrement())
-  contract_address String?  @db.VarChar
-  borrower_address String?  @db.VarChar
+  contract_address String  @db.VarChar
+  borrower_address String  @db.VarChar
   block_date       DateTime @default(now())
 }
 
@@ -130,6 +130,7 @@ model market_repay {
   account       String   @db.VarChar
   repayer       String   @db.VarChar
   repaid_amount String   @db.VarChar
+  is_repay_all  Boolean
   block_date    DateTime
   block_id      Int
   tx_hash       String   @db.VarChar(66)
@@ -144,6 +145,7 @@ model market_repay_and_withdraw {
   account          String   @db.VarChar
   repaid_amount    String   @db.VarChar
   withdrawn_amount String   @db.VarChar
+  is_repay_all     Boolean
   block_date       DateTime
   block_id         Int
   tx_hash          String   @db.VarChar(66)
@@ -158,6 +160,7 @@ model market_zap_repay {
   account       String   @db.VarChar
   repayer       String   @db.VarChar
   repaid_amount String   @db.VarChar
+  is_repay_all  Boolean
   token_in      String   @db.VarChar
   amount_in     String   @db.VarChar
   block_date    DateTime
@@ -174,6 +177,7 @@ model market_zap_repay_and_withdraw {
   account          String   @db.VarChar
   withdrawn_amount String   @db.VarChar
   repaid_amount    String   @db.VarChar
+  is_repay_all     Boolean
   token_in         String   @db.VarChar
   amount_in        String   @db.VarChar
   block_date       DateTime
