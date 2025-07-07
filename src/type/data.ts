@@ -29,8 +29,8 @@ export type LiquidationUserInfo = LiquidationAccountOutInfo & LiquidationUserInI
 export type LiquidationUserFullInfo = LiquidationUserInfo & { collatToken: AddressLike }
 
 export type LiquidationAnalyseInfo = {
-  hardLiquidationList?: LiquidationUserFullInfo[]
-  softLiquidationList?: LiquidationUserFullInfo[]
+  seizingList?: LiquidationUserFullInfo[]
+  liquidationList?: LiquidationUserFullInfo[]
   notDebtorAnymoreList?: LiquidationUserInInfo[]
 }
 
@@ -54,4 +54,73 @@ export type CurveQuote = {
 
 export type QuoteLiquidationRouterIn = {
   quotes: CurveQuote[]
+}
+
+// Snapshot Proposal Types
+export type RewardedChoice = {
+  choice: string
+  index: number
+  rewardIndex: number
+}
+
+export type Reward = {
+  task: string
+  value: string
+}
+
+export type ValidatedTask = {
+  task: string
+  value: string
+  validationDate?: Date
+  voterAddress?: string
+  votingPower?: number
+  proposalId?: string
+}
+
+export type Proposal = {
+  id: string
+  title: string
+  start: number
+  end: number
+  created: number
+  state: string
+  snapshot: string
+  type: string
+  rewarded?: RewardedChoice[]
+  organizationRewards?: Reward[]
+  excludedVoters?: string[]
+}
+
+export type Vote = {
+  id: string
+  voter: string
+  created: number
+  choice: number | string | number[] | Record<string, number>
+  vp: number
+  reason?: string
+  proposal: {
+    id: string
+    title: string
+  }
+}
+
+export type Organization = {
+  key: string
+  value: string
+  title: string
+  rewards: Reward[]
+  excludedVoters?: string[]
+}
+
+export type OrganizationConfig = {
+  key: string
+  value: string
+  title: string
+  rewards: Reward[]
+  excludedVoters: string[]
+}
+
+export type RewardedChoiceOption = {
+  key: string
+  value: string
 }

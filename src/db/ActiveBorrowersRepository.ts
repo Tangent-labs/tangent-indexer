@@ -2,6 +2,10 @@ import { AbstractRepository } from "./AbstractRepository"
 import { Prisma } from "@prisma/client"
 import { UserAction } from "../services/events/UserMarketService"
 export class ActiveBorrowersRepository extends AbstractRepository {
+  async getAll() {
+    return await this.prismaClient.active_borrowers.findMany()
+  }
+
   async insertActiveBorrowers(userActions: UserAction[]) {
     const activeBorrowers: Prisma.active_borrowersCreateManyInput[] = userActions.map((userAction) => {
       return {
@@ -18,7 +22,7 @@ export class ActiveBorrowersRepository extends AbstractRepository {
 
   async deleteActiveBorrowers(userActions: UserAction[]) {
     const where = {
-      AND: userActions.map((userAction) => ({
+      OR: userActions.map((userAction) => ({
         borrower_address: { equals: userAction.user, mode: "insensitive" },
         contract_address: { equals: userAction.market, mode: "insensitive" },
       })),

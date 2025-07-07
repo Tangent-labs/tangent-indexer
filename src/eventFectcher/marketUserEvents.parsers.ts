@@ -183,3 +183,50 @@ export function parseZapLeverageEvent(log: Log): Prisma.market_zap_leverageCreat
     tx_hash: log.transactionHash,
   }
 }
+
+export function parseLiquidateEvent(log: Log): Prisma.market_liquidateCreateInput {
+  const [repaidAmount, fee, collateralLiquidated, liquidator, isRepayAll] = AbiCoder.defaultAbiCoder().decode(
+    ["uint256", "uint256", "uint256", "address", "bool"],
+    log.data
+  )
+  return {
+    market: log.address,
+    account: userAddress(log.topics[1]),
+    repaid_amount: repaidAmount.toString(),
+    fee: fee.toString(),
+    collateral_liquidated: collateralLiquidated.toString(),
+    liquidator: liquidator,
+    is_repay_all: isRepayAll,
+    block_date: new Date(), // placeholder
+    block_id: log.blockNumber,
+    tx_hash: log.transactionHash,
+  }
+}
+
+export function parseSelfLiquidateEvent(log: Log): Prisma.market_self_liquidateCreateInput {
+  const [repaidAmount, collateralLiquidated, liquidator, isRepayAll] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "address", "bool"], log.data)
+  return {
+    market: log.address,
+    account: userAddress(log.topics[1]),
+    repaid_amount: repaidAmount.toString(),
+    collateral_liquidated: collateralLiquidated.toString(),
+    liquidator: liquidator,
+    is_repay_all: isRepayAll,
+    block_date: new Date(), // placeholder
+    block_id: log.blockNumber,
+    tx_hash: log.transactionHash,
+  }
+}
+
+export function parseSeizeCollateralEvent(log: Log): Prisma.market_seize_collateralCreateInput {
+  const [badDebt, collateralSeized] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256"], log.data)
+  return {
+    market: log.address,
+    account: userAddress(log.topics[1]),
+    bad_debt: badDebt.toString(),
+    collateral_seized: collateralSeized.toString(),
+    block_date: new Date(), // placeholder
+    block_id: log.blockNumber,
+    tx_hash: log.transactionHash,
+  }
+}

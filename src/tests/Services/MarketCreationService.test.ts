@@ -12,7 +12,6 @@ vi.mock("../../eventFectcher/marketCreationEventFectcher", () => ({
 describe("MarketCreationService", () => {
   it("should insert non-existing contracts from logs", async () => {
     const mockMarketContractsRepository = {
-      getContractsInList: vi.fn().mockResolvedValue([]),
       insertContracts: vi.fn(),
     }
 
@@ -23,8 +22,8 @@ describe("MarketCreationService", () => {
     const endingBlock = 2000
 
     const mockLogs = [
-      { address: "0xMarket1", blockNumber: 1001, marketType: "ConvexCrv" },
-      { address: "0xMarket2", blockNumber: 1002, marketType: "ConvexFxn" },
+      { contract_address: "0xMarket1", contract_type: "ConvexCrv" },
+      { contract_address: "0xMarket2", contract_type: "ConvexFxn" },
     ]
 
     ;(fetchMarketCreationLogs as any).mockResolvedValue(mockLogs)
@@ -32,7 +31,6 @@ describe("MarketCreationService", () => {
     await marketCreationService.runDetection(mockProvider, startingBlock, endingBlock)
 
     expect(fetchMarketCreationLogs).toHaveBeenCalledWith(mockProvider, startingBlock, endingBlock, marketCreatorAddress)
-    expect(mockMarketContractsRepository.getContractsInList).toHaveBeenCalledWith(["0xMarket1", "0xMarket2"])
     expect(mockMarketContractsRepository.insertContracts).toHaveBeenCalledWith([
       { contract_address: "0xMarket1", contract_type: "ConvexCrv" },
       { contract_address: "0xMarket2", contract_type: "ConvexFxn" },
@@ -57,30 +55,5 @@ describe("MarketCreationService", () => {
 
     expect(mockMarketContractsRepository.getContractsInList).not.toHaveBeenCalled()
     expect(mockMarketContractsRepository.insertContracts).not.toHaveBeenCalled()
-  })
-
-  it("should not insert existing contracts", async () => {
-    const mockMarketContractsRepository = {
-      getContractsInList: vi.fn().mockResolvedValue([{ contract_address: "0xMarket1", contract_type: "ConvexCrv" }]),
-      insertContracts: vi.fn(),
-    }
-
-    const marketCreationService = new MarketCreationService(mockMarketContractsRepository as any as MarketContractsRepository, marketCreatorAddress)
-
-    const mockProvider = {} as JsonRpcProvider
-    const startingBlock = 1000
-    const endingBlock = 2000
-
-    const mockLogs = [
-      { address: "0xMarket1", blockNumber: 1001, marketType: "ConvexCrv" },
-      { address: "0xMarket2", blockNumber: 1002, marketType: "ConvexFxn" },
-    ]
-
-    ;(fetchMarketCreationLogs as any).mockResolvedValue(mockLogs)
-
-    await marketCreationService.runDetection(mockProvider, startingBlock, endingBlock)
-
-    expect(mockMarketContractsRepository.getContractsInList).toHaveBeenCalledWith(["0xMarket1", "0xMarket2"])
-    expect(mockMarketContractsRepository.insertContracts).toHaveBeenCalledWith([{ contract_address: "0xMarket2", contract_type: "ConvexFxn" }])
   })
 })

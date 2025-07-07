@@ -1,0 +1,13 @@
+query ListProposalByOrga($orga: String!, $timeAgo: Int!, $title: String!) {
+  proposals(first: 100, where: { space: $orga, created_gte: $timeAgo, title_contains: $title, state: "closed" }, orderBy: "created", orderDirection: desc) {
+    id
+    title
+    start
+    end
+    created
+    state
+    snapshot
+    type
+    choices
+  }
+}

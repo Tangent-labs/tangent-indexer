@@ -61,7 +61,7 @@ export class CheckLiquidationService {
       }
 
       currentAction = "liquidation_analysis"
-      const { hardLiquidationList, softLiquidationList, notDebtorAnymoreList } = await this.liquidationService.analyzeLiquidation(onChainData, borrowers)
+      const { seizingList, liquidationList, notDebtorAnymoreList } = await this.liquidationService.analyzeLiquidation(onChainData, borrowers)
       await this.liquidationBotService.logLiquidationAnalysis(onChainData || null, this.context)
 
       currentAction = "liquidation_prioritization"
@@ -69,7 +69,7 @@ export class CheckLiquidationService {
       const actions: Promise<void>[] = []
       if (prioritizedLiquidationList && prioritizedLiquidationList.length > 0) {
         prioritizedLiquidationList.forEach((a, index) => {
-          if (a.type === "hard") {
+          if (a.type === "seizing") {
             actions.push(this.liquidationService.executeHardLiquidation(index, a as unknown as LiquidationUserFullInfo))
           } else {
             actions.push(this.liquidationService.executeSoftLiquidation(index, a as unknown as LiquidationUserFullInfo))
@@ -78,11 +78,7 @@ export class CheckLiquidationService {
       }
 
       if (notDebtorAnymoreList && notDebtorAnymoreList.length > 0) {
-        actions.push(
-          this.liquidationService.processCleanDebtors(notDebtorAnymoreList || []).then(() => {
-            this.liquidationBotService.logCleanDebtors(notDebtorAnymoreList || null, this.context)
-          })
-        )
+        actions.push(this.liquidationBotService.logCleanDebtors(notDebtorAnymoreList || null, this.context))
       }
       currentAction = "liquidation_execution"
 

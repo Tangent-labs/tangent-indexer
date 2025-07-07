@@ -94,4 +94,28 @@ export class UserEventsRepository extends AbstractRepository {
       })
     }
   }
+
+  async insertLiquidations(events: Prisma.market_liquidateCreateInput[]) {
+    if (events.length > 0) {
+      await this.prismaClient.market_liquidate.createMany({
+        data: events,
+      })
+    }
+  }
+
+  async insertSelfLiquidations(events: Prisma.market_self_liquidateCreateInput[]) {
+    if (events.length > 0) {
+      await this.prismaClient.market_self_liquidate.createMany({
+        data: events,
+      })
+    }
+  }
+
+  async insertSeizeCollateral(events: Prisma.market_seize_collateralCreateInput[]) {
+    if (events.length > 0) {
+      await this.prismaClient.market_seize_collateral.createMany({
+        data: events,
+      })
+    }
+  }
 }

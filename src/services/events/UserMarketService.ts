@@ -1,12 +1,17 @@
 import { AddressLike, Log } from "ethers"
-import { EVENT_TOPICS } from "../../eventFectcher/marketUserEvents.signatures"
+import { Prisma } from "@prisma/client"
+
+import { EVENT_TOPICS } from "../../resources/eventSignatures"
 import {
   parseBorrowEvent,
   parseDepositAndBorrowEvent,
   parseDepositEvent,
   parseLeverageEvent,
+  parseLiquidateEvent,
   parseRepayAndWithdrawEvent,
   parseRepayEvent,
+  parseSeizeCollateralEvent,
+  parseSelfLiquidateEvent,
   parseWithdrawEvent,
   parseZapDepositAndBorrowEvent,
   parseZapDepositEvent,
@@ -14,8 +19,7 @@ import {
   parseZapRepayAndWithdrawEvent,
   parseZapRepayEvent,
 } from "../../eventFectcher/marketUserEvents.parsers"
-import { UserEventsRepository } from "db/UserEventsRepository"
-import { Prisma } from "@prisma/client"
+import { UserEventsRepository } from "../../db/UserEventsRepository"
 
 export type UserAction = {
   user: AddressLike
@@ -39,6 +43,9 @@ export type SortedEvents = {
   Borrow: Prisma.market_borrowCreateInput[]
   Leverage: Prisma.market_leverageCreateInput[]
   ZapLeverage: Prisma.market_zap_leverageCreateInput[]
+  Liquidate: Prisma.market_liquidateCreateInput[]
+  SelfLiquidate: Prisma.market_self_liquidateCreateInput[]
+  SeizeCollateral: Prisma.market_seize_collateralCreateInput[]
 }
 
 export class UserMarketService {
@@ -52,14 +59,20 @@ export class UserMarketService {
     await this.userEventsRepository.insertZapDeposits(sortedParsedEvents.ZapDeposit)
     await this.userEventsRepository.insertDepositAndBorrows(sortedParsedEvents.DepositAndBorrow)
     await this.userEventsRepository.insertZapDepositAndBorrows(sortedParsedEvents.ZapDepositAndBorrow)
-    await this.userEventsRepository.insertWithdraws(sortedParsedEvents.Withdraw)
     await this.userEventsRepository.insertBorrows(sortedParsedEvents.Borrow)
+
+    await this.userEventsRepository.insertWithdraws(sortedParsedEvents.Withdraw)
     await this.userEventsRepository.insertRepays(sortedParsedEvents.Repay)
     await this.userEventsRepository.insertZapRepays(sortedParsedEvents.ZapRepay)
     await this.userEventsRepository.insertRepayAndWithdraws(sortedParsedEvents.RepayAndWithdraw)
     await this.userEventsRepository.insertZapRepayAndWithdraws(sortedParsedEvents.ZapRepayAndWithdraw)
+
     await this.userEventsRepository.insertLeverages(sortedParsedEvents.Leverage)
     await this.userEventsRepository.insertZapLeverages(sortedParsedEvents.ZapLeverage)
+
+    await this.userEventsRepository.insertLiquidations(sortedParsedEvents.Liquidate)
+    await this.userEventsRepository.insertSelfLiquidations(sortedParsedEvents.SelfLiquidate)
+    await this.userEventsRepository.insertSeizeCollateral(sortedParsedEvents.SeizeCollateral)
   }
 
   replaceRightDates(sortedParsedEvents: SortedEvents, userActions: UserAction[], blockInfos: Map<number, number>) {
@@ -91,6 +104,9 @@ export class UserMarketService {
       ZapLeverage: [],
       ZapRepay: [],
       ZapRepayAndWithdraw: [],
+      Liquidate: [],
+      SelfLiquidate: [],
+      SeizeCollateral: [],
     }
 
     const uniqueBlockId: Set<number> = new Set()
@@ -225,6 +241,42 @@ export class UserMarketService {
           }
           isImpactingActiveBorrows = true
           sortedAndParsedEvents.ZapLeverage.push(zapLeverageEvent)
+          break
+
+        case "Liquidate":
+          const liquidateEvent = parseLiquidateEvent(log)
+          activeBorrowAction = {
+            user: liquidateEvent.account,
+            market: liquidateEvent.market,
+            isRepayAll: liquidateEvent.is_repay_all,
+            blockId: liquidateEvent.block_id,
+          }
+          isImpactingActiveBorrows = true
+          sortedAndParsedEvents.Liquidate.push(liquidateEvent)
+          break
+
+        case "SelfLiquidate":
+          const selfLiquidateEvent = parseSelfLiquidateEvent(log)
+          activeBorrowAction = {
+            user: selfLiquidateEvent.account,
+            market: selfLiquidateEvent.market,
+            isRepayAll: selfLiquidateEvent.is_repay_all,
+            blockId: selfLiquidateEvent.block_id,
+          }
+          isImpactingActiveBorrows = true
+          sortedAndParsedEvents.SelfLiquidate.push(selfLiquidateEvent)
+          break
+
+        case "SeizeCollateral":
+          const seizeCollateralEvent = parseSeizeCollateralEvent(log)
+          activeBorrowAction = {
+            user: seizeCollateralEvent.account,
+            market: seizeCollateralEvent.market,
+            isRepayAll: true,
+            blockId: seizeCollateralEvent.block_id,
+          }
+          isImpactingActiveBorrows = true
+          sortedAndParsedEvents.SeizeCollateral.push(seizeCollateralEvent)
           break
 
         default:

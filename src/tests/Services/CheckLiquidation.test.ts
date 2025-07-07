@@ -24,7 +24,7 @@ vi.mock("utils/jsonSerializer", () => ({
   prepareSerialize: vi.fn((data) => data),
 }))
 
-vi.mock("db/MarketBorrowerRepository")
+vi.mock("db/ActiveBorrowersRepository")
 vi.mock("db/LiquidationBotLogRepository")
 vi.mock("services/LiquidationService")
 vi.mock("services/LiquidationBotLogService")
@@ -36,7 +36,7 @@ vi.mock("config/indexer_setup", () => ({
 }))
 
 describe("CheckLiquidationService", () => {
-  let mockMarketBorrowerRepository: ActiveBorrowersRepository
+  let activeBorrowersRepository: ActiveBorrowersRepository
   let mockLiquidationBotLogRepository: LiquidationBotLogRepository
   let mockLiquidationBotService: LiquidationBotService
   let mockLiquidationService: LiquidationService
@@ -54,12 +54,12 @@ describe("CheckLiquidationService", () => {
     mockContext.isDbAlive = true
 
     // Setup mock repositories
-    mockMarketBorrowerRepository = new ActiveBorrowersRepository({} as PrismaClient)
+    activeBorrowersRepository = new ActiveBorrowersRepository({} as PrismaClient)
     mockLiquidationBotLogRepository = new LiquidationBotLogRepository({} as PrismaClient)
 
     // Setup mock services
     mockLiquidationBotService = new LiquidationBotService(mockLiquidationBotLogRepository)
-    mockLiquidationService = new LiquidationService(mockMarketBorrowerRepository, mockContext, mockLiquidationBotService)
+    mockLiquidationService = new LiquidationService(activeBorrowersRepository, mockContext, mockLiquidationBotService)
     mockNotificationService = new NotificationService()
     mockProviders = [{} as JsonRpcProvider]
 
@@ -81,7 +81,6 @@ describe("CheckLiquidationService", () => {
     vi.spyOn(mockLiquidationService, "prioritizeActions").mockResolvedValue([])
     vi.spyOn(mockLiquidationService, "executeHardLiquidation").mockResolvedValue(undefined)
     vi.spyOn(mockLiquidationService, "executeSoftLiquidation").mockResolvedValue(undefined)
-    vi.spyOn(mockLiquidationService, "processCleanDebtors").mockResolvedValue(undefined)
     vi.spyOn(mockLiquidationService, "saveFiles").mockResolvedValue(undefined)
 
     // Mock bot service methods

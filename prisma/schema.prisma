@@ -223,6 +223,55 @@ model market_zap_leverage {
   @@index([market], map: "market_zap_leverage_market_address")
 }
 
+
+model market_liquidate {
+  id                    BigInt   @id(map: "market_liquidate_pkey") @default(autoincrement())
+  market                String   @db.VarChar
+  account               String   @db.VarChar
+  repaid_amount         String   @db.VarChar
+  fee                   String   @db.VarChar
+  collateral_liquidated String   @db.VarChar
+  liquidator            String   @db.VarChar
+  is_repay_all          Boolean
+  block_date            DateTime
+  block_id              Int
+  tx_hash               String   @db.VarChar(66)
+
+  @@index([account], map: "market_liquidate_account")
+  @@index([market], map: "market_liquidate_market_address")
+}
+
+model market_self_liquidate {
+  id                    BigInt   @id(map: "market_self_liquidate_pkey") @default(autoincrement())
+  market                String   @db.VarChar
+  account               String   @db.VarChar
+  repaid_amount         String   @db.VarChar
+  collateral_liquidated String   @db.VarChar
+  liquidator            String   @db.VarChar
+  is_repay_all          Boolean
+  block_date            DateTime
+  block_id              Int
+  tx_hash               String   @db.VarChar(66)
+
+  @@index([account], map: "market_self_liquidate_account")
+  @@index([market], map: "market_self_liquidate_market_address")
+}
+
+model market_seize_collateral {
+  id                    BigInt   @id(map: "market_seize_collateral_pkey") @default(autoincrement())
+  market                String   @db.VarChar
+  account               String   @db.VarChar
+  bad_debt              String   @db.VarChar
+  collateral_seized     String   @db.VarChar
+  block_date            DateTime
+  block_id              Int
+  tx_hash               String   @db.VarChar(66)
+
+  @@index([account], map: "market_seize_collateral_account")
+  @@index([market], map: "market_seize_collateral_market_address")
+}
+
+
 model market_global_data {
   id              BigInt           @id(map: "global_data_and_aprs_markets_history_pkey") @default(autoincrement())
   market          market_contracts @relation(fields: [market_id], references: [id])

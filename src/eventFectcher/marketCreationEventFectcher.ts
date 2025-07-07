@@ -1,21 +1,10 @@
-import { AddressLike, Contract, ethers, JsonRpcProvider, Log } from "ethers"
+import { AddressLike, Contract, ethers, id, JsonRpcProvider, Log } from "ethers"
 import { getEthLogs } from "./_baseFectcher"
 import { MarketType } from "type/data"
 import { Prisma } from "@prisma/client"
+import { MARKET_CONVEX_CRV_CREATED, MARKET_CONVEX_FXN_CREATED, MARKET_NO_SOCIABILIZATION_CREATED } from "resources/eventSignatures"
 
 // Define Event Signatures
-
-const MARKET_CREATION_EVENT_SIGNATURES = {
-  MarketConvexCrvCreated: ethers.id("MarketConvexCrvCreated(address,string)"),
-  MarketConvexFxnCreated: ethers.id("MarketConvexFxnCreated(address,string)"),
-  MarketNoSociabilizationCreated: ethers.id("MarketNoSociabilizationCreated(address,string)"),
-}
-
-const marketTypes = {
-  [MARKET_CREATION_EVENT_SIGNATURES.MarketConvexCrvCreated]: "ConvexCrv",
-  [MARKET_CREATION_EVENT_SIGNATURES.MarketConvexFxnCreated]: "ConvexFxn",
-  [MARKET_CREATION_EVENT_SIGNATURES.MarketNoSociabilizationCreated]: "NoSociabilization",
-}
 
 // Type Definition for Market Events
 export type MarketCreationEvent = {
@@ -31,7 +20,13 @@ export const fetchMarketCreationLogs = async (
   endingBlock: number,
   marketCreator: AddressLike
 ): Promise<Prisma.market_contractsCreateInput[]> => {
-  const logs = await getEthLogs(provider, startingBlock, endingBlock, [marketCreator], Object.values(MARKET_CREATION_EVENT_SIGNATURES))
+  const logs = await getEthLogs(
+    provider,
+    startingBlock,
+    endingBlock,
+    [marketCreator],
+    [id(MARKET_CONVEX_CRV_CREATED), id(MARKET_CONVEX_FXN_CREATED), id(MARKET_NO_SOCIABILIZATION_CREATED)]
+  )
   return await Promise.all(logs.map((log) => parseMarketEvent(log, provider)))
 }
 

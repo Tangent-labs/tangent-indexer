@@ -7,7 +7,7 @@ import QuoteLiquidationRouterAbi from "../abis/QuoteLiquidationRouter.json"
 import successRoutes from "../hydratedRoute.json"
 
 import { Addressable, AddressLike, Contract, Interface, JsonRpcProvider, MaxUint256, Wallet, ZeroAddress } from "ethers"
-import { MarketBorrowerRepository } from "../db/MarketBorrowerRepository"
+import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository"
 
 import {
   CurveQuote,
@@ -30,18 +30,24 @@ type WithToObject<T> = T & {
 }
 
 export class LiquidationService {
-  marketBorrowerRepository: MarketBorrowerRepository
+  activeBorrowersRepository: ActiveBorrowersRepository
   context: LiquidationExecutionContext
   liquidationBotService?: LiquidationBotService
   marketBorrowerFilePath: string = "./src/data/market_borrowers.json"
   minEthBalance: number = 0.1
   curveRouterAddress: AddressLike | undefined
 
+  constructor(activeBorrowersRepository: ActiveBorrowersRepository, context: LiquidationExecutionContext, LiquidationBotService?: LiquidationBotService) {
+    this.activeBorrowersRepository = activeBorrowersRepository
+    this.context = context
+    this.liquidationBotService = LiquidationBotService
+  }
+
   async checkContext() {
     const providers = this.context.providers
 
     const blockRepository = new BlockRepository(null!)
-    blockRepository.setClient(this.marketBorrowerRepository.prismaClient)
+    blockRepository.setClient(this.activeBorrowersRepository.prismaClient)
 
     // try the database connectivty
     try {
@@ -78,12 +84,6 @@ export class LiquidationService {
     })
   }
 
-  constructor(marketBorrowerRepository: MarketBorrowerRepository, context: LiquidationExecutionContext, LiquidationBotService?: LiquidationBotService) {
-    this.marketBorrowerRepository = marketBorrowerRepository
-    this.context = context
-    this.liquidationBotService = LiquidationBotService
-  }
-
   async getLiquidationParams(): Promise<{ markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }> {
     if (this.context.isDbAlive) {
       const data = await this.getLiquidationParamsFromDb()
@@ -114,7 +114,7 @@ export class LiquidationService {
    */
   async getLiquidationParamsFromDb(): Promise<{ markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }> {
     if (this.context.isDbAlive) {
-      const borrowersRawList = await this.marketBorrowerRepository.getList()
+      const borrowersRawList = await this.activeBorrowersRepository.getAll()
 
       const markets = new Set<AddressLike>()
       const borrowers = borrowersRawList.map((borrower) => {
@@ -206,8 +206,8 @@ export class LiquidationService {
     })
 
     const notDebtorAnymoreList: LiquidationUserInInfo[] = [] // borrower with 0 debt
-    let hardLiquidationList: LiquidationUserFullInfo[] = [] // borrower with positionvalue < debt
-    let softLiquidationList: LiquidationUserFullInfo[] = [] // borrower with ltv > liquidationThreshold
+    let seizingList: LiquidationUserFullInfo[] = [] // borrower with positionvalue < debt
+    let liquidationList: LiquidationUserFullInfo[] = [] // borrower with ltv > liquidationThreshold
 
     // We detect the potential actions we have to do
     hydratedAccounts.forEach((account) => {
@@ -217,24 +217,20 @@ export class LiquidationService {
       }
 
       if (account.userDebt >= account.positionValue) {
-        hardLiquidationList.push(account as LiquidationUserFullInfo)
+        seizingList.push(account as LiquidationUserFullInfo)
         return
       }
       if (account.ltv > account.liquidationThreshold!) {
-        softLiquidationList.push(account as LiquidationUserFullInfo)
+        liquidationList.push(account as LiquidationUserFullInfo)
       }
     })
 
     const sortFn: (a: LiquidationUserFullInfo, b: LiquidationUserFullInfo) => number = (a, b) => Number(b.positionValue) - Number(a.positionValue)
 
-    hardLiquidationList = hardLiquidationList.sort(sortFn)
-    softLiquidationList = softLiquidationList.sort(sortFn)
-    console.log("analyzeLiquidation", {
-      hardLiquidationList: hardLiquidationList.length,
-      softLiquidationList: softLiquidationList.length,
-      notDebtorAnymoreList: notDebtorAnymoreList.length,
-    })
-    return { hardLiquidationList, softLiquidationList, notDebtorAnymoreList }
+    seizingList = seizingList.sort(sortFn)
+    liquidationList = liquidationList.sort(sortFn)
+
+    return { seizingList, liquidationList, notDebtorAnymoreList }
   }
 
   //
@@ -245,20 +241,20 @@ export class LiquidationService {
    * @returns The prioritized liquidation actions.
    */
   prioritizeActions(
-    hardLiquidationList: LiquidationUserFullInfo[],
-    softLiquidationList: LiquidationUserFullInfo[]
-  ): (LiquidationUserFullInfo & { type: "hard" | "soft" })[] {
+    seizingList: LiquidationUserFullInfo[],
+    liquidationList: LiquidationUserFullInfo[]
+  ): (LiquidationUserFullInfo & { type: "seizing" | "liquidation" })[] {
     const actionsCount = this.context.walletsPks.length
 
     // Select the actions by amount desc
-    const liquidationList = [
-      ...hardLiquidationList.map((a) => ({ ...a, type: "hard" as const })),
-      ...softLiquidationList.map((b) => ({ ...b, type: "soft" as const })),
+    const actionsList = [
+      ...seizingList.map((a) => ({ ...a, type: "seizing" as const })),
+      ...liquidationList.map((b) => ({ ...b, type: "liquidation" as const })),
     ]
-    const sortedLiquidationList = liquidationList.sort((a, b) => Number(b.positionValue) - Number(a.positionValue))
-    const prioritizedLiquidationList: (LiquidationUserFullInfo & { type: "hard" | "soft" })[] = sortedLiquidationList.slice(0, actionsCount)
+    const sortedActionsList = actionsList.sort((a, b) => Number(b.positionValue) - Number(a.positionValue))
+    const prioritizedActionList: (LiquidationUserFullInfo & { type: "seizing" | "liquidation" })[] = sortedActionsList.slice(0, actionsCount)
 
-    return prioritizedLiquidationList || []
+    return prioritizedActionList || []
   }
 
   /**
@@ -342,19 +338,6 @@ export class LiquidationService {
     const { index: maxIndex } = quotes.reduce((acc, val, idx) => (val > acc.value ? { index: idx, value: val } : acc), { index: -1, value: -1000000n })
     // TODO check if the max is enough
     return { route: uniqueRoutes[maxIndex], amount: quotes[maxIndex] }
-  }
-
-  /**
-   * Processes clean debtors.
-   * @param accounts The accounts to be cleaned.
-   */
-  async processCleanDebtors(accounts: LiquidationUserInInfo[]) {
-    await this.marketBorrowerRepository.deleteMarketBorrowers(
-      accounts.map((acc) => ({
-        borrower: acc.account as string,
-        market: acc.market as string,
-      }))
-    )
   }
 
   /**
