@@ -11,7 +11,7 @@ export function parseBorrowEvent(log: Log): Prisma.market_borrowCreateInput {
   return {
     market: log.address,
     account: userAddress(log.topics[1]),
-    receiver: receiver,
+    receiver,
     borrowed_amount: borrowedAmount.toString(),
     block_date: new Date(), // placeholder
     block_id: log.blockNumber,
@@ -85,13 +85,13 @@ export function parseWithdrawEvent(log: Log): Prisma.market_withdrawCreateInput 
 }
 
 export function parseRepayEvent(log: Log): Prisma.market_repayCreateInput {
-  const [repayer, repaidAmount, is_repay_all] = AbiCoder.defaultAbiCoder().decode(["address", "uint256", "bool"], log.data)
+  const [repayer, repaidAmount, isRepayAll] = AbiCoder.defaultAbiCoder().decode(["address", "uint256", "bool"], log.data)
   return {
     market: log.address,
     account: userAddress(log.topics[1]),
     repayer,
     repaid_amount: repaidAmount.toString(),
-    is_repay_all,
+    is_repay_all: isRepayAll,
     block_date: new Date(), // placeholder
     block_id: log.blockNumber,
     tx_hash: log.transactionHash,

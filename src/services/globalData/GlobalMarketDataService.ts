@@ -111,7 +111,7 @@ export class GlobalMarketDataService {
             if (!cvxFxnPool?.curvePoolData) {
               return false
             }
-            return cvxFxnPool?.curvePoolData?.address.toLowerCase() == market.collateral_address.toLowerCase()
+            return cvxFxnPool?.curvePoolData?.address.toLowerCase() === market.collateral_address.toLowerCase()
           })!
 
           data.rewardCoins.forEach((rewardCoin, i) => {
@@ -122,7 +122,7 @@ export class GlobalMarketDataService {
       }
       // PENDLE PT
       else if (market.contract_type === APR_TYPE["PENDLE PT"]) {
-        let item = pendleJson.markets.find((pendleMarket) => {
+        const item = pendleJson.markets.find((pendleMarket) => {
           const ptAddress = pendleMarket.pt.split("-")[1]
           return ptAddress.toLowerCase() === market.collateral_address.toLowerCase()
         })!
@@ -153,7 +153,7 @@ export class GlobalMarketDataService {
 
 function computeCurrentStreamedAPR(onchainData: TVLAprs, prices: Prices): KeyStringValueNumber {
   const tvlTangent = Number(formatEther(onchainData.globalData.totalStakedUSD))
-  let actualAPRs: { [aprKey: string]: number } = {} // APY: item?.latestWeeklyApy
+  const actualAPRs: { [aprKey: string]: number } = {} // APY: item?.latestWeeklyApy
   onchainData.currentAPR.forEach((streamData) => {
     const rewardAddress = streamData.token.toLowerCase()
     const priceInfo = prices[rewardAddress]

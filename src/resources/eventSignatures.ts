@@ -1,4 +1,4 @@
-import { AbiCoder, id, parseEther } from "ethers"
+import { AbiCoder, id } from "ethers"
 
 export const REPAY = "Repay(address,address,uint256,bool)"
 export const REPAY_AND_WITHDRAW = "RepayAndWithdraw(address,uint256,uint256,bool)"

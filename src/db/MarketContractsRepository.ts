@@ -1,4 +1,3 @@
-import { AddressLike } from "ethers"
 import { AbstractRepository } from "./AbstractRepository"
 import { Prisma } from "@prisma/client"
 

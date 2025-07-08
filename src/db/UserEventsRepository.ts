@@ -9,6 +9,7 @@ export class UserEventsRepository extends AbstractRepository {
       })
     }
   }
+
   async insertDeposits(events: Prisma.market_depositCreateInput[]) {
     if (events.length > 0) {
       await this.prismaClient.market_deposit.createMany({
@@ -32,6 +33,7 @@ export class UserEventsRepository extends AbstractRepository {
       })
     }
   }
+
   async insertZapDepositAndBorrows(events: Prisma.market_zap_deposit_and_borrowCreateInput[]) {
     if (events.length > 0) {
       await this.prismaClient.market_zap_deposit_and_borrow.createMany({
@@ -55,6 +57,7 @@ export class UserEventsRepository extends AbstractRepository {
       })
     }
   }
+
   async insertZapRepays(events: Prisma.market_zap_repayCreateInput[]) {
     if (events.length > 0) {
       await this.prismaClient.market_zap_repay.createMany({
