@@ -74,13 +74,13 @@ describe("CheckLiquidationService", () => {
       accounts: [],
     })
     vi.spyOn(mockLiquidationService, "analyzeLiquidation").mockResolvedValue({
-      hardLiquidationList: [],
-      softLiquidationList: [],
+      seizingList: [],
+      liquidationList: [],
       notDebtorAnymoreList: [],
     })
-    vi.spyOn(mockLiquidationService, "prioritizeActions").mockResolvedValue([])
-    vi.spyOn(mockLiquidationService, "executeHardLiquidation").mockResolvedValue(undefined)
-    vi.spyOn(mockLiquidationService, "executeSoftLiquidation").mockResolvedValue(undefined)
+    vi.spyOn(mockLiquidationService, "prioritizeActions").mockReturnValue([])
+    vi.spyOn(mockLiquidationService, "executeSeizing").mockResolvedValue(undefined)
+    vi.spyOn(mockLiquidationService, "executeLiquidation").mockResolvedValue(undefined)
     vi.spyOn(mockLiquidationService, "saveFiles").mockResolvedValue(undefined)
 
     // Mock bot service methods
@@ -121,8 +121,8 @@ describe("CheckLiquidationService", () => {
     expect(mockNotificationService.sendImmediateNotification).toHaveBeenCalledWith("Test error")
   })
 
-  it("should process hard liquidations when present", async () => {
-    const hardLiquidation: LiquidationUserFullInfo & { type: "hard" } = {
+  it("should process seizing when present", async () => {
+    const seizing: LiquidationUserFullInfo & { type: "seizing" } = {
       account: "0xUser1" as AddressLike,
       market: "0xMarket1" as AddressLike,
       healthRatio: 500000000000000000n,
@@ -130,18 +130,18 @@ describe("CheckLiquidationService", () => {
       positionValue: 550n * DECIMALS,
       collateralBalance: 1500n * DECIMALS,
       collatToken: "0xToken1" as AddressLike,
-      type: "hard",
+      type: "seizing",
     }
 
-    vi.spyOn(mockLiquidationService, "prioritizeActions").mockResolvedValue([{ ...hardLiquidation }])
+    vi.spyOn(mockLiquidationService, "prioritizeActions").mockReturnValue([{ ...seizing }])
 
     await checkLiquidationService.run()
 
-    expect(mockLiquidationService.executeHardLiquidation).toHaveBeenCalledWith(0, hardLiquidation)
+    expect(mockLiquidationService.executeSeizing).toHaveBeenCalledWith(0, seizing)
   })
 
-  it("should process soft liquidations when present", async () => {
-    const softLiquidation: LiquidationUserFullInfo & { type: "soft" } = {
+  it("should process liquidations when present", async () => {
+    const liquidation: LiquidationUserFullInfo & { type: "liquidation" } = {
       account: "0xUser1" as AddressLike,
       market: "0xMarket1" as AddressLike,
       healthRatio: 2000000000000000000n,
@@ -149,13 +149,13 @@ describe("CheckLiquidationService", () => {
       positionValue: 1000n * DECIMALS,
       collateralBalance: 1500n * DECIMALS,
       collatToken: "0xToken1" as AddressLike,
-      type: "soft",
+      type: "liquidation",
     }
 
-    vi.spyOn(mockLiquidationService, "prioritizeActions").mockResolvedValue([{ ...softLiquidation }])
+    vi.spyOn(mockLiquidationService, "prioritizeActions").mockReturnValue([{ ...liquidation }])
 
     await checkLiquidationService.run()
 
-    expect(mockLiquidationService.executeSoftLiquidation).toHaveBeenCalledWith(0, softLiquidation)
+    expect(mockLiquidationService.executeLiquidation).toHaveBeenCalledWith(0, liquidation)
   })
 })

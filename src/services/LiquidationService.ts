@@ -258,11 +258,11 @@ export class LiquidationService {
   }
 
   /**
-   * Executes a single hard liquidation for a given market and account
+   * Executes a single seizing of collateral for a given market and account
    * @param pkIndex  the index of the wallet in the context
    * @param account The account/market address to liquidate
    */
-  public async executeHardLiquidation(pkIndex: number, account: LiquidationUserFullInfo) {
+  public async executeSeizing(pkIndex: number, account: LiquidationUserFullInfo) {
     const signer = new Wallet(this.context.walletsPks[pkIndex], this.context.providers[this.context.currentRpcIndex])
     const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
 
@@ -276,11 +276,11 @@ export class LiquidationService {
   }
 
   /**
-   * Processes a single soft liquidation for a given account
+   * Processes a single liquidation for a given account
    * @param pkIndex  the index of the wallet in the context
    * @param account The account to be liquidated
    */
-  public async executeSoftLiquidation(pkIndex: number, account: LiquidationUserFullInfo) {
+  public async executeLiquidation(pkIndex: number, account: LiquidationUserFullInfo) {
     const { route, amount } = await this._getBestRoute(this.context.providers, account)
     if (route) {
       try {

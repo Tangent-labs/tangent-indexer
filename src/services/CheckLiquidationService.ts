@@ -65,14 +65,16 @@ export class CheckLiquidationService {
       await this.liquidationBotService.logLiquidationAnalysis(onChainData || null, this.context)
 
       currentAction = "liquidation_prioritization"
-      const prioritizedLiquidationList = this.liquidationService.prioritizeActions(hardLiquidationList || [], softLiquidationList || [])
+      const prioritizedLiquidationList = this.liquidationService.prioritizeActions(seizingList || [], liquidationList || [])
+      console.log(prioritizedLiquidationList)
       const actions: Promise<void>[] = []
+
       if (prioritizedLiquidationList && prioritizedLiquidationList.length > 0) {
         prioritizedLiquidationList.forEach((a, index) => {
           if (a.type === "seizing") {
-            actions.push(this.liquidationService.executeHardLiquidation(index, a as unknown as LiquidationUserFullInfo))
+            actions.push(this.liquidationService.executeSeizing(index, a as unknown as LiquidationUserFullInfo))
           } else {
-            actions.push(this.liquidationService.executeSoftLiquidation(index, a as unknown as LiquidationUserFullInfo))
+            actions.push(this.liquidationService.executeLiquidation(index, a as unknown as LiquidationUserFullInfo))
           }
         })
       }
