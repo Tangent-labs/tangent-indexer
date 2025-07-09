@@ -50,7 +50,7 @@ export class BlockService {
       id: index + 1,
       method: "eth_getBlockByNumber",
       params: [
-        "0x" + blockNumber.toString(16), // format hex
+        blockNumber.toString(16), // format hex
         false,
       ],
     }))
@@ -60,7 +60,6 @@ export class BlockService {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requests),
     })
-
     const responses = (await res.json()) as BlockInfo[]
 
     const timestampPerBlockId: Map<number, number> = new Map()

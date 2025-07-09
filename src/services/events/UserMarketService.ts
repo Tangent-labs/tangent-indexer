@@ -31,21 +31,21 @@ export type UserAction = {
 }
 
 export type SortedEvents = {
-  Deposit: Prisma.market_depositCreateInput[]
-  ZapDeposit: Prisma.market_zap_depositCreateInput[]
-  DepositAndBorrow: Prisma.market_deposit_and_borrowCreateInput[]
-  ZapDepositAndBorrow: Prisma.market_zap_deposit_and_borrowCreateInput[]
-  Repay: Prisma.market_repayCreateInput[]
-  ZapRepay: Prisma.market_zap_repayCreateInput[]
-  RepayAndWithdraw: Prisma.market_repay_and_withdrawCreateInput[]
-  ZapRepayAndWithdraw: Prisma.market_zap_repay_and_withdrawCreateInput[]
-  Withdraw: Prisma.market_withdrawCreateInput[]
-  Borrow: Prisma.market_borrowCreateInput[]
-  Leverage: Prisma.market_leverageCreateInput[]
-  ZapLeverage: Prisma.market_zap_leverageCreateInput[]
-  Liquidate: Prisma.market_liquidateCreateInput[]
-  SelfLiquidate: Prisma.market_self_liquidateCreateInput[]
-  SeizeCollateral: Prisma.market_seize_collateralCreateInput[]
+  Deposit: Prisma.depositCreateInput[]
+  ZapDeposit: Prisma.zap_depositCreateInput[]
+  DepositAndBorrow: Prisma.deposit_and_borrowCreateInput[]
+  ZapDepositAndBorrow: Prisma.zap_deposit_and_borrowCreateInput[]
+  Repay: Prisma.repayCreateInput[]
+  ZapRepay: Prisma.zap_repayCreateInput[]
+  RepayAndWithdraw: Prisma.repay_and_withdrawCreateInput[]
+  ZapRepayAndWithdraw: Prisma.zap_repay_and_withdrawCreateInput[]
+  Withdraw: Prisma.withdrawCreateInput[]
+  Borrow: Prisma.borrowCreateInput[]
+  Leverage: Prisma.leverageCreateInput[]
+  ZapLeverage: Prisma.zap_leverageCreateInput[]
+  Liquidate: Prisma.liquidateCreateInput[]
+  SelfLiquidate: Prisma.self_liquidateCreateInput[]
+  SeizeCollateral: Prisma.seize_collateralCreateInput[]
 }
 
 export class UserMarketService {
@@ -78,14 +78,13 @@ export class UserMarketService {
   replaceRightDates(sortedParsedEvents: SortedEvents, userActions: UserAction[], blockInfos: Map<number, number>) {
     Object.values(sortedParsedEvents).forEach((v) => {
       v.forEach((event) => {
-        event.block_date = new Date(blockInfos.get(event.block_id)!)
+        event.block_date = new Date(blockInfos.get(event.block_id)! * 1_000)
       })
     })
 
     userActions.forEach((userAction) => {
-      userAction.timestamp = new Date(blockInfos.get(userAction.blockId)!)
+      userAction.timestamp = new Date(blockInfos.get(userAction.blockId)! * 1_000)
     })
-
     return { sortedParsedEvents, userActions }
   }
 

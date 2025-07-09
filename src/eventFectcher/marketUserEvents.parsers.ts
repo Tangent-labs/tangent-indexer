@@ -5,7 +5,7 @@ function userAddress(topic: string): string {
   return AbiCoder.defaultAbiCoder().decode(["address"], topic)[0]
 }
 
-export function parseBorrowEvent(log: Log): Prisma.market_borrowCreateInput {
+export function parseBorrowEvent(log: Log): Prisma.borrowCreateInput {
   const [receiver, borrowedAmount] = AbiCoder.defaultAbiCoder().decode(["address", "uint256"], log.data)
 
   return {
@@ -14,37 +14,38 @@ export function parseBorrowEvent(log: Log): Prisma.market_borrowCreateInput {
     receiver,
     borrowed_amount: borrowedAmount.toString(),
     block_date: new Date(), // placeholder
-    block_id: log.blockNumber,
+    block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
   }
 }
 
-export function parseDepositEvent(log: Log): Prisma.market_depositCreateInput {
+export function parseDepositEvent(log: Log): Prisma.depositCreateInput {
   const [stakedAmount] = AbiCoder.defaultAbiCoder().decode(["uint256"], log.data)
   return {
     market: log.address,
     account: userAddress(log.topics[1]),
     staked_amount: stakedAmount.toString(),
     block_date: new Date(), // placeholder
-    block_id: log.blockNumber,
+    block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
   }
 }
 
-export function parseDepositAndBorrowEvent(log: Log): Prisma.market_deposit_and_borrowCreateInput {
+export function parseDepositAndBorrowEvent(log: Log): Prisma.deposit_and_borrowCreateInput {
   const [stakedAmount, borrowAmount] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256"], log.data)
+
   return {
     market: log.address,
     account: userAddress(log.topics[1]),
     staked_amount: stakedAmount.toString(),
     borrow_amount: borrowAmount.toString(),
     block_date: new Date(), // placeholder
-    block_id: log.blockNumber,
+    block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
   }
 }
 
-export function parseZapDepositEvent(log: Log): Prisma.market_zap_depositCreateInput {
+export function parseZapDepositEvent(log: Log): Prisma.zap_depositCreateInput {
   const [stakedAmount, tokenIn, amountIn] = AbiCoder.defaultAbiCoder().decode(["uint256", "address", "uint256"], log.data)
   return {
     market: log.address,
@@ -53,12 +54,12 @@ export function parseZapDepositEvent(log: Log): Prisma.market_zap_depositCreateI
     token_in: tokenIn,
     amount_in: amountIn.toString(),
     block_date: new Date(), // placeholder
-    block_id: log.blockNumber,
+    block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
   }
 }
 
-export function parseZapDepositAndBorrowEvent(log: Log): Prisma.market_zap_deposit_and_borrowCreateInput {
+export function parseZapDepositAndBorrowEvent(log: Log): Prisma.zap_deposit_and_borrowCreateInput {
   const [stakedAmount, borrowAmount, tokenIn, amountIn] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "address", "uint256"], log.data)
   return {
     market: log.address,
@@ -68,23 +69,23 @@ export function parseZapDepositAndBorrowEvent(log: Log): Prisma.market_zap_depos
     token_in: tokenIn,
     amount_in: amountIn.toString(),
     block_date: new Date(), // placeholder
-    block_id: log.blockNumber,
+    block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
   }
 }
-export function parseWithdrawEvent(log: Log): Prisma.market_withdrawCreateInput {
+export function parseWithdrawEvent(log: Log): Prisma.withdrawCreateInput {
   const [withdrawnAmount] = AbiCoder.defaultAbiCoder().decode(["uint256"], log.data)
   return {
     market: log.address,
     account: userAddress(log.topics[1]),
     withdrawn_amount: withdrawnAmount.toString(),
     block_date: new Date(), // placeholder
-    block_id: log.blockNumber,
+    block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
   }
 }
 
-export function parseRepayEvent(log: Log): Prisma.market_repayCreateInput {
+export function parseRepayEvent(log: Log): Prisma.repayCreateInput {
   const [repayer, repaidAmount, isRepayAll] = AbiCoder.defaultAbiCoder().decode(["address", "uint256", "bool"], log.data)
   return {
     market: log.address,
@@ -93,12 +94,12 @@ export function parseRepayEvent(log: Log): Prisma.market_repayCreateInput {
     repaid_amount: repaidAmount.toString(),
     is_repay_all: isRepayAll,
     block_date: new Date(), // placeholder
-    block_id: log.blockNumber,
+    block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
   }
 }
 
-export function parseRepayAndWithdrawEvent(log: Log): Prisma.market_repay_and_withdrawCreateInput {
+export function parseRepayAndWithdrawEvent(log: Log): Prisma.repay_and_withdrawCreateInput {
   const [repaidAmount, withdrawnAmount, isRepayAll] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "bool"], log.data)
   return {
     market: log.address,
@@ -107,12 +108,12 @@ export function parseRepayAndWithdrawEvent(log: Log): Prisma.market_repay_and_wi
     withdrawn_amount: withdrawnAmount.toString(),
     is_repay_all: isRepayAll,
     block_date: new Date(), // placeholder
-    block_id: log.blockNumber,
+    block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
   }
 }
 
-export function parseZapRepayEvent(log: Log): Prisma.market_zap_repayCreateInput {
+export function parseZapRepayEvent(log: Log): Prisma.zap_repayCreateInput {
   const [repayer, repaidAmount, isRepayAll, tokenIn, amountIn] = AbiCoder.defaultAbiCoder().decode(
     ["address", "uint256", "bool", "address", "uint256"],
     log.data
@@ -126,12 +127,12 @@ export function parseZapRepayEvent(log: Log): Prisma.market_zap_repayCreateInput
     token_in: tokenIn,
     amount_in: amountIn.toString(),
     block_date: new Date(), // placeholder
-    block_id: log.blockNumber,
+    block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
   }
 }
 
-export function parseZapRepayAndWithdrawEvent(log: Log): Prisma.market_zap_repay_and_withdrawCreateInput {
+export function parseZapRepayAndWithdrawEvent(log: Log): Prisma.zap_repay_and_withdrawCreateInput {
   const [withdrawnAmount, repaidAmount, isRepayAll, tokenIn, amountIn] = AbiCoder.defaultAbiCoder().decode(
     ["uint256", "uint256", "bool", "address", "uint256"],
     log.data
@@ -145,12 +146,12 @@ export function parseZapRepayAndWithdrawEvent(log: Log): Prisma.market_zap_repay
     token_in: tokenIn,
     amount_in: amountIn.toString(),
     block_date: new Date(), // placeholder
-    block_id: log.blockNumber,
+    block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
   }
 }
 
-export function parseLeverageEvent(log: Log): Prisma.market_leverageCreateInput {
+export function parseLeverageEvent(log: Log): Prisma.leverageCreateInput {
   const [stakedAmount, collatBought, borrowedAmount] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "uint256"], log.data)
   return {
     market: log.address,
@@ -159,12 +160,12 @@ export function parseLeverageEvent(log: Log): Prisma.market_leverageCreateInput 
     collat_bought: collatBought.toString(),
     borrowed_amount: borrowedAmount.toString(),
     block_date: new Date(), // placeholder
-    block_id: log.blockNumber,
+    block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
   }
 }
 
-export function parseZapLeverageEvent(log: Log): Prisma.market_zap_leverageCreateInput {
+export function parseZapLeverageEvent(log: Log): Prisma.zap_leverageCreateInput {
   const [stakedAmount, collatZapDeposit, collatLeverage, borrowedAmount, tokenIn, amountIn] = AbiCoder.defaultAbiCoder().decode(
     ["uint256", "uint256", "uint256", "uint256", "address", "uint256"],
     log.data
@@ -179,12 +180,12 @@ export function parseZapLeverageEvent(log: Log): Prisma.market_zap_leverageCreat
     token_in: tokenIn.toString(),
     amount_in: amountIn.toString(),
     block_date: new Date(), // placeholder
-    block_id: log.blockNumber,
+    block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
   }
 }
 
-export function parseLiquidateEvent(log: Log): Prisma.market_liquidateCreateInput {
+export function parseLiquidateEvent(log: Log): Prisma.liquidateCreateInput {
   const [repaidAmount, fee, collateralLiquidated, liquidator, isRepayAll] = AbiCoder.defaultAbiCoder().decode(
     ["uint256", "uint256", "uint256", "address", "bool"],
     log.data
@@ -198,12 +199,12 @@ export function parseLiquidateEvent(log: Log): Prisma.market_liquidateCreateInpu
     liquidator: liquidator,
     is_repay_all: isRepayAll,
     block_date: new Date(), // placeholder
-    block_id: log.blockNumber,
+    block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
   }
 }
 
-export function parseSelfLiquidateEvent(log: Log): Prisma.market_self_liquidateCreateInput {
+export function parseSelfLiquidateEvent(log: Log): Prisma.self_liquidateCreateInput {
   const [repaidAmount, collateralLiquidated, liquidator, isRepayAll] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "address", "bool"], log.data)
   return {
     market: log.address,
@@ -213,12 +214,12 @@ export function parseSelfLiquidateEvent(log: Log): Prisma.market_self_liquidateC
     liquidator: liquidator,
     is_repay_all: isRepayAll,
     block_date: new Date(), // placeholder
-    block_id: log.blockNumber,
+    block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
   }
 }
 
-export function parseSeizeCollateralEvent(log: Log): Prisma.market_seize_collateralCreateInput {
+export function parseSeizeCollateralEvent(log: Log): Prisma.seize_collateralCreateInput {
   const [badDebt, collateralSeized] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256"], log.data)
   return {
     market: log.address,
@@ -226,7 +227,7 @@ export function parseSeizeCollateralEvent(log: Log): Prisma.market_seize_collate
     bad_debt: badDebt.toString(),
     collateral_seized: collateralSeized.toString(),
     block_date: new Date(), // placeholder
-    block_id: log.blockNumber,
+    block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
   }
 }

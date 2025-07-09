@@ -3,12 +3,12 @@ import { Prisma } from "@prisma/client"
 
 export class MarketContractsRepository extends AbstractRepository {
   getContracts = async () => {
-    const contracts = await this.prismaClient.market_contracts.findMany()
+    const contracts = await this.prismaClient.market_creations.findMany()
     return contracts
   }
 
-  insertContracts = async (contracts: Prisma.market_contractsCreateInput[]) => {
-    await this.prismaClient.market_contracts.createMany({
+  insertContracts = async (contracts: Prisma.market_creationsCreateInput[]) => {
+    await this.prismaClient.market_creations.createMany({
       data: contracts,
     })
   }

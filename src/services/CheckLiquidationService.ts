@@ -66,7 +66,6 @@ export class CheckLiquidationService {
 
       currentAction = "liquidation_prioritization"
       const prioritizedLiquidationList = this.liquidationService.prioritizeActions(seizingList || [], liquidationList || [])
-      console.log(prioritizedLiquidationList)
       const actions: Promise<void>[] = []
 
       if (prioritizedLiquidationList && prioritizedLiquidationList.length > 0) {
