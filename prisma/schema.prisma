@@ -1,26 +1,27 @@
 generator prisma {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas = ["events", "global"]
+  schemas  = ["events", "global"]
 }
 
 model global_blocks {
   block_id   BigInt    @id(map: "blocks_pkey") @default(autoincrement())
   created_at DateTime? @db.Timestamptz(6)
+
   @@schema("global")
 }
 
-
 model active_borrowers {
   id               BigInt   @id(map: "markets_borrower_pkey") @default(autoincrement())
-  contract_address String  @db.VarChar
-  borrower_address String  @db.VarChar
+  contract_address String   @db.VarChar
+  borrower_address String   @db.VarChar
   block_date       DateTime @default(now())
+
   @@schema("global")
 }
 
@@ -37,30 +38,30 @@ model liquidation_bot_log {
 }
 
 model market_global_data {
-  id              BigInt           @id(map: "global_data_and_aprs_markets_history_pkey") @default(autoincrement())
-  market          market_creations @relation(fields: [market_id], references: [id])
-  market_id       BigInt
-  timestamp       DateTime
-  apr_projected   Json
-  apr_current     Json
-  tvl_usd         Float
-  tvl_amount      Float
-  total_debt      Float
-  bad_debt        Float
-  oracle_price    Float
-  ir_apy          Float
-  reward_cut      Float
-  @@schema("global")
+  id            BigInt           @id(map: "global_data_and_aprs_markets_history_pkey") @default(autoincrement())
+  market        market_creations @relation(fields: [market_id], references: [id])
+  market_id     BigInt
+  timestamp     DateTime
+  apr_projected Json
+  apr_current   Json
+  tvl_usd       Float
+  tvl_amount    Float
+  total_debt    Float
+  bad_debt      Float
+  oracle_price  Float
+  ir_apy        Float
+  reward_cut    Float
 
+  @@schema("global")
 }
 
 model market_creations {
-  id                  BigInt                @id(map: "markets_contracts_pkey") @default(autoincrement())
-  contract_name       String                @db.VarChar
-  collateral_address  String                @db.VarChar
-  contract_address    String                @db.VarChar
-  contract_type       String                @db.VarChar
-  market_global_data  market_global_data[]
+  id                 BigInt               @id(map: "markets_contracts_pkey") @default(autoincrement())
+  contract_name      String               @db.VarChar
+  collateral_address String               @db.VarChar
+  contract_address   String               @db.VarChar
+  contract_type      String               @db.VarChar
+  market_global_data market_global_data[]
 
   @@index([contract_address], map: "markets_creations_address_idx")
   @@schema("events")
@@ -93,7 +94,6 @@ model deposit {
   @@index([account], map: "deposit_account")
   @@index([market], map: "deposit_market_address")
   @@schema("events")
-
 }
 
 model zap_deposit {
@@ -110,7 +110,6 @@ model zap_deposit {
   @@index([account], map: "zap_deposit_account")
   @@index([market], map: "zap_deposit_market_address")
   @@schema("events")
-
 }
 
 model deposit_and_borrow {
@@ -126,7 +125,6 @@ model deposit_and_borrow {
   @@index([account], map: "deposit_and_borrow_account")
   @@index([market], map: "deposit_and_borrow_market_address")
   @@schema("events")
-
 }
 
 model zap_deposit_and_borrow {
@@ -144,7 +142,6 @@ model zap_deposit_and_borrow {
   @@index([account], map: "zap_deposit_and_borrow_account")
   @@index([market], map: "zap_deposit_and_borrow_market_address")
   @@schema("events")
-
 }
 
 model withdraw {
@@ -159,7 +156,6 @@ model withdraw {
   @@index([account], map: "withdraw_account")
   @@index([market], map: "withdraw_market_address")
   @@schema("events")
-
 }
 
 model repay {
@@ -176,7 +172,6 @@ model repay {
   @@index([account], map: "repay_account")
   @@index([market], map: "repay_market_address")
   @@schema("events")
-
 }
 
 model repay_and_withdraw {
@@ -193,7 +188,6 @@ model repay_and_withdraw {
   @@index([account], map: "repay_and_withdraw_account")
   @@index([market], map: "repay_and_withdraw_market_address")
   @@schema("events")
-
 }
 
 model zap_repay {
@@ -212,7 +206,6 @@ model zap_repay {
   @@index([account], map: "zap_repay_account")
   @@index([market], map: "zap_repay_market_address")
   @@schema("events")
-
 }
 
 model zap_repay_and_withdraw {
@@ -231,7 +224,6 @@ model zap_repay_and_withdraw {
   @@index([account], map: "zap_repay_and_withdraw_account")
   @@index([market], map: "zap_repay_and_withdraw_market_address")
   @@schema("events")
-
 }
 
 model leverage {
@@ -248,9 +240,7 @@ model leverage {
   @@index([account], map: "leverage_account")
   @@index([market], map: "leverage_market_address")
   @@schema("events")
-
 }
-
 
 model zap_leverage {
   id                 BigInt   @id(map: "zap_leverage_pkey") @default(autoincrement())
@@ -269,9 +259,7 @@ model zap_leverage {
   @@index([account], map: "zap_leverage_account")
   @@index([market], map: "zap_leverage_market_address")
   @@schema("events")
-
 }
-
 
 model liquidate {
   id                    BigInt   @id(map: "liquidate_pkey") @default(autoincrement())
@@ -289,7 +277,6 @@ model liquidate {
   @@index([account], map: "liquidate_account")
   @@index([market], map: "liquidate_market_address")
   @@schema("events")
-
 }
 
 model self_liquidate {
@@ -307,23 +294,32 @@ model self_liquidate {
   @@index([account], map: "self_liquidate_account")
   @@index([market], map: "self_liquidate_market_address")
   @@schema("events")
-
 }
 
 model seize_collateral {
-  id                    BigInt   @id(map: "seize_collateral_pkey") @default(autoincrement())
-  market                String   @db.VarChar
-  account               String   @db.VarChar
-  bad_debt              String   @db.VarChar
-  collateral_seized     String   @db.VarChar
-  block_date            DateTime
-  block_id              Int
-  tx_hash               String   @db.VarChar(66)
+  id                BigInt   @id(map: "seize_collateral_pkey") @default(autoincrement())
+  market            String   @db.VarChar
+  account           String   @db.VarChar
+  bad_debt          String   @db.VarChar
+  collateral_seized String   @db.VarChar
+  block_date        DateTime
+  block_id          Int
+  tx_hash           String   @db.VarChar(66)
 
   @@index([account], map: "seize_collateral_account")
   @@index([market], map: "seize_collateral_market_address")
   @@schema("events")
-
 }
 
+model points_action {
+  id            BigInt   @id(map: "points_action_pkey") @default(autoincrement())
+  token_address String   @db.VarChar
+  from          String   @db.VarChar
+  to            String   @db.VarChar
+  amount        String   @db.VarChar
+  block_date    DateTime
+  block_id      Int
+  tx_hash       String   @db.VarChar(66)
 
+  @@schema("events")
+}

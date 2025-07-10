@@ -3,17 +3,13 @@ import { getEthLogs } from "./_baseFectcher"
 
 // Define Event Signatures
 const TRANSFER_SIGNATURES = {
-  transfer: ethers.id("transfer(address,address,uint256)"),
+  transfer: ethers.id("Transfer(address,address,uint256)"),
+  Staked: ethers.id("Staked(address,uint256)"),
+  Withdrawn: ethers.id("Withdrawn(address,uint256)"),
 }
 
 // Type Definition for Market Events
-
-export const fetchTransferLogs = async (
-  provider: JsonRpcProvider,
-  startingBlock: number,
-  endingBlock: number,
-  contract: AddressLike = "0x6B175474E89094C44Da98b954EedeAC495271d0F" // DAI // Single contract address
-): Promise<any[]> => {
-  const logs = await getEthLogs(provider, startingBlock, endingBlock, [contract], Object.values(TRANSFER_SIGNATURES))
+export const fetchTransferLogs = async (provider: JsonRpcProvider, startingBlock: number, endingBlock: number, contract: AddressLike[]): Promise<any[]> => {
+  const logs = await getEthLogs(provider, startingBlock, endingBlock, contract, Object.values(TRANSFER_SIGNATURES))
   return logs
 }
