@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import fs from "fs"
 
 import { LiquidationService } from "../../../src/services/LiquidationService"
-import { MarketBorrowerRepository } from "../../../src/db/MarketBorrowerRepository"
+import { ActiveBorrowersRepository } from "../../../src/db/ActiveBorrowersRepository"
 import { AddressLike, JsonRpcProvider } from "ethers"
 import {
   LiquidationAccountOutInfo,
@@ -35,11 +35,11 @@ const nominalContext = {
 
 describe("LiquidationService", () => {
   let liquidationService: LiquidationService
-  let marketBorrowerRepository: MarketBorrowerRepository
+  let marketBorrowerRepository: ActiveBorrowersRepository
   let mockBlockRepository: any
 
   beforeEach(() => {
-    marketBorrowerRepository = new MarketBorrowerRepository({} as any) // Mock Prisma client
+    marketBorrowerRepository = new ActiveBorrowersRepository({} as any) // Mock Prisma client
     liquidationService = new LiquidationService(marketBorrowerRepository, nominalContext)
 
     // Mock BlockRepository
@@ -109,10 +109,10 @@ describe("LiquidationService", () => {
     ] as any
 
     const mockMarketBorrowerRepository = {
-      getList: vi.fn().mockResolvedValue(mockBorrowers),
+      getAll: vi.fn().mockResolvedValue(mockBorrowers),
     }
 
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as MarketBorrowerRepository, nominalContext)
+    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as ActiveBorrowersRepository, nominalContext)
 
     const { markets, borrowers } = await liquidationService.getLiquidationParams()
 
@@ -142,15 +142,15 @@ describe("LiquidationService", () => {
     ] as any
 
     const mockMarketBorrowerRepository = {
-      getList: vi.fn().mockResolvedValue(mockBorrowers),
+      getAll: vi.fn().mockResolvedValue(mockBorrowers),
     }
 
     const context = { ...nominalContext, isDbAlive: true, currentBlock: 0, providers: [], walletsPks: [] }
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as MarketBorrowerRepository, context)
+    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as ActiveBorrowersRepository, context)
 
     const { markets, borrowers } = await liquidationService.getLiquidationParams()
 
-    expect(mockMarketBorrowerRepository.getList).toHaveBeenCalled()
+    expect(mockMarketBorrowerRepository.getAll).toHaveBeenCalled()
     expect(markets).toEqual(["0x456"])
     expect(borrowers).toEqual([
       {
@@ -169,11 +169,11 @@ describe("LiquidationService", () => {
     ] as any
 
     const mockMarketBorrowerRepository = {
-      getList: vi.fn().mockResolvedValue(mockBorrowers),
+      getAll: vi.fn().mockResolvedValue(mockBorrowers),
     }
 
     const context = { ...nominalContext, isDbAlive: false, currentBlock: 0, providers: [], walletsPks: [] }
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as MarketBorrowerRepository, context)
+    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as ActiveBorrowersRepository, context)
 
     // Mock fs.readFileSync
     const mockFileData = {
@@ -189,7 +189,7 @@ describe("LiquidationService", () => {
 
     const { markets, borrowers } = await liquidationService.getLiquidationParams()
 
-    expect(mockMarketBorrowerRepository.getList).not.toHaveBeenCalled()
+    expect(mockMarketBorrowerRepository.getAll).not.toHaveBeenCalled()
     expect(markets).toEqual(["0x789"])
     expect(borrowers).toEqual([
       {
@@ -202,14 +202,14 @@ describe("LiquidationService", () => {
 
 describe("LiquidationService - analyzeLiquidation", () => {
   let liquidationService: LiquidationService
-  let mockMarketBorrowerRepository: MarketBorrowerRepository
+  let mockMarketBorrowerRepository: ActiveBorrowersRepository
 
   beforeEach(() => {
     // Mock repository
     mockMarketBorrowerRepository = {
-      getList: vi.fn(),
+      getAll: vi.fn(),
       deleteMarketBorrowers: vi.fn(),
-    } as unknown as MarketBorrowerRepository
+    } as unknown as ActiveBorrowersRepository
 
     // Create service instance
     liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext)
@@ -243,8 +243,8 @@ describe("LiquidationService - analyzeLiquidation", () => {
 
     const result = await liquidationService.analyzeLiquidation(liquidationData, accounts)
 
-    expect(result.hardLiquidationList).toHaveLength(0)
-    expect(result.softLiquidationList).toHaveLength(0)
+    expect(result.seizingList).toHaveLength(0)
+    expect(result.liquidationList).toHaveLength(0)
     expect(result.notDebtorAnymoreList).toHaveLength(1)
     expect(result.notDebtorAnymoreList?.[0].account).toBe("0xUser1")
   })
@@ -273,8 +273,8 @@ describe("LiquidationService - analyzeLiquidation", () => {
 
     const result = await liquidationService.analyzeLiquidation(liquidationData, accounts)
 
-    expect(result.hardLiquidationList).toHaveLength(0)
-    expect(result.softLiquidationList).toHaveLength(0)
+    expect(result.seizingList).toHaveLength(0)
+    expect(result.liquidationList).toHaveLength(0)
     expect(result.notDebtorAnymoreList).toHaveLength(0)
   })
 
@@ -346,29 +346,29 @@ describe("LiquidationService - analyzeLiquidation", () => {
     const result = await liquidationService.analyzeLiquidation(liquidationData, accounts)
 
     // Expectations
-    expect(result.hardLiquidationList).toHaveLength(2)
-    expect(result.hardLiquidationList?.[0].account).toBe("0xUser6")
-    expect(result.hardLiquidationList?.[1].account).toBe("0xUser1")
+    expect(result.seizingList).toHaveLength(2)
+    expect(result.seizingList?.[0].account).toBe("0xUser6")
+    expect(result.seizingList?.[1].account).toBe("0xUser1")
 
-    expect(result.softLiquidationList).toHaveLength(2)
-    expect(result.softLiquidationList?.[0].account).toBe("0xUser5")
-    expect(result.softLiquidationList?.[1].account).toBe("0xUser2")
+    expect(result.liquidationList).toHaveLength(2)
+    expect(result.liquidationList?.[0].account).toBe("0xUser5")
+    expect(result.liquidationList?.[1].account).toBe("0xUser2")
 
     expect(result.notDebtorAnymoreList).toHaveLength(1)
     expect(result.notDebtorAnymoreList?.[0].account).toBe("0xUser3")
 
-    expect(result.hardLiquidationList?.some((acc: LiquidationUserInfo) => acc.account === "0xUser2")).toBe(false)
-    expect(result.softLiquidationList?.some((acc: LiquidationUserInfo) => acc.account === "0xUser1")).toBe(false)
+    expect(result.seizingList?.some((acc: LiquidationUserInfo) => acc.account === "0xUser2")).toBe(false)
+    expect(result.liquidationList?.some((acc: LiquidationUserInfo) => acc.account === "0xUser1")).toBe(false)
     expect(result.notDebtorAnymoreList?.some((acc: LiquidationUserInInfo) => acc.account === "0xUser4")).toBe(false)
   })
 })
 
 describe("LiquidationService - prioritizeActions", () => {
   let liquidationService: LiquidationService
-  let mockMarketBorrowerRepository: MarketBorrowerRepository
+  let mockMarketBorrowerRepository: ActiveBorrowersRepository
 
   beforeEach(() => {
-    mockMarketBorrowerRepository = new MarketBorrowerRepository({} as any)
+    mockMarketBorrowerRepository = new ActiveBorrowersRepository({} as any)
     liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext)
   })
 
@@ -411,9 +411,9 @@ describe("LiquidationService - prioritizeActions", () => {
 
     // Verify the result
     expect(result).toHaveLength(2) // Limited by wallet count
-    expect(result[0].type).toBe("hard")
+    expect(result[0].type).toBe("seizing")
     expect(result[0].account).toBe("0xUser1") // Highest position value
-    expect(result[1].type).toBe("hard")
+    expect(result[1].type).toBe("seizing")
     expect(result[1].account).toBe("0xUser2") // Second highest position value
   })
 
@@ -456,11 +456,11 @@ describe("LiquidationService - prioritizeActions", () => {
 
     // Verify the result
     expect(result).toHaveLength(3) // All positions included
-    expect(result[0].type).toBe("hard")
+    expect(result[0].type).toBe("seizing")
     expect(result[0].account).toBe("0xUser1") // Highest position value
-    expect(result[1].type).toBe("soft")
+    expect(result[1].type).toBe("liquidation")
     expect(result[1].account).toBe("0xUser2") // Second highest position value
-    expect(result[2].type).toBe("hard")
+    expect(result[2].type).toBe("seizing")
     expect(result[2].account).toBe("0xUser3") // Third highest position value
   })
 
@@ -474,7 +474,7 @@ describe("LiquidationService - prioritizeActions", () => {
     liquidationService.context.walletsPks = ["pk1", "pk2"]
 
     // Create 5 positions with different amounts
-    const hardLiquidation1: LiquidationUserFullInfo = {
+    const seizing1: LiquidationUserFullInfo = {
       account: "0xUser1" as AddressLike,
       market: "0xMarket1" as AddressLike,
       healthRatio: 500000000000000000n,
@@ -484,7 +484,7 @@ describe("LiquidationService - prioritizeActions", () => {
       collatToken: "0xToken1" as AddressLike,
     }
 
-    const softLiquidation1: LiquidationUserFullInfo = {
+    const liquidation1: LiquidationUserFullInfo = {
       account: "0xUser2" as AddressLike,
       market: "0xMarket1" as AddressLike,
       healthRatio: 600000000000000000n,
@@ -494,7 +494,7 @@ describe("LiquidationService - prioritizeActions", () => {
       collatToken: "0xToken1" as AddressLike,
     }
 
-    const hardLiquidation2: LiquidationUserFullInfo = {
+    const seizing2: LiquidationUserFullInfo = {
       account: "0xUser3" as AddressLike,
       market: "0xMarket1" as AddressLike,
       healthRatio: 700000000000000000n,
@@ -504,7 +504,7 @@ describe("LiquidationService - prioritizeActions", () => {
       collatToken: "0xToken1" as AddressLike,
     }
 
-    const softLiquidation2: LiquidationUserFullInfo = {
+    const liquidation2: LiquidationUserFullInfo = {
       account: "0xUser4" as AddressLike,
       market: "0xMarket1" as AddressLike,
       healthRatio: 800000000000000000n,
@@ -514,7 +514,7 @@ describe("LiquidationService - prioritizeActions", () => {
       collatToken: "0xToken1" as AddressLike,
     }
 
-    const hardLiquidation3: LiquidationUserFullInfo = {
+    const seizing3: LiquidationUserFullInfo = {
       account: "0xUser5" as AddressLike,
       market: "0xMarket1" as AddressLike,
       healthRatio: 900000000000000000n,
@@ -524,13 +524,13 @@ describe("LiquidationService - prioritizeActions", () => {
       collatToken: "0xToken1" as AddressLike,
     }
 
-    const result = liquidationService.prioritizeActions([hardLiquidation1, hardLiquidation2, hardLiquidation3], [softLiquidation1, softLiquidation2])
+    const result = liquidationService.prioritizeActions([seizing1, seizing2, seizing3], [liquidation1, liquidation2])
 
     // Verify the result
     expect(result).toHaveLength(2) // Limited by wallet count
-    expect(result[0].type).toBe("hard")
+    expect(result[0].type).toBe("seizing")
     expect(result[0].account).toBe("0xUser1") // Highest position value
-    expect(result[1].type).toBe("soft")
+    expect(result[1].type).toBe("liquidation")
     expect(result[1].account).toBe("0xUser2") // Second highest position value
 
     // Verify that lower value positions were not included

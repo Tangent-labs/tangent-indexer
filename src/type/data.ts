@@ -1,6 +1,6 @@
 import { AddressLike } from "ethers"
 
-export type MarketType = "ConvexFxn" | "ConvexCrv" | "NoSociabilization"
+export type MarketType = "ConvexFxn" | "ConvexCrv" | "Pendle PT"
 
 export type LiquidationUserInInfo = { account: AddressLike; market: AddressLike }
 
@@ -29,8 +29,8 @@ export type LiquidationUserInfo = LiquidationAccountOutInfo & LiquidationUserInI
 export type LiquidationUserFullInfo = LiquidationUserInfo & { collatToken: AddressLike }
 
 export type LiquidationAnalyseInfo = {
-  hardLiquidationList?: LiquidationUserFullInfo[]
-  softLiquidationList?: LiquidationUserFullInfo[]
+  seizingList?: LiquidationUserFullInfo[]
+  liquidationList?: LiquidationUserFullInfo[]
   notDebtorAnymoreList?: LiquidationUserInInfo[]
 }
 

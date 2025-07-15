@@ -3,35 +3,21 @@ import { setUpIndexer } from "../config/indexer_setup"
 import { TransactionPrisma } from "type/prisma"
 import { PrismaClient } from "@prisma/client"
 import { BlockRepository } from "db/BlockRepository"
-import { MarketBorrowerRepository } from "db/MarketBorrowerRepository"
+import { ActiveBorrowersRepository } from "db/ActiveBorrowersRepository"
 import { MarketContractsRepository } from "db/MarketContractsRepository"
-import { MarketDepositRepository } from "db/MarketDepositRepository"
-import { MarketBorrowerService } from "services/MarketBorrowerService"
-import { MarketLeverageService } from "services/MarketLeverageService"
-import { MarketCreationService } from "services/MarketCreationService"
-import { MarketDepositService } from "services/MarketDepositService"
+import { MarketCreationService } from "services/events/MarketCreationService"
+import { UserMarketService } from "services/events/UserMarketService"
 import * as dotenv from "dotenv"
 import { indexerConfig } from "config/indexer_config"
-import { MarketRepayService } from "services/MarketRepayService"
-import { MarketRepayRepository } from "db/MarketRepayRepository"
-import { MarketLeverageRepository } from "db/MarketLeverageRepository"
-import { MarketLiquidateRepository } from "db/MarketLiquidateRepository"
-import { MarketLiquidationService } from "services/MarketLiquidationService"
+import { AddressLike } from "ethers"
+import { ActiveBorrowersService } from "services/ActiveBorrowersService"
+import { UserEventsRepository } from "db/UserEventsRepository"
+import { getEthLogs } from "eventFectcher/_baseFectcher"
 dotenv.config()
-
 async function main() {
   const { providers, handleError } = setUpIndexer()
-  const {
-    prismaClient,
-    marketBorrowerService,
-    marketCreationService,
-    marketDepositService,
-    marketLeverageService,
-    marketLiquidateService,
-    marketRepayService,
-    blockService,
-    setTransation,
-  } = setUpIndexerBlockServices()
+  const { prismaClient, userMarketService, marketCreationService, blockService, marketContractsRepository, activeBorrowersService, setTransaction } =
+    setUpIndexerBlockServices()
 
   try {
     const blockInfo = await BlockService.getIndexerBlockInfo(providers, blockService)
@@ -40,32 +26,37 @@ async function main() {
       return
     }
 
-    const { startBlock, endBlock, actualBlock, bestProvider } = blockInfo
+    const { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex } = blockInfo
 
     if (startBlock && endBlock) {
       console.log("indexing :", startBlock, "<----------------->", endBlock)
       await prismaClient.$transaction(
         async (dbTransaction: TransactionPrisma) => {
           // Set the database transaction to the repositories
-          setTransation(dbTransaction)
+          setTransaction(dbTransaction)
 
           // Detect new markets
           await marketCreationService.runDetection(bestProvider, startBlock, endBlock)
 
-          // Detect new borrowers
-          await marketBorrowerService.runDetection(bestProvider, startBlock, endBlock)
+          // Get all market addresses after
+          const marketContracts: AddressLike[] = (await marketContractsRepository.getContracts()).map((market) => market.contract_address as AddressLike)
 
-          // Detect deposit events
-          await marketDepositService.runDetection(bestProvider, startBlock, endBlock)
+          // Fetch all User market logs
+          const logs = await getEthLogs(bestProvider, startBlock, endBlock, marketContracts, [])
 
-          // Detect repay events
-          await marketRepayService.runDetection(bestProvider, startBlock, endBlock)
+          // Parse events with their proper topics and group all user events to update active borrowers
+          const { activeBorrowActions, sortedAndParsedEvents, blockIds } = userMarketService.sortUserMarketLogs(logs)
 
-          // Detect leverage events
-          await marketLeverageService.runDetection(bestProvider, startBlock, endBlock)
+          // Find block timestamps of the unique blockIDs
+          const blocks = await blockService.fetchBlockTimestamps(blockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
 
-          // Detect liquidate events
-          await marketLiquidateService.runDetection(bestProvider, startBlock, endBlock)
+          const hydratedWithCorrectDates = userMarketService.replaceRightDates(sortedAndParsedEvents, activeBorrowActions, blocks)
+
+          // Insert user events
+          await userMarketService.insertEvents(hydratedWithCorrectDates.sortedParsedEvents)
+
+          // Update active borrowers
+          await activeBorrowersService.updateActiveBorrowers(hydratedWithCorrectDates.userActions)
 
           // Update the last indexed block
           await blockService.updateLastBlockIndexed(endBlock)
@@ -90,40 +81,31 @@ function setUpIndexerBlockServices() {
   // Setup the repositories
   const blockRepository = new BlockRepository(prismaClient)
   const marketContractsRepository = new MarketContractsRepository(prismaClient)
-  const marketBorrowerRepository = new MarketBorrowerRepository(prismaClient)
-  const marketDepositRepository = new MarketDepositRepository(prismaClient)
-  const marketRepayRepository = new MarketRepayRepository(prismaClient)
-  const marketLeverageRepository = new MarketLeverageRepository(prismaClient)
-  const marketLiquidateRepository = new MarketLiquidateRepository(prismaClient)
+  const userEventsRepository = new UserEventsRepository(prismaClient)
+  const activeBorrowersRepository = new ActiveBorrowersRepository(prismaClient)
 
-  const setTransation = (dbTransaction: TransactionPrisma): void => {
+  const setTransaction = (dbTransaction: TransactionPrisma): void => {
     blockRepository.setClient(dbTransaction)
     marketContractsRepository.setClient(dbTransaction)
-    marketBorrowerRepository.setClient(dbTransaction)
-    marketDepositRepository.setClient(dbTransaction)
-    marketRepayRepository.setClient(dbTransaction)
-    marketLeverageRepository.setClient(dbTransaction)
-    marketLiquidateRepository.setClient(dbTransaction)
+    userEventsRepository.setClient(dbTransaction)
+    activeBorrowersRepository.setClient(dbTransaction)
   }
 
   // Set up the services
   const blockService = new BlockService(blockRepository)
   const marketCreationService = new MarketCreationService(marketContractsRepository, indexerConfig.contracts.marketCreatorAddress)
-  const marketBorrowerService = new MarketBorrowerService(marketBorrowerRepository, marketCreationService.marketContractsRepository)
-  const marketDepositService = new MarketDepositService(marketDepositRepository, marketContractsRepository)
-  const marketRepayService = new MarketRepayService(marketRepayRepository, marketContractsRepository)
-  const marketLeverageService = new MarketLeverageService(marketLeverageRepository, marketContractsRepository)
-  const marketLiquidateService = new MarketLiquidationService(marketLiquidateRepository, marketContractsRepository)
+
+  const userMarketService = new UserMarketService(userEventsRepository)
+  const activeBorrowersService = new ActiveBorrowersService(activeBorrowersRepository)
 
   return {
     prismaClient,
     marketCreationService,
-    marketBorrowerService,
-    marketDepositService,
-    marketRepayService,
-    marketLeverageService,
-    marketLiquidateService,
+    userEventsRepository,
+    userMarketService,
     blockService,
-    setTransation,
+    activeBorrowersService,
+    setTransaction,
+    marketContractsRepository,
   }
 }

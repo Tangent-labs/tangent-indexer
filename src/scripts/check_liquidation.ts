@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client"
-import { MarketBorrowerRepository } from "db/MarketBorrowerRepository"
+import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository"
 
 import { setUpIndexer } from "config/indexer_setup"
 import { LiquidationService } from "services/LiquidationService"
@@ -34,8 +34,8 @@ export function setUpCheckLiquidationServices() {
   const liquidationBotLogRepository = new LiquidationBotLogRepository(prismaClient)
   const liquidationBotService = new LiquidationBotService(liquidationBotLogRepository)
 
-  const marketBorrowerRepository = new MarketBorrowerRepository(prismaClient)
-  const liquidationService = new LiquidationService(marketBorrowerRepository, context, liquidationBotService)
+  const activeBorrowersRepository = new ActiveBorrowersRepository(prismaClient)
+  const liquidationService = new LiquidationService(activeBorrowersRepository, context, liquidationBotService)
   liquidationService.minEthBalance = indexerConfig.minEthBalance
   liquidationService.curveRouterAddress = indexerConfig.contracts.curveRouterAddress
   const notificationService = new NotificationService()

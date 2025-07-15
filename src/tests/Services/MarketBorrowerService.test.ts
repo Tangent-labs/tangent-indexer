@@ -1,47 +1,60 @@
 import { describe, it, expect, vi } from "vitest"
-import { MarketBorrowerService } from "../../services/MarketBorrowerService"
-import { MarketBorrowerRepository } from "../../db/MarketBorrowerRepository"
-import { MarketContractsRepository } from "../../db/MarketContractsRepository"
-import { JsonRpcProvider } from "ethers"
-import { fetchBorrowLogs } from "../../eventFectcher/marketBorrowerEventFetcher"
+import { ActiveBorrowersService } from "../../services/ActiveBorrowersService"
+import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository"
+import { UserAction } from "services/events/UserMarketService"
 
 vi.mock("../../eventFectcher/marketBorrowerEventFetcher", () => ({
   fetchBorrowLogs: vi.fn(),
 }))
 
 describe("MarketBorrowerService", () => {
-  it("should insert market borrowers with fetched logs", async () => {
-    const mockMarketBorrowerRepository = {
-      updateMarketBorrowers: vi.fn(),
-    }
+  it("should sort properly the market/user to insert and delete", async () => {
+    const activeBorrowersRepository = {
+      deleteActiveBorrowers: vi.fn(),
+      insertActiveBorrowers: vi.fn(),
+    } as any as ActiveBorrowersRepository
 
-    const mockMarketContractsRepository = {
-      getContracts: vi.fn().mockResolvedValue([{ contract_address: "0xMarket1" }, { contract_address: "0xMarket2" }]),
-    }
+    const activeBorrowersService = new ActiveBorrowersService(activeBorrowersRepository)
 
-    const marketBorrowerService = new MarketBorrowerService(
-      mockMarketBorrowerRepository as any as MarketBorrowerRepository,
-      mockMarketContractsRepository as any as MarketContractsRepository
-    )
-
-    const mockProvider = {} as JsonRpcProvider
-    const startingBlock = 1000
-    const endingBlock = 2000
-
-    const mockLogs = [
-      { borrower: "0xBorrower1", market: "0xMarket1" },
-      { borrower: "0xBorrower2", market: "0xMarket2" },
+    const mockLogs: UserAction[] = [
+      { user: "0xBorrower1", market: "0xMarket1", blockId: 12, isBorrow: true },
+      { user: "0xBorrower2", market: "0xMarket2", blockId: 12, isBorrow: true },
+      { user: "0xBorrower2", market: "0xMarket2", blockId: 12, isRepayAll: true },
+      { user: "0xBorrower1", market: "0xMarket2", blockId: 20, isBorrow: true },
+      { user: "0xBorrower1", market: "0xMarket2", blockId: 22, isRepayAll: false },
     ]
 
-    ;(fetchBorrowLogs as any).mockResolvedValue(mockLogs)
+    const expectedInserted: UserAction[] = [
+      { user: "0xBorrower1", market: "0xMarket1", blockId: 12, isBorrow: true },
+      { user: "0xBorrower1", market: "0xMarket2", blockId: 22, isRepayAll: false },
+    ]
 
-    await marketBorrowerService.runDetection(mockProvider, startingBlock, endingBlock)
+    const { inserted, deleted } = await activeBorrowersService.updateActiveBorrowers(mockLogs)
 
-    expect(mockMarketContractsRepository.getContracts).toHaveBeenCalled()
-    expect(fetchBorrowLogs).toHaveBeenCalledWith(mockProvider, startingBlock, endingBlock, ["0xMarket1", "0xMarket2"])
-    expect(mockMarketBorrowerRepository.updateMarketBorrowers).toHaveBeenCalledWith([
-      { borrower: "0xBorrower1", market: "0xMarket1" },
-      { borrower: "0xBorrower2", market: "0xMarket2" },
-    ])
+    expect(activeBorrowersRepository.deleteActiveBorrowers).toHaveBeenCalledWith(deleted)
+    expect(activeBorrowersRepository.insertActiveBorrowers).toHaveBeenCalledWith(inserted)
+
+    deleted.forEach((item, i) => {
+      const log = mockLogs[i]
+      expect(item.blockId).toBe(log.blockId)
+      expect(item.market).toBe(log.market)
+      expect(item.user).toBe(log.user)
+      expect(item.isBorrow).toBe(log.isBorrow)
+      expect(item.isRepayAll).toBe(log.isRepayAll)
+      expect(item.timestamp).toBe(log.timestamp)
+    })
+
+    inserted.forEach((item, i) => {
+      const log = expectedInserted[i]
+      expect(item.blockId).toBe(log.blockId)
+      expect(item.market).toBe(log.market)
+      expect(item.user).toBe(log.user)
+      expect(item.isBorrow).toBe(log.isBorrow)
+      expect(item.isRepayAll).toBe(log.isRepayAll)
+      expect(item.timestamp).toBe(log.timestamp)
+    })
+
+    expect(deleted.length).toBe(5)
+    expect(inserted.length).toBe(2)
   })
 })

@@ -8,7 +8,7 @@ const TRANSFER_SIGNATURES = {
 
 // Type Definition for Market Events
 
-export const fetchTransfertLogs = async (
+export const fetchTransferLogs = async (
   provider: JsonRpcProvider,
   startingBlock: number,
   endingBlock: number,
