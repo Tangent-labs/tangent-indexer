@@ -5,10 +5,6 @@ function userAddress(topic: string): string {
   return AbiCoder.defaultAbiCoder().decode(["address"], topic)[0]
 }
 
-//
-
-//
-
 export function parseTransferEvent(log: Log): Prisma.points_actionCreateInput {
   const [amount] = AbiCoder.defaultAbiCoder().decode(["uint256"], log.data)
 
@@ -25,10 +21,6 @@ export function parseTransferEvent(log: Log): Prisma.points_actionCreateInput {
     tx_hash: log.transactionHash,
   }
 }
-
-//
-
-//
 
 export function parseBorrowEvent(log: Log): Prisma.borrowCreateInput {
   const [receiver, borrowedAmount] = AbiCoder.defaultAbiCoder().decode(["address", "uint256"], log.data)
