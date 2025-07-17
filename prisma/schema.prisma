@@ -311,8 +311,8 @@ model seize_collateral {
   @@schema("events")
 }
 
-model points_action {
-  id            BigInt   @id(map: "points_action_pkey") @default(autoincrement())
+model transfert_events {
+  id            BigInt   @id(map: "transfert_events_pkey") @default(autoincrement())
   token_address String   @db.VarChar
   from          String   @db.VarChar
   to            String   @db.VarChar
@@ -321,5 +321,59 @@ model points_action {
   block_id      Int
   tx_hash       String   @db.VarChar(66)
 
+  @@schema("events")
+}
+
+model user_addresses {
+  id      BigInt @id(map: "user_addresses_pkey") @default(autoincrement())
+  address String @unique
+
+  @@schema("events")
+}
+
+model task {
+  id          BigInt  @id(map: "task_pkey") @default(autoincrement())
+  name        String
+  action_type String  @db.VarChar
+  protocol    String
+  token       String
+  point_rate  Float
+  unit        String
+  description String
+  url         String
+  is_active   Boolean @default(true)
+
+  @@schema("events")
+}
+
+model user_snapshots {
+  id           BigInt   @id(map: "user_snapshots_pkey") @default(autoincrement())
+  user_address String   @db.VarChar
+  timestamp    DateTime
+  task_id      BigInt
+  amount       Float
+  external_id  String?
+
+  @@unique([user_address, task_id]) // Add this line to enforce uniqueness
+  @@index([task_id])
+  @@schema("events")
+}
+
+model last_processed_block {
+  id       Int @id @default(1) // Single row table, id fixed at 1
+  block_id Int @default(0)
+
+  @@schema("global")
+}
+
+model user_tasks {
+  id           BigInt    @id(map: "user_tasks_pkey") @default(autoincrement())
+  task_id      BigInt
+  user_address String    @db.VarChar
+  start        DateTime? @db.Timestamp
+  closed       DateTime? @db.Timestamp
+  amount       Float
+
+  @@index([task_id, user_address])
   @@schema("events")
 }

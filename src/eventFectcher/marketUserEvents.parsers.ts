@@ -5,7 +5,26 @@ function userAddress(topic: string): string {
   return AbiCoder.defaultAbiCoder().decode(["address"], topic)[0]
 }
 
-export function parseTransferEvent(log: Log): Prisma.points_actionCreateInput {
+export function getUserAddressFromTransfer(log: Log): { address: string } {
+  const TRANSFER_EVENT_SIGNATURE = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+  if (log.topics[0] !== TRANSFER_EVENT_SIGNATURE) {
+    throw new Error("Log is not a Transfer event")
+  }
+
+  const from = userAddress(log.topics[1])
+  const to = userAddress(log.topics[2])
+  const zeroAddress = "0x0000000000000000000000000000000000000000"
+
+  if (from !== zeroAddress) {
+    return { address: from }
+  } else if (to !== zeroAddress) {
+    return { address: to }
+  } else {
+    throw new Error("No non-zero user address found in the Transfer event")
+  }
+}
+
+export function parseTransferEvent(log: Log): Prisma.transfert_eventsCreateInput {
   const [amount] = AbiCoder.defaultAbiCoder().decode(["uint256"], log.data)
 
   const from = userAddress(log.topics[1])

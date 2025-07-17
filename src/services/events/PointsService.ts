@@ -1,10 +1,10 @@
 import { UserPointsRepository } from "db/UserPointsRepository"
 import { Prisma } from "@prisma/client"
 import { Log } from "ethers"
-import { parseTransferEvent } from "eventFectcher/marketUserEvents.parsers"
+import { getUserAddressFromTransfer, parseTransferEvent } from "eventFectcher/marketUserEvents.parsers"
 
 export type SortedEvents = {
-  Transfer: Prisma.points_actionCreateInput[]
+  Transfer: Prisma.transfert_eventsCreateInput[]
 }
 
 export class UserPointsService {
@@ -15,6 +15,18 @@ export class UserPointsService {
 
   async insertEvents(sortedParsedEvents: SortedEvents) {
     await this.userPointsRepository.insertTransfers(sortedParsedEvents.Transfer)
+  }
+
+  async sortAndInsertUserAddresses(logs: Log[]) {
+    const sortedAndParsedUsers: Prisma.user_addressesCreateInput[] = []
+
+    logs.forEach((log) => {
+      const transferEvent = getUserAddressFromTransfer(log)
+
+      sortedAndParsedUsers.push(transferEvent)
+    })
+
+    await this.userPointsRepository.insertAddresses(sortedAndParsedUsers)
   }
 
   replaceDates(sortedParsedEvents: SortedEvents, blockInfos: Map<number, number>) {

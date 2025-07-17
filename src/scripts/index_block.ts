@@ -56,13 +56,9 @@ async function main() {
           const logs = await getEthLogs(bestProvider, startBlock, endBlock, marketContracts, [])
 
           const transferToWatch = [
-            "0x963B59A52647777E3646034213d6A7B5aEA4F1d8",
-            "0xedb6a6D23Ed23c8024A1e48f877e81432041aE00",
-            "0x3FD3d725e7Ab6C1E12a916410437f47b002560d2",
-            "0xeef0c605546958c1f899b6fb336c20671f9cd49f",
-            "0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6",
-            "0xB9E1E3A9feFf48998E45Fa90847ed4D467E8BcfD",
-            "0xa569d910839Ae8865Da8F8e70FfFb0cBA869F961",
+            "0xa5100dFD6C966aC60a8E497a3545B49B12Dd45BC",
+            "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+            "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
           ]
 
           const transferLogs = await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch)
@@ -80,6 +76,7 @@ async function main() {
 
           // Insert user points actions
           await userPointsService.insertEvents(pointsActionEventsDates.sortedParsedEvents)
+          await userPointsService.sortAndInsertUserAddresses(transferLogs)
 
           // Insert user events
           await userMarketService.insertEvents(hydratedWithCorrectDates.sortedParsedEvents)
