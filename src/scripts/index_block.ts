@@ -55,12 +55,17 @@ async function main() {
           // Fetch all User market logs
           const logs = await getEthLogs(bestProvider, startBlock, endBlock, marketContracts, [])
 
-          const transferToWatch = [
-            "0xa5100dFD6C966aC60a8E497a3545B49B12Dd45BC",
-            "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
-            "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
-          ]
+          const tokens = await prismaClient.tracked_erc20.findMany({
+            select: { address: true },
+          })
 
+          // Extract addresses into an array
+          const transferToWatch: string[] = tokens.map((token) => token.address)
+
+          // Log for debugging
+          console.log(`Fetched ${transferToWatch.length} token addresses for tracking`)
+
+          // Call fetchTransferLogs with the addresses
           const transferLogs = await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch)
 
           // Parse events with their proper topics and group all user events to update active borrowers
@@ -68,15 +73,13 @@ async function main() {
           const { sortedAndParsedPointsEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs(transferLogs)
 
           // Find block timestamps of the unique blockIDs
-          const blocks = await blockService.fetchBlockTimestamps(blockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
-          const pointsEventsBlocks = await blockService.fetchBlockTimestamps(pointsEventsBlockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
+          const blocks = await blockService.fetchBlockTimestamps(blockIds.concat(pointsEventsBlockIds), indexerConfig.provider.chainRpc[bestProviderIndex])
 
           const hydratedWithCorrectDates = userMarketService.replaceRightDates(sortedAndParsedEvents, activeBorrowActions, blocks)
-          const pointsActionEventsDates = userPointsService.replaceDates(sortedAndParsedPointsEvents, pointsEventsBlocks)
+          const pointsActionEventsDates = userPointsService.replaceDates(sortedAndParsedPointsEvents, blocks)
 
           // Insert user points actions
           await userPointsService.insertEvents(pointsActionEventsDates.sortedParsedEvents)
-          await userPointsService.sortAndInsertUserAddresses(transferLogs)
 
           // Insert user events
           await userMarketService.insertEvents(hydratedWithCorrectDates.sortedParsedEvents)

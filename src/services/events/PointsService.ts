@@ -1,7 +1,7 @@
-import { UserPointsRepository } from "db/UserPointsRepository"
 import { Prisma } from "@prisma/client"
+import { UserPointsRepository } from "db/UserPointsRepository"
 import { Log } from "ethers"
-import { getUserAddressFromTransfer, parseTransferEvent } from "eventFectcher/marketUserEvents.parsers"
+import { parseTransferEvent } from "eventFectcher/marketUserEvents.parsers"
 
 export type SortedEvents = {
   Transfer: Prisma.transfert_eventsCreateInput[]
@@ -9,24 +9,35 @@ export type SortedEvents = {
 
 export class UserPointsService {
   userPointsRepository: UserPointsRepository
+
   constructor(userPointsRepository: UserPointsRepository) {
     this.userPointsRepository = userPointsRepository
   }
 
-  async insertEvents(sortedParsedEvents: SortedEvents) {
-    await this.userPointsRepository.insertTransfers(sortedParsedEvents.Transfer)
+  async processUserAddressesFromTransfers(startBlock: number, endBlock: number) {
+    const uniqueAddresses = await this.userPointsRepository.getUniqueAddressesFromTransfers(startBlock, endBlock)
+    console.log(`Found ${uniqueAddresses.length} unique addresses to insert`)
+    await this.userPointsRepository.insertAddresses(uniqueAddresses)
   }
 
-  async sortAndInsertUserAddresses(logs: Log[]) {
-    const sortedAndParsedUsers: Prisma.user_addressesCreateInput[] = []
+  async processUserTasks(startBlock: number) {
+    const { tasks, userAddresses, relevantEvents } = await this.userPointsRepository.fetchTasksEventsAndAddresses(startBlock)
 
-    logs.forEach((log) => {
-      const transferEvent = getUserAddressFromTransfer(log)
+    await this.userPointsRepository.processTasks(relevantEvents, tasks, userAddresses)
 
-      sortedAndParsedUsers.push(transferEvent)
-    })
+    const maxBlockId = await this.userPointsRepository.getMaxBlockId(startBlock)
+    if (maxBlockId) {
+      await this.userPointsRepository.updateLastProcessedBlock(maxBlockId)
+      console.log(`Updated last processed block to ${maxBlockId}`)
+    } else {
+      console.log("No new blocks processed")
+    }
 
-    await this.userPointsRepository.insertAddresses(sortedAndParsedUsers)
+    console.log("User tasks processing completed")
+  }
+
+  async insertEvents(sortedParsedEvents: SortedEvents) {
+    await this.userPointsRepository.insertTransfers(sortedParsedEvents.Transfer)
   }
 
   replaceDates(sortedParsedEvents: SortedEvents, blockInfos: Map<number, number>) {
@@ -48,9 +59,7 @@ export class UserPointsService {
 
     logs.forEach((log) => {
       const transferEvent = parseTransferEvent(log)
-
       uniqueBlockId.add(log.blockNumber)
-
       sortedAndParsedPointsEvents.Transfer.push(transferEvent)
     })
 

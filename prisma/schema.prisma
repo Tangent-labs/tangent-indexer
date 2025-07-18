@@ -6,7 +6,7 @@ generator prisma {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["events", "global"]
+  schemas  = ["events", "global", "points"]
 }
 
 model global_blocks {
@@ -328,22 +328,36 @@ model user_addresses {
   id      BigInt @id(map: "user_addresses_pkey") @default(autoincrement())
   address String @unique
 
-  @@schema("events")
+  @@schema("points")
+}
+
+model user_tasks {
+  id           BigInt    @id(map: "user_tasks_pkey") @default(autoincrement())
+  task         task      @relation(fields: [task_id], references: [id])
+  task_id      BigInt
+  user_address String    @db.VarChar
+  start        DateTime? @db.Timestamp
+  closed       DateTime? @db.Timestamp
+  amount       Float
+
+  @@index([task_id, user_address])
+  @@schema("points")
 }
 
 model task {
-  id          BigInt  @id(map: "task_pkey") @default(autoincrement())
+  id          BigInt       @id(map: "task_pkey") @default(autoincrement())
   name        String
-  action_type String  @db.VarChar
+  action_type String       @db.VarChar
   protocol    String
   token       String
   point_rate  Float
   unit        String
   description String
   url         String
-  is_active   Boolean @default(true)
+  is_active   Boolean      @default(true)
+  user_tasks  user_tasks[]
 
-  @@schema("events")
+  @@schema("points")
 }
 
 model user_snapshots {
@@ -356,24 +370,22 @@ model user_snapshots {
 
   @@unique([user_address, task_id]) // Add this line to enforce uniqueness
   @@index([task_id])
-  @@schema("events")
+  @@schema("points")
 }
 
 model last_processed_block {
-  id       Int @id @default(1) // Single row table, id fixed at 1
-  block_id Int @default(0)
+  block_id Int @id(map: "last_processed_block_pkey") @default(autoincrement())
 
-  @@schema("global")
+  @@schema("points")
 }
 
-model user_tasks {
-  id           BigInt    @id(map: "user_tasks_pkey") @default(autoincrement())
-  task_id      BigInt
-  user_address String    @db.VarChar
-  start        DateTime? @db.Timestamp
-  closed       DateTime? @db.Timestamp
-  amount       Float
+model tracked_erc20 {
+  id        BigInt   @id(map: "tracked_erc20_pkey") @default(autoincrement())
+  address   String   @unique
+  name      String?
+  symbol    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@index([task_id, user_address])
-  @@schema("events")
+  @@schema("points")
 }
