@@ -118,10 +118,10 @@ export class LiquidationService {
 
       const markets = new Set<AddressLike>()
       const borrowers = borrowersRawList.map((borrower) => {
-        markets.add(borrower.contract_address as AddressLike)
+        markets.add(borrower.market.contract_address as AddressLike)
         return {
           account: borrower.borrower_address as AddressLike,
-          market: borrower.contract_address as AddressLike,
+          market: borrower.market.contract_address as AddressLike,
         }
       })
       return { markets: Array.from(markets), borrowers }

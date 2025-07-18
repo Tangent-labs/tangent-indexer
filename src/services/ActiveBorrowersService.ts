@@ -15,7 +15,7 @@ export class ActiveBorrowersService {
     // Going reverse through the array and keep only the first
     for (let i = userActions.length - 1; i >= 0; i--) {
       const item = userActions[i]
-      const key = `${item.user}|${item.market}`
+      const key = `${item.user}|${item.marketId}`
       if (!seen.has(key)) {
         seen.set(key, item)
       }

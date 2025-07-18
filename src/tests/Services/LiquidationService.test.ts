@@ -93,20 +93,47 @@ describe("LiquidationService", () => {
   })
 
   it("should get liquidation parameters", async () => {
-    const mockBorrowers = [
+    const mockBorrowers: {
+      market: {
+        id: bigint
+        contract_name: string
+        collateral_address: string
+        contract_address: string
+        contract_type: string
+      }
+      borrower_address: string
+    }[] = [
       {
-        borrower_address: "0x123" as AddressLike,
-        contract_address: "0x456" as AddressLike,
+        market: {
+          id: 1n,
+          collateral_address: "0x1",
+          contract_address: "0x456",
+          contract_name: "A",
+          contract_type: "Convex CRV",
+        },
+        borrower_address: "0x123",
       },
       {
-        borrower_address: "0x789" as AddressLike,
-        contract_address: "0xABC" as AddressLike,
+        market: {
+          id: 2n,
+          collateral_address: "0x1",
+          contract_address: "0xABC",
+          contract_name: "A",
+          contract_type: "Convex CRV",
+        },
+        borrower_address: "0x789",
       },
       {
-        borrower_address: "0x789" as AddressLike,
-        contract_address: "0x456" as AddressLike,
+        market: {
+          id: 1n,
+          collateral_address: "0x1",
+          contract_address: "0x456",
+          contract_name: "A",
+          contract_type: "Convex CRV",
+        },
+        borrower_address: "0x789",
       },
-    ] as any
+    ]
 
     const mockMarketBorrowerRepository = {
       getAll: vi.fn().mockResolvedValue(mockBorrowers),
@@ -134,12 +161,27 @@ describe("LiquidationService", () => {
   })
 
   it("should get liquidation parameters from database when isDbAlive is true", async () => {
-    const mockBorrowers = [
+    const mockBorrowers: {
+      market: {
+        id: bigint
+        contract_name: string
+        collateral_address: string
+        contract_address: string
+        contract_type: string
+      }
+      borrower_address: string
+    }[] = [
       {
-        borrower_address: "0x123" as AddressLike,
-        contract_address: "0x456" as AddressLike,
+        market: {
+          id: 1n,
+          collateral_address: "0x1",
+          contract_address: "0x456",
+          contract_name: "A",
+          contract_type: "Convex CRV",
+        },
+        borrower_address: "0x123",
       },
-    ] as any
+    ]
 
     const mockMarketBorrowerRepository = {
       getAll: vi.fn().mockResolvedValue(mockBorrowers),

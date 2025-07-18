@@ -29,14 +29,43 @@ describe("ActiveBorrowersRepository", () => {
 
   it("should delete borrowers that exist in the database", async () => {
     prismaMock.active_borrowers.findMany.mockResolvedValue([
-      { borrower_address: "Alice", contract_address: "Market1" },
-      { borrower_address: "Bob", contract_address: "Market2" },
-      { borrower_address: "Alice", contract_address: "Market2" },
+      {
+        market: {
+          id: 1n,
+          collateral_address: "0x1",
+          contract_address: "Market1",
+          contract_name: "A",
+          contract_type: "Convex CRV",
+        },
+        borrower_address: "Alice",
+      },
+
+      {
+        market: {
+          id: 2n,
+          collateral_address: "0x2",
+          contract_address: "Market2",
+          contract_name: "A",
+          contract_type: "Convex CRV",
+        },
+        borrower_address: "Bob",
+      },
+
+      {
+        market: {
+          id: 2n,
+          collateral_address: "0x2",
+          contract_address: "Market2",
+          contract_name: "A",
+          contract_type: "Convex CRV",
+        },
+        borrower_address: "Alice",
+      },
     ])
 
     const inputData: UserAction[] = [
-      { user: "Alice", market: "Market1", blockId: 12 },
-      { user: "Charlie", market: "Market3", blockId: 13 }, // Should be ignored (not in DB)
+      { user: "Alice", marketId: 1, blockId: 12 },
+      { user: "Charlie", marketId: 3, blockId: 13 }, // Should be ignored (not in DB)
     ]
 
     await repository.deleteActiveBorrowers(inputData)
@@ -44,8 +73,8 @@ describe("ActiveBorrowersRepository", () => {
     expect(prismaMock.active_borrowers.deleteMany).toHaveBeenCalledWith({
       where: {
         OR: [
-          { borrower_address: { equals: "Alice", mode: "insensitive" }, contract_address: { equals: "Market1", mode: "insensitive" } },
-          { borrower_address: { equals: "Charlie", mode: "insensitive" }, contract_address: { equals: "Market3", mode: "insensitive" } },
+          { borrower_address: { equals: "Alice", mode: "insensitive" }, market_id: { equals: 1, mode: "insensitive" } },
+          { borrower_address: { equals: "Charlie", mode: "insensitive" }, market_id: { equals: 3, mode: "insensitive" } },
         ],
       },
     })
@@ -53,16 +82,61 @@ describe("ActiveBorrowersRepository", () => {
 
   it("should delete multiple matched borrowers", async () => {
     prismaMock.active_borrowers.findMany.mockResolvedValue([
-      { borrower_address: "Alice", contract_address: "Market1" },
-      { borrower_address: "Alice", contract_address: "Market2" },
-      { borrower_address: "Bob", contract_address: "Market2" },
-      { borrower_address: "Bob", contract_address: "Market3" },
-      { borrower_address: "Charlie", contract_address: "Market3" },
+      {
+        market: {
+          id: 1n,
+          collateral_address: "0x1",
+          contract_address: "Market1",
+          contract_name: "A",
+          contract_type: "Convex CRV",
+        },
+        borrower_address: "Alice",
+      },
+      {
+        market: {
+          id: 1n,
+          collateral_address: "0x1",
+          contract_address: "Market2",
+          contract_name: "A",
+          contract_type: "Convex CRV",
+        },
+        borrower_address: "Alice",
+      },
+      {
+        market: {
+          id: 1n,
+          collateral_address: "0x1",
+          contract_address: "Market2",
+          contract_name: "A",
+          contract_type: "Convex CRV",
+        },
+        borrower_address: "Bob",
+      },
+      {
+        market: {
+          id: 1n,
+          collateral_address: "0x1",
+          contract_address: "Market3",
+          contract_name: "A",
+          contract_type: "Convex CRV",
+        },
+        borrower_address: "Bob",
+      },
+      {
+        market: {
+          id: 1n,
+          collateral_address: "0x1",
+          contract_address: "Market3",
+          contract_name: "A",
+          contract_type: "Convex CRV",
+        },
+        borrower_address: "Charlie",
+      },
     ])
 
     const inputData: UserAction[] = [
-      { user: "Alice", market: "Market1", blockId: 12 },
-      { user: "Bob", market: "Market2", blockId: 13 },
+      { user: "Alice", marketId: 1, blockId: 12 },
+      { user: "Bob", marketId: 2, blockId: 13 },
     ]
 
     await repository.deleteActiveBorrowers(inputData)
@@ -70,8 +144,8 @@ describe("ActiveBorrowersRepository", () => {
     expect(prismaMock.active_borrowers.deleteMany).toHaveBeenCalledWith({
       where: {
         OR: [
-          { borrower_address: { equals: "Alice", mode: "insensitive" }, contract_address: { equals: "Market1", mode: "insensitive" } },
-          { borrower_address: { equals: "Bob", mode: "insensitive" }, contract_address: { equals: "Market2", mode: "insensitive" } },
+          { borrower_address: { equals: "Alice", mode: "insensitive" }, market_id: { equals: 1, mode: "insensitive" } },
+          { borrower_address: { equals: "Bob", mode: "insensitive" }, market_id: { equals: 2, mode: "insensitive" } },
         ],
       },
     })

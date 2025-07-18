@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client"
 import { AbstractRepository } from "./AbstractRepository"
 
 export class UserEventsRepository extends AbstractRepository {
-  async insertBorrows(events: Prisma.borrowCreateInput[]) {
+  async insertBorrows(events: Prisma.borrowCreateManyInput[]) {
     if (events.length > 0) {
       await this.prismaClient.borrow.createMany({
         data: events,
@@ -10,7 +10,7 @@ export class UserEventsRepository extends AbstractRepository {
     }
   }
 
-  async insertDeposits(events: Prisma.depositCreateInput[]) {
+  async insertDeposits(events: Prisma.depositCreateManyInput[]) {
     if (events.length > 0) {
       await this.prismaClient.deposit.createMany({
         data: events,
@@ -18,7 +18,7 @@ export class UserEventsRepository extends AbstractRepository {
     }
   }
 
-  async insertZapDeposits(events: Prisma.zap_depositCreateInput[]) {
+  async insertZapDeposits(events: Prisma.zap_depositCreateManyInput[]) {
     if (events.length > 0) {
       await this.prismaClient.zap_deposit.createMany({
         data: events,
@@ -26,7 +26,7 @@ export class UserEventsRepository extends AbstractRepository {
     }
   }
 
-  async insertDepositAndBorrows(events: Prisma.deposit_and_borrowCreateInput[]) {
+  async insertDepositAndBorrows(events: Prisma.deposit_and_borrowCreateManyInput[]) {
     if (events.length > 0) {
       await this.prismaClient.deposit_and_borrow.createMany({
         data: events,
@@ -34,7 +34,7 @@ export class UserEventsRepository extends AbstractRepository {
     }
   }
 
-  async insertZapDepositAndBorrows(events: Prisma.zap_deposit_and_borrowCreateInput[]) {
+  async insertZapDepositAndBorrows(events: Prisma.zap_deposit_and_borrowCreateManyInput[]) {
     if (events.length > 0) {
       await this.prismaClient.zap_deposit_and_borrow.createMany({
         data: events,
@@ -42,7 +42,7 @@ export class UserEventsRepository extends AbstractRepository {
     }
   }
 
-  async insertWithdraws(events: Prisma.withdrawCreateInput[]) {
+  async insertWithdraws(events: Prisma.withdrawCreateManyInput[]) {
     if (events.length > 0) {
       await this.prismaClient.withdraw.createMany({
         data: events,
@@ -50,7 +50,7 @@ export class UserEventsRepository extends AbstractRepository {
     }
   }
 
-  async insertRepays(events: Prisma.repayCreateInput[]) {
+  async insertRepays(events: Prisma.repayCreateManyInput[]) {
     if (events.length > 0) {
       await this.prismaClient.repay.createMany({
         data: events,
@@ -58,7 +58,7 @@ export class UserEventsRepository extends AbstractRepository {
     }
   }
 
-  async insertZapRepays(events: Prisma.zap_repayCreateInput[]) {
+  async insertZapRepays(events: Prisma.zap_repayCreateManyInput[]) {
     if (events.length > 0) {
       await this.prismaClient.zap_repay.createMany({
         data: events,
@@ -66,7 +66,7 @@ export class UserEventsRepository extends AbstractRepository {
     }
   }
 
-  async insertRepayAndWithdraws(events: Prisma.repay_and_withdrawCreateInput[]) {
+  async insertRepayAndWithdraws(events: Prisma.repay_and_withdrawCreateManyInput[]) {
     if (events.length > 0) {
       await this.prismaClient.repay_and_withdraw.createMany({
         data: events,
@@ -74,7 +74,7 @@ export class UserEventsRepository extends AbstractRepository {
     }
   }
 
-  async insertZapRepayAndWithdraws(events: Prisma.zap_repay_and_withdrawCreateInput[]) {
+  async insertZapRepayAndWithdraws(events: Prisma.zap_repay_and_withdrawCreateManyInput[]) {
     if (events.length > 0) {
       await this.prismaClient.zap_repay_and_withdraw.createMany({
         data: events,
@@ -82,7 +82,7 @@ export class UserEventsRepository extends AbstractRepository {
     }
   }
 
-  async insertLeverages(events: Prisma.leverageCreateInput[]) {
+  async insertLeverages(events: Prisma.leverageCreateManyInput[]) {
     if (events.length > 0) {
       await this.prismaClient.leverage.createMany({
         data: events,
@@ -90,7 +90,7 @@ export class UserEventsRepository extends AbstractRepository {
     }
   }
 
-  async insertZapLeverages(events: Prisma.zap_leverageCreateInput[]) {
+  async insertZapLeverages(events: Prisma.zap_leverageCreateManyInput[]) {
     if (events.length > 0) {
       await this.prismaClient.zap_leverage.createMany({
         data: events,
@@ -98,7 +98,7 @@ export class UserEventsRepository extends AbstractRepository {
     }
   }
 
-  async insertLiquidations(events: Prisma.liquidateCreateInput[]) {
+  async insertLiquidations(events: Prisma.liquidateCreateManyInput[]) {
     if (events.length > 0) {
       await this.prismaClient.liquidate.createMany({
         data: events,
@@ -106,7 +106,7 @@ export class UserEventsRepository extends AbstractRepository {
     }
   }
 
-  async insertSelfLiquidations(events: Prisma.self_liquidateCreateInput[]) {
+  async insertSelfLiquidations(events: Prisma.self_liquidateCreateManyInput[]) {
     if (events.length > 0) {
       await this.prismaClient.self_liquidate.createMany({
         data: events,
@@ -114,7 +114,7 @@ export class UserEventsRepository extends AbstractRepository {
     }
   }
 
-  async insertSeizeCollateral(events: Prisma.seize_collateralCreateInput[]) {
+  async insertSeizeCollateral(events: Prisma.seize_collateralCreateManyInput[]) {
     if (events.length > 0) {
       await this.prismaClient.seize_collateral.createMany({
         data: events,

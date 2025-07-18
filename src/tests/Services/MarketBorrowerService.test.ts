@@ -17,16 +17,16 @@ describe("MarketBorrowerService", () => {
     const activeBorrowersService = new ActiveBorrowersService(activeBorrowersRepository)
 
     const mockLogs: UserAction[] = [
-      { user: "0xBorrower1", market: "0xMarket1", blockId: 12, isBorrow: true },
-      { user: "0xBorrower2", market: "0xMarket2", blockId: 12, isBorrow: true },
-      { user: "0xBorrower2", market: "0xMarket2", blockId: 12, isRepayAll: true },
-      { user: "0xBorrower1", market: "0xMarket2", blockId: 20, isBorrow: true },
-      { user: "0xBorrower1", market: "0xMarket2", blockId: 22, isRepayAll: false },
+      { user: "0xBorrower1", marketId: 1, blockId: 12, isBorrow: true },
+      { user: "0xBorrower2", marketId: 2, blockId: 12, isBorrow: true },
+      { user: "0xBorrower2", marketId: 2, blockId: 12, isRepayAll: true },
+      { user: "0xBorrower1", marketId: 2, blockId: 20, isBorrow: true },
+      { user: "0xBorrower1", marketId: 2, blockId: 22, isRepayAll: false },
     ]
 
     const expectedInserted: UserAction[] = [
-      { user: "0xBorrower1", market: "0xMarket1", blockId: 12, isBorrow: true },
-      { user: "0xBorrower1", market: "0xMarket2", blockId: 22, isRepayAll: false },
+      { user: "0xBorrower1", marketId: 1, blockId: 12, isBorrow: true },
+      { user: "0xBorrower1", marketId: 2, blockId: 22, isRepayAll: false },
     ]
 
     const { inserted, deleted } = await activeBorrowersService.updateActiveBorrowers(mockLogs)
@@ -37,7 +37,7 @@ describe("MarketBorrowerService", () => {
     deleted.forEach((item, i) => {
       const log = mockLogs[i]
       expect(item.blockId).toBe(log.blockId)
-      expect(item.market).toBe(log.market)
+      expect(item.marketId).toBe(log.marketId)
       expect(item.user).toBe(log.user)
       expect(item.isBorrow).toBe(log.isBorrow)
       expect(item.isRepayAll).toBe(log.isRepayAll)
@@ -47,7 +47,7 @@ describe("MarketBorrowerService", () => {
     inserted.forEach((item, i) => {
       const log = expectedInserted[i]
       expect(item.blockId).toBe(log.blockId)
-      expect(item.market).toBe(log.market)
+      expect(item.marketId).toBe(log.marketId)
       expect(item.user).toBe(log.user)
       expect(item.isBorrow).toBe(log.isBorrow)
       expect(item.isRepayAll).toBe(log.isRepayAll)

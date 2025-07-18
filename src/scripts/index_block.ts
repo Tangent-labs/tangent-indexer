@@ -1,3 +1,5 @@
+import * as dotenv from "dotenv"
+
 import { BlockService } from "../services/BlockService"
 import { setUpIndexer } from "../config/indexer_setup"
 import { TransactionPrisma } from "type/prisma"
@@ -7,13 +9,13 @@ import { ActiveBorrowersRepository } from "db/ActiveBorrowersRepository"
 import { MarketContractsRepository } from "db/MarketContractsRepository"
 import { MarketCreationService } from "services/events/MarketCreationService"
 import { UserMarketService } from "services/events/UserMarketService"
-import * as dotenv from "dotenv"
 import { indexerConfig } from "config/indexer_config"
 import { AddressLike } from "ethers"
 import { ActiveBorrowersService } from "services/ActiveBorrowersService"
 import { UserEventsRepository } from "db/UserEventsRepository"
 import { getEthLogs } from "eventFectcher/_baseFectcher"
 dotenv.config()
+
 async function main() {
   const { providers, handleError } = setUpIndexer()
   const { prismaClient, userMarketService, marketCreationService, blockService, marketContractsRepository, activeBorrowersService, setTransaction } =
@@ -38,14 +40,13 @@ async function main() {
           // Detect new markets
           await marketCreationService.runDetection(bestProvider, startBlock, endBlock)
 
-          // Get all market addresses after
-          const marketContracts: AddressLike[] = (await marketContractsRepository.getContracts()).map((market) => market.contract_address as AddressLike)
+          const { marketAddresses, mapMarketIdAddresses } = await marketCreationService.getMarketsAddressesAndMap()
 
           // Fetch all User market logs
-          const logs = await getEthLogs(bestProvider, startBlock, endBlock, marketContracts, [])
+          const logs = await getEthLogs(bestProvider, startBlock, endBlock, marketAddresses, [])
 
           // Parse events with their proper topics and group all user events to update active borrowers
-          const { activeBorrowActions, sortedAndParsedEvents, blockIds } = userMarketService.sortUserMarketLogs(logs)
+          const { activeBorrowActions, sortedAndParsedEvents, blockIds } = userMarketService.sortUserMarketLogs(logs, mapMarketIdAddresses)
 
           // Find block timestamps of the unique blockIDs
           const blocks = await blockService.fetchBlockTimestamps(blockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
