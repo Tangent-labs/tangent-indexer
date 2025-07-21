@@ -15,6 +15,7 @@
     "tangent:indexer-tvl-aprs": "tsx src/scripts/index_tvl_aprs.ts",
     "tangent:check-liquidation": "tsx src/scripts/check_liquidation.ts",
     "tangent:check-votes": "tsx src/scripts/check_votes.ts",
+    "tangent:check-prices": "tsx src/scripts/check_prices.ts",
     "format": "prettier --write --list-different . ",
     "db:truncate": "tsx src/scripts/utils/truncate_tables.ts",
     "db:push": "npx prisma db push",

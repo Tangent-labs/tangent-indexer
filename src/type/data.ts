@@ -124,3 +124,15 @@ export type RewardedChoiceOption = {
   key: string
   value: string
 }
+
+export type PriceInfo = {
+  address: string
+  price: number
+}
+
+export type PriceSource = {
+  address: string
+  name: string
+  type: "curveApi" | "ERC4626" | "Internal" | "pendleApi" | "llamaApi"
+  refToken?: string
+}

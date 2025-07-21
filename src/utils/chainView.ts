@@ -25,10 +25,18 @@ export const chainView = async <A extends any[], R>(
     await provider.call(deploy)
   } catch (e: any) {
     dataError = e.data
-  }
-  // decode data returned by the fake deployment
-  const decoded = ChainViewInterface.parseError(dataError)
 
+    console.log("keys", Object.keys(e))
+    console.log("reason", e.reason)
+    console.log("data", e.data)
+    console.log("code", e.code)
+    console.log("action", e.action)
+    console.log("shortMessage", e.shortMessage)
+  }
+
+  // decode data returned by the fake deployment
+  const decoded = ChainViewInterface.parseError(dataError.trim())
+  console.log("decoded", decoded)
   const errorName = decoded!.name
   if (!errorNamesExpected.includes(errorName)) {
     throw new Error(`ChainView Error: ${decoded?.name} with arg ${decoded?.args} at selector ${decoded?.selector}`)
