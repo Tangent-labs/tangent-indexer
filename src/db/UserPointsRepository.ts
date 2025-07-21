@@ -2,9 +2,25 @@ import { Prisma } from "@prisma/client"
 import { AbstractRepository } from "./AbstractRepository"
 
 export class UserPointsRepository extends AbstractRepository {
-  processTasks = async (
-    relevantEvents: Prisma.transfert_eventsUncheckedCreateInput[],
-    tasks: {
+  updateTask = async (
+    openTask: {
+      id: bigint
+      task_id: bigint
+      user_address: string
+      start: Date | null
+      closed: Date | null
+      amount: string
+    },
+    event: Prisma.transfert_eventsUncheckedCreateInput
+  ) => {
+    await this.prismaClient.user_tasks.update({
+      where: { id: openTask.id },
+      data: { closed: event.block_date },
+    })
+  }
+
+  createTask = async (
+    task: {
       id: bigint
       token: {
         symbol: string | null
@@ -12,68 +28,44 @@ export class UserPointsRepository extends AbstractRepository {
         name: string | null
         address: string
       }
-    }[]
+    },
+    user: string,
+    event: Prisma.transfert_eventsUncheckedCreateInput,
+    amount: string
   ) => {
-    for (const event of relevantEvents) {
-      const task = tasks.find((t: any) => t.token.address.toLowerCase() === event.token_address?.toLowerCase())
-      if (!task) {
-        console.warn(`No matching task for token ${event.token_address}, skipping`)
-        continue
-      }
+    await this.prismaClient.user_tasks.create({
+      data: {
+        task_id: task.id,
+        user_address: user,
+        start: event.block_date, // Chain with previous closed time
+        amount: amount.toString(), // Updated running balance
+        closed: null,
+      },
+    })
+  }
 
-      const openTasks = await this.prismaClient.user_tasks.findMany({
-        where: {
-          user_address: {
-            in: [event.from, event.to],
-          },
-          task_id: task.id,
-          closed: null,
-        },
-        orderBy: { start: "desc" },
-      })
-
-      // Process open tasks for each user
-      for (const openTask of openTasks) {
-        const userAddress = openTask.user_address
-        const isFromUser = userAddress.toLowerCase() === event.from?.toLowerCase()
-
-        // Close the existing task and open a new one
-        const newAmount = isFromUser ? Number(openTask.amount) - Number(event.amount) : Number(openTask.amount) + Number(event.amount)
-
-        await this.prismaClient.user_tasks.update({
-          where: { id: openTask.id },
-          data: { closed: event.block_date },
-        })
-
-        if (newAmount > 0.01) {
-          await this.prismaClient.user_tasks.create({
-            data: {
-              task_id: task.id,
-              user_address: userAddress,
-              start: event.block_date, // Chain with previous closed time
-              amount: newAmount.toString(), // Updated running balance
-              closed: null,
-            },
-          })
-        }
-      }
-
-      // Handle cases where no open task exists for a user
-      for (const userAddress of [event.from, event.to]) {
-        const hasOpenTask = openTasks.some((task) => task.user_address.toLowerCase() === userAddress.toLowerCase())
-        if (!hasOpenTask) {
-          await this.prismaClient.user_tasks.create({
-            data: {
-              task_id: task.id,
-              user_address: userAddress,
-              start: event.block_date,
-              amount: event.amount,
-              closed: null,
-            },
-          })
-        }
+  returnOpenedTasks = async (
+    event: Prisma.transfert_eventsUncheckedCreateInput,
+    task: {
+      id: bigint
+      token: {
+        symbol: string | null
+        id: bigint
+        name: string | null
+        address: string
       }
     }
+  ) => {
+    return await this.prismaClient.user_tasks.findMany({
+      where: {
+        user_address: {
+          in: [event.from, event.to],
+        },
+        task_id: task.id,
+        closed: null,
+      },
+      orderBy: { start: "desc" },
+    })
   }
 
   fetchTasksEventsAndAddresses = async (lastBlockId: number) => {

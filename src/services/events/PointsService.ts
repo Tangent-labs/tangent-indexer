@@ -20,13 +20,56 @@ export class UserPointsService {
     await this.userPointsRepository.insertAddresses(uniqueAddresses)
   }
 
-  processUserTasks = async (startBlock: number) => {
-    const { tasks, relevantEvents } = await this.userPointsRepository.fetchTasksEventsAndAddresses(startBlock)
-    await this.userPointsRepository.processTasks(relevantEvents, tasks)
-    console.log("User tasks processing completed")
+  processTasks = async (
+    relevantEvents: Prisma.transfert_eventsUncheckedCreateInput[],
+    tasks: {
+      id: bigint
+      token: {
+        symbol: string | null
+        id: bigint
+        name: string | null
+        address: string
+      }
+    }[]
+  ) => {
+    for (const event of relevantEvents) {
+      const task = tasks.find((t: any) => t.token.address.toLowerCase() === event.token_address?.toLowerCase())
+      if (!task) {
+        console.warn(`No matching task for token ${event.token_address}, skipping`)
+        continue
+      }
+
+      const openTasks = await this.userPointsRepository.returnOpenedTasks(event, task)
+
+      for (const openTask of openTasks) {
+        const userAddress = openTask.user_address
+        const isFromUser = userAddress.toLowerCase() === event.from?.toLowerCase()
+
+        const newAmount = isFromUser ? Number(openTask.amount) - Number(event.amount) : Number(openTask.amount) + Number(event.amount)
+
+        await this.userPointsRepository.updateTask(openTask, event)
+
+        if (newAmount > 0.01) {
+          await this.userPointsRepository.createTask(task, userAddress, event, newAmount.toString())
+        }
+      }
+
+      // Handle cases where no open task exists for a user
+      for (const userAddress of [event.from, event.to]) {
+        const hasOpenTask = openTasks.some((task) => task.user_address.toLowerCase() === userAddress.toLowerCase())
+        if (!hasOpenTask) {
+          await this.userPointsRepository.createTask(task, userAddress, event, event.amount)
+        }
+      }
+    }
   }
 
-  async insertEvents(sortedParsedEvents: SortedEvents) {
+  processUserTasks = async (startBlock: number) => {
+    const { tasks, relevantEvents } = await this.userPointsRepository.fetchTasksEventsAndAddresses(startBlock)
+    await this.processTasks(relevantEvents, tasks)
+  }
+
+  insertEvents = async (sortedParsedEvents: SortedEvents) => {
     await this.userPointsRepository.insertTransfers(sortedParsedEvents.Transfer)
   }
 
