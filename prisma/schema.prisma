@@ -312,14 +312,15 @@ model seize_collateral {
 }
 
 model transfert_events {
-  id            BigInt   @id(map: "transfert_events_pkey") @default(autoincrement())
-  token_address String   @db.VarChar
-  from          String   @db.VarChar
-  to            String   @db.VarChar
-  amount        String   @db.VarChar
+  id            BigInt        @id(map: "transfert_events_pkey") @default(autoincrement())
+  token         tracked_erc20 @relation(fields: [token_address], references: [address])
+  token_address String        @db.VarChar
+  from          String        @db.VarChar
+  to            String        @db.VarChar
+  amount        String        @db.VarChar
   block_date    DateTime
   block_id      Int
-  tx_hash       String   @db.VarChar(66)
+  tx_hash       String        @db.VarChar(66)
 
   @@schema("events")
 }
@@ -336,40 +337,28 @@ model user_tasks {
   task         task      @relation(fields: [task_id], references: [id])
   task_id      BigInt
   user_address String    @db.VarChar
-  start        DateTime? @db.Timestamp
+  start        DateTime  @db.Timestamp
   closed       DateTime? @db.Timestamp
-  amount       Float
+  amount       String
 
   @@index([task_id, user_address])
   @@schema("points")
 }
 
 model task {
-  id          BigInt       @id(map: "task_pkey") @default(autoincrement())
-  name        String
-  action_type String       @db.VarChar
-  protocol    String
-  token       String
-  point_rate  Float
-  unit        String
-  description String
-  url         String
-  is_active   Boolean      @default(true)
-  user_tasks  user_tasks[]
+  id            BigInt        @id(map: "task_pkey") @default(autoincrement())
+  name          String
+  action_type   String        @db.VarChar
+  protocol      String
+  token         tracked_erc20 @relation(fields: [token_address], references: [address])
+  token_address String
+  point_rate    Float
+  unit          String
+  description   String
+  url           String
+  is_active     Boolean       @default(true)
+  user_tasks    user_tasks[]
 
-  @@schema("points")
-}
-
-model user_snapshots {
-  id           BigInt   @id(map: "user_snapshots_pkey") @default(autoincrement())
-  user_address String   @db.VarChar
-  timestamp    DateTime
-  task_id      BigInt
-  amount       Float
-  external_id  String?
-
-  @@unique([user_address, task_id]) // Add this line to enforce uniqueness
-  @@index([task_id])
   @@schema("points")
 }
 
@@ -380,12 +369,12 @@ model last_processed_block {
 }
 
 model tracked_erc20 {
-  id        BigInt   @id(map: "tracked_erc20_pkey") @default(autoincrement())
-  address   String   @unique
-  name      String?
-  symbol    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               BigInt             @id(map: "tracked_erc20_pkey") @default(autoincrement())
+  address          String             @unique
+  name             String?
+  symbol           String?
+  task             task[]
+  transfert_events transfert_events[]
 
   @@schema("points")
 }

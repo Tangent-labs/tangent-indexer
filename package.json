@@ -8,7 +8,6 @@
     "tangent:reset-liquidation-test": "npm run db:truncate &  npm run tangent:indexer-block & npm run tangent:check-liquidation",
     "tangent:feed-tasks": "tsx src/scripts/fill_task_table.ts",
     "tangent:feed-tokens": "tsx src/scripts/seed_tokens.ts",
-    "tangent:update-snapshot": "tsx src/scripts/udate_user_snapshot.ts",
     "tangent:indexer-points": "tsx src/scripts/index_points.ts",
     "tangent:indexer-block": "tsx src/scripts/index_block.ts",
     "tangent:indexer-tvl-aprs": "tsx src/scripts/index_tvl_aprs.ts",

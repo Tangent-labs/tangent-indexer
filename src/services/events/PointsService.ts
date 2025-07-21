@@ -14,15 +14,15 @@ export class UserPointsService {
     this.userPointsRepository = userPointsRepository
   }
 
-  async processUserAddressesFromTransfers(startBlock: number, endBlock: number) {
+  processUserAddressesFromTransfers = async (startBlock: number, endBlock: number) => {
     const uniqueAddresses = await this.userPointsRepository.getUniqueAddressesFromTransfers(startBlock, endBlock)
     console.log(`Found ${uniqueAddresses.length} unique addresses to insert`)
     await this.userPointsRepository.insertAddresses(uniqueAddresses)
   }
 
-  async processUserTasks(startBlock: number) {
-    const { tasks, userAddresses, relevantEvents } = await this.userPointsRepository.fetchTasksEventsAndAddresses(startBlock)
-    await this.userPointsRepository.processTasks(relevantEvents, tasks, userAddresses)
+  processUserTasks = async (startBlock: number) => {
+    const { tasks, relevantEvents } = await this.userPointsRepository.fetchTasksEventsAndAddresses(startBlock)
+    await this.userPointsRepository.processTasks(relevantEvents, tasks)
     console.log("User tasks processing completed")
   }
 
@@ -30,7 +30,7 @@ export class UserPointsService {
     await this.userPointsRepository.insertTransfers(sortedParsedEvents.Transfer)
   }
 
-  replaceDates(sortedParsedEvents: SortedEvents, blockInfos: Map<number, number>) {
+  replaceDates = (sortedParsedEvents: SortedEvents, blockInfos: Map<number, number>) => {
     Object.values(sortedParsedEvents).forEach((v) => {
       v.forEach((event) => {
         event.block_date = new Date(blockInfos.get(event.block_id)! * 1_000)
@@ -40,7 +40,11 @@ export class UserPointsService {
     return { sortedParsedEvents }
   }
 
-  sortPointsActionsLogs(logs: Log[]) {
+  getERC20ToTrack = async () => {
+    return await this.userPointsRepository.getERC20ToTrack()
+  }
+
+  sortPointsActionsLogs = (logs: Log[]) => {
     const sortedAndParsedPointsEvents: SortedEvents = {
       Transfer: [],
     }

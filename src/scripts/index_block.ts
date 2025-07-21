@@ -55,18 +55,13 @@ async function main() {
           // Fetch all User market logs
           const logs = await getEthLogs(bestProvider, startBlock, endBlock, marketContracts, [])
 
-          const tokens = await prismaClient.tracked_erc20.findMany({
-            select: { address: true },
-          })
+          const transferToWatch = await userPointsService.getERC20ToTrack()
 
-          // Extract addresses into an array
-          const transferToWatch: string[] = tokens.map((token) => token.address)
-
-          // Log for debugging
-          console.log(`Fetched ${transferToWatch.length} token addresses for tracking`)
+          console.log("transferToWatch : ", transferToWatch)
 
           // Call fetchTransferLogs with the addresses
           const transferLogs = await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch)
+          console.log("transferLogs : ", transferLogs)
 
           // Parse events with their proper topics and group all user events to update active borrowers
           const { activeBorrowActions, sortedAndParsedEvents, blockIds } = userMarketService.sortUserMarketLogs(logs)
@@ -76,9 +71,10 @@ async function main() {
           // Find block timestamps of the unique blockIDs
           const blocks = await blockService.fetchBlockTimestamps(uniqueBlockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
 
-
           const hydratedWithCorrectDates = userMarketService.replaceRightDates(sortedAndParsedEvents, activeBorrowActions, blocks)
           const pointsActionEventsDates = userPointsService.replaceDates(sortedAndParsedPointsEvents, blocks)
+
+          console.log("pointsActionEventsDates : ", pointsActionEventsDates)
 
           // Insert user points actions
           await userPointsService.insertEvents(pointsActionEventsDates.sortedParsedEvents)

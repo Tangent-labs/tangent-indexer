@@ -25,8 +25,6 @@ export class BlockRepository extends AbstractRepository {
           block_id: blockId,
         },
       })
-    } else {
-      console.warn(`Block ${blockId} already exists in last_processed_block, skipping creation`)
     }
   }
 

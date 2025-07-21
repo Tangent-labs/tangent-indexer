@@ -1,80 +1,49 @@
-import { Prisma, PrismaClient } from "@prisma/client"
+import { Prisma } from "@prisma/client"
 import { AbstractRepository } from "./AbstractRepository"
 
 export class UserPointsRepository extends AbstractRepository {
-  constructor(prismaClient: PrismaClient) {
-    super(prismaClient)
-  }
-
   processTasks = async (
-    relevantEvents: Prisma.transfert_eventsCreateInput[],
+    relevantEvents: Prisma.transfert_eventsUncheckedCreateInput[],
     tasks: {
-      token: string
       id: bigint
-    }[],
-    userAddresses: Prisma.user_addressesCreateInput[]
+      token: {
+        symbol: string | null
+        id: bigint
+        name: string | null
+        address: string
+      }
+    }[]
   ) => {
     for (const event of relevantEvents) {
-      // Map token_address to task_id
-      const task = tasks.find((t) => t.token.toLowerCase() === event.token_address.toLowerCase())
+      const task = tasks.find((t: any) => t.token.address.toLowerCase() === event.token_address?.toLowerCase())
       if (!task) {
         console.warn(`No matching task for token ${event.token_address}, skipping`)
         continue
       }
 
-      const userAddress = userAddresses.find(
-        (u) => u.address.toLowerCase() === event.from.toLowerCase() || u.address.toLowerCase() === event.to.toLowerCase()
-      )?.address
-
-      if (!userAddress) {
-        console.warn(`No matching user for event ${event.tx_hash}, skipping`)
-        continue
-      }
-
-      const eventAmount = parseFloat(event.amount)
-      if (isNaN(eventAmount)) {
-        console.warn(`Invalid amount for event ${event.tx_hash}, skipping`)
-        continue
-      }
-
-      // Determine if it's a deposit or withdrawal
-      const isDeposit = event.from.toLowerCase() === userAddress.toLowerCase()
-      const amountChange = isDeposit ? eventAmount : -eventAmount
-
-      // Find the most recent open task for this user and task
-      const openTask = await this.prismaClient.user_tasks.findFirst({
+      const openTasks = await this.prismaClient.user_tasks.findMany({
         where: {
-          user_address: userAddress,
+          user_address: {
+            in: [event.from, event.to],
+          },
           task_id: task.id,
           closed: null,
         },
         orderBy: { start: "desc" },
-        take: 1,
       })
 
-      if (!openTask) {
-        // New event: Create a new task with initial balance
-        await this.prismaClient.user_tasks.create({
-          data: {
-            task_id: task.id,
-            user_address: userAddress,
-            start: event.block_date,
-            amount: amountChange, // Initial balance
-            closed: null,
-          },
-        })
-        console.log(`Opened new task ${task.id} for user ${userAddress} at ${event.block_date} with amount ${amountChange}`)
-      } else {
+      // Process open tasks for each user
+      for (const openTask of openTasks) {
+        const userAddress = openTask.user_address
+        const isFromUser = userAddress.toLowerCase() === event.from?.toLowerCase()
+
         // Close the existing task and open a new one
-        const previousAmount = openTask.amount || 0
-        const newAmount = previousAmount + amountChange // Running balance
+        const newAmount = isFromUser ? Number(openTask.amount) - Number(event.amount) : Number(openTask.amount) + Number(event.amount)
 
         await this.prismaClient.user_tasks.update({
           where: { id: openTask.id },
           data: { closed: event.block_date },
         })
-
-        console.log(`Closed task ${task.id} for user ${userAddress} at ${event.block_date}`)
 
         if (newAmount > 0.01) {
           await this.prismaClient.user_tasks.create({
@@ -82,11 +51,26 @@ export class UserPointsRepository extends AbstractRepository {
               task_id: task.id,
               user_address: userAddress,
               start: event.block_date, // Chain with previous closed time
-              amount: newAmount, // Updated running balance
+              amount: newAmount.toString(), // Updated running balance
               closed: null,
             },
           })
-          console.log(`Opened new task with amount ${newAmount}`)
+        }
+      }
+
+      // Handle cases where no open task exists for a user
+      for (const userAddress of [event.from, event.to]) {
+        const hasOpenTask = openTasks.some((task) => task.user_address.toLowerCase() === userAddress.toLowerCase())
+        if (!hasOpenTask) {
+          await this.prismaClient.user_tasks.create({
+            data: {
+              task_id: task.id,
+              user_address: userAddress,
+              start: event.block_date,
+              amount: event.amount,
+              closed: null,
+            },
+          })
         }
       }
     }
@@ -114,7 +98,7 @@ export class UserPointsRepository extends AbstractRepository {
       orderBy: { block_id: "asc" }, // Process events chronologically
     })
 
-    return { tasks, userAddresses, relevantEvents }
+    return { tasks, relevantEvents }
   }
   //
 
@@ -138,7 +122,17 @@ export class UserPointsRepository extends AbstractRepository {
     return Array.from(uniqueAddressesSet).map((address) => ({ address }))
   }
 
-  async getMaxBlockId(startBlock: number) {
+  getERC20ToTrack = async () => {
+    const tokens = await this.prismaClient.tracked_erc20.findMany({
+      select: { address: true },
+    })
+
+    const transferToWatch: string[] = tokens.map((token) => token.address)
+
+    return transferToWatch
+  }
+
+  getMaxBlockId = async (startBlock: number) => {
     const maxBlockId = await this.prismaClient.transfert_events.aggregate({
       _max: { block_id: true },
       where: { block_id: { gt: startBlock } },
@@ -146,7 +140,7 @@ export class UserPointsRepository extends AbstractRepository {
     return maxBlockId._max.block_id
   }
 
-  async updateLastProcessedBlock(blockId: number) {
+  updateLastProcessedBlock = async (blockId: number) => {
     await this.prismaClient.last_processed_block.upsert({
       where: { block_id: 0 },
       update: { block_id: blockId },
@@ -154,7 +148,7 @@ export class UserPointsRepository extends AbstractRepository {
     })
   }
 
-  async insertTransfers(events: Prisma.transfert_eventsCreateInput[]) {
+  insertTransfers = async (events: any) => {
     if (events.length > 0) {
       await this.prismaClient.transfert_events.createMany({
         data: events,
@@ -162,7 +156,7 @@ export class UserPointsRepository extends AbstractRepository {
     }
   }
 
-  async insertAddresses(events: Prisma.user_addressesCreateInput[]) {
+  insertAddresses = async (events: Prisma.user_addressesCreateInput[]) => {
     if (events.length > 0) {
       const uniqueAddresses = Array.from(new Map(events.map((event) => [event.address, event])).values())
       await this.prismaClient.user_addresses.createMany({
