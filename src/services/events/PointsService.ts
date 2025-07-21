@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client"
 import { UserPointsRepository } from "db/UserPointsRepository"
 import { Log } from "ethers"
-import { parseTransferEvent } from "eventFectcher/marketUserEvents.parsers"
+import { parseTransferEvent } from "../../eventFectcher/marketUserEvents.parsers"
 
 export type SortedEvents = {
   Transfer: Prisma.transfert_eventsCreateInput[]
@@ -22,17 +22,7 @@ export class UserPointsService {
 
   async processUserTasks(startBlock: number) {
     const { tasks, userAddresses, relevantEvents } = await this.userPointsRepository.fetchTasksEventsAndAddresses(startBlock)
-
     await this.userPointsRepository.processTasks(relevantEvents, tasks, userAddresses)
-
-    const maxBlockId = await this.userPointsRepository.getMaxBlockId(startBlock)
-    if (maxBlockId) {
-      await this.userPointsRepository.updateLastProcessedBlock(maxBlockId)
-      console.log(`Updated last processed block to ${maxBlockId}`)
-    } else {
-      console.log("No new blocks processed")
-    }
-
     console.log("User tasks processing completed")
   }
 

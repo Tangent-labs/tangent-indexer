@@ -23,6 +23,10 @@ export const MARKET_CONVEX_CRV_CREATED = "MarketConvexCrvCreated(address,string)
 export const MARKET_CONVEX_FXN_CREATED = "MarketConvexFxnCreated(address,string)"
 export const MARKET_NO_SOCIABILIZATION_CREATED = "MarketNoSociabilizationCreated(address,string)"
 
+export const TRANSFER = "Transfer(address,address,uint256)"
+export const STAKED = "Staked(address,uint256)"
+export const WITHDRAWN = "Withdrawn(address,uint256)"
+
 // Event signatures and topics
 export const EVENT_TOPICS = {
   [id(REPAY)]: "Repay",
@@ -40,6 +44,9 @@ export const EVENT_TOPICS = {
   [id(LIQUIDATE)]: "Liquidate",
   [id(SELF_LIQUIDATE)]: "SelfLiquidate",
   [id(SEIZE_COLLATERAL)]: "SeizeCollateral",
+  [id(TRANSFER)]: "Transfer",
+  [id(STAKED)]: "Staked",
+  [id(WITHDRAWN)]: "Withdrawn",
 
   // Market Creation
 
@@ -61,4 +68,8 @@ export function encodeDeposit(stakedAmount: bigint) {
 }
 export function encodeDepositAndBorrow(stakedAmount: bigint, borrowedAmount: bigint) {
   return AbiCoder.defaultAbiCoder().encode(["uint256", "uint256"], [stakedAmount, borrowedAmount])
+}
+
+export function encodeTransfer(from: string, to: string, amount: bigint) {
+  return AbiCoder.defaultAbiCoder().encode(["address", "address", "uint256"], [from, to, amount])
 }

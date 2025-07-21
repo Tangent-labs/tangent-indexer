@@ -72,8 +72,10 @@ async function main() {
           const { activeBorrowActions, sortedAndParsedEvents, blockIds } = userMarketService.sortUserMarketLogs(logs)
           const { sortedAndParsedPointsEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs(transferLogs)
 
+          const uniqueBlockIds = [...new Set([...blockIds, ...pointsEventsBlockIds])]
           // Find block timestamps of the unique blockIDs
-          const blocks = await blockService.fetchBlockTimestamps(blockIds.concat(pointsEventsBlockIds), indexerConfig.provider.chainRpc[bestProviderIndex])
+          const blocks = await blockService.fetchBlockTimestamps(uniqueBlockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
+
 
           const hydratedWithCorrectDates = userMarketService.replaceRightDates(sortedAndParsedEvents, activeBorrowActions, blocks)
           const pointsActionEventsDates = userPointsService.replaceDates(sortedAndParsedPointsEvents, blocks)
