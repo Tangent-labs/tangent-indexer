@@ -24,7 +24,7 @@ export function getUserAddressFromTransfer(log: Log): { address: string } {
   }
 }
 
-export function parseTransferEvent(log: Log): Prisma.transfert_eventsCreateInput {
+export function parseTransferEvent(log: Log): Prisma.transfert_eventsUncheckedCreateInput {
   const [amount] = AbiCoder.defaultAbiCoder().decode(["uint256"], log.data)
 
   const from = userAddress(log.topics[1])

@@ -6,54 +6,44 @@ const prisma = new PrismaClient()
 async function seedTokens() {
   const transferToWatch = [
     {
-      address: "0xa569d910839Ae8865Da8F8e70FfFb0cBA869F961",
-      name: "USDe",
-      symbol: "USDe",
-    },
-    {
       address: "0xeef0c605546958c1f899b6fb336c20671f9cd49f",
       name: "crvUSD",
       symbol: "crvUSD",
     },
     {
-      address: "0x5f9dc06607e947742ef1b837b952ea0728b1748f",
+      address: "0xe53bb721f8a434ad562c248fd4c6a7714ec06787",
       name: "USG",
       symbol: "USG",
     },
     {
-      address: CURVE_CONTEXT["USDT_crvUSD"].stakeDaoGauge,
+      address: CURVE_CONTEXT["USDT_crvUSD"].stakeDaoGauge.toLowerCase(),
       name: "USDT_crvUSD stakeDaoGauge",
       symbol: "USDT_crvUSD",
     },
     {
-      address: CURVE_CONTEXT["USDC_crvUSD"].stakeDaoGauge,
+      address: CURVE_CONTEXT["USDT_crvUSD"].curveLp.toLowerCase(),
+      name: "USDT_crvUSD curveLp",
+      symbol: "USDT_crvUSD",
+    },
+    {
+      address: CURVE_CONTEXT["USDC_crvUSD"].stakeDaoGauge.toLowerCase(),
       name: "USDC_crvUSD stakeDaoGauge",
       symbol: "USDC_crvUSD",
     },
     {
-      address: CURVE_CONTEXT["USDC_crvUSD"].curveLp,
+      address: CURVE_CONTEXT["USDC_crvUSD"].curveLp.toLowerCase(),
       name: "USDC_crvUSD curveLp",
       symbol: "USDC_crvUSD",
     },
     {
-      address: CURVE_CONTEXT["USDe_USDC"].curveLp,
+      address: CURVE_CONTEXT["USDe_USDC"].curveLp.toLowerCase(),
       name: "USDe_USDC curveLp",
       symbol: "USDe_USDC",
     },
     {
-      address: CURVE_CONTEXT["USDe_USDC"].curveGauge,
+      address: CURVE_CONTEXT["USDe_USDC"].curveGauge.toLowerCase(),
       name: "USDe_USDC gauge",
       symbol: "USDe_USDC",
-    },
-    {
-      address: "0x4dece678ceceb27446b35c672dc7d61f30bad69e",
-      name: "some collat",
-      symbol: "some collat",
-    },
-    {
-      address: "0x390f3595bca2df7d23783dfd126427cceb997bf4",
-      name: "crvUSD-USDT collat",
-      symbol: "crvUSD-USDT",
     },
   ]
 

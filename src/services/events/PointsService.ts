@@ -4,7 +4,7 @@ import { Log } from "ethers"
 import { parseTransferEvent } from "../../eventFectcher/marketUserEvents.parsers"
 
 export type SortedEvents = {
-  Transfer: Prisma.transfert_eventsCreateInput[]
+  Transfer: Prisma.transfert_eventsUncheckedCreateInput[]
 }
 
 export class UserPointsService {
