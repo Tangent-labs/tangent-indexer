@@ -17,6 +17,7 @@ export class ActiveBorrowersRepository extends AbstractRepository {
         borrower_address: userAction.user.toString(),
         market_id: userAction.marketId,
         block_date: userAction.timestamp,
+        debt_shares: userAction.debt_shares.toString(),
       }
     })
 

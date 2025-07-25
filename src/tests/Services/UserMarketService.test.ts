@@ -44,9 +44,7 @@ describe("UserMarketService", () => {
 
     const borrowLog0 = buildLog(id(BORROW), "0x1", user0, 100, encodeBorrow(user0, parseEther("650000"), parseEther("3000")))
     const repayLog0 = buildLog(id(REPAY), "0x1", user0, 100, encodeRepay(user0, parseEther("650000"), parseEther("3000")))
-
     const deposit1 = buildLog(id(DEPOSIT), "0x1", user1, 100, encodeDeposit(parseEther("10000")))
-
     const depositAndBorrow1 = buildLog(
       id(DEPOSIT_AND_BORROW),
       "0x1",
@@ -54,6 +52,7 @@ describe("UserMarketService", () => {
       150,
       encodeDepositAndBorrow(parseEther("100000"), parseEther("50000"), parseEther("3000"))
     )
+
     const map = new Map<string, number>()
     map.set("0x1", 1)
 

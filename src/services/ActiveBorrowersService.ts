@@ -21,13 +21,11 @@ export class ActiveBorrowersService {
       }
     }
 
-    // Then reverse the array and filter only active_borrowers to reinsert
-    //    - It's a borrow
-    //      OR
-    //    - It's not a repayAll
+    // Then reverse the array and keep only the useActions where the
+    // new debtShares is not 0 ( when 0 there is no more debt )
     const userActionsNoDuplicate = Array.from(seen.values())
       .reverse()
-      .filter((userAction) => userAction.isBorrow || !userAction.isRepayAll)
+      .filter((userAction) => userAction.debt_shares !== 0n)
 
     // Delete all user actions matching the market/user keys
     await this.activeBorrowersRepository.deleteActiveBorrowers(userActions)

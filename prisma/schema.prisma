@@ -17,11 +17,12 @@ model global_blocks {
 
 
 model active_borrowers {
-  id               BigInt   @id(map: "markets_borrower_pkey") @default(autoincrement())
-  market          usg_markets @relation(fields: [market_id], references: [id])
-  market_id       BigInt
-  borrower_address String  @db.VarChar
-  block_date       DateTime @default(now())
+  id               BigInt      @id(map: "markets_borrower_pkey") @default(autoincrement())
+  market           usg_markets @relation(fields: [market_id], references: [id])
+  market_id        BigInt
+  debt_shares      String
+  borrower_address String      @db.VarChar
+  block_date       DateTime    @default(now())
   @@schema("global")
 }
 
@@ -293,6 +294,7 @@ model zap_leverage {
   collat_zap_deposit String   @db.VarChar
   collat_leverage    String   @db.VarChar
   borrowed_amount    String   @db.VarChar
+  debt_shares        String   @db.VarChar
   token_in           String   @db.VarChar
   amount_in          String   @db.VarChar
   block_date         DateTime

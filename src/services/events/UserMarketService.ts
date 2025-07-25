@@ -25,8 +25,7 @@ export type UserAction = {
   user: AddressLike
   marketId: number
   blockId: number
-  isBorrow?: boolean
-  isRepayAll?: boolean
+  debt_shares: bigint
   timestamp?: Date
 }
 
@@ -113,7 +112,7 @@ export class UserMarketService {
     logs.forEach((log) => {
       const eventTopic = log.topics[0]
       const eventType = EVENT_TOPICS[eventTopic]
-      let activeBorrowAction: UserAction = { user: "", marketId: NaN, blockId: 0 }
+      let activeBorrowAction: UserAction = { user: "", marketId: NaN, debt_shares: 0n, blockId: 0 }
       let isImpactingActiveBorrows = false
 
       uniqueBlockId.add(log.blockNumber)
@@ -124,7 +123,7 @@ export class UserMarketService {
           activeBorrowAction = {
             user: repayEvent.account,
             marketId: Number(repayEvent.market_id),
-            isRepayAll: BigInt(repayEvent.debt_shares) === 0n,
+            debt_shares: BigInt(repayEvent.debt_shares),
             blockId: repayEvent.block_id,
           }
           isImpactingActiveBorrows = true
@@ -135,7 +134,7 @@ export class UserMarketService {
           activeBorrowAction = {
             user: repayAndWithdrawEvent.account,
             marketId: Number(repayAndWithdrawEvent.market_id),
-            isRepayAll: BigInt(repayAndWithdrawEvent.debt_shares) === 0n,
+            debt_shares: BigInt(repayAndWithdrawEvent.debt_shares),
             blockId: repayAndWithdrawEvent.block_id,
           }
           isImpactingActiveBorrows = true
@@ -146,7 +145,7 @@ export class UserMarketService {
           activeBorrowAction = {
             user: zapRepayEvent.account,
             marketId: Number(zapRepayEvent.market_id),
-            isRepayAll: BigInt(zapRepayEvent.debt_shares) === 0n,
+            debt_shares: BigInt(zapRepayEvent.debt_shares),
             blockId: zapRepayEvent.block_id,
           }
           isImpactingActiveBorrows = true
@@ -157,7 +156,7 @@ export class UserMarketService {
           activeBorrowAction = {
             user: zapRepayAndWithdrawEvent.account,
             marketId: Number(zapRepayAndWithdrawEvent.market_id),
-            isRepayAll: BigInt(zapRepayAndWithdrawEvent.debt_shares) === 0n,
+            debt_shares: BigInt(zapRepayAndWithdrawEvent.debt_shares),
             blockId: zapRepayAndWithdrawEvent.block_id,
           }
           isImpactingActiveBorrows = true
@@ -179,7 +178,7 @@ export class UserMarketService {
           activeBorrowAction = {
             user: borrowEvent.account,
             marketId: Number(borrowEvent.market_id),
-            isBorrow: true,
+            debt_shares: BigInt(borrowEvent.debt_shares),
             blockId: borrowEvent.block_id,
           }
           isImpactingActiveBorrows = true
@@ -196,7 +195,7 @@ export class UserMarketService {
           activeBorrowAction = {
             user: depositAndBorrowEvent.account,
             marketId: Number(depositAndBorrowEvent.market_id),
-            isBorrow: true,
+            debt_shares: BigInt(depositAndBorrowEvent.debt_shares),
             blockId: depositAndBorrowEvent.block_id,
           }
           isImpactingActiveBorrows = true
@@ -208,7 +207,7 @@ export class UserMarketService {
           activeBorrowAction = {
             user: zapDepositAndBorrowEvent.account,
             marketId: Number(zapDepositAndBorrowEvent.market_id),
-            isBorrow: true,
+            debt_shares: BigInt(zapDepositAndBorrowEvent.debt_shares),
             blockId: zapDepositAndBorrowEvent.block_id,
           }
           isImpactingActiveBorrows = true
@@ -220,7 +219,7 @@ export class UserMarketService {
           activeBorrowAction = {
             user: leverageEvent.account,
             marketId: Number(leverageEvent.market_id),
-            isBorrow: true,
+            debt_shares: BigInt(leverageEvent.debt_shares),
             blockId: leverageEvent.block_id,
           }
           isImpactingActiveBorrows = true
@@ -232,7 +231,7 @@ export class UserMarketService {
           activeBorrowAction = {
             user: zapLeverageEvent.account,
             marketId: Number(zapLeverageEvent.market_id),
-            isBorrow: true,
+            debt_shares: BigInt(zapLeverageEvent.debt_shares),
             blockId: zapLeverageEvent.block_id,
           }
           isImpactingActiveBorrows = true
@@ -244,7 +243,7 @@ export class UserMarketService {
           activeBorrowAction = {
             user: liquidateEvent.account,
             marketId: Number(liquidateEvent.market_id),
-            isRepayAll: BigInt(liquidateEvent.debt_shares) === 0n,
+            debt_shares: BigInt(liquidateEvent.debt_shares),
             blockId: liquidateEvent.block_id,
           }
           isImpactingActiveBorrows = true
@@ -256,7 +255,7 @@ export class UserMarketService {
           activeBorrowAction = {
             user: selfLiquidateEvent.account,
             marketId: Number(selfLiquidateEvent.market_id),
-            isRepayAll: BigInt(selfLiquidateEvent.debt_shares) === 0n,
+            debt_shares: BigInt(selfLiquidateEvent.debt_shares),
             blockId: selfLiquidateEvent.block_id,
           }
           isImpactingActiveBorrows = true
@@ -268,7 +267,7 @@ export class UserMarketService {
           activeBorrowAction = {
             user: seizeCollateralEvent.account,
             marketId: Number(seizeCollateralEvent.market_id),
-            isRepayAll: true,
+            debt_shares: 0n,
             blockId: seizeCollateralEvent.block_id,
           }
           isImpactingActiveBorrows = true

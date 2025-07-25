@@ -170,8 +170,8 @@ export function parseLeverageEvent(log: Log, mapMarketIdPerAddress: Map<string, 
 }
 
 export function parseZapLeverageEvent(log: Log, mapMarketIdPerAddress: Map<string, number>): Prisma.zap_leverageCreateManyInput {
-  const [stakedAmount, collatZapDeposit, collatLeverage, borrowedAmount, tokenIn, amountIn] = AbiCoder.defaultAbiCoder().decode(
-    ["uint256", "uint256", "uint256", "uint256", "address", "uint256"],
+  const [stakedAmount, collatZapDeposit, collatLeverage, borrowedAmount, debtShares, tokenIn, amountIn] = AbiCoder.defaultAbiCoder().decode(
+    ["uint256", "uint256", "uint256", "uint256", "uint256", "address", "uint256"],
     log.data
   )
   return {
@@ -181,6 +181,7 @@ export function parseZapLeverageEvent(log: Log, mapMarketIdPerAddress: Map<strin
     collat_zap_deposit: collatZapDeposit.toString(),
     collat_leverage: collatLeverage.toString(),
     borrowed_amount: borrowedAmount.toString(),
+    debt_shares: debtShares.toString(),
     token_in: tokenIn.toString(),
     amount_in: amountIn.toString(),
     block_date: new Date(), // placeholder
@@ -190,8 +191,8 @@ export function parseZapLeverageEvent(log: Log, mapMarketIdPerAddress: Map<strin
 }
 
 export function parseLiquidateEvent(log: Log, mapMarketIdPerAddress: Map<string, number>): Prisma.liquidateCreateManyInput {
-  const [repaidAmount, fee, collateralLiquidated, liquidator, debtShares] = AbiCoder.defaultAbiCoder().decode(
-    ["uint256", "uint256", "uint256", "address", "uint256"],
+  const [repaidAmount, debtShares, fee, collateralLiquidated, liquidator] = AbiCoder.defaultAbiCoder().decode(
+    ["uint256", "uint256", "uint256", "uint256", "address"],
     log.data
   )
   return {
@@ -209,7 +210,7 @@ export function parseLiquidateEvent(log: Log, mapMarketIdPerAddress: Map<string,
 }
 
 export function parseSelfLiquidateEvent(log: Log, mapMarketIdPerAddress: Map<string, number>): Prisma.self_liquidateCreateManyInput {
-  const [repaidAmount, collateralLiquidated, liquidator, debtShares] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "address", "bool"], log.data)
+  const [repaidAmount, debtShares, collateralLiquidated, liquidator] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "uint256", "address"], log.data)
   return {
     market_id: mapMarketIdPerAddress.get(log.address)!,
     account: userAddress(log.topics[1]),
