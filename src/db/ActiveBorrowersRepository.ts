@@ -30,7 +30,7 @@ export class ActiveBorrowersRepository extends AbstractRepository {
     const where = {
       OR: userActions.map((userAction) => ({
         borrower_address: { equals: userAction.user, mode: "insensitive" },
-        market_id: { equals: userAction.marketId, mode: "insensitive" },
+        market_id: { equals: userAction.marketId },
       })),
     } as Prisma.active_borrowersWhereInput
 

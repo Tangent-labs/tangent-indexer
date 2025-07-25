@@ -1,10 +1,9 @@
 import { describe, it, expect, vi } from "vitest"
-import { MarketCreationService } from "../../services/MarketCreationService"
 import { MarketContractsRepository } from "../../db/MarketContractsRepository"
 import { JsonRpcProvider } from "ethers"
-
 import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher"
-const marketCreatorAddress = "0xCreator"
+import { MarketCreationService } from "services/events/MarketCreationService"
+
 vi.mock("../../eventFectcher/marketCreationEventFectcher", () => ({
   fetchMarketCreationLogs: vi.fn(),
 }))
@@ -15,25 +14,25 @@ describe("MarketCreationService", () => {
       insertContracts: vi.fn(),
     }
 
-    const marketCreationService = new MarketCreationService(mockMarketContractsRepository as any as MarketContractsRepository, marketCreatorAddress)
+    const marketCreationService = new MarketCreationService(mockMarketContractsRepository as any as MarketContractsRepository, "COUCOU")
 
     const mockProvider = {} as JsonRpcProvider
     const startingBlock = 1000
     const endingBlock = 2000
 
     const mockLogs = [
-      { contract_address: "0xMarket1", contract_type: "ConvexCrv" },
-      { contract_address: "0xMarket2", contract_type: "ConvexFxn" },
+      { contract_address: "0xMarket1", collateral_address: "0xCollat1", contract_type: "ConvexCrv" },
+      { contract_address: "0xMarket2", collateral_address: "0xCollat2", contract_type: "ConvexFxn" },
     ]
 
     ;(fetchMarketCreationLogs as any).mockResolvedValue(mockLogs)
 
     await marketCreationService.runDetection(mockProvider, startingBlock, endingBlock)
 
-    expect(fetchMarketCreationLogs).toHaveBeenCalledWith(mockProvider, startingBlock, endingBlock, marketCreatorAddress)
+    expect(fetchMarketCreationLogs).toHaveBeenCalledWith(mockProvider, startingBlock, endingBlock, "COUCOU")
     expect(mockMarketContractsRepository.insertContracts).toHaveBeenCalledWith([
-      { contract_address: "0xMarket1", contract_type: "ConvexCrv" },
-      { contract_address: "0xMarket2", contract_type: "ConvexFxn" },
+      { contract_address: "0xmarket1", collateral_address: "0xcollat1", contract_type: "ConvexCrv" },
+      { contract_address: "0xmarket2", collateral_address: "0xcollat2", contract_type: "ConvexFxn" },
     ])
   })
 
@@ -43,7 +42,7 @@ describe("MarketCreationService", () => {
       insertContracts: vi.fn(),
     }
 
-    const marketCreationService = new MarketCreationService(mockMarketContractsRepository as any as MarketContractsRepository, marketCreatorAddress)
+    const marketCreationService = new MarketCreationService(mockMarketContractsRepository as any as MarketContractsRepository, "COUCOU")
 
     const mockProvider = {} as JsonRpcProvider
     const startingBlock = 1000

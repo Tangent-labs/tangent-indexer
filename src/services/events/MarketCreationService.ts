@@ -1,7 +1,6 @@
 import { AddressLike, JsonRpcProvider } from "ethers"
 import { MarketContractsRepository } from "../../db/MarketContractsRepository"
 import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher"
-import * as usgContractAddresses from "../../addresses.json"
 
 export class MarketCreationService {
   marketContractsRepository: MarketContractsRepository
@@ -14,7 +13,7 @@ export class MarketCreationService {
 
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
     // Fetch logs from MarketCreator
-    let marketsCreated = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, usgContractAddresses.utilities.marketCreator)
+    let marketsCreated = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, this.marketCreatorAddress)
 
     // If some logs are coming from MarketCreator, we insert them in db
     if (marketsCreated.length) {
