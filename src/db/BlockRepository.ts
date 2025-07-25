@@ -1,16 +1,15 @@
 import { AbstractRepository } from "./AbstractRepository"
-import { GlobalBlock } from "type/prisma"
 
 export class BlockRepository extends AbstractRepository {
   // GET
-  async getLastEventBlockIndexed(): Promise<GlobalBlock> {
+  async getLastEventBlockIndexed() {
     const lastBlock = await this.prismaClient.last_processed_block.findFirst({
       orderBy: {
         block_id: "desc",
       },
     })
 
-    return lastBlock as GlobalBlock
+    return lastBlock
   }
 
   // STORE
@@ -29,14 +28,14 @@ export class BlockRepository extends AbstractRepository {
   }
 
   // GET
-  async getLastBlockIndexed(): Promise<GlobalBlock> {
+  async getLastBlockIndexed() {
     const lastBlock = await this.prismaClient.global_blocks.findFirst({
       orderBy: {
         block_id: "desc",
       },
     })
 
-    return lastBlock as GlobalBlock
+    return lastBlock
   }
 
   // STORE

@@ -15,9 +15,34 @@ export class MarketCreationService {
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
     // Fetch logs from MarketCreator
     const marketsCreated = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, usgContractAddresses.utilities.marketCreator)
+
     // If some logs are coming from MarketCreator, we insert them in db
     if (marketsCreated.length) {
       await this.marketContractsRepository.insertContracts(marketsCreated)
+    }
+  }
+
+  /**
+   * Retrieves all the markets in the market table
+   * @returns   An object composed of a map  (marketAddress => marketID)
+   *          AND
+   *            The list of all market addresses
+   */
+  async getMarketsAddressesAndMap() {
+    // Get all market addresses after
+    const marketContracts = await this.marketContractsRepository.getContracts()
+
+    const mapMarketIdAddresses = new Map<string, number>()
+
+    marketContracts.forEach((market) => {
+      mapMarketIdAddresses.set(market.contract_address, Number(market.id))
+    })
+
+    const marketAddresses = marketContracts.map((market) => market.contract_address as AddressLike)
+
+    return {
+      mapMarketIdAddresses,
+      marketAddresses,
     }
   }
 }

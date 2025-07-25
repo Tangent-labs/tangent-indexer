@@ -1,22 +1,22 @@
 import { AbiCoder, id } from "ethers"
 
-export const REPAY = "Repay(address,address,uint256,bool)"
-export const REPAY_AND_WITHDRAW = "RepayAndWithdraw(address,uint256,uint256,bool)"
-export const ZAP_REPAY = "ZapRepay(address,address,uint256,bool,address,uint256)"
-export const ZAP_REPAY_AND_WITHDRAW = "ZapRepayAndWithdraw(address,uint256,uint256,bool,address,uint256)"
+export const REPAY = "Repay(address,address,uint256,uint256)"
+export const REPAY_AND_WITHDRAW = "RepayAndWithdraw(address,uint256,uint256,uint256)"
+export const ZAP_REPAY = "ZapRepay(address,address,uint256,uint256,address,uint256)"
+export const ZAP_REPAY_AND_WITHDRAW = "ZapRepayAndWithdraw(address,uint256,uint256,uint256,address,uint256)"
 export const WITHDRAW = "Withdraw(address,uint256)"
 
 export const DEPOSIT = "Deposit(address,uint256)"
-export const BORROW = "Borrow(address,address,uint256)"
+export const BORROW = "Borrow(address,address,uint256,uint256)"
 export const ZAP_DEPOSIT = "ZapDeposit(address,uint256,address,uint256)"
-export const DEPOSIT_AND_BORROW = "DepositAndBorrow(address,uint256,uint256)"
-export const ZAP_DEPOSIT_AND_BORROW = "ZapDepositAndBorrow(address,uint256,uint256,address,uint256)"
+export const DEPOSIT_AND_BORROW = "DepositAndBorrow(address,uint256,uint256,uint256)"
+export const ZAP_DEPOSIT_AND_BORROW = "ZapDepositAndBorrow(address,uint256,uint256,uint256,address,uint256)"
 
-export const LEVERAGE = "Leverage(address,uint256,uint256,uint256)"
-export const ZAP_LEVERAGE = "ZapLeverage(address,uint256,uint256,uint256,uint256,address,uint256)"
+export const LEVERAGE = "Leverage(address,uint256,uint256,uint256,uint256)"
+export const ZAP_LEVERAGE = "ZapLeverage(address,uint256,uint256,uint256,uint256,uint256,address,uint256)"
 
-export const LIQUIDATE = "Liquidate(address,uint256,uint256,uint256,address,bool)"
-export const SELF_LIQUIDATE = "SelfLiquidate(address,uint256,uint256,uint256,address,bool)"
+export const LIQUIDATE = "Liquidate(address,uint256,uint256,uint256,uint256,address)"
+export const SELF_LIQUIDATE = "SelfLiquidate(address,uint256,uint256,uint256,address)"
 export const SEIZE_COLLATERAL = "SeizeCollateral(address,uint256,uint256)"
 
 export const MARKET_CONVEX_CRV_CREATED = "MarketConvexCrvCreated(address,string)"
@@ -55,19 +55,19 @@ export const EVENT_TOPICS = {
   [id(MARKET_NO_SOCIABILIZATION_CREATED)]: "MarketNoSociabilizationCreated",
 }
 
-export function encodeRepay(repayer: string, repaidAmount: bigint, isRepayAll: boolean) {
-  return AbiCoder.defaultAbiCoder().encode(["address", "uint256", "bool"], [repayer, repaidAmount, isRepayAll])
+export function encodeRepay(repayer: string, repaidAmount: bigint, newUserDebtShares: bigint) {
+  return AbiCoder.defaultAbiCoder().encode(["address", "uint256", "uint256"], [repayer, repaidAmount, newUserDebtShares])
 }
 
-export function encodeBorrow(receiver: string, borrowedAmount: bigint) {
-  return AbiCoder.defaultAbiCoder().encode(["address", "uint256"], [receiver, borrowedAmount])
+export function encodeBorrow(receiver: string, borrowedAmount: bigint, newUserDebtShares: bigint) {
+  return AbiCoder.defaultAbiCoder().encode(["address", "uint256", "uint256"], [receiver, borrowedAmount, newUserDebtShares])
 }
 
 export function encodeDeposit(stakedAmount: bigint) {
   return AbiCoder.defaultAbiCoder().encode(["uint256"], [stakedAmount])
 }
-export function encodeDepositAndBorrow(stakedAmount: bigint, borrowedAmount: bigint) {
-  return AbiCoder.defaultAbiCoder().encode(["uint256", "uint256"], [stakedAmount, borrowedAmount])
+export function encodeDepositAndBorrow(stakedAmount: bigint, borrowedAmount: bigint, newUserDebtShares: bigint) {
+  return AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256"], [stakedAmount, borrowedAmount, newUserDebtShares])
 }
 
 export function encodeTransfer(from: string, to: string, amount: bigint) {

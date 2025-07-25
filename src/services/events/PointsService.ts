@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client"
 import { UserPointsRepository } from "db/UserPointsRepository"
 import { Log } from "ethers"
-import { parseTransferEvent } from "../../eventFectcher/marketUserEvents.parsers"
+import { parseTransferEvent } from "eventFectcher/marketUserEvents.parsers"
 
 export type SortedEvents = {
   Transfer: Prisma.transfert_eventsUncheckedCreateInput[]

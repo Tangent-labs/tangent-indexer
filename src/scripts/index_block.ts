@@ -1,3 +1,5 @@
+import * as dotenv from "dotenv"
+
 import { BlockService } from "../services/BlockService"
 import { setUpIndexer } from "../config/indexer_setup"
 import { TransactionPrisma } from "type/prisma"
@@ -7,7 +9,6 @@ import { ActiveBorrowersRepository } from "db/ActiveBorrowersRepository"
 import { MarketContractsRepository } from "db/MarketContractsRepository"
 import { MarketCreationService } from "services/events/MarketCreationService"
 import { UserMarketService } from "services/events/UserMarketService"
-import * as dotenv from "dotenv"
 import { indexerConfig } from "config/indexer_config"
 import { AddressLike } from "ethers"
 import { ActiveBorrowersService } from "services/ActiveBorrowersService"
@@ -17,18 +18,11 @@ import { fetchTransferLogs } from "eventFectcher/erc20TransferEventFetcher"
 import { UserPointsService } from "services/events/PointsService"
 import { UserPointsRepository } from "db/UserPointsRepository"
 dotenv.config()
+
 async function main() {
   const { providers, handleError } = setUpIndexer()
-  const {
-    prismaClient,
-    userMarketService,
-    userPointsService,
-    marketCreationService,
-    blockService,
-    marketContractsRepository,
-    activeBorrowersService,
-    setTransaction,
-  } = setUpIndexerBlockServices()
+  const { prismaClient, userMarketService, userPointsService, marketCreationService, blockService, activeBorrowersService, setTransaction } =
+    setUpIndexerBlockServices()
 
   try {
     const blockInfo = await BlockService.getIndexerBlockInfo(providers, blockService)
@@ -49,22 +43,18 @@ async function main() {
           // Detect new markets
           await marketCreationService.runDetection(bestProvider, startBlock, endBlock)
 
-          // Get all market addresses after
-          const marketContracts: AddressLike[] = (await marketContractsRepository.getContracts()).map((market) => market.contract_address as AddressLike)
+          const { marketAddresses, mapMarketIdAddresses } = await marketCreationService.getMarketsAddressesAndMap()
 
           // Fetch all User market logs
-          const logs = await getEthLogs(bestProvider, startBlock, endBlock, marketContracts, [])
+          const logs = await getEthLogs(bestProvider, startBlock, endBlock, marketAddresses, [])
 
           const transferToWatch = await userPointsService.getERC20ToTrack()
 
-          console.log("transferToWatch : ", transferToWatch)
-
           // Call fetchTransferLogs with the addresses
           const transferLogs = await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch)
-          console.log("transferLogs : ", transferLogs)
 
           // Parse events with their proper topics and group all user events to update active borrowers
-          const { activeBorrowActions, sortedAndParsedEvents, blockIds } = userMarketService.sortUserMarketLogs(logs)
+          const { activeBorrowActions, sortedAndParsedEvents, blockIds } = userMarketService.sortUserMarketLogs(logs, mapMarketIdAddresses)
           const { sortedAndParsedPointsEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs(transferLogs)
 
           const uniqueBlockIds = [...new Set([...blockIds, ...pointsEventsBlockIds])]
@@ -74,12 +64,11 @@ async function main() {
           const hydratedWithCorrectDates = userMarketService.replaceRightDates(sortedAndParsedEvents, activeBorrowActions, blocks)
           const pointsActionEventsDates = userPointsService.replaceDates(sortedAndParsedPointsEvents, blocks)
 
-          console.log("pointsActionEventsDates : ", pointsActionEventsDates)
-
           // Insert user points actions
           await userPointsService.insertEvents(pointsActionEventsDates.sortedParsedEvents)
 
           // Insert user events
+
           await userMarketService.insertEvents(hydratedWithCorrectDates.sortedParsedEvents)
 
           // Update active borrowers

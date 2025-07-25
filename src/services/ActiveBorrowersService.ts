@@ -15,7 +15,7 @@ export class ActiveBorrowersService {
     // Going reverse through the array and keep only the first
     for (let i = userActions.length - 1; i >= 0; i--) {
       const item = userActions[i]
-      const key = `${item.user}|${item.market}`
+      const key = `${item.user}|${item.marketId}`
       if (!seen.has(key)) {
         seen.set(key, item)
       }
@@ -27,7 +27,7 @@ export class ActiveBorrowersService {
     //    - It's not a repayAll
     const userActionsNoDuplicate = Array.from(seen.values())
       .reverse()
-      .filter((userAction) => userAction.isBorrow || !userAction.isRepayAll)
+      .filter((userAction) => userAction.debt_shares !== 0n)
 
     // Delete all user actions matching the market/user keys
     await this.activeBorrowersRepository.deleteActiveBorrowers(userActions)
