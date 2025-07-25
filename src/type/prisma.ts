@@ -7,8 +7,3 @@ export type TransactionPrisma = Omit<
   PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
   "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
 >
-
-export type GlobalBlock = Prisma.global_blocksCreateInput
-export type MarketContract = Prisma.market_creationsCreateInput
-export type MarketBorrower = Prisma.active_borrowersCreateInput
-export type LiquidationBotLog = Prisma.liquidation_bot_logCreateInput

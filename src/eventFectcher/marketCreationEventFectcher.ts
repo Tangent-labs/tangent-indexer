@@ -19,7 +19,7 @@ export const fetchMarketCreationLogs = async (
   startingBlock: number,
   endingBlock: number,
   marketCreator: AddressLike
-): Promise<Prisma.market_contractsCreateInput[]> => {
+): Promise<Prisma.usg_marketsCreateInput[]> => {
   const logs = await getEthLogs(
     provider,
     startingBlock,
@@ -30,7 +30,7 @@ export const fetchMarketCreationLogs = async (
   return await Promise.all(logs.map((log) => parseMarketEvent(log, provider)))
 }
 
-const parseMarketEvent = async (log: Log, provider: JsonRpcProvider): Promise<Prisma.market_contractsCreateInput> => {
+const parseMarketEvent = async (log: Log, provider: JsonRpcProvider): Promise<Prisma.usg_marketsCreateInput> => {
   // all events have the same signature
   const decoded = ethers.AbiCoder.defaultAbiCoder().decode(["address", "string"], log.data)
   const name = decoded[1]

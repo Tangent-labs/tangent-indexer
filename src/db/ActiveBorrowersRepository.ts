@@ -3,15 +3,21 @@ import { Prisma } from "@prisma/client"
 import { UserAction } from "../services/events/UserMarketService"
 export class ActiveBorrowersRepository extends AbstractRepository {
   async getAll() {
-    return await this.prismaClient.active_borrowers.findMany()
+    return await this.prismaClient.active_borrowers.findMany({
+      select: {
+        market: true,
+        borrower_address: true,
+      },
+    })
   }
 
   async insertActiveBorrowers(userActions: UserAction[]) {
     const activeBorrowers: Prisma.active_borrowersCreateManyInput[] = userActions.map((userAction) => {
       return {
         borrower_address: userAction.user.toString(),
-        contract_address: userAction.market.toString(),
+        market_id: userAction.marketId,
         block_date: userAction.timestamp,
+        debt_shares: userAction.debt_shares.toString(),
       }
     })
 
@@ -24,7 +30,7 @@ export class ActiveBorrowersRepository extends AbstractRepository {
     const where = {
       OR: userActions.map((userAction) => ({
         borrower_address: { equals: userAction.user, mode: "insensitive" },
-        contract_address: { equals: userAction.market, mode: "insensitive" },
+        market_id: { equals: userAction.marketId, mode: "insensitive" },
       })),
     } as Prisma.active_borrowersWhereInput
 

@@ -12,15 +12,17 @@ datasource db {
 model global_blocks {
   block_id   BigInt    @id(map: "blocks_pkey") @default(autoincrement())
   created_at DateTime? @db.Timestamptz(6)
-  @@schema("global")
+  @@schema("events")
 }
 
 
 model active_borrowers {
-  id               BigInt   @id(map: "markets_borrower_pkey") @default(autoincrement())
-  contract_address String  @db.VarChar
-  borrower_address String  @db.VarChar
-  block_date       DateTime @default(now())
+  id               BigInt      @id(map: "markets_borrower_pkey") @default(autoincrement())
+  market           usg_markets @relation(fields: [market_id], references: [id])
+  market_id        BigInt
+  debt_shares      String
+  borrower_address String      @db.VarChar
+  block_date       DateTime    @default(now())
   @@schema("global")
 }
 
@@ -38,7 +40,7 @@ model liquidation_bot_log {
 
 model market_global_data {
   id              BigInt           @id(map: "global_data_and_aprs_markets_history_pkey") @default(autoincrement())
-  market          market_creations @relation(fields: [market_id], references: [id])
+  market          usg_markets @relation(fields: [market_id], references: [id])
   market_id       BigInt
   timestamp       DateTime
   apr_projected   Json
@@ -54,87 +56,111 @@ model market_global_data {
 
 }
 
-model market_creations {
-  id                  BigInt                @id(map: "markets_contracts_pkey") @default(autoincrement())
-  contract_name       String                @db.VarChar
-  collateral_address  String                @db.VarChar
-  contract_address    String                @db.VarChar
-  contract_type       String                @db.VarChar
-  market_global_data  market_global_data[]
+model usg_markets {
+  id                     BigInt                @id(map: "markets_contracts_pkey") @default(autoincrement())
+  contract_name          String                @db.VarChar
+  collateral_address     String                @db.VarChar
+  contract_address       String                @db.VarChar
+  contract_type          String                @db.VarChar
+  market_global_data     market_global_data[]
+  active_borrowers       active_borrowers[]
+  borrow                 borrow[]
+  deposit                deposit[]
+  zap_deposit            zap_deposit[]
+  deposit_and_borrow     deposit_and_borrow[]
+  zap_deposit_and_borrow zap_deposit_and_borrow[]
+  withdraw               withdraw[]
+  repay                  repay[]
+  repay_and_withdraw     repay_and_withdraw[]
+  zap_repay              zap_repay[]
+  zap_repay_and_withdraw zap_repay_and_withdraw[]
+  leverage               leverage[]
+  zap_leverage           zap_leverage[]
+  liquidate              liquidate[]
+  self_liquidate         self_liquidate[]
+  seize_collateral       seize_collateral[]
 
   @@index([contract_address], map: "markets_creations_address_idx")
   @@schema("events")
 }
 
 model borrow {
-  id              BigInt   @id(map: "borrow_pkey") @default(autoincrement())
-  market          String   @db.VarChar
-  account         String   @db.VarChar
-  receiver        String   @db.VarChar
-  borrowed_amount String   @db.VarChar
-  block_date      DateTime
-  block_id        Int
-  tx_hash         String   @db.VarChar(66)
+  id                BigInt   @id(map: "borrow_pkey") @default(autoincrement())
+  market            usg_markets @relation(fields: [market_id], references: [id])
+  market_id         BigInt
+  account           String   @db.VarChar
+  receiver          String   @db.VarChar
+  borrowed_amount   String   @db.VarChar
+  debt_shares       String   @db.VarChar
+  block_date        DateTime
+  block_id          Int
+  tx_hash           String   @db.VarChar(66)
 
   @@index([account], map: "borrow_account")
-  @@index([market], map: "borrow_market_address")
+  @@index([market_id], map: "borrow_market_id")
   @@schema("events")
 }
 
 model deposit {
-  id            BigInt   @id(map: "deposit_pkey") @default(autoincrement())
-  market        String   @db.VarChar
-  account       String   @db.VarChar
-  staked_amount String   @db.VarChar
-  block_date    DateTime
-  block_id      Int
-  tx_hash       String   @db.VarChar(66)
+  id               BigInt   @id(map: "deposit_pkey") @default(autoincrement())
+  market           usg_markets @relation(fields: [market_id], references: [id])
+  market_id        BigInt
+  account          String   @db.VarChar
+  staked_amount    String   @db.VarChar
+  block_date       DateTime
+  block_id         Int
+  tx_hash          String   @db.VarChar(66)
 
   @@index([account], map: "deposit_account")
-  @@index([market], map: "deposit_market_address")
+  @@index([market_id], map: "deposit_market_id")
   @@schema("events")
 
 }
 
 model zap_deposit {
-  id            BigInt   @id(map: "zap_deposit_pkey") @default(autoincrement())
-  market        String   @db.VarChar
-  account       String   @db.VarChar
-  staked_amount String   @db.VarChar
-  token_in      String   @db.VarChar
-  amount_in     String   @db.VarChar
-  block_date    DateTime
-  block_id      Int
-  tx_hash       String   @db.VarChar(66)
+  id               BigInt   @id(map: "zap_deposit_pkey") @default(autoincrement())
+  market           usg_markets @relation(fields: [market_id], references: [id])
+  market_id        BigInt
+  account          String   @db.VarChar
+  staked_amount    String   @db.VarChar
+  token_in         String   @db.VarChar
+  amount_in        String   @db.VarChar
+  block_date       DateTime
+  block_id         Int
+  tx_hash          String   @db.VarChar(66)
 
   @@index([account], map: "zap_deposit_account")
-  @@index([market], map: "zap_deposit_market_address")
+  @@index([market_id], map: "zap_deposit_market_id")
   @@schema("events")
 
 }
 
 model deposit_and_borrow {
-  id            BigInt   @id(map: "deposit_and_borrow_pkey") @default(autoincrement())
-  market        String   @db.VarChar
-  account       String   @db.VarChar
-  staked_amount String   @db.VarChar
-  borrow_amount String   @db.VarChar
+  id               BigInt   @id(map: "deposit_and_borrow_pkey") @default(autoincrement())
+  market           usg_markets @relation(fields: [market_id], references: [id])
+  market_id        BigInt
+  account            String   @db.VarChar
+  staked_amount      String   @db.VarChar
+  borrow_amount      String   @db.VarChar
+  debt_shares String   @db.VarChar
   block_date    DateTime
   block_id      Int
   tx_hash       String   @db.VarChar(66)
 
   @@index([account], map: "deposit_and_borrow_account")
-  @@index([market], map: "deposit_and_borrow_market_address")
+  @@index([market_id], map: "deposit_and_borrow_market_id")
   @@schema("events")
 
 }
 
 model zap_deposit_and_borrow {
   id            BigInt   @id(map: "zap_deposit_and_borrow_pkey") @default(autoincrement())
-  market        String   @db.VarChar
+  market           usg_markets @relation(fields: [market_id], references: [id])
+  market_id        BigInt
   account       String   @db.VarChar
   staked_amount String   @db.VarChar
   borrow_amount String   @db.VarChar
+  debt_shares String   @db.VarChar
   token_in      String   @db.VarChar
   amount_in     String   @db.VarChar
   block_date    DateTime
@@ -142,14 +168,15 @@ model zap_deposit_and_borrow {
   tx_hash       String   @db.VarChar(66)
 
   @@index([account], map: "zap_deposit_and_borrow_account")
-  @@index([market], map: "zap_deposit_and_borrow_market_address")
+  @@index([market_id], map: "zap_deposit_and_borrow_market_id")
   @@schema("events")
 
 }
 
 model withdraw {
   id               BigInt   @id(map: "withdraw_pkey") @default(autoincrement())
-  market           String   @db.VarChar
+  market           usg_markets @relation(fields: [market_id], references: [id])
+  market_id        BigInt
   account          String   @db.VarChar
   withdrawn_amount String   @db.VarChar
   block_date       DateTime
@@ -157,52 +184,55 @@ model withdraw {
   tx_hash          String   @db.VarChar(66)
 
   @@index([account], map: "withdraw_account")
-  @@index([market], map: "withdraw_market_address")
+  @@index([market_id], map: "withdraw_market_id")
   @@schema("events")
 
 }
 
 model repay {
   id            BigInt   @id(map: "repay_pkey") @default(autoincrement())
-  market        String   @db.VarChar
+  market           usg_markets @relation(fields: [market_id], references: [id])
+  market_id        BigInt
   account       String   @db.VarChar
   repayer       String   @db.VarChar
   repaid_amount String   @db.VarChar
-  is_repay_all  Boolean
+  debt_shares String   @db.VarChar
   block_date    DateTime
   block_id      Int
   tx_hash       String   @db.VarChar(66)
 
   @@index([account], map: "repay_account")
-  @@index([market], map: "repay_market_address")
+  @@index([market_id], map: "repay_market_id")
   @@schema("events")
 
 }
 
 model repay_and_withdraw {
   id               BigInt   @id(map: "repay_and_withdraw_pkey") @default(autoincrement())
-  market           String   @db.VarChar
+  market           usg_markets @relation(fields: [market_id], references: [id])
+  market_id        BigInt
   account          String   @db.VarChar
   repaid_amount    String   @db.VarChar
   withdrawn_amount String   @db.VarChar
-  is_repay_all     Boolean
+  debt_shares String   @db.VarChar
   block_date       DateTime
   block_id         Int
   tx_hash          String   @db.VarChar(66)
 
   @@index([account], map: "repay_and_withdraw_account")
-  @@index([market], map: "repay_and_withdraw_market_address")
+  @@index([market_id], map: "repay_and_withdraw_market_id")
   @@schema("events")
 
 }
 
 model zap_repay {
   id            BigInt   @id(map: "zap_repay_pkey") @default(autoincrement())
-  market        String   @db.VarChar
+  market           usg_markets @relation(fields: [market_id], references: [id])
+  market_id        BigInt
   account       String   @db.VarChar
   repayer       String   @db.VarChar
   repaid_amount String   @db.VarChar
-  is_repay_all  Boolean
+  debt_shares String   @db.VarChar
   token_in      String   @db.VarChar
   amount_in     String   @db.VarChar
   block_date    DateTime
@@ -210,18 +240,19 @@ model zap_repay {
   tx_hash       String   @db.VarChar(66)
 
   @@index([account], map: "zap_repay_account")
-  @@index([market], map: "zap_repay_market_address")
+  @@index([market_id], map: "zap_repay_market_id")
   @@schema("events")
 
 }
 
 model zap_repay_and_withdraw {
   id               BigInt   @id(map: "zap_repay_and_withdraw_pkey") @default(autoincrement())
-  market           String   @db.VarChar
+  market           usg_markets @relation(fields: [market_id], references: [id])
+  market_id        BigInt
   account          String   @db.VarChar
   withdrawn_amount String   @db.VarChar
   repaid_amount    String   @db.VarChar
-  is_repay_all     Boolean
+  debt_shares String   @db.VarChar
   token_in         String   @db.VarChar
   amount_in        String   @db.VarChar
   block_date       DateTime
@@ -229,24 +260,26 @@ model zap_repay_and_withdraw {
   tx_hash          String   @db.VarChar(66)
 
   @@index([account], map: "zap_repay_and_withdraw_account")
-  @@index([market], map: "zap_repay_and_withdraw_market_address")
+  @@index([market_id], map: "zap_repay_and_withdraw_market_id")
   @@schema("events")
 
 }
 
 model leverage {
   id              BigInt   @id(map: "leverage_pkey") @default(autoincrement())
-  market          String   @db.VarChar
+  market           usg_markets @relation(fields: [market_id], references: [id])
+  market_id        BigInt
   account         String   @db.VarChar
   staked_amount   String   @db.VarChar
   collat_bought   String   @db.VarChar
   borrowed_amount String   @db.VarChar
+  debt_shares String   @db.VarChar
   block_date      DateTime
   block_id        Int
   tx_hash         String   @db.VarChar(66)
 
   @@index([account], map: "leverage_account")
-  @@index([market], map: "leverage_market_address")
+  @@index([market_id], map: "leverage_market_id")
   @@schema("events")
 
 }
@@ -254,12 +287,14 @@ model leverage {
 
 model zap_leverage {
   id                 BigInt   @id(map: "zap_leverage_pkey") @default(autoincrement())
-  market             String   @db.VarChar
+  market           usg_markets @relation(fields: [market_id], references: [id])
+  market_id        BigInt
   account            String   @db.VarChar
   staked_amount      String   @db.VarChar
   collat_zap_deposit String   @db.VarChar
   collat_leverage    String   @db.VarChar
   borrowed_amount    String   @db.VarChar
+  debt_shares        String   @db.VarChar
   token_in           String   @db.VarChar
   amount_in          String   @db.VarChar
   block_date         DateTime
@@ -267,7 +302,7 @@ model zap_leverage {
   tx_hash            String   @db.VarChar(66)
 
   @@index([account], map: "zap_leverage_account")
-  @@index([market], map: "zap_leverage_market_address")
+  @@index([market_id], map: "zap_leverage_market_id")
   @@schema("events")
 
 }
@@ -275,44 +310,47 @@ model zap_leverage {
 
 model liquidate {
   id                    BigInt   @id(map: "liquidate_pkey") @default(autoincrement())
-  market                String   @db.VarChar
+  market           usg_markets @relation(fields: [market_id], references: [id])
+  market_id        BigInt
   account               String   @db.VarChar
   repaid_amount         String   @db.VarChar
   fee                   String   @db.VarChar
   collateral_liquidated String   @db.VarChar
   liquidator            String   @db.VarChar
-  is_repay_all          Boolean
+  debt_shares           String   @db.VarChar
   block_date            DateTime
   block_id              Int
   tx_hash               String   @db.VarChar(66)
 
   @@index([account], map: "liquidate_account")
-  @@index([market], map: "liquidate_market_address")
+  @@index([market_id], map: "liquidate_market_id")
   @@schema("events")
 
 }
 
 model self_liquidate {
   id                    BigInt   @id(map: "self_liquidate_pkey") @default(autoincrement())
-  market                String   @db.VarChar
+  market           usg_markets @relation(fields: [market_id], references: [id])
+  market_id        BigInt
   account               String   @db.VarChar
   repaid_amount         String   @db.VarChar
   collateral_liquidated String   @db.VarChar
   liquidator            String   @db.VarChar
-  is_repay_all          Boolean
+  debt_shares           String   @db.VarChar
   block_date            DateTime
   block_id              Int
   tx_hash               String   @db.VarChar(66)
 
   @@index([account], map: "self_liquidate_account")
-  @@index([market], map: "self_liquidate_market_address")
+  @@index([market_id], map: "self_liquidate_market_id")
   @@schema("events")
 
 }
 
 model seize_collateral {
   id                    BigInt   @id(map: "seize_collateral_pkey") @default(autoincrement())
-  market                String   @db.VarChar
+  market           usg_markets @relation(fields: [market_id], references: [id])
+  market_id        BigInt
   account               String   @db.VarChar
   bad_debt              String   @db.VarChar
   collateral_seized     String   @db.VarChar
@@ -321,7 +359,7 @@ model seize_collateral {
   tx_hash               String   @db.VarChar(66)
 
   @@index([account], map: "seize_collateral_account")
-  @@index([market], map: "seize_collateral_market_address")
+  @@index([market_id], map: "seize_collateral_market_id")
   @@schema("events")
 
 }
