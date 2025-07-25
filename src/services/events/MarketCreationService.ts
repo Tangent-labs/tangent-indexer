@@ -14,9 +14,17 @@ export class MarketCreationService {
 
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
     // Fetch logs from MarketCreator
-    const marketsCreated = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, usgContractAddresses.utilities.marketCreator)
+    let marketsCreated = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, usgContractAddresses.utilities.marketCreator)
+
     // If some logs are coming from MarketCreator, we insert them in db
     if (marketsCreated.length) {
+      marketsCreated = marketsCreated.map((m) => {
+        return {
+          ...m,
+          collateral_address: m.collateral_address.toLocaleLowerCase(),
+          contract_address: m.contract_address.toLocaleLowerCase(),
+        }
+      })
       await this.marketContractsRepository.insertContracts(marketsCreated)
     }
   }
