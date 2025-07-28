@@ -242,7 +242,7 @@ export function parseLiquidateEvent(log: Log, mapMarketIdPerAddress: Map<string,
     repaid_amount: repaidAmount.toString(),
     fee: fee.toString(),
     collateral_liquidated: collateralLiquidated.toString(),
-    liquidator: liquidator,
+    liquidator,
     debt_shares: debtShares.toString(),
     block_date: new Date(), // placeholder
     block_id: Number(log.blockNumber),
@@ -257,7 +257,7 @@ export function parseSelfLiquidateEvent(log: Log, mapMarketIdPerAddress: Map<str
     account: userAddress(log.topics[1]),
     repaid_amount: repaidAmount.toString(),
     collateral_liquidated: collateralLiquidated.toString(),
-    liquidator: liquidator,
+    liquidator,
     debt_shares: debtShares.toString(),
     block_date: new Date(), // placeholder
     block_id: Number(log.blockNumber),

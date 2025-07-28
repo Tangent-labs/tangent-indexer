@@ -16,32 +16,32 @@ async function seedTokens() {
       symbol: "USG",
     },
     {
-      address: CURVE_CONTEXT["USDT_crvUSD"].stakeDaoGauge.toLowerCase(),
+      address: CURVE_CONTEXT.USDT_crvUSD.stakeDaoGauge.toLowerCase(),
       name: "USDT_crvUSD stakeDaoGauge",
       symbol: "USDT_crvUSD",
     },
     {
-      address: CURVE_CONTEXT["USDT_crvUSD"].curveLp.toLowerCase(),
+      address: CURVE_CONTEXT.USDT_crvUSD.curveLp.toLowerCase(),
       name: "USDT_crvUSD curveLp",
       symbol: "USDT_crvUSD",
     },
     {
-      address: CURVE_CONTEXT["USDC_crvUSD"].stakeDaoGauge.toLowerCase(),
+      address: CURVE_CONTEXT.USDC_crvUSD.stakeDaoGauge.toLowerCase(),
       name: "USDC_crvUSD stakeDaoGauge",
       symbol: "USDC_crvUSD",
     },
     {
-      address: CURVE_CONTEXT["USDC_crvUSD"].curveLp.toLowerCase(),
+      address: CURVE_CONTEXT.USDC_crvUSD.curveLp.toLowerCase(),
       name: "USDC_crvUSD curveLp",
       symbol: "USDC_crvUSD",
     },
     {
-      address: CURVE_CONTEXT["USDe_USDC"].curveLp.toLowerCase(),
+      address: CURVE_CONTEXT.USDe_USDC.curveLp.toLowerCase(),
       name: "USDe_USDC curveLp",
       symbol: "USDe_USDC",
     },
     {
-      address: CURVE_CONTEXT["USDe_USDC"].curveGauge.toLowerCase(),
+      address: CURVE_CONTEXT.USDe_USDC.curveGauge.toLowerCase(),
       name: "USDe_USDC gauge",
       symbol: "USDe_USDC",
     },

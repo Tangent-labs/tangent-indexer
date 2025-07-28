@@ -6,7 +6,7 @@ import { setUpIndexer } from "../config/indexer_setup"
 import { BlockService } from "../services/BlockService"
 import { UserEventsRepository } from "db/UserEventsRepository"
 import { UserPointsRepository } from "db/UserPointsRepository"
-import { UserPointsService } from "services/events/PointsService"
+import { UserPointsService } from "services/events/UserPointsService"
 
 dotenv.config()
 

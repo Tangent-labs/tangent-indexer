@@ -10,12 +10,11 @@ import { MarketContractsRepository } from "db/MarketContractsRepository"
 import { MarketCreationService } from "services/events/MarketCreationService"
 import { UserMarketService } from "services/events/UserMarketService"
 import { indexerConfig } from "config/indexer_config"
-import { AddressLike } from "ethers"
 import { ActiveBorrowersService } from "services/ActiveBorrowersService"
 import { UserEventsRepository } from "db/UserEventsRepository"
 import { getEthLogs } from "eventFectcher/_baseFectcher"
 import { fetchTransferLogs } from "eventFectcher/erc20TransferEventFetcher"
-import { UserPointsService } from "services/events/PointsService"
+import { UserPointsService } from "services/events/UserPointsService"
 import { UserPointsRepository } from "db/UserPointsRepository"
 dotenv.config()
 

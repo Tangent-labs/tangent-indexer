@@ -32,7 +32,7 @@ async function seedTasks() {
         name: "Deposit Curve LP USDe_USDC",
         action_type: "LP",
         protocol: "Curve",
-        token_address: CURVE_CONTEXT["USDe_USDC"].curveLp.toLowerCase(), // USDe_USDC Address
+        token_address: CURVE_CONTEXT.USDe_USDC.curveLp.toLowerCase(), // USDe_USDC Address
         point_rate: 1.5,
         unit: "hour",
         description: "Deposit liquidity provider tokens on Curve",
@@ -43,7 +43,7 @@ async function seedTasks() {
         name: "Deposit Curve Gauge USDe_USDC",
         action_type: "LP",
         protocol: "Curve",
-        token_address: CURVE_CONTEXT["USDe_USDC"].curveGauge.toLowerCase(), // USDe_USDC Address
+        token_address: CURVE_CONTEXT.USDe_USDC.curveGauge.toLowerCase(), // USDe_USDC Address
         point_rate: 1.5,
         unit: "hour",
         description: "Deposit liquidity provider tokens on Curve",
@@ -54,7 +54,7 @@ async function seedTasks() {
         name: "Deposit some LP on Curve USDC_crvUSD",
         action_type: "LP",
         protocol: "Curve",
-        token_address: CURVE_CONTEXT["USDC_crvUSD"].curveLp.toLowerCase(), // crvUSD-USDC Address
+        token_address: CURVE_CONTEXT.USDC_crvUSD.curveLp.toLowerCase(), // crvUSD-USDC Address
         point_rate: 1.5,
         unit: "hour",
         description: "Deposit liquidity provider tokens on Curve",
@@ -65,7 +65,7 @@ async function seedTasks() {
         name: "Stake some LP on stakeDAO USDC_crvUSD",
         action_type: "LP",
         protocol: "stakeDAO",
-        token_address: CURVE_CONTEXT["USDC_crvUSD"].stakeDaoGauge.toLowerCase(), // crvUSD-USDC Address
+        token_address: CURVE_CONTEXT.USDC_crvUSD.stakeDaoGauge.toLowerCase(), // crvUSD-USDC Address
         point_rate: 2.0,
         unit: "hour",
         description: "Stake liquidity provider tokens on stakeDAO",
@@ -76,7 +76,7 @@ async function seedTasks() {
         name: "Hold USDT_crvUSD LP",
         action_type: "LP",
         protocol: "Curve",
-        token_address: CURVE_CONTEXT["USDT_crvUSD"].curveLp.toLowerCase(), // USDT_crvUSD Address
+        token_address: CURVE_CONTEXT.USDT_crvUSD.curveLp.toLowerCase(), // USDT_crvUSD Address
         point_rate: 2.0,
         unit: "hour",
         description: "Stake liquidity provider tokens on stakeDAO",
@@ -87,7 +87,7 @@ async function seedTasks() {
         name: "Stake some LP on stakeDAO USDT_crvUSD",
         action_type: "LP",
         protocol: "stakeDAO",
-        token_address: CURVE_CONTEXT["USDT_crvUSD"].stakeDaoGauge.toLowerCase(), // crvUSD-USDC Address
+        token_address: CURVE_CONTEXT.USDT_crvUSD.stakeDaoGauge.toLowerCase(), // crvUSD-USDC Address
         point_rate: 2.0,
         unit: "hour",
         description: "Stake liquidity provider tokens on stakeDAO",

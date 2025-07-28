@@ -1,4 +1,5 @@
 import { JsonRpcProvider } from "ethers"
+import axios from "axios"
 import { indexerConfig } from "../config/indexer_config"
 import { BlockRepository } from "../db/BlockRepository"
 
@@ -92,12 +93,10 @@ export class BlockService {
       ],
     }))
 
-    const res = await fetch(providerURL, {
-      method: "POST",
+    const res = await axios.post(providerURL, requests, {
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requests),
     })
-    const responses = (await res.json()) as BlockInfo[]
+    const responses = res.data as BlockInfo[]
 
     const timestampPerBlockId: Map<number, number> = new Map()
 

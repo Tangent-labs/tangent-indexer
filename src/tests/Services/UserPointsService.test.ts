@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { AbiCoder, AddressLike, id, JsonRpcProvider, Log, parseEther } from "ethers"
 import { encodeTransfer, TRANSFER } from "../../resources/eventSignatures"
-import { UserPointsService } from "services/events/PointsService"
+import { UserPointsService } from "services/events/UserPointsService"
 import { UserPointsRepository } from "db/UserPointsRepository"
 
 function buildLog(topicId: string, from: AddressLike, to: AddressLike, blockNumber: number, data: string) {
