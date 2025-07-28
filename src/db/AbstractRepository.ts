@@ -8,7 +8,7 @@ export class AbstractRepository {
     this.prismaClient = prismaClient
   }
 
-  setClient(transaction: TransactionPrisma3) {
+  setClient(transaction: TransactionPrisma) {
     this.prismaClient = transaction
   }
 }

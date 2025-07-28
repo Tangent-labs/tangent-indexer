@@ -24,7 +24,7 @@
     "lint:tsc": "npx tsc --noEmit",
     "lint:prettier": "prettier --check .",
     "prepare": "husky",
-    "validate": "npm run lint & npm run lint:tsc & npm run lint:prettier",
+    "validate": "npm run lint && npm run lint:tsc && npm run lint:prettier",
     "compile:prod": "npm run compile && npm run sentry:sourcemaps",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org cvg-mb --project indexer ./build && sentry-cli sourcemaps upload --org cvg-mb --project indexer ./build"
   },
