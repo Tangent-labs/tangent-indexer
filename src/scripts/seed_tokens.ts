@@ -6,12 +6,7 @@ const prisma = new PrismaClient()
 async function seedTokens() {
   const transferToWatch = [
     {
-      address: "0xeef0c605546958c1f899b6fb336c20671f9cd49f",
-      name: "crvUSD",
-      symbol: "crvUSD",
-    },
-    {
-      address: "0xe53bb721f8a434ad562c248fd4c6a7714ec06787",
+      address: "0xf0014CBe67b3aB638bdaA2e2Cb1B531935829E50".toLowerCase(),
       name: "USG",
       symbol: "USG",
     },

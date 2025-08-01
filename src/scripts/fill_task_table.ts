@@ -7,21 +7,10 @@ async function seedTasks() {
   await prisma.task.createMany({
     data: [
       {
-        name: "Move crvUSD",
-        action_type: "move crvUSD",
-        protocol: "crvUSD",
-        token_address: "0xeef0c605546958c1f899b6fb336c20671f9cd49f", // crvUSD Address
-        point_rate: 1.5,
-        unit: "hour",
-        description: "crvUSD",
-        url: "https://curve.fi/deposit",
-        is_active: true,
-      },
-      {
         name: "Hold USG",
         action_type: "hold",
         protocol: "tangent",
-        token_address: "0xe53bb721f8a434ad562c248fd4c6a7714ec06787", // USG Address
+        token_address: "0xf0014CBe67b3aB638bdaA2e2Cb1B531935829E50".toLowerCase(),
         point_rate: 1.5,
         unit: "hour",
         description: "Hold USG",

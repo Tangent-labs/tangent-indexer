@@ -7,6 +7,8 @@ export const getEthLogs = async (
   contracts: AddressLike[],
   topics: string[]
 ): Promise<Log[]> => {
+  console.log(topics)
+
   try {
     const params = {
       fromBlock: toBeHex(startingBlock),

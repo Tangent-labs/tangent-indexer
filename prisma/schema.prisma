@@ -349,27 +349,6 @@ model seize_collateral {
   @@schema("events")
 }
 
-model transfert_events {
-  id            BigInt        @id(map: "transfert_events_pkey") @default(autoincrement())
-  token         tracked_erc20 @relation(fields: [token_address], references: [address])
-  token_address String        @db.VarChar
-  from          String        @db.VarChar
-  to            String        @db.VarChar
-  amount        String        @db.VarChar
-  block_date    DateTime
-  block_id      Int
-  tx_hash       String        @db.VarChar(66)
-
-  @@schema("events")
-}
-
-model user_addresses {
-  id      BigInt @id(map: "user_addresses_pkey") @default(autoincrement())
-  address String @unique
-
-  @@schema("points")
-}
-
 model user_tasks {
   id           BigInt    @id(map: "user_tasks_pkey") @default(autoincrement())
   task         task      @relation(fields: [task_id], references: [id])
@@ -407,12 +386,49 @@ model last_processed_block {
 }
 
 model tracked_erc20 {
-  id               BigInt             @id(map: "tracked_erc20_pkey") @default(autoincrement())
-  address          String             @unique
-  name             String?
-  symbol           String?
-  task             task[]
-  transfert_events transfert_events[]
+  id              BigInt            @id(map: "tracked_erc20_pkey") @default(autoincrement())
+  address         String            @unique
+  name            String?
+  symbol          String?
+  task            task[]
+  transfer_events transfer_events[]
 
   @@schema("points")
+}
+
+model transfer_events {
+  id            BigInt        @id(map: "transfer_events_pkey") @default(autoincrement())
+  token         tracked_erc20 @relation(fields: [token_address], references: [address])
+  token_address String        @db.VarChar
+  from          String        @db.VarChar
+  to            String        @db.VarChar
+  amount        String        @db.VarChar
+  block_date    DateTime
+  block_id      Int
+  tx_hash       String        @db.VarChar(66)
+
+  @@schema("events")
+}
+
+model user {
+  id        BigInt            @id(map: "user_pkey") @default(autoincrement())
+  address   String            @unique
+  onboarded Boolean           @default(false)
+  code      String?           @unique
+  godsons   referral_usages[] @relation("GodfatherRelation")
+  godfather referral_usages?  @relation("GodsonRelation")
+
+  @@schema("global")
+}
+
+model referral_usages {
+  id           BigInt   @id(map: "referral_usages_pkey") @default(autoincrement())
+  godfather_id BigInt
+  godson_id    BigInt
+  used_at      DateTime @default(now())
+  godfather    user     @relation(fields: [godfather_id], references: [id], name: "GodfatherRelation")
+  godson       user     @relation(fields: [godson_id], references: [id], name: "GodsonRelation")
+
+  @@unique(godson_id)
+  @@schema("global")
 }

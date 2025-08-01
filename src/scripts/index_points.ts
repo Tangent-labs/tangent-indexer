@@ -28,8 +28,8 @@ async function main() {
       await prismaClient.$transaction(
         async (dbTransaction: TransactionPrisma) => {
           setTransaction(dbTransaction)
-          await userPointsService.processUserAddressesFromTransfers(startBlock, endBlock)
-          await userPointsService.processUserTasks(startBlock)
+          await userPointsService.retrieveUserAddressesFromTransfers(startBlock, endBlock)
+          await userPointsService.updateUserTasks(startBlock)
 
           await blockService.updateLastEventBlockIndexed(endBlock)
         },
@@ -57,7 +57,6 @@ function setUpIndexerBlockServices() {
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
     blockRepository.setClient(dbTransaction)
     userEventsRepository.setClient(dbTransaction)
-    userPointsRepository.setClient(dbTransaction)
   }
 
   const blockService = new BlockService(blockRepository)

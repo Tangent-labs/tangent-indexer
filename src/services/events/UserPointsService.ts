@@ -1,10 +1,10 @@
+import { Log } from "ethers"
 import { Prisma } from "@prisma/client"
 import { UserPointsRepository } from "db/UserPointsRepository"
-import { Log } from "ethers"
 import { parseTransferEvent } from "../../eventFectcher/marketUserEvents.parsers"
 
 export type SortedEvents = {
-  Transfer: Prisma.transfert_eventsUncheckedCreateInput[]
+  Transfer: Prisma.transfer_eventsUncheckedCreateInput[]
 }
 
 export class UserPointsService {
@@ -14,20 +14,16 @@ export class UserPointsService {
     this.userPointsRepository = userPointsRepository
   }
 
-  processUserAddressesFromTransfers = async (startBlock: number, endBlock: number) => {
+  retrieveUserAddressesFromTransfers = async (startBlock: number, endBlock: number) => {
     const uniqueAddresses = await this.userPointsRepository.getUniqueAddressesFromTransfers(startBlock, endBlock)
-    console.log(`Found ${uniqueAddresses.length} unique addresses to insert`)
     await this.userPointsRepository.insertAddresses(uniqueAddresses)
   }
 
-  processTasks = async (
-    relevantEvents: Prisma.transfert_eventsUncheckedCreateInput[],
+  updateTasks = async (
+    relevantEvents: Prisma.transfer_eventsUncheckedCreateInput[],
     tasks: {
       id: bigint
       token: {
-        symbol: string | null
-        id: bigint
-        name: string | null
         address: string
       }
     }[]
@@ -49,7 +45,7 @@ export class UserPointsService {
 
         await this.userPointsRepository.updateTask(openTask, event)
 
-        if (newAmount > 0.01) {
+        if (newAmount !== 0) {
           await this.userPointsRepository.createTask(task, userAddress, event, newAmount.toString())
         }
       }
@@ -64,9 +60,9 @@ export class UserPointsService {
     }
   }
 
-  processUserTasks = async (startBlock: number) => {
+  updateUserTasks = async (startBlock: number) => {
     const { tasks, relevantEvents } = await this.userPointsRepository.fetchTasksEventsAndAddresses(startBlock)
-    await this.processTasks(relevantEvents, tasks)
+    await this.updateTasks(relevantEvents, tasks)
   }
 
   insertEvents = async (sortedParsedEvents: SortedEvents) => {

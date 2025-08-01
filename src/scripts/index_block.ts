@@ -104,7 +104,6 @@ function setUpIndexerBlockServices() {
     blockRepository.setClient(dbTransaction)
     marketContractsRepository.setClient(dbTransaction)
     userEventsRepository.setClient(dbTransaction)
-    userPointsRepository.setClient(dbTransaction)
     activeBorrowersRepository.setClient(dbTransaction)
   }
 
