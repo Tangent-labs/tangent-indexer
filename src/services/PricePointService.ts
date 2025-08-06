@@ -6,7 +6,8 @@ import { PriceInfo, PriceSource } from "type/data"
 
 import { AddressLike, JsonRpcProvider } from "ethers"
 import { chainView } from "utils/chainView"
-import PriceApiService from "./PriceAPiService"
+import PriceApiService from "./PriceApiService"
+import { MarketContractsRepository } from "../db/MarketContractsRepository"
 
 const curvePoolType = "factory-stable-ng"
 
@@ -19,20 +20,27 @@ type PointServiceChainViewOut = {
   ]
   sUsgPrice: bigint
   usgPrice: bigint
+  debtIndexes: {
+    market: string
+    index: bigint
+  }[]
 }
 
 export class PricePointService {
+  marketContractsRepository: MarketContractsRepository
   priceRepository: PriceRepository
   providers: JsonRpcProvider
   priceApiService: PriceApiService
-  constructor(priceRepository: PriceRepository, providers: JsonRpcProvider) {
+  constructor(priceRepository: PriceRepository, marketContractsRepository: MarketContractsRepository, providers: JsonRpcProvider) {
     this.priceRepository = priceRepository
+    this.marketContractsRepository = marketContractsRepository
     this.providers = providers
     this.priceApiService = new PriceApiService()
   }
 
   async fetchPriceFeed() {
     const priceSource = await this.priceRepository.getPriceSources()
+    const markets = (await this.marketContractsRepository.getContracts())?.map((m) => m.contract_address.toLowerCase()) || []
     const promises = []
 
     // We get all the price for the API
@@ -63,13 +71,13 @@ export class PricePointService {
       }
     }
     const apiPrices = (await Promise.all(promises)).flat() || []
-    console.log("apiPrices", priceSource, apiPrices)
 
     // We get the price for the chain VIEW
     const erc4626Addresses = priceSource.filter((p) => p.type === "ERC4626").map((p) => p.address.toLowerCase())
 
-    const chainViewPrices = await this.chainViewPrices(erc4626Addresses)
+    const chainViewPrices = await this.chainViewPrices(erc4626Addresses, markets)
     this.processErc4626Prices(priceSource, chainViewPrices, apiPrices)
+    this.processDebtIndexes(chainViewPrices, apiPrices)
 
     apiPrices.push({
       address: chainAddresses.tokens.USG,
@@ -83,6 +91,15 @@ export class PricePointService {
     return apiPrices || []
   }
 
+  processDebtIndexes(chainViewPrices: PointServiceChainViewOut, apiPrices: PriceInfo[]) {
+    chainViewPrices?.debtIndexes.forEach((p) => {
+      apiPrices.push({
+        address: p.market,
+        price: Number(p.index) / 1e18,
+      })
+    })
+  }
+
   processErc4626Prices(priceSource: PriceSource[], chainViewPrices: PointServiceChainViewOut, apiPrices: PriceInfo[]) {
     if (!chainViewPrices?.ervc4626shares?.length) {
       return
@@ -93,17 +110,14 @@ export class PricePointService {
       let erc4626Price = 0
       // Find the reference price config for this ERC4626 vault
       const refToken = priceSource.find((conf) => conf.address.toLowerCase() === p.token.toLowerCase())?.refToken
-      console.log("refPrice", refToken)
       if (refToken) {
         // Find the USD price for the underlying asset
         const priceObj = apiPrices.find((x) => x.address.toLowerCase() === refToken.toLowerCase())
-        console.log("priceObj", priceObj)
         if (priceObj) {
           // Shares is the amount of underlying assets per 1 share (scaled by 1e18)
           // Underlying price is in USD (decimal format)
           // erc4626Price = (shares * underlying USD price) / 1e18
           erc4626Price = Number((BigInt(p.shares) * BigInt(Math.floor(priceObj.price * 1e18))) / 10n ** 18n) / 1e18
-          console.log("erc4626Price", erc4626Price)
         }
       }
       apiPrices.push({
@@ -113,7 +127,7 @@ export class PricePointService {
     })
   }
 
-  async chainViewPrices(erc4626: string[]): Promise<PointServiceChainViewOut> {
+  async chainViewPrices(erc4626: string[], markets: string[]): Promise<PointServiceChainViewOut> {
     const addressParams = {
       usg: chainAddresses.tokens.USG as AddressLike,
       usgOracle: chainAddresses.oracles.USG as AddressLike,
@@ -121,15 +135,17 @@ export class PricePointService {
       pegKeepers: Object.values(chainAddresses.pegKeepers) as AddressLike[],
     }
 
-    const p = await chainView<[AddressLike[], typeof addressParams], [PointServiceChainViewOut]>(this.providers, PointPricesAbi.abi, PointPricesAbi.bytecode, [
-      erc4626,
-      addressParams,
-    ])
+    const p = await chainView<[AddressLike[], typeof addressParams, AddressLike[]], [PointServiceChainViewOut]>(
+      this.providers,
+      PointPricesAbi.abi,
+      PointPricesAbi.bytecode,
+      [erc4626, addressParams, markets]
+    )
 
     return p?.at(0) as PointServiceChainViewOut
   }
 
   async insertPrices(prices: PriceInfo[]) {
-    return []
+    return this.priceRepository.insertPriceFeed(prices)
   }
 }

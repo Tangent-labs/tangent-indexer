@@ -74,7 +74,6 @@ class PriceApiService {
 
     try {
       const url = `${PENDLE_PRICE_API}?addresses=${addresses.map((a) => a.toLowerCase()).join(",")}`
-      console.log("url", url)
 
       const call = await axios.get<PendlePriceApiResult>(url)
       const prices: PriceInfo[] = []

@@ -9,6 +9,7 @@
     "tangent:feed-tasks": "tsx src/scripts/fill_task_table.ts",
     "tangent:feed-vote-tasks": "tsx src/scripts/fill_vote_task_table.ts",
     "tangent:feed-tokens": "tsx src/scripts/seed_tokens.ts",
+    "tangent:feed-price-sources": "tsx src/scripts/seed_price_sources.ts",
     "tangent:indexer-points": "tsx src/scripts/index_points.ts",
     "tangent:indexer-block": "tsx src/scripts/index_block.ts",
     "tangent:indexer-vote": "tsx src/scripts/index_votes.ts",
