@@ -2,6 +2,32 @@ import { AbstractRepository } from "./AbstractRepository"
 
 export class BlockRepository extends AbstractRepository {
   // GET
+  async getLastEventBlockIndexed() {
+    const lastBlock = await this.prismaClient.last_processed_block.findFirst({
+      orderBy: {
+        block_id: "desc",
+      },
+    })
+
+    return lastBlock
+  }
+
+  // STORE
+
+  async storeEventBlockTracking(blockId: number) {
+    const existing = await this.prismaClient.last_processed_block.findUnique({
+      where: { block_id: blockId },
+    })
+    if (!existing) {
+      await this.prismaClient.last_processed_block.create({
+        data: {
+          block_id: blockId,
+        },
+      })
+    }
+  }
+
+  // GET
   async getLastBlockIndexed() {
     const lastBlock = await this.prismaClient.global_blocks.findFirst({
       orderBy: {

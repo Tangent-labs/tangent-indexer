@@ -10,15 +10,17 @@ import { MarketContractsRepository } from "db/MarketContractsRepository"
 import { MarketCreationService } from "services/events/MarketCreationService"
 import { UserMarketService } from "services/events/UserMarketService"
 import { indexerConfig } from "config/indexer_config"
-import { AddressLike } from "ethers"
 import { ActiveBorrowersService } from "services/ActiveBorrowersService"
 import { UserEventsRepository } from "db/UserEventsRepository"
 import { getEthLogs } from "eventFectcher/_baseFectcher"
+import { fetchTransferLogs } from "eventFectcher/erc20TransferEventFetcher"
+import { UserPointsService } from "services/events/UserPointsService"
+import { UserPointsRepository } from "db/UserPointsRepository"
 dotenv.config()
 
 async function main() {
   const { providers, handleError } = setUpIndexer()
-  const { prismaClient, userMarketService, marketCreationService, blockService, marketContractsRepository, activeBorrowersService, setTransaction } =
+  const { prismaClient, userMarketService, userPointsService, marketCreationService, blockService, activeBorrowersService, setTransaction } =
     setUpIndexerBlockServices()
 
   try {
@@ -45,15 +47,27 @@ async function main() {
           // Fetch all User market logs
           const logs = await getEthLogs(bestProvider, startBlock, endBlock, marketAddresses, [])
 
+          const transferToWatch = await userPointsService.getERC20ToTrack()
+
+          // Call fetchTransferLogs with the addresses
+          const transferLogs = await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch)
+
           // Parse events with their proper topics and group all user events to update active borrowers
           const { activeBorrowActions, sortedAndParsedEvents, blockIds } = userMarketService.sortUserMarketLogs(logs, mapMarketIdAddresses)
+          const { sortedAndParsedPointsEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs(transferLogs)
 
+          const uniqueBlockIds = [...new Set([...blockIds, ...pointsEventsBlockIds])]
           // Find block timestamps of the unique blockIDs
-          const blocks = await blockService.fetchBlockTimestamps(blockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
+          const blocks = await blockService.fetchBlockTimestamps(uniqueBlockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
 
           const hydratedWithCorrectDates = userMarketService.replaceRightDates(sortedAndParsedEvents, activeBorrowActions, blocks)
+          const pointsActionEventsDates = userPointsService.replaceDates(sortedAndParsedPointsEvents, blocks)
+
+          // Insert user points actions
+          await userPointsService.insertEvents(pointsActionEventsDates.sortedParsedEvents)
 
           // Insert user events
+
           await userMarketService.insertEvents(hydratedWithCorrectDates.sortedParsedEvents)
 
           // Update active borrowers
@@ -83,6 +97,7 @@ function setUpIndexerBlockServices() {
   const blockRepository = new BlockRepository(prismaClient)
   const marketContractsRepository = new MarketContractsRepository(prismaClient)
   const userEventsRepository = new UserEventsRepository(prismaClient)
+  const userPointsRepository = new UserPointsRepository(prismaClient)
   const activeBorrowersRepository = new ActiveBorrowersRepository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
@@ -97,6 +112,7 @@ function setUpIndexerBlockServices() {
   const marketCreationService = new MarketCreationService(marketContractsRepository, indexerConfig.contracts.marketCreatorAddress)
 
   const userMarketService = new UserMarketService(userEventsRepository)
+  const userPointsService = new UserPointsService(userPointsRepository)
   const activeBorrowersService = new ActiveBorrowersService(activeBorrowersRepository)
 
   return {
@@ -104,6 +120,7 @@ function setUpIndexerBlockServices() {
     marketCreationService,
     userEventsRepository,
     userMarketService,
+    userPointsService,
     blockService,
     activeBorrowersService,
     setTransaction,

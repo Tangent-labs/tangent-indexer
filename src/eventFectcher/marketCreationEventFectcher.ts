@@ -27,6 +27,7 @@ export const fetchMarketCreationLogs = async (
     [marketCreator],
     [id(MARKET_CONVEX_CRV_CREATED), id(MARKET_CONVEX_FXN_CREATED), id(MARKET_NO_SOCIABILIZATION_CREATED)]
   )
+
   return await Promise.all(logs.map((log) => parseMarketEvent(log, provider)))
 }
 

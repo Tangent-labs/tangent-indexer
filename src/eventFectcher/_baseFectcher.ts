@@ -7,12 +7,14 @@ export const getEthLogs = async (
   contracts: AddressLike[],
   topics: string[]
 ): Promise<Log[]> => {
+  console.log(topics)
+
   try {
     const params = {
       fromBlock: toBeHex(startingBlock),
       toBlock: toBeHex(endingBlock),
       address: contracts,
-      topics: topics.length == 0 ? [] : [topics],
+      topics: !topics?.length ? [] : [topics],
     }
 
     const logs = await provider.send("eth_getLogs", [params])

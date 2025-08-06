@@ -111,6 +111,7 @@ export class UserMarketService {
 
     logs.forEach((log) => {
       const eventTopic = log.topics[0]
+
       const eventType = EVENT_TOPICS[eventTopic]
       let activeBorrowAction: UserAction = { user: "", marketId: NaN, debt_shares: 0n, blockId: 0 }
       let isImpactingActiveBorrows = false
@@ -119,169 +120,190 @@ export class UserMarketService {
 
       switch (eventType) {
         case "Repay":
-          const repayEvent = parseRepayEvent(log, mapMarketIdPerAddresses)
-          activeBorrowAction = {
-            user: repayEvent.account,
-            marketId: Number(repayEvent.market_id),
-            debt_shares: BigInt(repayEvent.debt_shares),
-            blockId: repayEvent.block_id,
+          {
+            const repayEvent = parseRepayEvent(log, mapMarketIdPerAddresses)
+            activeBorrowAction = {
+              user: repayEvent.account,
+              marketId: Number(repayEvent.market_id),
+              debt_shares: BigInt(repayEvent.debt_shares),
+              blockId: repayEvent.block_id,
+            }
+            isImpactingActiveBorrows = true
+            sortedAndParsedEvents.Repay.push(repayEvent)
           }
-          isImpactingActiveBorrows = true
-          sortedAndParsedEvents.Repay.push(repayEvent)
           break
         case "RepayAndWithdraw":
-          const repayAndWithdrawEvent = parseRepayAndWithdrawEvent(log, mapMarketIdPerAddresses)
-          activeBorrowAction = {
-            user: repayAndWithdrawEvent.account,
-            marketId: Number(repayAndWithdrawEvent.market_id),
-            debt_shares: BigInt(repayAndWithdrawEvent.debt_shares),
-            blockId: repayAndWithdrawEvent.block_id,
+          {
+            const repayAndWithdrawEvent = parseRepayAndWithdrawEvent(log, mapMarketIdPerAddresses)
+            activeBorrowAction = {
+              user: repayAndWithdrawEvent.account,
+              marketId: Number(repayAndWithdrawEvent.market_id),
+              debt_shares: BigInt(repayAndWithdrawEvent.debt_shares),
+              blockId: repayAndWithdrawEvent.block_id,
+            }
+            isImpactingActiveBorrows = true
+            sortedAndParsedEvents.RepayAndWithdraw.push(repayAndWithdrawEvent)
           }
-          isImpactingActiveBorrows = true
-          sortedAndParsedEvents.RepayAndWithdraw.push(repayAndWithdrawEvent)
           break
         case "ZapRepay":
-          const zapRepayEvent = parseZapRepayEvent(log, mapMarketIdPerAddresses)
-          activeBorrowAction = {
-            user: zapRepayEvent.account,
-            marketId: Number(zapRepayEvent.market_id),
-            debt_shares: BigInt(zapRepayEvent.debt_shares),
-            blockId: zapRepayEvent.block_id,
+          {
+            const zapRepayEvent = parseZapRepayEvent(log, mapMarketIdPerAddresses)
+            activeBorrowAction = {
+              user: zapRepayEvent.account,
+              marketId: Number(zapRepayEvent.market_id),
+              debt_shares: BigInt(zapRepayEvent.debt_shares),
+              blockId: zapRepayEvent.block_id,
+            }
+            isImpactingActiveBorrows = true
+            sortedAndParsedEvents.ZapRepay.push(zapRepayEvent)
           }
-          isImpactingActiveBorrows = true
-          sortedAndParsedEvents.ZapRepay.push(zapRepayEvent)
           break
         case "ZapRepayAndWithdraw":
-          const zapRepayAndWithdrawEvent = parseZapRepayAndWithdrawEvent(log, mapMarketIdPerAddresses)
-          activeBorrowAction = {
-            user: zapRepayAndWithdrawEvent.account,
-            marketId: Number(zapRepayAndWithdrawEvent.market_id),
-            debt_shares: BigInt(zapRepayAndWithdrawEvent.debt_shares),
-            blockId: zapRepayAndWithdrawEvent.block_id,
+          {
+            const zapRepayAndWithdrawEvent = parseZapRepayAndWithdrawEvent(log, mapMarketIdPerAddresses)
+            activeBorrowAction = {
+              user: zapRepayAndWithdrawEvent.account,
+              marketId: Number(zapRepayAndWithdrawEvent.market_id),
+              debt_shares: BigInt(zapRepayAndWithdrawEvent.debt_shares),
+              blockId: zapRepayAndWithdrawEvent.block_id,
+            }
+            isImpactingActiveBorrows = true
+            sortedAndParsedEvents.ZapRepayAndWithdraw.push(zapRepayAndWithdrawEvent)
           }
-          isImpactingActiveBorrows = true
-          sortedAndParsedEvents.ZapRepayAndWithdraw.push(zapRepayAndWithdrawEvent)
-
           break
         case "Withdraw":
-          const withdrawEvent = parseWithdrawEvent(log, mapMarketIdPerAddresses)
-          sortedAndParsedEvents.Withdraw.push(withdrawEvent)
+          {
+            const withdrawEvent = parseWithdrawEvent(log, mapMarketIdPerAddresses)
+            sortedAndParsedEvents.Withdraw.push(withdrawEvent)
+          }
 
           break
         case "Deposit":
-          const depositEvent = parseDepositEvent(log, mapMarketIdPerAddresses)
-          sortedAndParsedEvents.Deposit.push(depositEvent)
+          {
+            const depositEvent = parseDepositEvent(log, mapMarketIdPerAddresses)
+            sortedAndParsedEvents.Deposit.push(depositEvent)
+          }
 
           break
         case "Borrow":
-          const borrowEvent = parseBorrowEvent(log, mapMarketIdPerAddresses)
-          activeBorrowAction = {
-            user: borrowEvent.account,
-            marketId: Number(borrowEvent.market_id),
-            debt_shares: BigInt(borrowEvent.debt_shares),
-            blockId: borrowEvent.block_id,
+          {
+            const borrowEvent = parseBorrowEvent(log, mapMarketIdPerAddresses)
+            activeBorrowAction = {
+              user: borrowEvent.account,
+              marketId: Number(borrowEvent.market_id),
+              debt_shares: BigInt(borrowEvent.debt_shares),
+              blockId: borrowEvent.block_id,
+            }
+            isImpactingActiveBorrows = true
+            sortedAndParsedEvents.Borrow.push(borrowEvent)
           }
-          isImpactingActiveBorrows = true
-          sortedAndParsedEvents.Borrow.push(borrowEvent)
-
           break
         case "ZapDeposit":
-          const zapDeposit = parseZapDepositEvent(log, mapMarketIdPerAddresses)
-          sortedAndParsedEvents.ZapDeposit.push(zapDeposit)
-
+          {
+            const zapDeposit = parseZapDepositEvent(log, mapMarketIdPerAddresses)
+            sortedAndParsedEvents.ZapDeposit.push(zapDeposit)
+          }
           break
         case "DepositAndBorrow":
-          const depositAndBorrowEvent = parseDepositAndBorrowEvent(log, mapMarketIdPerAddresses)
-          activeBorrowAction = {
-            user: depositAndBorrowEvent.account,
-            marketId: Number(depositAndBorrowEvent.market_id),
-            debt_shares: BigInt(depositAndBorrowEvent.debt_shares),
-            blockId: depositAndBorrowEvent.block_id,
+          {
+            const depositAndBorrowEvent = parseDepositAndBorrowEvent(log, mapMarketIdPerAddresses)
+            activeBorrowAction = {
+              user: depositAndBorrowEvent.account,
+              marketId: Number(depositAndBorrowEvent.market_id),
+              debt_shares: BigInt(depositAndBorrowEvent.debt_shares),
+              blockId: depositAndBorrowEvent.block_id,
+            }
+            isImpactingActiveBorrows = true
+            sortedAndParsedEvents.DepositAndBorrow.push(depositAndBorrowEvent)
           }
-          isImpactingActiveBorrows = true
-          sortedAndParsedEvents.DepositAndBorrow.push(depositAndBorrowEvent)
           break
-
         case "ZapDepositAndBorrow":
-          const zapDepositAndBorrowEvent = parseZapDepositAndBorrowEvent(log, mapMarketIdPerAddresses)
-          activeBorrowAction = {
-            user: zapDepositAndBorrowEvent.account,
-            marketId: Number(zapDepositAndBorrowEvent.market_id),
-            debt_shares: BigInt(zapDepositAndBorrowEvent.debt_shares),
-            blockId: zapDepositAndBorrowEvent.block_id,
+          {
+            const zapDepositAndBorrowEvent = parseZapDepositAndBorrowEvent(log, mapMarketIdPerAddresses)
+            activeBorrowAction = {
+              user: zapDepositAndBorrowEvent.account,
+              marketId: Number(zapDepositAndBorrowEvent.market_id),
+              debt_shares: BigInt(zapDepositAndBorrowEvent.debt_shares),
+              blockId: zapDepositAndBorrowEvent.block_id,
+            }
+            isImpactingActiveBorrows = true
+            sortedAndParsedEvents.ZapDepositAndBorrow.push(zapDepositAndBorrowEvent)
           }
-          isImpactingActiveBorrows = true
-          sortedAndParsedEvents.ZapDepositAndBorrow.push(zapDepositAndBorrowEvent)
           break
-
         case "Leverage":
-          const leverageEvent = parseLeverageEvent(log, mapMarketIdPerAddresses)
-          activeBorrowAction = {
-            user: leverageEvent.account,
-            marketId: Number(leverageEvent.market_id),
-            debt_shares: BigInt(leverageEvent.debt_shares),
-            blockId: leverageEvent.block_id,
+          {
+            const leverageEvent = parseLeverageEvent(log, mapMarketIdPerAddresses)
+            activeBorrowAction = {
+              user: leverageEvent.account,
+              marketId: Number(leverageEvent.market_id),
+              debt_shares: BigInt(leverageEvent.debt_shares),
+              blockId: leverageEvent.block_id,
+            }
+            isImpactingActiveBorrows = true
+            sortedAndParsedEvents.Leverage.push(leverageEvent)
           }
-          isImpactingActiveBorrows = true
-          sortedAndParsedEvents.Leverage.push(leverageEvent)
           break
-
         case "ZapLeverage":
-          const zapLeverageEvent = parseZapLeverageEvent(log, mapMarketIdPerAddresses)
-          activeBorrowAction = {
-            user: zapLeverageEvent.account,
-            marketId: Number(zapLeverageEvent.market_id),
-            debt_shares: BigInt(zapLeverageEvent.debt_shares),
-            blockId: zapLeverageEvent.block_id,
+          {
+            const zapLeverageEvent = parseZapLeverageEvent(log, mapMarketIdPerAddresses)
+            activeBorrowAction = {
+              user: zapLeverageEvent.account,
+              marketId: Number(zapLeverageEvent.market_id),
+              debt_shares: BigInt(zapLeverageEvent.debt_shares),
+              blockId: zapLeverageEvent.block_id,
+            }
+            isImpactingActiveBorrows = true
+            sortedAndParsedEvents.ZapLeverage.push(zapLeverageEvent)
           }
-          isImpactingActiveBorrows = true
-          sortedAndParsedEvents.ZapLeverage.push(zapLeverageEvent)
           break
-
         case "Liquidate":
-          const liquidateEvent = parseLiquidateEvent(log, mapMarketIdPerAddresses)
-          activeBorrowAction = {
-            user: liquidateEvent.account,
-            marketId: Number(liquidateEvent.market_id),
-            debt_shares: BigInt(liquidateEvent.debt_shares),
-            blockId: liquidateEvent.block_id,
+          {
+            const liquidateEvent = parseLiquidateEvent(log, mapMarketIdPerAddresses)
+            activeBorrowAction = {
+              user: liquidateEvent.account,
+              marketId: Number(liquidateEvent.market_id),
+              debt_shares: BigInt(liquidateEvent.debt_shares),
+              blockId: liquidateEvent.block_id,
+            }
+            isImpactingActiveBorrows = true
+            sortedAndParsedEvents.Liquidate.push(liquidateEvent)
           }
-          isImpactingActiveBorrows = true
-          sortedAndParsedEvents.Liquidate.push(liquidateEvent)
           break
-
         case "SelfLiquidate":
-          const selfLiquidateEvent = parseSelfLiquidateEvent(log, mapMarketIdPerAddresses)
-          activeBorrowAction = {
-            user: selfLiquidateEvent.account,
-            marketId: Number(selfLiquidateEvent.market_id),
-            debt_shares: BigInt(selfLiquidateEvent.debt_shares),
-            blockId: selfLiquidateEvent.block_id,
+          {
+            const selfLiquidateEvent = parseSelfLiquidateEvent(log, mapMarketIdPerAddresses)
+            activeBorrowAction = {
+              user: selfLiquidateEvent.account,
+              marketId: Number(selfLiquidateEvent.market_id),
+              debt_shares: BigInt(selfLiquidateEvent.debt_shares),
+              blockId: selfLiquidateEvent.block_id,
+            }
+            isImpactingActiveBorrows = true
+            sortedAndParsedEvents.SelfLiquidate.push(selfLiquidateEvent)
           }
-          isImpactingActiveBorrows = true
-          sortedAndParsedEvents.SelfLiquidate.push(selfLiquidateEvent)
           break
-
         case "SeizeCollateral":
-          const seizeCollateralEvent = parseSeizeCollateralEvent(log, mapMarketIdPerAddresses)
-          activeBorrowAction = {
-            user: seizeCollateralEvent.account,
-            marketId: Number(seizeCollateralEvent.market_id),
-            debt_shares: 0n,
-            blockId: seizeCollateralEvent.block_id,
+          {
+            const seizeCollateralEvent = parseSeizeCollateralEvent(log, mapMarketIdPerAddresses)
+            activeBorrowAction = {
+              user: seizeCollateralEvent.account,
+              marketId: Number(seizeCollateralEvent.market_id),
+              debt_shares: 0n,
+              blockId: seizeCollateralEvent.block_id,
+            }
+            isImpactingActiveBorrows = true
+            sortedAndParsedEvents.SeizeCollateral.push(seizeCollateralEvent)
           }
-          isImpactingActiveBorrows = true
-          sortedAndParsedEvents.SeizeCollateral.push(seizeCollateralEvent)
           break
-
         default:
+          break
       }
 
+      // Add to activeBorrowActions if this event impacts active borrows
       if (isImpactingActiveBorrows) {
         activeBorrowActions.push(activeBorrowAction)
       }
     })
-
     return { sortedAndParsedEvents, activeBorrowActions, blockIds: Array.from(uniqueBlockId) }
   }
 }

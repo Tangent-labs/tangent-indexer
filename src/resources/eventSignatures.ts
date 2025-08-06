@@ -23,6 +23,10 @@ export const MARKET_CONVEX_CRV_CREATED = "MarketConvexCrvCreated(address,string)
 export const MARKET_CONVEX_FXN_CREATED = "MarketConvexFxnCreated(address,string)"
 export const MARKET_NO_SOCIABILIZATION_CREATED = "MarketNoSociabilizationCreated(address,string)"
 
+export const TRANSFER = "Transfer(address,address,uint256)"
+export const STAKED = "Staked(address,uint256)"
+export const WITHDRAWN = "Withdrawn(address,uint256)"
+
 // Event signatures and topics
 export const EVENT_TOPICS = {
   [id(REPAY)]: "Repay",
@@ -40,6 +44,9 @@ export const EVENT_TOPICS = {
   [id(LIQUIDATE)]: "Liquidate",
   [id(SELF_LIQUIDATE)]: "SelfLiquidate",
   [id(SEIZE_COLLATERAL)]: "SeizeCollateral",
+  [id(TRANSFER)]: "Transfer",
+  [id(STAKED)]: "Staked",
+  [id(WITHDRAWN)]: "Withdrawn",
 
   // Market Creation
 
@@ -61,4 +68,72 @@ export function encodeDeposit(stakedAmount: bigint) {
 }
 export function encodeDepositAndBorrow(stakedAmount: bigint, borrowedAmount: bigint, newUserDebtShares: bigint) {
   return AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256"], [stakedAmount, borrowedAmount, newUserDebtShares])
+}
+
+export function encodeTransfer(from: string, to: string, amount: bigint) {
+  return AbiCoder.defaultAbiCoder().encode(["address", "address", "uint256"], [from, to, amount])
+}
+
+export function encodeWithdraw(withdrawnAmount: bigint) {
+  return AbiCoder.defaultAbiCoder().encode(["uint256"], [withdrawnAmount])
+}
+
+export function encodeRepayAndWithdraw(repaidAmount: bigint, withdrawnAmount: bigint, debtShares: bigint) {
+  return AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256"], [repaidAmount, withdrawnAmount, debtShares])
+}
+
+export function encodeZapDeposit(stakedAmount: bigint, tokenIn: string, amountIn: bigint) {
+  return AbiCoder.defaultAbiCoder().encode(["uint256", "address", "uint256"], [stakedAmount, tokenIn, amountIn])
+}
+
+export function encodeZapDepositAndBorrow(stakedAmount: bigint, borrowedAmount: bigint, debtShares: bigint, tokenIn: string, amountIn: bigint) {
+  return AbiCoder.defaultAbiCoder().encode(
+    ["uint256", "uint256", "uint256", "address", "uint256"],
+    [stakedAmount, borrowedAmount, debtShares, tokenIn, amountIn]
+  )
+}
+
+export function encodeZapRepay(repayer: string, repaidAmount: bigint, debtShares: bigint, tokenIn: string, amountIn: bigint) {
+  return AbiCoder.defaultAbiCoder().encode(["address", "uint256", "uint256", "address", "uint256"], [repayer, repaidAmount, debtShares, tokenIn, amountIn])
+}
+
+export function encodeZapRepayAndWithdraw(withdrawnAmount: bigint, repaidAmount: bigint, debtShares: bigint, tokenIn: string, amountIn: bigint) {
+  return AbiCoder.defaultAbiCoder().encode(
+    ["uint256", "uint256", "uint256", "address", "uint256"],
+    [withdrawnAmount, repaidAmount, debtShares, tokenIn, amountIn]
+  )
+}
+
+export function encodeLeverage(stakedAmount: bigint, collatBought: bigint, borrowedAmount: bigint, debtShares: bigint) {
+  return AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256", "uint256"], [stakedAmount, collatBought, borrowedAmount, debtShares])
+}
+
+export function encodeZapLeverage(
+  stakedAmount: bigint,
+  collatZapDeposit: bigint,
+  collatLeverage: bigint,
+  borrowedAmount: bigint,
+  debtShares: bigint,
+  tokenIn: string,
+  amountIn: bigint
+) {
+  return AbiCoder.defaultAbiCoder().encode(
+    ["uint256", "uint256", "uint256", "uint256", "uint256", "address", "uint256"],
+    [stakedAmount, collatZapDeposit, collatLeverage, borrowedAmount, debtShares, tokenIn, amountIn]
+  )
+}
+
+export function encodeLiquidate(repaidAmount: bigint, debtShares: bigint, fee: bigint, collateralLiquidated: bigint, liquidator: string) {
+  return AbiCoder.defaultAbiCoder().encode(
+    ["uint256", "uint256", "uint256", "uint256", "address"],
+    [repaidAmount, debtShares, fee, collateralLiquidated, liquidator]
+  )
+}
+
+export function encodeSelfLiquidate(repaidAmount: bigint, debtShares: bigint, collateralLiquidated: bigint, liquidator: string) {
+  return AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256", "address"], [repaidAmount, debtShares, collateralLiquidated, liquidator])
+}
+
+export function encodeSeizeCollateral(badDebt: bigint, collateralSeized: bigint) {
+  return AbiCoder.defaultAbiCoder().encode(["uint256", "uint256"], [badDebt, collateralSeized])
 }

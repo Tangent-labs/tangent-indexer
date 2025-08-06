@@ -5,6 +5,23 @@ function userAddress(topic: string): string {
   return AbiCoder.defaultAbiCoder().decode(["address"], topic)[0]
 }
 
+export function parseTransferEvent(log: Log): Prisma.transfer_eventsUncheckedCreateInput {
+  const [amount] = AbiCoder.defaultAbiCoder().decode(["uint256"], log.data)
+
+  const from = userAddress(log.topics[1])
+  const to = userAddress(log.topics[2])
+
+  return {
+    token_address: log.address,
+    from,
+    to,
+    amount: amount.toString(),
+    block_date: new Date(), // placeholder
+    block_id: Number(log.blockNumber),
+    tx_hash: log.transactionHash,
+  }
+}
+
 export function parseBorrowEvent(log: Log, mapMarketIdPerAddress: Map<string, number>): Prisma.borrowCreateManyInput {
   const [receiver, borrowedAmount, debtShares] = AbiCoder.defaultAbiCoder().decode(["address", "uint256", "uint256"], log.data)
 
@@ -13,7 +30,7 @@ export function parseBorrowEvent(log: Log, mapMarketIdPerAddress: Map<string, nu
     account: userAddress(log.topics[1]),
     receiver,
     borrowed_amount: borrowedAmount.toString(),
-    debt_shares: debtShares,
+    debt_shares: debtShares.toString(),
     block_date: new Date(), // placeholder
     block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
@@ -22,6 +39,7 @@ export function parseBorrowEvent(log: Log, mapMarketIdPerAddress: Map<string, nu
 
 export function parseDepositEvent(log: Log, mapMarketIdPerAddress: Map<string, number>): Prisma.depositCreateManyInput {
   const [stakedAmount] = AbiCoder.defaultAbiCoder().decode(["uint256"], log.data)
+
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLocaleLowerCase())!,
     account: userAddress(log.topics[1]),
@@ -62,13 +80,17 @@ export function parseZapDepositEvent(log: Log, mapMarketIdPerAddress: Map<string
 }
 
 export function parseZapDepositAndBorrowEvent(log: Log, mapMarketIdPerAddress: Map<string, number>): Prisma.zap_deposit_and_borrowCreateManyInput {
-  const [stakedAmount, borrowAmount, debtShares, tokenIn, amountIn] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "address", "uint256"], log.data)
+  const [stakedAmount, borrowAmount, debtShares, tokenIn, amountIn] = AbiCoder.defaultAbiCoder().decode(
+    ["uint256", "uint256", "uint256", "address", "uint256"],
+    log.data
+  )
+
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLocaleLowerCase())!,
     account: userAddress(log.topics[1]),
     staked_amount: stakedAmount.toString(),
     borrow_amount: borrowAmount.toString(),
-    debt_shares: debtShares,
+    debt_shares: debtShares.toString(),
     token_in: tokenIn,
     amount_in: amountIn.toString(),
     block_date: new Date(), // placeholder
@@ -95,7 +117,7 @@ export function parseRepayEvent(log: Log, mapMarketIdPerAddress: Map<string, num
     account: userAddress(log.topics[1]),
     repayer,
     repaid_amount: repaidAmount.toString(),
-    debt_shares: debtShares,
+    debt_shares: debtShares.toString(),
     block_date: new Date(), // placeholder
     block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
@@ -109,7 +131,7 @@ export function parseRepayAndWithdrawEvent(log: Log, mapMarketIdPerAddress: Map<
     account: userAddress(log.topics[1]),
     repaid_amount: repaidAmount.toString(),
     withdrawn_amount: withdrawnAmount.toString(),
-    debt_shares: debtShares,
+    debt_shares: debtShares.toString(),
     block_date: new Date(), // placeholder
     block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
@@ -201,7 +223,7 @@ export function parseLiquidateEvent(log: Log, mapMarketIdPerAddress: Map<string,
     repaid_amount: repaidAmount.toString(),
     fee: fee.toString(),
     collateral_liquidated: collateralLiquidated.toString(),
-    liquidator: liquidator,
+    liquidator,
     debt_shares: debtShares.toString(),
     block_date: new Date(), // placeholder
     block_id: Number(log.blockNumber),
@@ -216,8 +238,8 @@ export function parseSelfLiquidateEvent(log: Log, mapMarketIdPerAddress: Map<str
     account: userAddress(log.topics[1]),
     repaid_amount: repaidAmount.toString(),
     collateral_liquidated: collateralLiquidated.toString(),
-    liquidator: liquidator,
-    debt_shares: debtShares,
+    liquidator,
+    debt_shares: debtShares.toString(),
     block_date: new Date(), // placeholder
     block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,

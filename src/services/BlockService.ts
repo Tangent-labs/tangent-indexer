@@ -1,4 +1,5 @@
 import { JsonRpcProvider } from "ethers"
+import axios from "axios"
 import { indexerConfig } from "../config/indexer_config"
 import { BlockRepository } from "../db/BlockRepository"
 
@@ -14,6 +15,43 @@ export class BlockService {
   async updateLastBlockIndexed(blockId: number) {
     await this.blockRepository.storeBlockTracking(blockId)
   }
+
+  async updateLastEventBlockIndexed(blockId: number) {
+    await this.blockRepository.storeEventBlockTracking(blockId)
+  }
+
+  //
+
+  async getLastEventBlockIndexed() {
+    const blocks = await this.blockRepository.getLastEventBlockIndexed()
+    return !blocks ? Number(process.env.LAST_BLOCK_INDEXED) : blocks.block_id
+  }
+
+  static async getPointsBlockInfo(providers: JsonRpcProvider[], blockService: BlockService) {
+    const { startingBlock, blockRange } = indexerConfig
+    const startBlock = Number(await blockService.getLastEventBlockIndexed()) + 1 || startingBlock
+    let endBlock: number
+    const actualBlocks = await Promise.all(providers.map((provider) => provider.getBlockNumber()))
+    const actualBlock = Math.max(...actualBlocks)
+    const bestProviderIndex = actualBlocks.indexOf(actualBlock)
+    const bestProvider = providers[bestProviderIndex]
+
+    // no block to index
+    if (startBlock === actualBlock + 1) {
+      return false
+    }
+
+    if (startBlock + blockRange > actualBlock!) {
+      // If the actual block is closed enough to the lastBlockIndexed we can use it
+      endBlock = actualBlock
+    } else {
+      // Else we get a step toward it
+      endBlock = startBlock + blockRange
+    }
+    return { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex }
+  }
+
+  //
 
   async getLastBlockIndexed() {
     const blocks = await this.blockRepository.getLastBlockIndexed()
@@ -55,12 +93,10 @@ export class BlockService {
       ],
     }))
 
-    const res = await fetch(providerURL, {
-      method: "POST",
+    const res = await axios.post(providerURL, requests, {
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requests),
     })
-    const responses = (await res.json()) as BlockInfo[]
+    const responses = res.data as BlockInfo[]
 
     const timestampPerBlockId: Map<number, number> = new Map()
 

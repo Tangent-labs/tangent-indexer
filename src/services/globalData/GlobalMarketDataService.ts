@@ -3,6 +3,7 @@ import { MarketContractsRepository } from "db/MarketContractsRepository"
 import { Prisma, PrismaClient } from "@prisma/client"
 import { commonERC20, curveLpMapping } from "defi-resources"
 import { chainView } from "utils/chainView"
+import axios from "axios"
 
 import * as usgContractAddresses from "../../addresses.json"
 import * as MarketCurrentAPR from "../../abis/MarketCurrentAPR.json"
@@ -11,6 +12,7 @@ import { defiLLamaFetchPrices, getPriceInfos } from "./DefiLLamaPriceFetcher"
 import { bigIntToNumber } from "scripts/utils/formatting"
 
 // TODO This is arbitraty, need a more dynamic version
+// eslint-disable-next-line no-loss-of-precision
 const ratioCrvToConvex = 221.80769230769230769230769230769
 
 const rewardTokens = [
@@ -53,18 +55,18 @@ export class GlobalMarketDataService {
 
     // Fetch APY of curve LP on their API
     const CURVE_API = "https://api.curve.finance/api"
-    const response = await fetch(CURVE_API + "/getSubgraphData/ethereum")
-    const curveJson: CurveApiReturn = await response.json()
+    const response = await axios.get(CURVE_API + "/getSubgraphData/ethereum")
+    const curveJson: CurveApiReturn = response.data
 
     // Fetch PENDLE markets informations on their API
     const PENDLE_API = "https://api-v2.pendle.finance/core/v1/1/markets/active"
-    const pendleResponse = await fetch(PENDLE_API)
-    const pendleJson: PendleApiReturn = await pendleResponse.json()
+    const pendleResponse = await axios.get(PENDLE_API)
+    const pendleJson: PendleApiReturn = pendleResponse.data
 
     // Fetch CONVEX FXN informations on their API
     const CONVEX_FXN_API = "https://fx.convexfinance.com/api/fxp/pools"
-    const convexFXNResponse = await fetch(CONVEX_FXN_API)
-    const cvxFxnJson: ConvexFxnApiReturn = await convexFXNResponse.json()
+    const convexFXNResponse = await axios.get(CONVEX_FXN_API)
+    const cvxFxnJson: ConvexFxnApiReturn = convexFXNResponse.data
 
     const now = new Date()
 
@@ -87,8 +89,8 @@ export class GlobalMarketDataService {
             item = curveJson.data.poolList.find((pool: { address: string }) => pool.address.toLowerCase() === curvePool?.toLowerCase())
           }
         }
-        currentAPR["APY"] = item!.latestWeeklyApy
-        projectedAPR["APY"] = item!.latestWeeklyApy
+        currentAPR.APY = item!.latestWeeklyApy
+        projectedAPR.APY = item!.latestWeeklyApy
 
         // Projected APR
 
@@ -101,8 +103,8 @@ export class GlobalMarketDataService {
           const priceInfo = getPriceInfos(formattedPrices, commonERC20.CRV)
           const usdPerYear = Number(formatUnits(aprTvlData.projectedAPR.streamingData[0].amountPerYear, priceInfo!.decimals)) * priceInfo!.price
 
-          projectedAPR["CRV"] = (usdPerYear * 100) / underlyingTvl
-          projectedAPR["CVX"] = projectedAPR["CRV"] / ratioCrvToConvex
+          projectedAPR.CRV = (usdPerYear * 100) / underlyingTvl
+          projectedAPR.CVX = projectedAPR.CRV / ratioCrvToConvex
         }
 
         // Convex FXN

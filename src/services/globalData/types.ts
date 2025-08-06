@@ -43,6 +43,8 @@ export type ConvexFxnApiReturn = {
 
 export type Prices = { [address: string]: { decimals: number; symbol: string; price: number; timestamp: number; confidence: number } }
 
+export type KeyStringValueNumber = { [key: string]: number }
+
 export const APR_TYPE: { [name: string]: number } = {
   "Convex CRV": 0,
   "Convex FXN": 1,
@@ -50,5 +52,3 @@ export const APR_TYPE: { [name: string]: number } = {
 }
 
 export type Aprs = { current: KeyStringValueNumber; projected: KeyStringValueNumber }
-
-export type KeyStringValueNumber = { [key: string]: number }

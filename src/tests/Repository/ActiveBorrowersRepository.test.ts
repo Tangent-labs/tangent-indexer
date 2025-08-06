@@ -64,8 +64,8 @@ describe("ActiveBorrowersRepository", () => {
     ])
 
     const inputData: UserAction[] = [
-      { user: "Alice", marketId: 1, blockId: 12 },
-      { user: "Charlie", marketId: 3, blockId: 13 }, // Should be ignored (not in DB)
+      { user: "Alice", marketId: 1, blockId: 12, debt_shares: 100n },
+      { user: "Charlie", marketId: 3, blockId: 13, debt_shares: 200n }, // Should be ignored (not in DB)
     ]
 
     await repository.deleteActiveBorrowers(inputData)
@@ -73,8 +73,8 @@ describe("ActiveBorrowersRepository", () => {
     expect(prismaMock.active_borrowers.deleteMany).toHaveBeenCalledWith({
       where: {
         OR: [
-          { borrower_address: { equals: "Alice", mode: "insensitive" }, market_id: { equals: 1, mode: "insensitive" } },
-          { borrower_address: { equals: "Charlie", mode: "insensitive" }, market_id: { equals: 3, mode: "insensitive" } },
+          { borrower_address: { equals: "Alice", mode: "insensitive" }, market_id: { equals: 1 } },
+          { borrower_address: { equals: "Charlie", mode: "insensitive" }, market_id: { equals: 3 } },
         ],
       },
     })
@@ -135,8 +135,8 @@ describe("ActiveBorrowersRepository", () => {
     ])
 
     const inputData: UserAction[] = [
-      { user: "Alice", marketId: 1, blockId: 12 },
-      { user: "Bob", marketId: 2, blockId: 13 },
+      { user: "Alice", marketId: 1, blockId: 12, debt_shares: 100n },
+      { user: "Bob", marketId: 2, blockId: 13, debt_shares: 100n },
     ]
 
     await repository.deleteActiveBorrowers(inputData)
@@ -144,8 +144,8 @@ describe("ActiveBorrowersRepository", () => {
     expect(prismaMock.active_borrowers.deleteMany).toHaveBeenCalledWith({
       where: {
         OR: [
-          { borrower_address: { equals: "Alice", mode: "insensitive" }, market_id: { equals: 1, mode: "insensitive" } },
-          { borrower_address: { equals: "Bob", mode: "insensitive" }, market_id: { equals: 2, mode: "insensitive" } },
+          { borrower_address: { equals: "Alice", mode: "insensitive" }, market_id: { equals: 1 } },
+          { borrower_address: { equals: "Bob", mode: "insensitive" }, market_id: { equals: 2 } },
         ],
       },
     })
