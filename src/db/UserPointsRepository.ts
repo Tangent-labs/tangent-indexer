@@ -1,67 +1,7 @@
-import { Prisma, PrismaClient } from "@prisma/client"
+import { Prisma } from "@prisma/client"
 import { AbstractRepository } from "./AbstractRepository"
 
 export class UserPointsRepository extends AbstractRepository {
-  returnOpenedTasks = async (
-    event: Prisma.transfer_eventsUncheckedCreateInput,
-    task: {
-      id: bigint
-      token: {
-        address: string
-      }
-    }
-  ) => {
-    return await this.prismaClient.user_tasks.findMany({
-      where: {
-        user_address: {
-          in: [event.from, event.to],
-        },
-        task_id: task.id,
-        closed: null,
-      },
-      orderBy: { start: "desc" },
-    })
-  }
-
-  updateTask = async (
-    openTask: {
-      id: bigint
-      task_id: bigint
-      user_address: string
-      start: Date | null
-      closed: Date | null
-      amount: string
-    },
-    event: Prisma.transfer_eventsUncheckedCreateInput
-  ) => {
-    await this.prismaClient.user_tasks.update({
-      where: { id: openTask.id },
-      data: { closed: event.block_date },
-    })
-  }
-
-  createTask = async (
-    task: {
-      id: bigint
-      token: {
-        address: string
-      }
-    },
-    user: string,
-    event: Prisma.transfer_eventsUncheckedCreateInput,
-    amount: string
-  ) => {
-    await this.prismaClient.user_tasks.create({
-      data: {
-        task_id: task.id,
-        user_address: user,
-        start: event.block_date, // Chain with previous closed time
-        amount: amount.toString(), // Updated running balance
-        closed: null,
-      },
-    })
-  }
-
   getOpenedTasks = async (userAddresses: Array<string>, taskIds: Array<bigint>) => {
     return this.prismaClient.user_tasks.findMany({
       where: {
@@ -87,18 +27,45 @@ export class UserPointsRepository extends AbstractRepository {
   }
 
   updateProcessedTasks = async (tasksToClose: { id: bigint; closed: Date }[], tasksToCreate: Prisma.user_tasksUncheckedCreateInput[]) => {
-    await (this.prismaClient as PrismaClient)?.$transaction([
-      ...tasksToClose.map((task) =>
-        this.prismaClient.user_tasks.update({
-          where: { id: task.id },
-          data: { closed: task.closed },
+    // Deduplicate and filter
+    const byId = new Map<bigint, Date>()
+    for (const t of tasksToClose) {
+      if (!t.id || t.id === 0n) continue
+      const prev = byId.get(t.id)
+      if (!prev || t.closed < prev) {
+        byId.set(t.id, t.closed)
+      }
+    }
+    const deduped = Array.from(byId.entries()).map(([id, closed]) => ({ id, closed }))
+
+    if (deduped.length > 0) {
+      const caseClauses = deduped
+        .map(({ id, closed }) => {
+          const timeInSeconds = Math.floor(closed.getTime() / 1000)
+          return `WHEN ${id.toString()} THEN (to_timestamp(${timeInSeconds}) AT TIME ZONE 'UTC')`
         })
-      ),
-      this.prismaClient.user_tasks.createMany({
+        .join(" ")
+
+      const ids = deduped.map(({ id }) => id.toString()).join(",")
+
+      const sql = `
+    UPDATE "points"."user_tasks"
+    SET "closed" = CASE "id"
+      ${caseClauses}
+      ELSE "closed"
+    END
+    WHERE "id" IN (${ids});
+  `
+
+      await (this.prismaClient as Prisma.TransactionClient).$executeRawUnsafe(sql)
+    }
+
+    if (tasksToCreate.length > 0) {
+      await (this.prismaClient as Prisma.TransactionClient).user_tasks.createMany({
         data: tasksToCreate,
         skipDuplicates: false,
-      }),
-    ])
+      })
+    }
   }
 
   fetchTasksEventsAndAddresses = async (lastBlockId: number) => {
