@@ -29,7 +29,19 @@ async function main() {
         async (dbTransaction: TransactionPrisma) => {
           setTransaction(dbTransaction)
           await userPointsService.retrieveUserAddressesFromTransfers(startBlock, endBlock)
+
           await userPointsService.updateUserTasks(startBlock)
+
+          // Pour chaque (tâche ouverte) ET (chaque tâche fermée après le startBlock)
+          // Calculer la time range (secondes ou heures)
+          // Récupérer le prix le plus proche du blockStart dans la table price_feed
+          // Récupérer le boost le plus proche du blockStart dans la table boost
+          // Calculer le nbr de pts sur la période // +- BOOST
+          // Upsert
+          //
+          // FAIRE DES TEEST UNITAIRES
+          //
+          // await userPointsService?.processPoints(startBlock)
 
           await blockService.updateLastEventBlockIndexed(endBlock)
         },
