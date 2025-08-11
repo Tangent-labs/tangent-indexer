@@ -19,6 +19,47 @@ export class UserPointsService {
     await this.userPointsRepository.insertAddresses(uniqueAddresses)
   }
 
+  // Helper to create and track new tasks in-memory
+  createAndTrack = (
+    userAddress: string,
+    taskId: bigint,
+    start: Date,
+    amount: string,
+    createdIndexByKey: Map<string, number>,
+    tasksToCreate: Prisma.user_tasksUncheckedCreateInput[],
+    openTaskMap: Map<
+      string,
+      {
+        id: bigint
+        task_id: bigint
+        user_address: string
+        start: Date
+        amount: string
+        closed: Date | null
+      }
+    >
+  ) => {
+    const newTask: Prisma.user_tasksUncheckedCreateInput = {
+      task_id: taskId,
+      user_address: userAddress,
+      start,
+      amount,
+      closed: null,
+    }
+    const idx = tasksToCreate.push(newTask) - 1
+    createdIndexByKey.set(`${userAddress}_${taskId}_${start.getTime()}`, idx)
+
+    // Also put it into the map so later events see it
+    openTaskMap.set(`${userAddress}_${taskId}`, {
+      id: BigInt(0), // synthetic
+      task_id: taskId,
+      user_address: userAddress,
+      start,
+      amount,
+      closed: null,
+    })
+  }
+
   updateTasks = async (
     relevantEvents: Prisma.transfer_eventsUncheckedCreateInput[],
     tasks: {
@@ -42,32 +83,9 @@ export class UserPointsService {
 
     // Map key: `${user}_${taskId}` -> open task
     const openTaskMap = new Map<string, (typeof openUserTasks)[0]>()
-    for (const ot of openUserTasks) {
-      const key = `${ot.user_address.toLowerCase()}_${ot.task_id}`
-      openTaskMap.set(key, ot)
-    }
-
-    // Helper to create and track new tasks in-memory
-    const createAndTrack = (userAddress: string, taskId: bigint, start: Date, amount: string) => {
-      const newTask: Prisma.user_tasksUncheckedCreateInput = {
-        task_id: taskId,
-        user_address: userAddress,
-        start,
-        amount,
-        closed: null,
-      }
-      const idx = tasksToCreate.push(newTask) - 1
-      createdIndexByKey.set(`${userAddress}_${taskId}_${start.getTime()}`, idx)
-
-      // Also put it into the map so later events see it
-      openTaskMap.set(`${userAddress}_${taskId}`, {
-        id: BigInt(0), // synthetic
-        task_id: taskId,
-        user_address: userAddress,
-        start,
-        amount,
-        closed: null,
-      })
+    for (const openUserTask of openUserTasks) {
+      const key = `${openUserTask.user_address.toLowerCase()}_${openUserTask.task_id}`
+      openTaskMap.set(key, openUserTask)
     }
 
     for (const event of relevantEvents) {
@@ -105,13 +123,13 @@ export class UserPointsService {
           const newAmount = isSender ? currentAmount - delta : currentAmount + delta
 
           if (newAmount !== 0) {
-            createAndTrack(userAddress, task.id, new Date(event.block_date), newAmount.toString())
+            this.createAndTrack(userAddress, task.id, new Date(event.block_date), newAmount.toString(), createdIndexByKey, tasksToCreate, openTaskMap)
           } else {
             openTaskMap.delete(key)
           }
         } else {
           // No open task exists → create one
-          createAndTrack(userAddress, task.id, new Date(event.block_date), event.amount)
+          this.createAndTrack(userAddress, task.id, new Date(event.block_date), event.amount, createdIndexByKey, tasksToCreate, openTaskMap)
         }
       }
     }

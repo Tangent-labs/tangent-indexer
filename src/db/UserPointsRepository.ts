@@ -27,26 +27,15 @@ export class UserPointsRepository extends AbstractRepository {
   }
 
   updateProcessedTasks = async (tasksToClose: { id: bigint; closed: Date }[], tasksToCreate: Prisma.user_tasksUncheckedCreateInput[]) => {
-    // Deduplicate and filter
-    const byId = new Map<bigint, Date>()
-    for (const t of tasksToClose) {
-      if (!t.id || t.id === 0n) continue
-      const prev = byId.get(t.id)
-      if (!prev || t.closed < prev) {
-        byId.set(t.id, t.closed)
-      }
-    }
-    const deduped = Array.from(byId.entries()).map(([id, closed]) => ({ id, closed }))
-
-    if (deduped.length > 0) {
-      const caseClauses = deduped
+    if (tasksToClose.length > 0) {
+      const caseClauses = tasksToClose
         .map(({ id, closed }) => {
           const timeInSeconds = Math.floor(closed.getTime() / 1000)
           return `WHEN ${id.toString()} THEN (to_timestamp(${timeInSeconds}) AT TIME ZONE 'UTC')`
         })
         .join(" ")
 
-      const ids = deduped.map(({ id }) => id.toString()).join(",")
+      const ids = tasksToClose.map(({ id }) => id.toString()).join(",")
 
       const sql = `
     UPDATE "points"."user_tasks"
