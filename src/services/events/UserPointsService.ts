@@ -137,6 +137,86 @@ export class UserPointsService {
     await this.userPointsRepository.updateProcessedTasks(tasksToClose, tasksToCreate)
   }
 
+  bulkUpsertUserPoints = async (
+    currentTasks: {
+      points: number
+      boostMultiplier: string
+      avgPriceUsd: string | null
+      timeRangeSeconds: number
+      id: bigint
+      task_id: bigint
+      user_address: string
+      start: Date
+      closed: Date | null
+      amount: string
+    }[]
+  ) => {
+    return await this.userPointsRepository.bulkUpsertUserPoints(currentTasks)
+  }
+
+  computePointsForTasks = async (
+    currentTasks: {
+      boostMultiplier: string
+      avgPriceUsd: string | null
+      timeRangeSeconds: number
+      id: bigint
+      task_id: bigint
+      user_address: string
+      start: Date
+      closed: Date | null
+      amount: string
+    }[]
+  ) => {
+    return await this.userPointsRepository.computePointsForTasks(currentTasks)
+  }
+
+  computeClosestBoostForTasks = async (
+    startBlock: number,
+    currentTasks: {
+      avgPriceUsd: string | null
+      timeRangeSeconds: number
+      id: bigint
+      task_id: bigint
+      user_address: string
+      start: Date
+      closed: Date | null
+      amount: string
+    }[]
+  ) => {
+    return await this.userPointsRepository.computeClosestBoostForTasks(currentTasks, startBlock)
+  }
+
+  computeTokenPriceForTask = async (
+    currentTasks: {
+      timeRangeSeconds: number
+      id: bigint
+      task_id: bigint
+      user_address: string
+      start: Date
+      closed: Date | null
+      amount: string
+    }[]
+  ) => {
+    return await this.userPointsRepository.computeTokenPriceForTask(currentTasks)
+  }
+
+  computeTimeRangeForOpenUserTasks = async (blockId: number) => {
+    const tasks = await this.userPointsRepository.fetchTasksToComputeRangeFor(blockId)
+
+    const now = new Date()
+
+    // Add time range in seconds to each task
+    return tasks
+      .filter((t) => t.user_address === "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")
+      .map((task) => {
+        const endDate = task.closed ?? now
+        return {
+          ...task,
+          timeRangeSeconds: Math.floor((endDate.getTime() - task.start.getTime()) / 1000),
+        }
+      })
+  }
+
   updateUserTasks = async (startBlock: number) => {
     const { tasks, relevantEvents } = await this.userPointsRepository.fetchTasksEventsAndAddresses(startBlock)
 

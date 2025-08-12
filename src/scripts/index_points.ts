@@ -32,16 +32,24 @@ async function main() {
 
           await userPointsService.updateUserTasks(startBlock)
 
-          // Pour chaque (tâche ouverte) ET (chaque tâche fermée après le startBlock)
-          // Calculer la time range (secondes ou heures)
+          // Pour (chaque tâche ouverte) ET (chaque tâche fermée après le startBlock)
+          // Calculer la time range (en fonction de l'unité)
+          const currentTasks = await userPointsService.computeTimeRangeForOpenUserTasks(startBlock)
+          console.log("currentTasks : ", currentTasks)
+
           // Récupérer le prix le plus proche du blockStart dans la table price_feed
+          const upgradedTasks = await userPointsService.computeTokenPriceForTask(currentTasks)
+
           // Récupérer le boost le plus proche du blockStart dans la table boost
+          const tasksWithBoosts = await userPointsService.computeClosestBoostForTasks(startBlock, upgradedTasks)
+          console.log("tasksWithBoosts : ", tasksWithBoosts)
+
           // Calculer le nbr de pts sur la période // +- BOOST
+          const tasksWithPoints = await userPointsService.computePointsForTasks(tasksWithBoosts)
+          console.log("tasksWithPoints : ", tasksWithPoints)
+
           // Upsert
-          //
-          // FAIRE DES TEEST UNITAIRES
-          //
-          // await userPointsService?.processPoints(startBlock)
+          await userPointsService.bulkUpsertUserPoints(tasksWithPoints)
 
           await blockService.updateLastEventBlockIndexed(endBlock)
         },

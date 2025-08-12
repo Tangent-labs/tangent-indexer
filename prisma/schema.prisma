@@ -350,13 +350,14 @@ model seize_collateral {
 }
 
 model user_tasks {
-  id           BigInt    @id(map: "user_tasks_pkey") @default(autoincrement())
-  task         task      @relation(fields: [task_id], references: [id])
+  id           BigInt       @id(map: "user_tasks_pkey") @default(autoincrement())
+  task         task         @relation(fields: [task_id], references: [id])
   task_id      BigInt
-  user_address String    @db.VarChar
-  start        DateTime  @db.Timestamp
-  closed       DateTime? @db.Timestamp
+  user_address String       @db.VarChar
+  start        DateTime     @db.Timestamp
+  closed       DateTime?    @db.Timestamp
   amount       String
+  user_points  user_points?
 
   @@index([task_id, user_address])
   @@schema("points")
@@ -375,6 +376,7 @@ model task {
   url           String
   is_active     Boolean       @default(true)
   user_tasks    user_tasks[]
+  user_points   user_points[]
 
   @@schema("points")
 }
@@ -392,6 +394,7 @@ model tracked_erc20 {
   symbol          String?
   task            task[]
   transfer_events transfer_events[]
+  price_feeds     price_feeds[]
 
   @@schema("points")
 }
@@ -411,12 +414,14 @@ model transfer_events {
 }
 
 model user {
-  id        BigInt            @id(map: "user_pkey") @default(autoincrement())
-  address   String            @unique
-  onboarded Boolean           @default(false)
-  code      String?           @unique
-  godsons   referral_usages[] @relation("GodfatherRelation")
-  godfather referral_usages?  @relation("GodsonRelation")
+  id          BigInt            @id(map: "user_pkey") @default(autoincrement())
+  address     String            @unique
+  onboarded   Boolean           @default(false)
+  code        String?           @unique
+  godsons     referral_usages[] @relation("GodfatherRelation")
+  godfather   referral_usages?  @relation("GodsonRelation")
+  user_points user_points[]
+  user_boost  user_boost[]
 
   @@schema("global")
 }
@@ -431,4 +436,41 @@ model referral_usages {
 
   @@unique(godson_id)
   @@schema("global")
+}
+
+model user_points {
+  id           BigInt     @id @default(autoincrement())
+  user_address String     @db.VarChar
+  user         user       @relation(fields: [user_address], references: [address])
+  task_id      BigInt
+  task         task       @relation(fields: [task_id], references: [id])
+  user_task_id BigInt     @unique
+  user_task    user_tasks @relation(fields: [user_task_id], references: [id])
+  points       Int
+
+  @@index([task_id, user_address])
+  @@schema("points")
+}
+
+model price_feeds {
+  id            BigInt        @id(map: "price_feeds_pkey") @default(autoincrement())
+  token_address tracked_erc20 @relation(fields: [token], references: [address])
+  token         String
+  timestamp     DateTime
+  price_usd     String
+
+  @@schema("points")
+}
+
+model user_boost {
+  id           BigInt    @id @default(autoincrement())
+  user_address String    @db.VarChar
+  user         user      @relation(fields: [user_address], references: [address])
+  multiplier   Decimal   @db.Decimal(4, 2)
+  start_at     DateTime  @db.Timestamptz(6)
+  end_at       DateTime? @db.Timestamptz(6)
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([user_address, start_at])
+  @@schema("points")
 }
