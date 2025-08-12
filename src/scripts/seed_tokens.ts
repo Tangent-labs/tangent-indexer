@@ -3,10 +3,10 @@ import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings
 
 const prisma = new PrismaClient()
 
-async function seedTokens() {
-  const transferToWatch = [
+async function seedPriceFeeds() {
+  const tokens = [
     {
-      address: "0x7f854de4e6D69A6EbdfFfCb92851139BA0Cc6bC0".toLowerCase(),
+      address: "0xA36B5Fec0E93d24908fAA9966535567E9f888994".toLowerCase(),
       name: "USG",
       symbol: "USG",
     },
@@ -42,16 +42,36 @@ async function seedTokens() {
     },
   ]
 
-  for (const token of transferToWatch) {
+  const currentTimestamp = 1754990730 // 12 Aout 2025
+  const oneDaySeconds = 24 * 60 * 60
+  const oneMontAgo = currentTimestamp - 30 * oneDaySeconds
+
+  for (const token of tokens) {
+    // Ensure token exists in tracked_erc20 table
     await prisma.tracked_erc20.upsert({
       where: { address: token.address },
       update: {},
       create: token,
     })
+
+    // Generate price feeds for each day
+    for (let ts = oneMontAgo; ts <= currentTimestamp; ts += oneDaySeconds) {
+      // Generate random price between 0.95 and 1.05 USD (assuming stablecoin-like tokens)
+      const priceUsd = Math.floor((0.95 + Math.random() * 0.1) * 1000000000000000000) // Store as integer (micro-USD)
+
+      await prisma.price_feeds.create({
+        data: {
+          token: token.address,
+          timestamp: new Date(ts * 1000),
+          price_usd: priceUsd.toString(),
+        },
+      })
+    }
   }
-  console.log("Tokens seeded successfully!")
+
+  console.log("Price feeds seeded successfully!")
 }
 
-seedTokens()
+seedPriceFeeds()
   .catch((e) => console.error(e))
   .finally(async () => await prisma.$disconnect())
