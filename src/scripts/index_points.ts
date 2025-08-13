@@ -7,6 +7,7 @@ import { BlockService } from "../services/BlockService"
 import { UserEventsRepository } from "db/UserEventsRepository"
 import { UserPointsRepository } from "db/UserPointsRepository"
 import { UserPointsService } from "services/events/UserPointsService"
+import { indexerConfig } from "config/indexer_config"
 
 dotenv.config()
 
@@ -21,7 +22,7 @@ async function main() {
       return
     }
 
-    const { startBlock, endBlock, actualBlock } = blockInfo
+    const { startBlock, endBlock, actualBlock, bestProviderIndex } = blockInfo
 
     if (startBlock && endBlock) {
       console.log("indexing :", startBlock, "<----------------->", endBlock)
@@ -34,7 +35,8 @@ async function main() {
 
           // Pour (chaque tâche ouverte) ET (chaque tâche fermée après le startBlock)
           // Calculer la time range (en fonction de l'unité)
-          const currentTasks = await userPointsService.computeTimeRangeForOpenUserTasks(startBlock)
+          const nowBlockTimestamp = await blockService.getLatestBlockTimestamp(indexerConfig.provider.chainRpc[bestProviderIndex])
+          const currentTasks = await userPointsService.computeTimeRangeForOpenUserTasks(startBlock, nowBlockTimestamp)
           console.log("currentTasks : ", currentTasks)
 
           // Récupérer le prix le plus proche du blockStart dans la table price_feed
