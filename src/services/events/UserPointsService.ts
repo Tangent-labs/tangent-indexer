@@ -200,10 +200,10 @@ export class UserPointsService {
     return await this.userPointsRepository.computeTokenPriceForTask(currentTasks)
   }
 
-  computeTimeRangeForOpenUserTasks = async (blockId: number) => {
+  computeTimeRangeForOpenUserTasks = async (blockId: number, nowBlockTimestamp: number) => {
     const tasks = await this.userPointsRepository.fetchTasksToComputeRangeFor(blockId)
 
-    const now = new Date()
+    const now = new Date(nowBlockTimestamp * 1000)
 
     // Add time range in seconds to each task
     return tasks
@@ -212,7 +212,7 @@ export class UserPointsService {
         const endDate = task.closed ?? now
         return {
           ...task,
-          timeRangeSeconds: Math.floor((endDate.getTime() - task.start.getTime()) / 1000),
+          timeRangeSeconds: Math.max(Math.floor((endDate.getTime() - task.start.getTime()) / 1000), 0),
         }
       })
   }

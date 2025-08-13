@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 async function seedPriceFeeds() {
   const tokens = [
     {
-      address: "0xA36B5Fec0E93d24908fAA9966535567E9f888994".toLowerCase(),
+      address: "0xdf422894281A27Aa3d19B0B7D578c59Cb051ABF8".toLowerCase(),
       name: "USG",
       symbol: "USG",
     },
