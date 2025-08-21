@@ -37,21 +37,17 @@ async function main() {
           // Calculer la time range (en fonction de l'unité)
           const nowBlockTimestamp = await blockService.getLatestBlockTimestamp(indexerConfig.provider.chainRpc[bestProviderIndex])
           const currentTasks = await userPointsService.computeTimeRangeForOpenUserTasks(startBlock, nowBlockTimestamp)
-          console.log("currentTasks : ", currentTasks)
 
           // Récupérer le prix le plus proche du blockStart dans la table price_feed
           const upgradedTasks = await userPointsService.computeTokenPriceForTask(currentTasks)
 
           // Récupérer le boost le plus proche du blockStart dans la table boost
           const tasksWithBoosts = await userPointsService.computeClosestBoostForTasks(startBlock, upgradedTasks)
-          console.log("tasksWithBoosts : ", tasksWithBoosts)
 
           // Calculer le nbr de pts sur la période // +- BOOST
           const tasksWithPoints = await userPointsService.computePointsForTasks(tasksWithBoosts)
-          console.log("tasksWithPoints : ", tasksWithPoints)
 
-          // Upsert
-          await userPointsService.bulkUpsertUserPoints(tasksWithPoints)
+          await userPointsService.bulkUpsertUserPoints(startBlock, tasksWithPoints)
 
           await blockService.updateLastEventBlockIndexed(endBlock)
         },

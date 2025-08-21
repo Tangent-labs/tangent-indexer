@@ -414,14 +414,15 @@ model transfer_events {
 }
 
 model user {
-  id          BigInt            @id(map: "user_pkey") @default(autoincrement())
-  address     String            @unique
-  onboarded   Boolean           @default(false)
-  code        String?           @unique
-  godsons     referral_usages[] @relation("GodfatherRelation")
-  godfather   referral_usages?  @relation("GodsonRelation")
-  user_points user_points[]
-  user_boost  user_boost[]
+  id              BigInt            @id(map: "user_pkey") @default(autoincrement())
+  address         String            @unique
+  onboarded       Boolean           @default(false)
+  code            String?           @unique
+  godsons         referral_usages[] @relation("GodfatherRelation")
+  godfather       referral_usages?  @relation("GodsonRelation")
+  user_points     user_points[]
+  user_boost      user_boost[]
+  referral_points BigInt            @default(0)
 
   @@schema("global")
 }

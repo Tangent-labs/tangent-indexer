@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 async function seedPriceFeeds() {
   const tokens = [
     {
-      address: "0xdf422894281A27Aa3d19B0B7D578c59Cb051ABF8".toLowerCase(),
+      address: "0x05325EF4e7d91153f0Dd0A774D09189b646B9365".toLowerCase(),
       name: "USG",
       symbol: "USG",
     },
@@ -42,7 +42,7 @@ async function seedPriceFeeds() {
     },
   ]
 
-  const currentTimestamp = 1754990730 // 12 Aout 2025
+  const currentTimestamp = 1755780359 // 12 Aout 2025
   const oneDaySeconds = 24 * 60 * 60
   const oneMontAgo = currentTimestamp - 30 * oneDaySeconds
 

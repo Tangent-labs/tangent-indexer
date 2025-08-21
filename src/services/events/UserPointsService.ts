@@ -137,13 +137,22 @@ export class UserPointsService {
     await this.userPointsRepository.updateProcessedTasks(tasksToClose, tasksToCreate)
   }
 
+  //
+
+  /**
+   *
+   * @param startBlock used to check eligible bonus referral points
+   * @param tasksWithPoints All data needed to upsert in the user_points table
+   * @returns
+   */
   bulkUpsertUserPoints = async (
-    currentTasks: {
+    startBlock: number,
+    tasksWithPoints: {
       points: number
       boostMultiplier: string
       avgPriceUsd: string | null
       timeRangeSeconds: number
-      id: bigint
+      id: bigint // user_task_id
       task_id: bigint
       user_address: string
       start: Date
@@ -151,8 +160,24 @@ export class UserPointsService {
       amount: string
     }[]
   ) => {
-    return await this.userPointsRepository.bulkUpsertUserPoints(currentTasks)
+    if (!tasksWithPoints?.length) return
+
+    const startBlockTime = await this.userPointsRepository.getBlockTimeAtOrBefore(startBlock)
+    const startBlockTimestampInSeconds = Math.floor(startBlockTime.getTime() / 1000)
+
+    const batch = tasksWithPoints.map((t) => ({
+      user_task_id: t.id,
+      task_id: t.task_id,
+      child_address: t.user_address.toLowerCase(),
+      new_points: Math.max(0, Math.round(t.points)),
+    }))
+
+    await this.userPointsRepository.upsertUserPointsAndReferralPoints(batch, startBlockTimestampInSeconds)
   }
+
+  //
+  //
+  //
 
   computePointsForTasks = async (
     currentTasks: {
@@ -205,16 +230,13 @@ export class UserPointsService {
 
     const now = new Date(nowBlockTimestamp * 1000)
 
-    // Add time range in seconds to each task
-    return tasks
-      .filter((t) => t.user_address === "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")
-      .map((task) => {
-        const endDate = task.closed ?? now
-        return {
-          ...task,
-          timeRangeSeconds: Math.max(Math.floor((endDate.getTime() - task.start.getTime()) / 1000), 0),
-        }
-      })
+    return tasks.map((task) => {
+      const endDate = task.closed ?? now
+      return {
+        ...task,
+        timeRangeSeconds: Math.max(Math.floor((endDate.getTime() - task.start.getTime()) / 1000), 0),
+      }
+    })
   }
 
   updateUserTasks = async (startBlock: number) => {
