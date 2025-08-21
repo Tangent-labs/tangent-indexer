@@ -4,43 +4,6 @@ import { AbstractRepository } from "./AbstractRepository"
 export class UserPointsRepository extends AbstractRepository {
   /**
    *
-   * @param tasksWithPoints All data needed to upsert in the user_points table
-   * @returns
-   */
-  bulkUpsertUserPoints = async (
-    tasksWithPoints: {
-      points: number
-      boostMultiplier: string
-      avgPriceUsd: string | null
-      timeRangeSeconds: number
-      id: bigint
-      task_id: bigint
-      user_address: string
-      start: Date
-      closed: Date | null
-      amount: string
-    }[]
-  ) => {
-    if (tasksWithPoints.length === 0) return
-
-    const values = tasksWithPoints
-      .map((task) => {
-        return `('${task.user_address}', ${task.task_id}, ${task.id}, ${task.points})`
-      })
-      .join(",")
-
-    const sql = `
-    INSERT INTO points.user_points (user_address, task_id, user_task_id, points)
-    VALUES ${values}
-    ON CONFLICT (user_task_id)
-    DO UPDATE SET points = EXCLUDED.points;
-  `
-
-    await this.prismaClient.$executeRawUnsafe(sql)
-  }
-
-  /**
-   *
    * @param tasksWithBoosts user_tasks with boost, average token price and time range
    * ready for points computation
    * Applied formula is tokenAmount * price * timeRange * pointRate * boost
@@ -271,6 +234,94 @@ export class UserPointsRepository extends AbstractRepository {
         orderBy: { start: "desc" },
       })
     }
+  }
+
+  // Helper: block time at or before startBlock
+  getBlockTimeAtOrBefore = async (blockId: number | bigint) => {
+    const row = await this.prismaClient.global_blocks.findFirst({
+      where: { block_id: { lte: BigInt(blockId) } },
+      orderBy: { block_id: "desc" },
+      select: { created_at: true },
+    })
+    return row?.created_at ?? new Date(0)
+  }
+
+  /**
+   *
+   * @param batch Looks up the previously stored points
+   * Computes the bonus delta for each task
+   * Maps each child in deltas to its referrer via referral_usages.
+   * Aggregates and inserts bonus points
+   * AND ONLY THEN
+   * Insert base points (order matters a lot here)
+   * @param startBlockTimestampInSeconds checks eligible bonuses
+   * @returns
+   */
+  upsertUserPointsAndReferralPoints = async (
+    batch: {
+      user_task_id: bigint
+      task_id: bigint
+      child_address: string
+      new_points: number
+    }[],
+    startBlockTimestampInSeconds: number
+  ) => {
+    if (!batch?.length) return
+
+    const queryValues = batch.map((b) => `(${b.user_task_id},'${b.child_address}',${b.task_id},${b.new_points})`).join(",")
+
+    const referralBonusPoints = `
+      WITH input(user_task_id, child_address, task_id, new_points) AS (VALUES ${queryValues}),
+      prior AS (
+        SELECT i.user_task_id,
+               i.child_address,
+               i.task_id,
+               i.new_points,
+               COALESCE(up.points, 0) AS old_points
+        FROM input i
+        LEFT JOIN "points"."user_points" up
+          ON up.user_task_id = i.user_task_id
+      ),
+      deltas AS (
+        SELECT
+          p.user_task_id,
+          p.child_address,
+          GREATEST(FLOOR(p.new_points * 0.10) - FLOOR(p.old_points * 0.10), 0)::bigint AS ref_delta
+        FROM prior p
+        WHERE GREATEST(FLOOR(p.new_points * 0.10) - FLOOR(p.old_points * 0.10), 0) > 0
+      ),
+      eligible AS (
+        SELECT
+          ru.godfather_id AS referrer_id,
+          d.ref_delta
+        FROM deltas d
+        JOIN "global"."user" child
+          ON child.address = d.child_address
+        JOIN "global"."referral_usages" ru
+          ON ru.godson_id = child.id
+        WHERE ru.used_at <= to_timestamp(${startBlockTimestampInSeconds})
+      ),
+      agg AS (
+        SELECT referrer_id, SUM(ref_delta)::bigint AS delta_sum
+        FROM eligible
+        GROUP BY referrer_id
+      )
+      UPDATE "global"."user" u
+      SET referral_points = u.referral_points + a.delta_sum
+      FROM agg a
+      WHERE u.id = a.referrer_id;
+    `
+    await (this.prismaClient as Prisma.TransactionClient).$executeRawUnsafe(referralBonusPoints)
+
+    const userPoints = `
+      WITH input(user_task_id, child_address, task_id, new_points) AS (VALUES ${queryValues})
+      INSERT INTO "points"."user_points" ("user_address","task_id","user_task_id","points")
+      SELECT child_address, task_id, user_task_id, new_points
+      FROM input
+      ON CONFLICT ("user_task_id")
+      DO UPDATE SET "points" = EXCLUDED."points";
+    `
+    await (this.prismaClient as Prisma.TransactionClient).$executeRawUnsafe(userPoints)
   }
 
   getOpenedTasks = async (userAddresses: Array<string>, taskIds: Array<bigint>) => {

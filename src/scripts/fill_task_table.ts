@@ -10,77 +10,86 @@ async function seedTasks() {
         name: "USG",
         action_type: "hold",
         protocol: "tangent",
-        token_address: "0xdf422894281A27Aa3d19B0B7D578c59Cb051ABF8".toLowerCase(),
+        token_address: "0x05325EF4e7d91153f0Dd0A774D09189b646B9365".toLowerCase(),
         point_rate: 1.5,
         unit: "hour",
-        description: "Hold USG",
-        url: "https://curve.fi/deposit",
+        description: "Hold USG in your wallet",
+        url: "https://curve.fi/deposit", // if you have a better USG page, swap it in
         is_active: true,
       },
+
+      // Curve USDe/USDC — LP in wallet
       {
         name: "USDe_USDC",
         action_type: "LP",
         protocol: "Curve",
-        token_address: CURVE_CONTEXT.USDe_USDC.curveLp.toLowerCase(), // USDe_USDC Address
+        token_address: CURVE_CONTEXT.USDe_USDC.curveLp.toLowerCase(),
         point_rate: 1.5,
         unit: "hour",
-        description: "Deposit LP tokens on Curve",
-        url: "https://curve.fi/deposit",
+        description: "Hold Curve USDe/USDC LP tokens",
+        url: "https://curve.fi/",
         is_active: true,
       },
+      // Curve USDe/USDC — staked in Curve gauge
       {
         name: "USDe_USDC",
         action_type: "LP",
         protocol: "Curve",
-        token_address: CURVE_CONTEXT.USDe_USDC.curveGauge.toLowerCase(), // USDe_USDC Address
+        token_address: CURVE_CONTEXT.USDe_USDC.curveGauge.toLowerCase(),
         point_rate: 1.5,
         unit: "hour",
-        description: "Deposit LP tokens on Curve",
-        url: "https://curve.fi/deposit",
+        description: "Stake USDe/USDC LP in Curve gauge",
+        url: "https://curve.fi/",
         is_active: true,
       },
+
+      // Curve crvUSD/USDC — LP in wallet
       {
-        name: "crvUSD-USDC",
+        name: "crvUSD_USDC",
         action_type: "LP",
         protocol: "Curve",
-        token_address: CURVE_CONTEXT.USDC_crvUSD.curveLp.toLowerCase(), // crvUSD-USDC Address
+        token_address: CURVE_CONTEXT.USDC_crvUSD.curveLp.toLowerCase(),
         point_rate: 1.5,
         unit: "hour",
-        description: "Deposit LP tokens on Curve",
-        url: "https://curve.fi/deposit",
+        description: "Hold Curve crvUSD/USDC LP tokens",
+        url: "https://curve.fi/",
         is_active: true,
       },
+      // StakeDAO crvUSD/USDC — staked in StakeDAO gauge
       {
-        name: "crvUSD-USDC",
+        name: "crvUSD_USDC",
         action_type: "LP",
-        protocol: "stakeDAO",
-        token_address: CURVE_CONTEXT.USDC_crvUSD.stakeDaoGauge.toLowerCase(), // crvUSD-USDC Address
+        protocol: "StakeDAO",
+        token_address: CURVE_CONTEXT.USDC_crvUSD.stakeDaoGauge.toLowerCase(),
         point_rate: 2.0,
         unit: "hour",
-        description: "Stake LP tokens on stakeDAO",
-        url: "https://stakedao.org/stake",
+        description: "Stake crvUSD/USDC LP in StakeDAO gauge",
+        url: "https://www.stakedao.org/",
         is_active: true,
       },
+
+      // Curve crvUSD/USDT — LP in wallet
       {
         name: "crvUSD-USDT",
         action_type: "LP",
         protocol: "Curve",
-        token_address: CURVE_CONTEXT.USDT_crvUSD.curveLp.toLowerCase(), // USDT_crvUSD Address
+        token_address: CURVE_CONTEXT.USDT_crvUSD.curveLp.toLowerCase(),
         point_rate: 2.0,
         unit: "hour",
-        description: "Stake LP tokens on stakeDAO",
-        url: "https://stakedao.org/stake",
+        description: "Hold Curve crvUSD/USDT LP tokens",
+        url: "https://curve.fi/",
         is_active: true,
       },
+      // StakeDAO crvUSD/USDT — staked in StakeDAO gauge
       {
         name: "crvUSD-USDT",
         action_type: "LP",
-        protocol: "stakeDAO",
-        token_address: CURVE_CONTEXT.USDT_crvUSD.stakeDaoGauge.toLowerCase(), // crvUSD-USDC Address
+        protocol: "StakeDAO",
+        token_address: CURVE_CONTEXT.USDT_crvUSD.stakeDaoGauge.toLowerCase(),
         point_rate: 2.0,
         unit: "hour",
-        description: "Stake LP tokens on stakeDAO",
-        url: "https://stakedao.org/stake",
+        description: "Stake crvUSD/USDT LP in StakeDAO gauge",
+        url: "https://www.stakedao.org/",
         is_active: true,
       },
     ],
