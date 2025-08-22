@@ -1,7 +1,7 @@
-import { JsonRpcProvider } from "ethers"
 import axios from "axios"
-import { indexerConfig } from "../config/indexer_config"
+import { JsonRpcProvider } from "ethers"
 import { BlockRepository } from "../db/BlockRepository"
+import { indexerConfig } from "../config/indexer_config"
 
 export type BlockInfo = { result: { number: string; timestamp: string } }
 
@@ -82,8 +82,7 @@ export class BlockService {
     return { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex }
   }
 
-  getLatestBlockTimestamp = async (providerURL: string): Promise<number> => {
-    const provider = new JsonRpcProvider(providerURL)
+  getLatestBlockTimestamp = async (provider: JsonRpcProvider): Promise<number> => {
     const latestBlock = await provider.getBlock("latest")
     if (!latestBlock) {
       throw new Error("Could not fetch latest block")
