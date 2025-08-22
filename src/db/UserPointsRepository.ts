@@ -52,12 +52,10 @@ export class UserPointsRepository extends AbstractRepository {
   }
 
   /**
-   *
-   * @param upgradedTasks user_tasks with average token price and time range
-   * @param startBlockId use start block to fetch the most accurate user boost
-   * @returns
+   * Time-weighted boost over [task.start, task.end).
+   * Any interval without an explicit user_boost uses 1.00.
    */
-  computeClosestBoostForTasks = async (
+  computeTimeWeightedBoostForTasks = async (
     upgradedTasks: {
       avgPriceUsd: string | null
       timeRangeSeconds: number
@@ -68,54 +66,96 @@ export class UserPointsRepository extends AbstractRepository {
       closed: Date | null
       amount: string
     }[],
-    startBlockId: number | bigint
+    nowBlockTimestampSec: number
   ) => {
     if (upgradedTasks.length === 0) return []
 
-    // 1) Resolve the block timestamp (use nearest <= just in case)
-    const block = await this.prismaClient.global_blocks.findFirst({
-      where: { block_id: { lte: BigInt(startBlockId) } },
-      orderBy: { block_id: "desc" },
-      select: { created_at: true },
-    })
-    if (!block?.created_at) {
-      // No block time: default multiplier 1.00
-      return upgradedTasks.map((t) => ({ ...t, boostMultiplier: "1.00" }))
-    }
+    const nowMs = nowBlockTimestampSec * 1000
 
-    // 2) Build VALUES(...) list for (id, user_address)
-    //    We’ll lowercase addresses to be safe/consistent.
-    const valuesRows = upgradedTasks.map((t) => `(${t.id.toString()}, '${t.user_address.toLowerCase()}')`).join(",")
+    // VALUES (id, user_address, start_at, end_at)
+    const valuesRows = upgradedTasks
+      .map((t) => {
+        const startS = Math.floor(t.start.getTime() / 1000)
+        const endS = Math.floor((t.closed ? t.closed.getTime() : nowMs) / 1000)
+        const addr = t.user_address.toLowerCase()
+        return `(${t.id.toString()}, '${addr}', to_timestamp(${startS}), to_timestamp(${endS}))`
+      })
+      .join(",")
 
-    // 3) Single SQL: for each input row (task id + user), pick closest user_boost to block_time
     const sql = `
-    WITH input(id, user_address) AS (
+    WITH input(id, user_address, start_at, end_at) AS (
       VALUES ${valuesRows}
     ),
-    blk AS (
-      SELECT ${Math.floor(block.created_at.getTime() / 1000)}::bigint AS epoch_s
-    )
-    SELECT i.id::bigint,
-           COALESCE(ub.multiplier::text, '1.00') AS multiplier
-    FROM input i
-    CROSS JOIN blk
-    LEFT JOIN LATERAL (
-      SELECT multiplier
+    -- Per-user boost segments [start_at, next_start_at)
+    ub_timeline AS (
+      SELECT
+        LOWER(ub.user_address) AS user_address,
+        ub.start_at,
+        LEAD(ub.start_at) OVER (PARTITION BY LOWER(ub.user_address) ORDER BY ub.start_at) AS next_start_at,
+        ub.multiplier::numeric AS multiplier
       FROM points.user_boost ub
-      WHERE LOWER(ub.user_address) = i.user_address
-      ORDER BY ABS(EXTRACT(EPOCH FROM ub.start_at) - blk.epoch_s)
-      LIMIT 1
-    ) ub ON true;
+    ),
+    -- Intersections of task window with boost segments
+    seg AS (
+      SELECT
+        i.id,
+        GREATEST(i.start_at, u.start_at) AS seg_start,
+        LEAST(i.end_at, COALESCE(u.next_start_at, i.end_at)) AS seg_end,
+        u.multiplier
+      FROM input i
+      JOIN ub_timeline u
+        ON u.user_address = i.user_address
+       AND u.start_at < i.end_at
+       AND COALESCE(u.next_start_at, i.end_at) > i.start_at
+    ),
+    durs AS (
+      SELECT
+        id,
+        EXTRACT(EPOCH FROM seg_end - seg_start) AS dur_s,
+        multiplier
+      FROM seg
+      WHERE seg_end > seg_start
+    ),
+    ovl AS (  -- sums over boosted portions only
+      SELECT
+        id,
+        SUM(dur_s)                  AS dur_sum,
+        SUM(dur_s * multiplier)     AS weighted_sum
+      FROM durs
+      GROUP BY id
+    ),
+    totals AS (   -- total task duration
+      SELECT
+        id,
+        EXTRACT(EPOCH FROM (end_at - start_at)) AS total_s
+      FROM input
+    ),
+    eff AS (
+      SELECT
+        t.id,
+        t.total_s,
+        COALESCE(o.dur_sum, 0)        AS overlapped_s,
+        COALESCE(o.weighted_sum, 0)   AS weighted_sum
+      FROM totals t
+      LEFT JOIN ovl o USING (id)
+    )
+    SELECT
+      e.id::bigint AS id,
+      CASE
+        WHEN e.total_s <= 0 THEN '1.00'
+        ELSE
+          TO_CHAR( (e.weighted_sum + (e.total_s - e.overlapped_s) * 1.00) / e.total_s
+                  , 'FM999999990.00')
+      END AS multiplier
+    FROM eff e;
   `
 
-    // 4) Execute and map back
     const rows: { id: bigint; multiplier: string }[] = await this.prismaClient.$queryRawUnsafe(sql)
-
-    const boostByTaskId = new Map<bigint, string>(rows.map((r) => [r.id, r.multiplier]))
+    const byId = new Map<bigint, string>(rows.map((r) => [r.id, r.multiplier]))
 
     return upgradedTasks.map((t) => ({
       ...t,
-      boostMultiplier: boostByTaskId.get(t.id) ?? "1.00",
+      boostMultiplier: byId.get(t.id) ?? "1.00",
     }))
   }
 
@@ -234,13 +274,20 @@ export class UserPointsRepository extends AbstractRepository {
   }
 
   // Helper: block time at or before startBlock
-  getBlockTimeAtOrBefore = async (blockId: number | bigint) => {
-    const row = await this.prismaClient.global_blocks.findFirst({
+  getBlockTimeAtOrBefore = async (blockId: number, provider: JsonRpcProvider) => {
+    const latestIndexedBlock = await this.prismaClient.global_blocks.findFirst({
       where: { block_id: { lte: BigInt(blockId) } },
       orderBy: { block_id: "desc" },
-      select: { created_at: true },
+      select: { block_id: true },
     })
-    return row?.created_at ?? new Date(0)
+
+    if (latestIndexedBlock) {
+      const referenceBlock = await provider.getBlock(Number(latestIndexedBlock.block_id))
+      if (!referenceBlock) throw new Error("RPC: reference block not found")
+      return referenceBlock.timestamp
+    }
+
+    return 0
   }
 
   /**
