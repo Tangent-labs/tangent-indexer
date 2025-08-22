@@ -42,12 +42,13 @@ async function main() {
           const upgradedTasks = await userPointsService.computeTokenPriceForTask(currentTasks)
 
           // Récupérer le boost le plus proche du blockStart dans la table boost
-          const tasksWithBoosts = await userPointsService.computeClosestBoostForTasks(startBlock, upgradedTasks)
+          const tasksWithBoosts = await userPointsService.computeClosestBoostForTasks(upgradedTasks, nowBlockTimestamp)
 
           // Calculer le nbr de pts sur la période // +- BOOST
           const tasksWithPoints = await userPointsService.computePointsForTasks(tasksWithBoosts)
 
-          await userPointsService.bulkUpsertUserPoints(startBlock, tasksWithPoints)
+          // Insert user referral points and then user points
+          await userPointsService.bulkUpsertUserPoints(startBlock, tasksWithPoints, bestProvider)
 
           await blockService.updateLastEventBlockIndexed(endBlock)
         },

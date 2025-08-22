@@ -158,12 +158,12 @@ export class UserPointsService {
       start: Date
       closed: Date | null
       amount: string
-    }[]
+    }[],
+    provider: JsonRpcProvider
   ) => {
     if (!tasksWithPoints?.length) return
 
-    const startBlockTime = await this.userPointsRepository.getBlockTimeAtOrBefore(startBlock)
-    const startBlockTimestampInSeconds = Math.floor(startBlockTime.getTime() / 1000)
+    const startBlockTimestamp = await this.userPointsRepository.getBlockTimeAtOrBefore(startBlock, provider)
 
     const batch = tasksWithPoints.map((t) => ({
       user_task_id: t.id,
@@ -172,7 +172,7 @@ export class UserPointsService {
       new_points: Math.max(0, Math.round(t.points)),
     }))
 
-    await this.userPointsRepository.upsertUserPointsAndReferralPoints(batch, startBlockTimestampInSeconds)
+    await this.userPointsRepository.upsertUserPointsAndReferralPoints(batch, startBlockTimestamp)
   }
 
   //
@@ -196,7 +196,6 @@ export class UserPointsService {
   }
 
   computeClosestBoostForTasks = async (
-    startBlock: number,
     currentTasks: {
       avgPriceUsd: string | null
       timeRangeSeconds: number
@@ -206,9 +205,10 @@ export class UserPointsService {
       start: Date
       closed: Date | null
       amount: string
-    }[]
+    }[],
+    nowBlockTimestamp: number
   ) => {
-    return await this.userPointsRepository.computeClosestBoostForTasks(currentTasks, startBlock)
+    return await this.userPointsRepository.computeTimeWeightedBoostForTasks(currentTasks, nowBlockTimestamp)
   }
 
   computeTokenPriceForTask = async (
