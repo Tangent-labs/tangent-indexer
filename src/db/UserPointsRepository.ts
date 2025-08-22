@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client"
 import { AbstractRepository } from "./AbstractRepository"
+import { JsonRpcProvider } from "ethers"
 
 export class UserPointsRepository extends AbstractRepository {
   /**
@@ -179,61 +180,57 @@ export class UserPointsRepository extends AbstractRepository {
   /**
    *
    * @param blockId Fetch all tasks which need time range computation starting at blockId
+   * @param provider best provider
    * @returns
    */
-  fetchTasksToComputeRangeFor = async (blockId: number) => {
-    const isFreshDB = (await this.prismaClient.user_points.count()) === 0
+  fetchTasksToComputeRangeFor = async (blockId: number, provider: JsonRpcProvider) => {
+    const userPointsCount = await this.prismaClient.user_points.count()
+    const isFreshDB = userPointsCount === 0
 
-    let referenceDate: Date
+    let referenceDate = new Date(0)
 
     if (!isFreshDB) {
-      // Try to get the block date from global_blocks
-      const block = await this.prismaClient.global_blocks.findFirst({
+      const latestIndexedBlock = await this.prismaClient.global_blocks.findFirst({
         where: { block_id: { lte: BigInt(blockId) } },
         orderBy: { block_id: "desc" },
-        select: { created_at: true },
+        select: { block_id: true },
       })
 
-      // Fallback: if no block found, use epoch
-      referenceDate = block?.created_at as Date
-    } else {
-      // Full rebuild mode → no need for block reference, but set to epoch for consistency
-      referenceDate = new Date(0)
+      if (latestIndexedBlock) {
+        const referenceBlock = await provider.getBlock(Number(latestIndexedBlock.block_id))
+        if (!referenceBlock) throw new Error("RPC: reference block not found")
+        referenceDate = new Date(referenceBlock.timestamp * 1000)
+      }
     }
+
+    const select = {
+      id: true,
+      task_id: true,
+      user_address: true,
+      amount: true,
+      start: true,
+      closed: true,
+    } as const
 
     if (isFreshDB) {
       // FULL mode → grab all user_tasks
       return this.prismaClient.user_tasks.findMany({
-        select: {
-          id: true,
-          task_id: true,
-          user_address: true,
-          amount: true,
-          start: true,
-          closed: true,
-        },
-        orderBy: { start: "desc" },
-      })
-    } else {
-      // INCREMENTAL mode → open tasks or closed after reference date
-      return this.prismaClient.user_tasks.findMany({
-        where: {
-          OR: [
-            { closed: null }, // still open
-            { closed: { gt: referenceDate } }, // closed after block
-          ],
-        },
-        select: {
-          id: true,
-          task_id: true,
-          user_address: true,
-          amount: true,
-          start: true,
-          closed: true,
-        },
+        select,
         orderBy: { start: "desc" },
       })
     }
+
+    // INCREMENTAL mode → open tasks or closed after on-chain reference time
+    return this.prismaClient.user_tasks.findMany({
+      where: {
+        OR: [
+          { closed: null }, // still open
+          { closed: { gt: referenceDate } }, // closed after reference block time
+        ],
+      },
+      select,
+      orderBy: { start: "desc" },
+    })
   }
 
   // Helper: block time at or before startBlock

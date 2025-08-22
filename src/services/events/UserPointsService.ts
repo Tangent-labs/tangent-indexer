@@ -1,4 +1,4 @@
-import { Log } from "ethers"
+import { JsonRpcProvider, Log } from "ethers"
 import { Prisma } from "@prisma/client"
 import { UserPointsRepository } from "db/UserPointsRepository"
 import { parseTransferEvent } from "../../eventFectcher/marketUserEvents.parsers"
@@ -225,16 +225,17 @@ export class UserPointsService {
     return await this.userPointsRepository.computeTokenPriceForTask(currentTasks)
   }
 
-  computeTimeRangeForOpenUserTasks = async (blockId: number, nowBlockTimestamp: number) => {
-    const tasks = await this.userPointsRepository.fetchTasksToComputeRangeFor(blockId)
+  computeTimeRangeForOpenUserTasks = async (blockId: number, nowBlockTimestamp: number, provider: JsonRpcProvider) => {
+    const tasks = await this.userPointsRepository.fetchTasksToComputeRangeFor(blockId, provider)
 
     const now = new Date(nowBlockTimestamp * 1000)
 
     return tasks.map((task) => {
       const endDate = task.closed ?? now
+      const secondsDiff = Math.floor((endDate.getTime() - task.start.getTime()) / 1000)
       return {
         ...task,
-        timeRangeSeconds: Math.max(Math.floor((endDate.getTime() - task.start.getTime()) / 1000), 0),
+        timeRangeSeconds: Math.max(secondsDiff, 0),
       }
     })
   }
