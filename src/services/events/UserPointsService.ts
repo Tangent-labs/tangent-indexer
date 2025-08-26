@@ -7,6 +7,15 @@ export type SortedEvents = {
   Transfer: Prisma.transfer_eventsUncheckedCreateInput[]
 }
 
+type TaskPoolItem = {
+  id: bigint
+  task_id: bigint
+  user_address: string
+  start: Date
+  amount: string
+  closed: Date | null
+}
+
 export class UserPointsService {
   userPointsRepository: UserPointsRepository
 
@@ -26,7 +35,7 @@ export class UserPointsService {
     start: Date,
     amount: string,
     createdIndexByKey: Map<string, number>,
-    tasksToCreate: Prisma.user_tasksUncheckedCreateInput[],
+    taskPool: TaskPoolItem[],
     openTaskMap: Map<
       string,
       {
@@ -39,25 +48,19 @@ export class UserPointsService {
       }
     >
   ) => {
-    const newTask: Prisma.user_tasksUncheckedCreateInput = {
+    const newTask: TaskPoolItem = {
+      id: 0n, // synthetic
       task_id: taskId,
       user_address: userAddress,
       start,
       amount,
       closed: null,
     }
-    const idx = tasksToCreate.push(newTask) - 1
+
+    const idx = taskPool.push(newTask) - 1
     createdIndexByKey.set(`${userAddress}_${taskId}_${start.getTime()}`, idx)
 
-    // Also put it into the map so later events see it
-    openTaskMap.set(`${userAddress}_${taskId}`, {
-      id: BigInt(0), // synthetic
-      task_id: taskId,
-      user_address: userAddress,
-      start,
-      amount,
-      closed: null,
-    })
+    openTaskMap.set(`${userAddress}_${taskId}`, newTask)
   }
 
   updateTasks = async (
@@ -67,11 +70,9 @@ export class UserPointsService {
       token: { address: string }
     }[]
   ) => {
-    const tasksToClose: { id: bigint; closed: Date }[] = []
-    const tasksToCreate: Prisma.user_tasksUncheckedCreateInput[] = []
-    const createdIndexByKey = new Map<string, number>() // maps synthetic key -> index in tasksToCreate
+    const taskPool: TaskPoolItem[] = []
+    const createdIndexByKey = new Map<string, number>()
 
-    // Preload open tasks from DB
     const allUserAddresses = new Set<string>()
     relevantEvents.forEach((event) => {
       if (event.from) allUserAddresses.add(event.from.toLowerCase())
@@ -81,8 +82,18 @@ export class UserPointsService {
     const allTaskIds = tasks.map((task) => task.id)
     const openUserTasks = await this.userPointsRepository.getOpenedTasks(Array.from(allUserAddresses), allTaskIds)
 
-    // Map key: `${user}_${taskId}` -> open task
-    const openTaskMap = new Map<string, (typeof openUserTasks)[0]>()
+    const openTaskMap = new Map<
+      string,
+      {
+        id: bigint
+        task_id: bigint
+        user_address: string
+        start: Date
+        amount: string
+        closed: Date | null
+      }
+    >()
+
     for (const openUserTask of openUserTasks) {
       const key = `${openUserTask.user_address.toLowerCase()}_${openUserTask.task_id}`
       openTaskMap.set(key, openUserTask)
@@ -105,15 +116,27 @@ export class UserPointsService {
         const openTask = openTaskMap.get(key)
 
         if (openTask) {
-          // Close the open task
-          if (openTask.id !== BigInt(0)) {
-            // From DB
-            tasksToClose.push({ id: openTask.id, closed: new Date(event.block_date) })
+          const closedAt = new Date(event.block_date)
+
+          if (openTask.id !== 0n) {
+            // Close existing task in DB
+            taskPool.push({
+              id: openTask.id,
+              task_id: openTask.task_id,
+              user_address: openTask.user_address,
+              start: openTask.start,
+              amount: openTask.amount,
+              closed: closedAt,
+            })
           } else {
-            // Created earlier in this same batch
             const idx = createdIndexByKey.get(`${userAddress}_${task.id}_${openTask.start.getTime()}`)
             if (idx !== undefined) {
-              tasksToCreate[idx].closed = new Date(event.block_date)
+              // Close in memory created task
+              taskPool[idx].closed = closedAt
+            } else {
+              // should never happen
+              // maybe we should throw an error here...?
+              openTask.closed = closedAt
             }
           }
 
@@ -123,21 +146,22 @@ export class UserPointsService {
           const newAmount = isSender ? currentAmount - delta : currentAmount + delta
 
           if (newAmount !== 0) {
-            this.createAndTrack(userAddress, task.id, new Date(event.block_date), newAmount.toString(), createdIndexByKey, tasksToCreate, openTaskMap)
+            this.createAndTrack(userAddress, task.id, new Date(event.block_date), newAmount.toString(), createdIndexByKey, taskPool, openTaskMap)
           } else {
             openTaskMap.delete(key)
           }
         } else {
           // No open task exists → create one
-          this.createAndTrack(userAddress, task.id, new Date(event.block_date), event.amount, createdIndexByKey, tasksToCreate, openTaskMap)
+          this.createAndTrack(userAddress, task.id, new Date(event.block_date), event.amount, createdIndexByKey, taskPool, openTaskMap)
         }
       }
     }
 
+    const tasksToClose = taskPool.filter((t) => t.id !== 0n && t.closed !== null).map((t) => ({ id: t.id, closed: t.closed as Date }))
+    const tasksToCreate = taskPool.filter((t) => t.id === 0n)
+
     await this.userPointsRepository.updateProcessedTasks(tasksToClose, tasksToCreate)
   }
-
-  //
 
   /**
    *
