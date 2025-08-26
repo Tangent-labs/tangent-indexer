@@ -393,32 +393,31 @@ export class UserPointsRepository extends AbstractRepository {
   }
 
   updateProcessedTasks = async (tasksToClose: { id: bigint; closed: Date }[], tasksToCreate: Prisma.user_tasksUncheckedCreateInput[]) => {
-    if (tasksToClose.length > 0) {
-      const caseClauses = tasksToClose
-        .map(({ id, closed }) => {
-          const timeInSeconds = Math.floor(closed.getTime() / 1000)
-          return `WHEN ${id.toString()} THEN (to_timestamp(${timeInSeconds}) AT TIME ZONE 'UTC')`
-        })
-        .join(" ")
-
+    if (tasksToClose.length) {
       const ids = tasksToClose.map(({ id }) => id.toString()).join(",")
+      const closedEpoch = tasksToClose.map((t) => Math.floor(t.closed.getTime() / 1000))
 
-      const sql = `
-    UPDATE "points"."user_tasks"
-    SET "closed" = CASE "id"
-      ${caseClauses}
-      ELSE "closed"
-    END
-    WHERE "id" IN (${ids});
-  `
-
-      await (this.prismaClient as Prisma.TransactionClient).$executeRawUnsafe(sql)
+      await (this.prismaClient as Prisma.TransactionClient).$executeRawUnsafe(
+        `
+      UPDATE "points"."user_tasks" AS u
+      SET "closed" = v.closed
+      FROM (
+        SELECT
+          (unnest($1::text[]))::bigint AS id,
+          (to_timestamp(unnest($2::bigint[])) AT TIME ZONE 'UTC') AS closed
+      ) AS v
+      WHERE u.id = v.id
+        AND (u."closed" IS DISTINCT FROM v.closed);
+      `,
+        ids,
+        closedEpoch
+      )
     }
 
-    if (tasksToCreate.length > 0) {
+    if (tasksToCreate.length) {
       await (this.prismaClient as Prisma.TransactionClient).user_tasks.createMany({
         data: tasksToCreate,
-        skipDuplicates: false,
+        skipDuplicates: true,
       })
     }
   }
