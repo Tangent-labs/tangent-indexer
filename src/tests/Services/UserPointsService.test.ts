@@ -197,7 +197,7 @@ describe("UserPointsService.updateTasks", () => {
     expect(tasksToCreate).toHaveLength(0)
   })
 
-  it("Open 1 task when no open tasks exist", async () => {
+  it("Open 1 task for the user when no open tasks exist", async () => {
     const newEvent = {
       id: 2954n,
       token_address: USG,
@@ -229,7 +229,7 @@ describe("UserPointsService.updateTasks", () => {
     expect(((tasksToCreate as Array<any>)[0] as any).closed).toBeNull()
   })
 
-  it("Open 1 task and close an existing one", async () => {
+  it("Open 1 new task for the user and close an existing one", async () => {
     const newEvent = {
       id: 2954n,
       token_address: USG,
@@ -269,7 +269,7 @@ describe("UserPointsService.updateTasks", () => {
     expect(((tasksToCreate as Array<any>)[0] as any).closed).toBeNull()
   })
 
-  it("Open 0 new task and close the existing one", async () => {
+  it("Open 0 new task for the user and close the existing one", async () => {
     const newEvent = {
       id: 2954n,
       token_address: USG,
@@ -299,6 +299,69 @@ describe("UserPointsService.updateTasks", () => {
     const [tasksToClose, tasksToCreate] = updateProcessedTasksSpy.mock.calls[0]
 
     expect(tasksToClose).toEqual([{ id: openedTask.id, closed: new Date(newEvent?.block_date) }])
+
     expect(tasksToCreate).toHaveLength(1)
+    expect((tasksToCreate as Array<any>)[0]).toMatchObject({
+      user_address: OXZERO.toLowerCase(),
+      task_id: openedTask.task_id,
+      start: new Date(newEvent?.block_date),
+      amount: "2000000000000000000000",
+    })
+  })
+
+  it("Close one existing task, create a newly opened task closed within the batch, and open 1 new task", async () => {
+    const firstEvent = {
+      id: 2954n,
+      token_address: USG,
+      from: OXZERO,
+      to: USER,
+      amount: "2000000000000000000000",
+      block_date: "2025-08-26T08:23:45.000Z",
+      block_id: 23224248,
+      tx_hash: "0x6cd7bf047d9b6180500e4969b69484cc2ca0255620dd75887462db727e92bc83",
+    }
+
+    const secondEvent = {
+      id: 2955n,
+      token_address: USG,
+      from: OXZERO,
+      to: USER,
+      amount: "1500000000000000000000",
+      block_date: "2025-08-26T08:32:45.000Z",
+      block_id: 23224249,
+      tx_hash: "0x6cd7bf047d9b6180500e4969b69484cc2ca0255620dd75887462dbTE6392bc83",
+    }
+
+    const openedTask = {
+      id: 2953n,
+      task_id: 906n,
+      user_address: USER,
+      amount: "1000000000000000000000",
+      start: "2025-08-26T08:07:45.000Z",
+      closed: null,
+    }
+
+    getOpenedTasksSpy.mockResolvedValue([openedTask])
+
+    await userPointsService.updateTasks([firstEvent, secondEvent], [{ id: openedTask.task_id, token: { address: USG } }])
+
+    expect(userPointsRepository.getOpenedTasks).toHaveBeenCalledWith([OXZERO.toLowerCase(), USER.toLowerCase()], [openedTask.task_id])
+
+    const [tasksToClose, tasksToCreate] = updateProcessedTasksSpy.mock.calls[0]
+
+    expect(tasksToClose).toEqual([{ id: openedTask.id, closed: new Date(firstEvent?.block_date) }])
+    expect(tasksToCreate).toHaveLength(4)
+    expect((tasksToCreate as Array<any>)[1]).toMatchObject({
+      user_address: USER.toLowerCase(),
+      task_id: openedTask.task_id,
+      start: new Date(firstEvent?.block_date),
+      amount: "3e+21",
+    })
+    expect((tasksToCreate as Array<any>)[3]).toMatchObject({
+      user_address: USER.toLowerCase(),
+      task_id: openedTask.task_id,
+      start: new Date(secondEvent?.block_date),
+      amount: "4.5e+21",
+    })
   })
 })
