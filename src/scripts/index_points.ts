@@ -7,6 +7,7 @@ import { BlockService } from "../services/BlockService"
 import { UserEventsRepository } from "db/UserEventsRepository"
 import { UserPointsRepository } from "db/UserPointsRepository"
 import { UserPointsService } from "services/events/UserPointsService"
+import { indexerConfig } from "config/indexer_config"
 
 dotenv.config()
 
@@ -21,7 +22,7 @@ async function main() {
       return
     }
 
-    const { startBlock, endBlock, actualBlock, bestProvider } = blockInfo
+    const { startBlock, endBlock, actualBlock, bestProviderIndex } = blockInfo
 
     if (startBlock && endBlock) {
       console.log("indexing :", startBlock, "<----------------->", endBlock)
@@ -32,24 +33,13 @@ async function main() {
 
           await userPointsService.updateUserTasks(startBlock)
 
-          // Pour (chaque tâche ouverte) ET (chaque tâche fermée après le startBlock)
-          // Calculer la time range (en fonction de l'unité)
-          const nowBlockTimestamp = await blockService.getLatestBlockTimestamp(bestProvider)
+          // Process points calculation for user tasks
+          await userPointsService.processUserPoints(startBlock, endBlock, blockService, indexerConfig.provider.chainRpc[bestProviderIndex])
 
-          const currentTasks = await userPointsService.computeTimeRangeForOpenUserTasks(startBlock, nowBlockTimestamp, bestProvider)
+          // Handle godfather points
+          await userPointsService.handleGodfatherPoints(startBlock, endBlock)
 
-          // Récupérer le prix le plus proche du blockStart dans la table price_feed
-          const upgradedTasks = await userPointsService.computeTokenPriceForTask(currentTasks)
-
-          // Récupérer le boost le plus proche du blockStart dans la table boost
-          const tasksWithBoosts = await userPointsService.computeClosestBoostForTasks(upgradedTasks, nowBlockTimestamp)
-
-          // Calculer le nbr de pts sur la période // +- BOOST
-          const tasksWithPoints = await userPointsService.computePointsForTasks(tasksWithBoosts)
-
-          // Insert user referral points and then user points
-          await userPointsService.bulkUpsertUserPoints(startBlock, tasksWithPoints, bestProvider)
-
+          // Update block logic
           await blockService.updateLastEventBlockIndexed(endBlock)
         },
         {

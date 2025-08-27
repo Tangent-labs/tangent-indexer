@@ -83,7 +83,7 @@ describe("LiquidationService", () => {
       // Test when database check fails
       mockBlockRepository.getLastBlockIndexed.mockRejectedValueOnce(new Error("DB connection failed"))
       await liquidationService.checkContext()
-      expect(liquidationService.context.isDbAlive).toBe(true)
+      expect(liquidationService.context.isDbAlive).toBe(false)
 
       // Test when database check succeeds
       mockBlockRepository.getLastBlockIndexed.mockResolvedValueOnce(1000)

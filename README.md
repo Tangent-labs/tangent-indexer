@@ -139,3 +139,13 @@ flowchart TD
 ```
 
 ## Snapshot Vote ( TODO )
+
+## Seeds
+
+`npm run tangent:feed-tokens`
+`npm run tangent:feed-tasks`
+
+Then deploy & context on contracts
+
+`npm run tangent:indexer-block`
+`npm run tangent:indexer-points`
