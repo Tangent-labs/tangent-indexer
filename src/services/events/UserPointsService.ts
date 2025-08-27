@@ -2,6 +2,7 @@ import { JsonRpcProvider, Log } from "ethers"
 import { Prisma } from "@prisma/client"
 import { UserPointsRepository } from "db/UserPointsRepository"
 import { parseTransferEvent } from "../../eventFectcher/marketUserEvents.parsers"
+import { BlockService } from "../BlockService"
 
 export type SortedEvents = {
   Transfer: Prisma.transfer_eventsUncheckedCreateInput[]
@@ -140,6 +141,8 @@ export class UserPointsService {
         }
       }
     }
+    // const taskToclose= openTaskMap.values().filter((t) => t.closed !== null && id!==Bigint(0))
+    // const tasksToCreate= openTaskMap.values().filter((t) => id===Bigint(0))
 
     const tasksToClose = taskPool.filter((t) => t.id !== 0n && t.closed !== null).map((t) => ({ id: t.id, closed: t.closed as Date }))
 
@@ -271,6 +274,50 @@ export class UserPointsService {
     await this.updateTasks(relevantEvents, tasks)
   }
 
+  processUserPoints = async (startBlock: number, endBlock: number, blockService: BlockService, providerURL: string) => {
+    const [dateStartStr, dateEndStr] = Object.values(await blockService.fetchBlockTimestamps([startBlock, endBlock], providerURL))
+
+    const dateStart = new Date(dateStartStr * 1000)
+    const dateEnd = new Date(dateEndStr * 1000)
+
+    await this.userPointsRepository.computeUserPoints(dateStart, dateEnd)
+
+    await this._computeUserBoost(dateStart, dateEnd)
+  }
+
+  _computeUserBoost = async (startDate: Date, endDate: Date) => {}
+
+  /**
+   * Process points calculation for user tasks
+   * This method handles the complete flow:
+   * 1. Get latest block timestamp
+   * 2. Compute time range for open user tasks
+   * 3. Compute token price for tasks
+   * 4. Compute closest boost for tasks
+   * 5. Compute points for tasks
+   * 6. Bulk upsert user points
+   */
+  processPointsOLD = async (startBlock: number, blockService: BlockService, bestProvider: JsonRpcProvider) => {
+    // Pour (chaque tâche ouverte) ET (chaque tâche fermée après le startBlock)
+    // Calculer la time range (en fonction de l'unité)
+    const nowBlockTimestamp = await blockService.getLatestBlockTimestamp(bestProvider)
+
+    // Récupérer les tâches ouvertes et fermées après le startBlock
+    const currentTasks = await this.computeTimeRangeForOpenUserTasks(startBlock, nowBlockTimestamp, bestProvider)
+
+    // Récupérer le prix le plus proche du blockStart dans la table price_feed
+    const upgradedTasks = await this.computeTokenPriceForTask(currentTasks)
+
+    // Récupérer le boost le plus proche du blockStart dans la table boost
+    const tasksWithBoosts = await this.computeClosestBoostForTasks(upgradedTasks, nowBlockTimestamp)
+
+    // Calculer le nbr de pts sur la période // +- BOOST
+    const tasksWithPoints = await this.computePointsForTasks(tasksWithBoosts)
+
+    // Insert user referral points and then user points
+    await this.bulkUpsertUserPoints(startBlock, tasksWithPoints, bestProvider)
+  }
+
   insertEvents = async (sortedParsedEvents: SortedEvents) => {
     await this.userPointsRepository.insertTransfers(sortedParsedEvents.Transfer)
   }
@@ -303,5 +350,9 @@ export class UserPointsService {
     })
 
     return { sortedAndParsedPointsEvents, pointsEventsBlockIds: Array.from(uniqueBlockId) }
+  }
+
+  handleGodfatherPoints(startBlock: number, endBlock: number) {
+    // TODO: handle godfather points
   }
 }

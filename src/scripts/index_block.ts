@@ -50,7 +50,7 @@ async function main() {
           const transferToWatch = await userPointsService.getERC20ToTrack()
 
           // Call fetchTransferLogs with the addresses
-          const transferLogs = await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch)
+          const transferLogs = transferToWatch?.length ? await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch) : []
 
           // Parse events with their proper topics and group all user events to update active borrowers
           const { activeBorrowActions, sortedAndParsedEvents, blockIds } = userMarketService.sortUserMarketLogs(logs, mapMarketIdAddresses)

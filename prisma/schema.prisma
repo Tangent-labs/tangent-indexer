@@ -448,6 +448,7 @@ model user_points {
   user_task_id BigInt     @unique
   user_task    user_tasks @relation(fields: [user_task_id], references: [id])
   points       Int
+  booster_points       Int
 
   @@index([task_id, user_address])
   @@schema("points")
