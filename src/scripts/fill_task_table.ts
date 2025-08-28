@@ -10,15 +10,13 @@ async function seedTasks() {
         name: "USG",
         action_type: "hold",
         protocol: "tangent",
-        token_address: "0x9b894B86F16EC30656aB6dd51e0fD620e70f630b".toLowerCase(),
+        token_address: "0x6d7EFb67236AaAeC2005ec704Bf5d755dd0703c4".toLowerCase(),
         point_rate: 1.5,
         unit: "hour",
         description: "Hold USG in your wallet",
-        url: "https://curve.fi/deposit", // if you have a better USG page, swap it in
+        url: "https://curve.fi/deposit",
         is_active: true,
       },
-
-      // Curve USDe/USDC — LP in wallet
       {
         name: "USDe_USDC",
         action_type: "LP",
@@ -30,7 +28,6 @@ async function seedTasks() {
         url: "https://curve.fi/",
         is_active: true,
       },
-      // Curve USDe/USDC — staked in Curve gauge
       {
         name: "USDe_USDC",
         action_type: "LP",
@@ -42,8 +39,6 @@ async function seedTasks() {
         url: "https://curve.fi/",
         is_active: true,
       },
-
-      // Curve crvUSD/USDC — LP in wallet
       {
         name: "crvUSD_USDC",
         action_type: "LP",
@@ -55,7 +50,6 @@ async function seedTasks() {
         url: "https://curve.fi/",
         is_active: true,
       },
-      // StakeDAO crvUSD/USDC — staked in StakeDAO gauge
       {
         name: "crvUSD_USDC",
         action_type: "LP",
@@ -67,8 +61,6 @@ async function seedTasks() {
         url: "https://www.stakedao.org/",
         is_active: true,
       },
-
-      // Curve crvUSD/USDT — LP in wallet
       {
         name: "crvUSD-USDT",
         action_type: "LP",
@@ -80,7 +72,6 @@ async function seedTasks() {
         url: "https://curve.fi/",
         is_active: true,
       },
-      // StakeDAO crvUSD/USDT — staked in StakeDAO gauge
       {
         name: "crvUSD-USDT",
         action_type: "LP",
