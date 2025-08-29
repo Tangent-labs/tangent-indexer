@@ -37,7 +37,7 @@ async function main() {
           await userPointsService.processUserPoints(startBlock, endBlock, blockService, indexerConfig.provider.chainRpc[bestProviderIndex])
 
           // Handle godfather points
-          await userPointsService.handleGodfatherPoints(startBlock, endBlock)
+          await userPointsService.processGodfatherPoints()
 
           // Update block logic
           await blockService.updateLastEventBlockIndexed(endBlock)

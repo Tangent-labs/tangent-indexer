@@ -1,8 +1,8 @@
-import { JsonRpcProvider, Log } from "ethers"
 import { Prisma } from "@prisma/client"
 import { UserPointsRepository } from "db/UserPointsRepository"
 import { parseTransferEvent } from "../../eventFectcher/marketUserEvents.parsers"
 import { BlockService } from "../BlockService"
+import { Log } from "ethers"
 
 export type SortedEvents = {
   Transfer: Prisma.transfer_eventsUncheckedCreateInput[]
@@ -281,7 +281,9 @@ export class UserPointsService {
     const dateEnd = new Date(dateEndStr * 1000)
 
     await this.userPointsRepository.computeUserPoints(dateStart, dateEnd)
+  }
 
+  processGodfatherPoints = async () => {
     await this.userPointsRepository.computeGodfatherPoints()
   }
 
@@ -317,9 +319,5 @@ export class UserPointsService {
     })
 
     return { sortedAndParsedPointsEvents, pointsEventsBlockIds: Array.from(uniqueBlockId) }
-  }
-
-  handleGodfatherPoints(startBlock: number, endBlock: number) {
-    // TODO: handle godfather points
   }
 }
