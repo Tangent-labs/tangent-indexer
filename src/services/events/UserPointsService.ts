@@ -7,6 +7,15 @@ export type SortedEvents = {
   Transfer: Prisma.transfer_eventsUncheckedCreateInput[]
 }
 
+type TaskPoolItem = {
+  id: bigint
+  task_id: bigint
+  user_address: string
+  start: Date
+  amount: string
+  closed: Date | null
+}
+
 export class UserPointsService {
   userPointsRepository: UserPointsRepository
 
@@ -26,7 +35,7 @@ export class UserPointsService {
     start: Date,
     amount: string,
     createdIndexByKey: Map<string, number>,
-    tasksToCreate: Prisma.user_tasksUncheckedCreateInput[],
+    taskPool: TaskPoolItem[],
     openTaskMap: Map<
       string,
       {
@@ -39,25 +48,19 @@ export class UserPointsService {
       }
     >
   ) => {
-    const newTask: Prisma.user_tasksUncheckedCreateInput = {
+    const newTask: TaskPoolItem = {
+      id: 0n, // synthetic
       task_id: taskId,
       user_address: userAddress,
       start,
       amount,
       closed: null,
     }
-    const idx = tasksToCreate.push(newTask) - 1
+
+    const idx = taskPool.push(newTask) - 1
     createdIndexByKey.set(`${userAddress}_${taskId}_${start.getTime()}`, idx)
 
-    // Also put it into the map so later events see it
-    openTaskMap.set(`${userAddress}_${taskId}`, {
-      id: BigInt(0), // synthetic
-      task_id: taskId,
-      user_address: userAddress,
-      start,
-      amount,
-      closed: null,
-    })
+    openTaskMap.set(`${userAddress}_${taskId}`, newTask)
   }
 
   updateTasks = async (
@@ -67,25 +70,22 @@ export class UserPointsService {
       token: { address: string }
     }[]
   ) => {
-    const tasksToClose: { id: bigint; closed: Date }[] = []
-    const tasksToCreate: Prisma.user_tasksUncheckedCreateInput[] = []
-    const createdIndexByKey = new Map<string, number>() // maps synthetic key -> index in tasksToCreate
+    const taskPool: TaskPoolItem[] = []
 
-    // Preload open tasks from DB
     const allUserAddresses = new Set<string>()
     relevantEvents.forEach((event) => {
       if (event.from) allUserAddresses.add(event.from.toLowerCase())
       if (event.to) allUserAddresses.add(event.to.toLowerCase())
     })
 
-    const allTaskIds = tasks.map((task) => task.id)
-    const openUserTasks = await this.userPointsRepository.getOpenedTasks(Array.from(allUserAddresses), allTaskIds)
+    const openUserTasks = await this.userPointsRepository.getOpenedTasks(
+      Array.from(allUserAddresses),
+      tasks.map((task) => task.id)
+    )
 
-    // Map key: `${user}_${taskId}` -> open task
-    const openTaskMap = new Map<string, (typeof openUserTasks)[0]>()
+    // Add all open tasks from DB to taskPool
     for (const openUserTask of openUserTasks) {
-      const key = `${openUserTask.user_address.toLowerCase()}_${openUserTask.task_id}`
-      openTaskMap.set(key, openUserTask)
+      taskPool.push(openUserTask as TaskPoolItem)
     }
 
     for (const event of relevantEvents) {
@@ -99,45 +99,65 @@ export class UserPointsService {
       for (const userAddressRaw of [event.from, event.to]) {
         if (!userAddressRaw) continue
         const userAddress = userAddressRaw.toLowerCase()
-        const key = `${userAddress}_${task.id}`
         const isSender = userAddress === event.from?.toLowerCase()
 
-        const openTask = openTaskMap.get(key)
+        // Find open task in taskPool
+        const openTask = taskPool.find((t) => t.user_address.toLowerCase() === userAddress && t.task_id === task.id && t.closed === null)
+
+        if (!openTask) {
+          taskPool.push({
+            id: 0n, // synthetic
+            task_id: task.id,
+            user_address: userAddress,
+            start: new Date(event.block_date),
+            amount: event.amount,
+            closed: null,
+          })
+          continue
+        }
 
         if (openTask) {
-          // Close the open task
-          if (openTask.id !== BigInt(0)) {
-            // From DB
-            tasksToClose.push({ id: openTask.id, closed: new Date(event.block_date) })
-          } else {
-            // Created earlier in this same batch
-            const idx = createdIndexByKey.get(`${userAddress}_${task.id}_${openTask.start.getTime()}`)
-            if (idx !== undefined) {
-              tasksToCreate[idx].closed = new Date(event.block_date)
-            }
-          }
+          const closedAt = new Date(event.block_date)
+          // Close the existing task
+          openTask.closed = closedAt
 
-          // Calculate new amount and open a new task if needed
+          // Calculate new amount and create a new task if needed
           const currentAmount = Number(openTask.amount)
           const delta = Number(event.amount)
           const newAmount = isSender ? currentAmount - delta : currentAmount + delta
 
           if (newAmount !== 0) {
-            this.createAndTrack(userAddress, task.id, new Date(event.block_date), newAmount.toString(), createdIndexByKey, tasksToCreate, openTaskMap)
-          } else {
-            openTaskMap.delete(key)
+            // Create new open task
+            taskPool.push({
+              id: 0n, // synthetic
+              task_id: task.id,
+              user_address: userAddress,
+              start: new Date(event.block_date),
+              amount: newAmount.toString(),
+              closed: null,
+            })
           }
-        } else {
-          // No open task exists → create one
-          this.createAndTrack(userAddress, task.id, new Date(event.block_date), event.amount, createdIndexByKey, tasksToCreate, openTaskMap)
         }
       }
     }
 
+    const tasksToClose = taskPool.filter((t) => t.id !== 0n && t.closed !== null).map((t) => ({ id: t.id, closed: t.closed as Date }))
+
+    // Remove "ids=0n" for prisma not to push them
+    const tasksToCreate = taskPool
+      .filter((t) => t.id === 0n)
+      .map((el) => {
+        return {
+          task_id: el.task_id,
+          user_address: el.user_address,
+          start: el.start,
+          closed: el.closed,
+          amount: el.amount,
+        }
+      })
+
     await this.userPointsRepository.updateProcessedTasks(tasksToClose, tasksToCreate)
   }
-
-  //
 
   /**
    *

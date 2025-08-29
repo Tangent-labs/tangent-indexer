@@ -393,26 +393,17 @@ export class UserPointsRepository extends AbstractRepository {
   }
 
   updateProcessedTasks = async (tasksToClose: { id: bigint; closed: Date }[], tasksToCreate: Prisma.user_tasksUncheckedCreateInput[]) => {
-    if (tasksToClose.length > 0) {
-      const caseClauses = tasksToClose
-        .map(({ id, closed }) => {
-          const timeInSeconds = Math.floor(closed.getTime() / 1000)
-          return `WHEN ${id.toString()} THEN (to_timestamp(${timeInSeconds}) AT TIME ZONE 'UTC')`
-        })
-        .join(" ")
+    if (tasksToClose.length) {
+      const queryParam = tasksToClose.map((t) => `(${t.id}::bigint, '${t.closed.toISOString()}'::timestamptz AT TIME ZONE 'UTC')`)
 
-      const ids = tasksToClose.map(({ id }) => id.toString()).join(",")
-
-      const sql = `
-    UPDATE "points"."user_tasks"
-    SET "closed" = CASE "id"
-      ${caseClauses}
-      ELSE "closed"
-    END
-    WHERE "id" IN (${ids});
-  `
-
-      await (this.prismaClient as Prisma.TransactionClient).$executeRawUnsafe(sql)
+      await (this.prismaClient as Prisma.TransactionClient).$executeRawUnsafe(`
+        UPDATE points.user_tasks ut
+        SET closed = v.closed
+        FROM (VALUES
+          ${queryParam.join(",")}
+        ) AS v(id, closed)
+        WHERE ut.id = v.id;
+      `)
     }
 
     if (tasksToCreate.length > 0) {
