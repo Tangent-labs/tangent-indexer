@@ -52,8 +52,9 @@ export class LiquidationService {
     // try the database connectivty
     try {
       await blockRepository.getLastBlockIndexed()
-    } catch (error) {
       this.context.isDbAlive = true
+    } catch (error) {
+      this.context.isDbAlive = false
     }
     // this.context.isDbAlive = false
     // TODO : check the RPCs , and set the rpcIndex on context

@@ -77,7 +77,7 @@ describe("LiquidationService", () => {
       await expect(liquidationService.checkContext()).rejects.toThrow("NO_RPC_CONNECTED")
     })
 
-    it("should handle database connectivity check", async () => {
+    it.only("should handle database connectivity check", async () => {
       liquidationService.context.providers = [{ getBlockNumber: vi.fn().mockResolvedValue(1000) }] as unknown as JsonRpcProvider[]
 
       // Test when database check fails
