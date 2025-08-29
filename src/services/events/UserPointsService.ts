@@ -282,40 +282,7 @@ export class UserPointsService {
 
     await this.userPointsRepository.computeUserPoints(dateStart, dateEnd)
 
-    await this._computeUserBoost(dateStart, dateEnd)
-  }
-
-  _computeUserBoost = async (startDate: Date, endDate: Date) => {}
-
-  /**
-   * Process points calculation for user tasks
-   * This method handles the complete flow:
-   * 1. Get latest block timestamp
-   * 2. Compute time range for open user tasks
-   * 3. Compute token price for tasks
-   * 4. Compute closest boost for tasks
-   * 5. Compute points for tasks
-   * 6. Bulk upsert user points
-   */
-  processPointsOLD = async (startBlock: number, blockService: BlockService, bestProvider: JsonRpcProvider) => {
-    // Pour (chaque tâche ouverte) ET (chaque tâche fermée après le startBlock)
-    // Calculer la time range (en fonction de l'unité)
-    const nowBlockTimestamp = await blockService.getLatestBlockTimestamp(bestProvider)
-
-    // Récupérer les tâches ouvertes et fermées après le startBlock
-    const currentTasks = await this.computeTimeRangeForOpenUserTasks(startBlock, nowBlockTimestamp, bestProvider)
-
-    // Récupérer le prix le plus proche du blockStart dans la table price_feed
-    const upgradedTasks = await this.computeTokenPriceForTask(currentTasks)
-
-    // Récupérer le boost le plus proche du blockStart dans la table boost
-    const tasksWithBoosts = await this.computeClosestBoostForTasks(upgradedTasks, nowBlockTimestamp)
-
-    // Calculer le nbr de pts sur la période // +- BOOST
-    const tasksWithPoints = await this.computePointsForTasks(tasksWithBoosts)
-
-    // Insert user referral points and then user points
-    await this.bulkUpsertUserPoints(startBlock, tasksWithPoints, bestProvider)
+    await this.userPointsRepository.computeGodfatherPoints()
   }
 
   insertEvents = async (sortedParsedEvents: SortedEvents) => {
