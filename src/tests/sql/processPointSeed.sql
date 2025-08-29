@@ -111,7 +111,11 @@ INSERT INTO points.user_tasks (id, task_id, user_address, start, closed, amount)
 -- Booster: U3, second task Day2
 INSERT INTO points.user_boost (user_address, start_at, end_at, multiplier) VALUES
   ('0xU3','2025-01-06 16:00+00','2025-01-06 17:00+00',2.0),
-  ('0xU1','2025-01-08 00:00+00','2025-01-09 00:00+00',1.5);
+  ('0xU1','2025-01-08 00:00+00','2025-01-09 00:00+00',1.5),
+  -- Boost that covers only half of task 200010 period (starts at 14:00, boost from 16:00-18:00)
+  ('0xU1','2025-01-07 16:00+00','2025-01-07 18:00+00',2.5),
+  -- Second boost on the same task 200010 (overlapping/adjacent periods)
+  ('0xU1','2025-01-07 18:00+00','2025-01-07 20:00+00',1.8);
 
 
 -- Godfather: U2 -> U1

@@ -82,12 +82,20 @@ export class BlockService {
     return { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex }
   }
 
+  getBlockTimestamp = async (blockNumber: number, provider: JsonRpcProvider): Promise<number> => {
+    const block = await provider.getBlock(blockNumber)
+    if (!block) {
+      throw new Error("Could not fetch block")
+    }
+    return block.timestamp
+  }
+
   getLatestBlockTimestamp = async (provider: JsonRpcProvider): Promise<number> => {
     const latestBlock = await provider.getBlock("latest")
     if (!latestBlock) {
       throw new Error("Could not fetch latest block")
     }
-    return latestBlock.timestamp
+    return this.getBlockTimestamp(latestBlock.number, provider)
   }
 
   async fetchBlockTimestamps(blockNumbers: number[], providerURL: string) {
@@ -105,7 +113,7 @@ export class BlockService {
       headers: { "Content-Type": "application/json" },
     })
     const responses = res.data as BlockInfo[]
-
+    console.log("fetchBlockTimestamps", responses) // TODO: remove
     const timestampPerBlockId: Map<number, number> = new Map()
 
     responses.forEach((resp: BlockInfo) => {

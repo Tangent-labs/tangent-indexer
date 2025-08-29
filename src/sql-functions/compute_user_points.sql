@@ -60,38 +60,31 @@ AS $$
     FROM clip c
     WHERE c.seg_end > c.seg_start
   ),
-  -- Time-weighted average multiplier per segment from user_boost timeline
+  -- Calculate boost factor per segment by summing overlapping boosts
   seg_with_mult AS (
     SELECT
       sp.*,
       COALESCE(
         (
           SELECT SUM(
-                  GREATEST(
-                    EXTRACT(EPOCH FROM (
-                      LEAST(COALESCE(ub.end_at, p.end_at), sp.seg_end) -
-                      GREATEST(ub.start_at, sp.seg_start)
-                    )) / 3600.0,
-                    0
-                  ) * ub.multiplier
-                )
-                / NULLIF(SUM(
-                  GREATEST(
-                    EXTRACT(EPOCH FROM (
-                      LEAST(COALESCE(ub.end_at, p.end_at), sp.seg_end) -
-                      GREATEST(ub.start_at, sp.seg_start)
-                    )) / 3600.0,
-                    0
-                  )
-                ), 0)
+            GREATEST(
+              EXTRACT(EPOCH FROM (
+                LEAST(COALESCE(ub.end_at, sp.seg_end), sp.seg_end) -
+                GREATEST(ub.start_at, sp.seg_start)
+              )) / 3600.0,
+              0
+            ) * (ub.multiplier - 1.0)
+          ) / NULLIF(
+            EXTRACT(EPOCH FROM (sp.seg_end - sp.seg_start)) / 3600.0,
+            0
+          )
           FROM points.user_boost ub
-          CROSS JOIN params p
           WHERE ub.user_address = sp.user_address
             AND ub.start_at < sp.seg_end
-            AND COALESCE(ub.end_at, p.end_at) > sp.seg_start
+            AND COALESCE(ub.end_at, sp.seg_end) > sp.seg_start
         ),
-        1.0
-      ) AS tw_mult
+        0.0
+      ) AS boost_factor
     FROM seg_price sp
   ),
   -- Aggregate per user_task, compute base and booster points
@@ -101,26 +94,25 @@ AS $$
       swm.task_id,
       -- base points
       ROUND(SUM(
-        (swm.point_rate
+        swm.point_rate
         * (EXTRACT(EPOCH FROM (swm.seg_end - swm.seg_start)) / 3600.0)
         * COALESCE(swm.amount, 0)
         * COALESCE(swm.avg_price_usd, 0)
-        )
       ))::int AS points,
-      -- booster points = time-weighted multiplier minus 1 applied to the same base
+      -- booster points = base points * boost_factor
       ROUND(SUM(
-        (swm.point_rate
+        swm.point_rate
         * (EXTRACT(EPOCH FROM (swm.seg_end - swm.seg_start)) / 3600.0)
         * COALESCE(swm.amount, 0)
         * COALESCE(swm.avg_price_usd, 0)
-        ) * GREATEST(swm.tw_mult - 1.0, 0)
+        * swm.boost_factor
       ))::int AS booster_points
     FROM seg_with_mult swm
     GROUP BY swm.user_task_id, swm.task_id
   )
   UPDATE points.user_points up
-  SET points = pt.points,
-      booster_points = pt.booster_points
+  SET points = up.points + pt.points,
+      booster_points = up.booster_points + pt.booster_points
   FROM per_task pt
   WHERE up.user_task_id = pt.user_task_id
     AND up.task_id      = pt.task_id;
