@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client"
 import { UserPointsRepository } from "db/UserPointsRepository"
 import { parseTransferEvent } from "../../eventFectcher/marketUserEvents.parsers"
 import { BlockService } from "../BlockService"
-import { Log } from "ethers"
+import { JsonRpcProvider, Log } from "ethers"
 
 export type SortedEvents = {
   Transfer: Prisma.transfer_eventsUncheckedCreateInput[]
@@ -275,7 +275,11 @@ export class UserPointsService {
   }
 
   processUserPoints = async (startBlock: number, endBlock: number, blockService: BlockService, providerURL: string) => {
-    const [dateStartStr, dateEndStr] = Object.values(await blockService.fetchBlockTimestamps([startBlock, endBlock], providerURL))
+    const provider = new JsonRpcProvider(providerURL)
+    const [dateStartStr, dateEndStr] = await Promise.all([
+      blockService.getBlockTimestamp(startBlock, provider),
+      blockService.getBlockTimestamp(endBlock, provider),
+    ])
 
     const dateStart = new Date(dateStartStr * 1000)
     const dateEnd = new Date(dateEndStr * 1000)

@@ -46,6 +46,7 @@
 
 - **U1** (TASK1/TOKENA) `10:00–11:00`, **amount 1000**.
 - **U1** opens (TASK2/TOKENB) **from 14:00**, **amount 1500** (stays open).
+- **U1** has **boost ×2.5** from 16:00–18:00 and **boost ×1.8** from 18:00–20:00 on TOKENB task.
 - **U2** (TASK1/TOKENA) `12:00–13:00`, **amount 600**.
 - **U2** keeps long open (TASK1/TOKENA) all day, **amount 1000**.
 - **U4** (TASK2/TOKENB) `09:00–10:00`, **amount 1100**.
@@ -57,7 +58,10 @@
 - **U1/200003 (TOKENA 10–11)**: fallback **08:00 = $3.8**.
   → `10 × 1h × 1000 × 3.8 = 38 000` pts.
 - **U1/200010 (TOKENB 14–24 open segment today 10h)**: in-segment feeds **16:00 = $6.7**, **20:00 = $7.3** → avg **$7.0**.
-  → `15 × 10h × 1500 × 7.0 = 1 575 000` pts; booster **0** (starts tomorrow).
+  → Base: `15 × 10h × 1500 × 7.0 = 1 575 000` pts
+  → **Boost ×2.5** from 16:00–18:00 (2h): `15 × 2h × 1500 × 6.7 × 1.5 = 452 250` additional pts
+  → **Boost ×1.8** from 18:00–20:00 (2h): `15 × 2h × 1500 × 7.3 × 0.8 = 262 800` additional pts
+  → **Total with boosts: 2 290 050** pts
 - **U2/200005 (TOKENA 12–13)**: in-segment feed **12:00 = $4.2**.
   → `10 × 1h × 600 × 4.2 = 25 200` pts.
 - **U2/200012 (TOKENA 00–24)**: day-avg **$4.0** (feeds at 00/04/08/12/16/20).
@@ -73,6 +77,7 @@
 
 - **U1** (TASK1/TOKENA) opens `10:00–…`, **amount 2000**.
 - **U1** continues open (TASK2/TOKENB) all day (from yesterday 14:00), **amount 1500**.
+- **U1** boosts from Day 3 (16:00–20:00) have ended; only the ×1.5 all-day boost applies.
 - **U2** (TASK3/TOKENC) opens `12:00–…`, **amount 3000`** (**excluded**: unit = `vote`).
 - **U2** continues open (TASK1/TOKENA) all day, **amount 1000**.
 - **Booster**: **U1 has ×1.5** active all day.

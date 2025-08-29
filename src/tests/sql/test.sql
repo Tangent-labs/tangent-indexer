@@ -25,7 +25,7 @@ select * from points.user_points;
 SELECT points.insert_missing_user_points();
 SELECT points.compute_user_points(
   '2025-01-07 00:00:00+00'::timestamptz,
-  '2025-01-09 00:00:00+00'::timestamptz
+  '2025-01-08 00:00:00+00'::timestamptz
 );
 select * from points.user_points;
 
