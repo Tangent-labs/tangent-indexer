@@ -394,25 +394,16 @@ export class UserPointsRepository extends AbstractRepository {
 
   updateProcessedTasks = async (tasksToClose: { id: bigint; closed: Date }[], tasksToCreate: Prisma.user_tasksUncheckedCreateInput[]) => {
     if (tasksToClose.length) {
-      const ids = tasksToClose.map((t) => t.id)
-      const closedEpoch = tasksToClose.map((t) => Math.floor(t.closed.getTime() / 1000))
+      const queryParam = tasksToClose.map((t) => `(${t.id}::bigint, '${t.closed.toISOString()}'::timestamptz AT TIME ZONE 'UTC')`)
 
-      await (this.prismaClient as Prisma.TransactionClient).$executeRawUnsafe(
-        `
-      UPDATE "points"."user_tasks" AS u
-      SET "closed" = v.closed
-      FROM (
-        SELECT
-          x.id,
-          (to_timestamp(x.epoch) AT TIME ZONE 'UTC') AS closed  
-        FROM unnest($1::bigint[], $2::bigint[]) AS x(id, epoch) 
-      ) AS v
-      WHERE u.id = v.id
-        AND (u."closed" IS DISTINCT FROM v.closed);
-      `,
-        ids,
-        closedEpoch
-      )
+      await (this.prismaClient as Prisma.TransactionClient).$executeRawUnsafe(`
+        UPDATE points.user_tasks ut
+        SET closed = v.closed
+        FROM (VALUES
+          ${queryParam.join(",")}
+        ) AS v(id, closed)
+        WHERE ut.id = v.id;
+      `)
     }
 
     if (tasksToCreate.length > 0) {
