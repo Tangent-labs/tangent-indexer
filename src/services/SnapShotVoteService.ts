@@ -2,12 +2,38 @@ import axios from "axios"
 import fs from "fs"
 import path from "path"
 import { Proposal, ValidatedTask, Reward, RewardedChoice, OrganizationConfig } from "type/data"
+import { BlockService } from "./BlockService"
+import { JsonRpcProvider } from "ethers"
 
 // https://snapshot.box/#/s:sdcrv.eth/proposal/0x10c44649c31c9716592c5ad92752e449d8b024d50adbd75cecea00864920941e
 // https://vote.convexfinance.com/?ref=littlemight.com#/proposal/0x662c82169a3e7c0ff0baeb3ceb20f9d76115b2cd2d9b138cee48d8f8f80812b0
 
 class SnapShotVoteService {
   private readonly GRAPHQL_ENDPOINT = "https://hub.snapshot.org/graphql"
+
+  computeUserPoints = async (startDate: number, endDate: number) => {
+    const proposals = await this.listProposals()
+
+    console.log("Fetched proposals:", proposals.length)
+
+    for (const proposal of proposals) {
+      const votes = await this.getProposalVotes(proposal, { fromTs: startDate, toTs: endDate })
+      //
+      console.log(votes)
+    }
+
+    //
+  }
+
+  computeVotes = async (startBlock: number, endBlock: number, blockService: BlockService, providerURL: string) => {
+    const provider = new JsonRpcProvider(providerURL)
+    const [dateStartStr, dateEndStr] = await Promise.all([
+      blockService.getBlockTimestamp(startBlock, provider),
+      blockService.getBlockTimestamp(endBlock, provider),
+    ])
+
+    await this.computeUserPoints(dateStartStr, dateEndStr)
+  }
 
   public getOrganizations(): OrganizationConfig[] {
     const list = [
@@ -18,7 +44,7 @@ class SnapShotVoteService {
         rewards: [
           { task: "VOTE_01", value: "crvUSD+USD0" },
           { task: "VOTE_02", value: "Lending: Borrow crvUSD (ETHFI collateral)" },
-          { task: "VOTE_02", value: "tgUSD/crvUSD" },
+          { task: "VOTE_03", value: "WETH+CVX" },
         ],
         excludedVoters: [
           "0x0000000000000000000000000000000000000000", // Example excluded address
@@ -81,8 +107,9 @@ class SnapShotVoteService {
             if (rewardIndex > -1) {
               return {
                 choice,
+
                 rewardIndex,
-                index,
+                index: index + 1,
               }
             }
             return null
@@ -126,17 +153,26 @@ class SnapShotVoteService {
     return response.data.data.proposals
   }
 
-  async getProposalVotes(proposal: Proposal): Promise<ValidatedTask[]> {
+  async getProposalVotes(proposal: Proposal, window?: { fromTs: number; toTs: number }): Promise<ValidatedTask[]> {
     try {
-      // Load the GraphQL query from the external file
-      const query = await this.loadGraphQLQuery("GetProposalVotes")
-      const response = await axios.post(this.GRAPHQL_ENDPOINT, {
-        query,
-        variables: {
-          proposalId: proposal.id,
-        },
-      })
+      // Use a range-aware query when window is provided (see GraphQL below)
+      const query = await this.loadGraphQLQuery(window ? "GetProposalVotesRange" : "GetProposalVotes")
 
+      let variables
+
+      if (window) {
+        variables = {
+          proposalId: proposal.id,
+          created_gte: window.fromTs,
+          created_lt: window.toTs,
+        }
+      } else {
+        variables = {
+          proposalId: proposal.id,
+        }
+      }
+
+      const response = await axios.post(this.GRAPHQL_ENDPOINT, { query, variables })
       let votes = response.data.data.votes
 
       // Filter out excluded voters
@@ -185,6 +221,66 @@ class SnapShotVoteService {
       throw error
     }
   }
+
+  // async getProposalVotes(proposal: Proposal): Promise<ValidatedTask[]> {
+  //   try {
+  //     // Load the GraphQL query from the external file
+  //     const query = await this.loadGraphQLQuery("GetProposalVotes")
+  //     const response = await axios.post(this.GRAPHQL_ENDPOINT, {
+  //       query,
+  //       variables: {
+  //         proposalId: proposal.id,
+  //       },
+  //     })
+
+  //     let votes = response.data.data.votes
+
+  //     // Filter out excluded voters
+  //     if (proposal.excludedVoters && proposal.excludedVoters.length > 0) {
+  //       votes = votes.filter((vote: any) => !proposal.excludedVoters!.includes(vote.voter))
+  //     }
+
+  //     // Filter for rewarded choices if requested
+  //     if (proposal.rewarded && proposal.rewarded.length > 0) {
+  //       const rewardedIndices = proposal.rewarded.map((reward: any) => reward.index)
+
+  //       votes = votes.filter((vote: any) => {
+  //         const choice = vote.choice
+  //         return Object.entries(choice).some(([option, weight]: [string, any]) => weight > 0 && rewardedIndices.includes(parseInt(option)))
+  //       })
+  //     }
+
+  //     // Add task validation logic
+  //     const validatedTasks: ValidatedTask[] = []
+
+  //     if (proposal.organizationRewards && votes.length > 0) {
+  //       for (const vote of votes) {
+  //         const choice = vote.choice
+
+  //         // Check each vote against organization rewards
+  //         for (const reward of proposal.organizationRewards) {
+  //           const isValidated = this.validateVoteAgainstTask(choice, reward, proposal.rewarded || [])
+
+  //           if (isValidated) {
+  //             validatedTasks.push({
+  //               task: reward.task,
+  //               value: reward.value,
+  //               validationDate: new Date(vote.created * 1000),
+  //               voterAddress: vote.voter,
+  //               votingPower: vote.vp || 0,
+  //               proposalId: proposal.id,
+  //             })
+  //           }
+  //         }
+  //       }
+  //     }
+
+  //     return validatedTasks
+  //   } catch (error) {
+  //     console.error("Error fetching proposal votes:", error)
+  //     throw error
+  //   }
+  // }
 
   private validateVoteAgainstTask(voteChoice: any, reward: Reward, rewardedChoices: RewardedChoice[]): boolean {
     // Check if the vote choice matches the reward value

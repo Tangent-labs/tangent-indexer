@@ -350,15 +350,33 @@ model seize_collateral {
 }
 
 model user_tasks {
-  id           BigInt    @id(map: "user_tasks_pkey") @default(autoincrement())
-  task         task      @relation(fields: [task_id], references: [id])
+  id           BigInt     @id(map: "user_tasks_pkey") @default(autoincrement())
+  task         task       @relation(fields: [task_id], references: [id])
   task_id      BigInt
-  user_address String    @db.VarChar
-  start        DateTime  @db.Timestamp
-  closed       DateTime? @db.Timestamp
+  user_address String     @db.VarChar
+  start        DateTime   @db.Timestamp
+  closed       DateTime?  @db.Timestamp
   amount       String
+  vote_task    vote_task? @relation(fields: [vote_taskId], references: [id])
+  vote_taskId  BigInt?
 
   @@index([task_id, user_address])
+  @@schema("points")
+}
+
+model vote_task {
+  id           BigInt       @id(map: "vote_task_pkey") @default(autoincrement())
+  name         String
+  action_type  String       @db.VarChar
+  organisation String       @db.VarChar
+  protocol     String
+  point_rate   Float
+  unit         String
+  description  String
+  url          String
+  is_active    Boolean      @default(true)
+  user_tasks   user_tasks[]
+
   @@schema("points")
 }
 

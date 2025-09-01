@@ -82,6 +82,14 @@ export class BlockService {
     return { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex }
   }
 
+  getBlockTimestamp = async (blockNumber: number, provider: JsonRpcProvider): Promise<number> => {
+    const block = await provider.getBlock(blockNumber)
+    if (!block) {
+      throw new Error("Could not fetch block")
+    }
+    return block.timestamp
+  }
+
   async fetchBlockTimestamps(blockNumbers: number[], providerURL: string) {
     const requests = blockNumbers.map((blockNumber, index) => ({
       jsonrpc: "2.0",
