@@ -11,6 +11,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     "controlTower": "0xFEE2d383Ee292283eC43bdf0fa360296BE1e1149",
     "rewardAccumulator": "0xfA400DAD72F107baab829953a860D9cc971b1FaC",
     "zappingProxy": "0xdb88CFC18875e3eD6797de31dfAae31F942231F2",
@@ -205,13 +206,14 @@
     "irCalculator": "0xdEb94Ed943d70A6343E18fE81eA08bF9AB0BB6F2",
     "pegKeeperRegulator": "0xe829d9aD102BC75449B7185DaaaA2E85cd270627"
 =======
+=======
+>>>>>>> 4c69189 (feat: merge clean)
     "controlTower": "0xFEE2d383Ee292283eC43bdf0fa360296BE1e1149",
     "rewardAccumulator": "0xfA400DAD72F107baab829953a860D9cc971b1FaC",
     "zappingProxy": "0xdb88CFC18875e3eD6797de31dfAae31F942231F2",
     "marketCreator": "0x6358cCe76aD9185c37BD0e3CF976Cc132841fA68",
     "irCalculator": "0xAe0d6703E1F6a47189BE43965707C0e451C40823",
     "pegKeeperRegulator": "0x5eb0B9B87a718c6Bd45C8883913d2468180697bA"
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
   },
   "tokens": {
     "USG": "0xf0014CBe67b3aB638bdaA2e2Cb1B531935829E50",
@@ -227,6 +229,7 @@
   "markets": [
     {
 <<<<<<< HEAD
+<<<<<<< HEAD
       "marketAddress": "0x540F74c5c72Bf8aca069d3c7b23be01317f18fbF",
 >>>>>>> d6fe66f (feat: process points)
 <<<<<<< HEAD
@@ -236,11 +239,15 @@
       "marketAddress": "0xba2c9F6cCCe7Cb58b899A46b4B09A1595740f46e",
 >>>>>>> 5c2c23c (fix: date issue when calling procedure)
 >>>>>>> 6067e5d (fix: date issue when calling procedure)
+=======
+      "marketAddress": "0xba2c9F6cCCe7Cb58b899A46b4B09A1595740f46e",
+>>>>>>> 4c69189 (feat: merge clean)
       "collatName": "crvUSD-USDC",
       "collatAddress": "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
       "marketType": "Convex_CRV"
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -294,11 +301,15 @@
       "marketAddress": "0xa98dfbd8B6FbEE6cc299FF9eca612945e044DD34",
 >>>>>>> 5c2c23c (fix: date issue when calling procedure)
 >>>>>>> 6067e5d (fix: date issue when calling procedure)
+=======
+      "marketAddress": "0xa98dfbd8B6FbEE6cc299FF9eca612945e044DD34",
+>>>>>>> 4c69189 (feat: merge clean)
       "collatName": "crvUSD-USDT",
       "collatAddress": "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
       "marketType": "Convex_CRV"
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -352,11 +363,15 @@
       "marketAddress": "0x6869fd8B5a562D9A0fe523934B0b4ccB1fdBaaE4",
 >>>>>>> 5c2c23c (fix: date issue when calling procedure)
 >>>>>>> 6067e5d (fix: date issue when calling procedure)
+=======
+      "marketAddress": "0x6869fd8B5a562D9A0fe523934B0b4ccB1fdBaaE4",
+>>>>>>> 4c69189 (feat: merge clean)
       "collatName": "USDC-USDT",
       "collatAddress": "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
       "marketType": "Convex_CRV"
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -410,11 +425,15 @@
       "marketAddress": "0xFeFD6Cd05472aeF69EB198Ea3b8435bbF3bd02D1",
 >>>>>>> 5c2c23c (fix: date issue when calling procedure)
 >>>>>>> 6067e5d (fix: date issue when calling procedure)
+=======
+      "marketAddress": "0xFeFD6Cd05472aeF69EB198Ea3b8435bbF3bd02D1",
+>>>>>>> 4c69189 (feat: merge clean)
       "collatName": "frxUSD-USDe",
       "collatAddress": "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
       "marketType": "Convex_CRV"
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -468,11 +487,15 @@
       "marketAddress": "0x255B6e17E41aC4C9cBC9ACFef6e1Dd9F2533b8d2",
 >>>>>>> 5c2c23c (fix: date issue when calling procedure)
 >>>>>>> 6067e5d (fix: date issue when calling procedure)
+=======
+      "marketAddress": "0x255B6e17E41aC4C9cBC9ACFef6e1Dd9F2533b8d2",
+>>>>>>> 4c69189 (feat: merge clean)
       "collatName": "frxETH-WETH",
       "collatAddress": "0x9c3b46c0ceb5b9e304fcd6d88fc50f7dd24b31bc",
       "marketType": "Convex_CRV"
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -526,11 +549,15 @@
       "marketAddress": "0x6B4523a73e3BCA2bD7d14d91811E78CdCAE13BEB",
 >>>>>>> 5c2c23c (fix: date issue when calling procedure)
 >>>>>>> 6067e5d (fix: date issue when calling procedure)
+=======
+      "marketAddress": "0x6B4523a73e3BCA2bD7d14d91811E78CdCAE13BEB",
+>>>>>>> 4c69189 (feat: merge clean)
       "collatName": "pxETH-WETH",
       "collatAddress": "0xC8Eb2Cf2f792F77AF0Cd9e203305a585E588179D",
       "marketType": "Convex_CRV"
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -584,11 +611,15 @@
       "marketAddress": "0x650315b24C41A87306be2c555fd7818Ad9A7496c",
 >>>>>>> 5c2c23c (fix: date issue when calling procedure)
 >>>>>>> 6067e5d (fix: date issue when calling procedure)
+=======
+      "marketAddress": "0x650315b24C41A87306be2c555fd7818Ad9A7496c",
+>>>>>>> 4c69189 (feat: merge clean)
       "collatName": "pxETH-stETH",
       "collatAddress": "0x6951bdc4734b9f7f3e1b74afebc670c736a0edb6",
       "marketType": "Convex_CRV"
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -642,11 +673,15 @@
       "marketAddress": "0x0d7096dc6eBB2ACfcbddc4F0800109662d83c74E",
 >>>>>>> 5c2c23c (fix: date issue when calling procedure)
 >>>>>>> 6067e5d (fix: date issue when calling procedure)
+=======
+      "marketAddress": "0x0d7096dc6eBB2ACfcbddc4F0800109662d83c74E",
+>>>>>>> 4c69189 (feat: merge clean)
       "collatName": "cbBTC-WBTC",
       "collatAddress": "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
       "marketType": "Convex_CRV"
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -700,11 +735,15 @@
       "marketAddress": "0x463753fDc594484B0C4f0CbEB006c8A5F90b61C6",
 >>>>>>> 5c2c23c (fix: date issue when calling procedure)
 >>>>>>> 6067e5d (fix: date issue when calling procedure)
+=======
+      "marketAddress": "0x463753fDc594484B0C4f0CbEB006c8A5F90b61C6",
+>>>>>>> 4c69189 (feat: merge clean)
       "collatName": "crvUSD-ETH-CRV",
       "collatAddress": "0x4ebdf703948ddcea3b11f675b4d1fba9d2414a14",
       "marketType": "Convex_CRV"
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -758,11 +797,15 @@
       "marketAddress": "0xea383806398217553EbF36aB4e23d6B9BdC37352",
 >>>>>>> 5c2c23c (fix: date issue when calling procedure)
 >>>>>>> 6067e5d (fix: date issue when calling procedure)
+=======
+      "marketAddress": "0xea383806398217553EbF36aB4e23d6B9BdC37352",
+>>>>>>> 4c69189 (feat: merge clean)
       "collatName": "GHO-cbBTC-WETH",
       "collatAddress": "0x8a4f252812dFF2A8636E4F7EB249d8FC2E3bd77f",
       "marketType": "Convex_CRV"
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -816,11 +859,15 @@
       "marketAddress": "0x620C056bC1A1A93E2e6ca2B774374D2fb7F07310",
 >>>>>>> 5c2c23c (fix: date issue when calling procedure)
 >>>>>>> 6067e5d (fix: date issue when calling procedure)
+=======
+      "marketAddress": "0x620C056bC1A1A93E2e6ca2B774374D2fb7F07310",
+>>>>>>> 4c69189 (feat: merge clean)
       "collatName": "USDC-WBTC-WETH",
       "collatAddress": "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
       "marketType": "Convex_CRV"
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -874,11 +921,15 @@
       "marketAddress": "0x754F13beD844fB79Fe6c8eAfaeD500bbAB88833b",
 >>>>>>> 5c2c23c (fix: date issue when calling procedure)
 >>>>>>> 6067e5d (fix: date issue when calling procedure)
+=======
+      "marketAddress": "0x754F13beD844fB79Fe6c8eAfaeD500bbAB88833b",
+>>>>>>> 4c69189 (feat: merge clean)
       "collatName": "USDT-WBTC-WETH",
       "collatAddress": "0xf5f5b97624542d72a9e06f04804bf81baa15e2b4",
       "marketType": "Convex_CRV"
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -932,11 +983,15 @@
       "marketAddress": "0xCe603eEfd4332Fb1e6Fce5041135B90636a9c2Ae",
 >>>>>>> 5c2c23c (fix: date issue when calling procedure)
 >>>>>>> 6067e5d (fix: date issue when calling procedure)
+=======
+      "marketAddress": "0xCe603eEfd4332Fb1e6Fce5041135B90636a9c2Ae",
+>>>>>>> 4c69189 (feat: merge clean)
       "collatName": "USR-RLP",
       "collatAddress": "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
       "marketType": "Convex_CRV"
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -990,11 +1045,15 @@
       "marketAddress": "0xe0A6550F7fB3d2FEB8963D127A5dD7DD731D6DD3",
 >>>>>>> 5c2c23c (fix: date issue when calling procedure)
 >>>>>>> 6067e5d (fix: date issue when calling procedure)
+=======
+      "marketAddress": "0xe0A6550F7fB3d2FEB8963D127A5dD7DD731D6DD3",
+>>>>>>> 4c69189 (feat: merge clean)
       "collatName": "CVX-ETH",
       "collatAddress": "0x3a283d9c08e8b55966afb64c515f5143cf907611",
       "marketType": "Convex_CRV"
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1048,11 +1107,15 @@
       "marketAddress": "0xAEF79E077e68657A0847EE5DD08871c1da9c55B5",
 >>>>>>> 5c2c23c (fix: date issue when calling procedure)
 >>>>>>> 6067e5d (fix: date issue when calling procedure)
+=======
+      "marketAddress": "0xAEF79E077e68657A0847EE5DD08871c1da9c55B5",
+>>>>>>> 4c69189 (feat: merge clean)
       "collatName": "USDC-fxUSD",
       "collatAddress": "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
       "marketType": "Convex_FXN"
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1653,10 +1716,11 @@
       "collatName": "sUSDe 07/31/25",
       "collatAddress": "0x3b3fB9C57858EF816833dC91565EFcd85D96f634",
 =======
+=======
+>>>>>>> 4c69189 (feat: merge clean)
       "marketAddress": "0xFbFE8eCD8aec493c46b276c95E8A0Cbb26026C5B",
       "collatName": "sUSDe 09/25/25",
       "collatAddress": "0x9F56094C450763769BA0EA9Fe2876070c0fD5F77",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "marketType": "Pendle_PT"
     },
     {
@@ -1727,6 +1791,7 @@
   },
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   "pegKeepers": {
     "USG-USDC": "0x9f90561766cEA617912925Af6F13737467C70884",
     "USG-wfrxUSD": "0x23681CeC8e4c2a9BFbC3c4F557f4BA478B903cF4"
@@ -1741,9 +1806,10 @@
 >>>>>>> 6067e5d (fix: date issue when calling procedure)
 }
 =======
+=======
+>>>>>>> 4c69189 (feat: merge clean)
   "pegKeepers": {
     "USG-USDC": "0x70274a6D27bD9173FC8fe9369FD7dcbE85231F26",
     "USG-wfrxUSD": "0x4924322ec75E8F8b7851CfAFAC11227873d28D67"
   }
 }
->>>>>>> 0701b60 (feat:  split request for lisibility)
