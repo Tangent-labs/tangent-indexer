@@ -42,7 +42,7 @@ INSERT INTO global.user (id,address, onboarded, referral_points) VALUES
 INSERT INTO points.task (id,protocol,action_type,unit,description, name,token_address, point_rate, is_active,url) VALUES
   (101,'proto', 'hold', 'hour', 'd1','TASK1','TOKENA', 10, TRUE,'https://1'),
   (102,'proto','hold', 'hour','d2', 'TASK2','TOKENB', 15, TRUE,'https://2'),
-  (103,'proto','hold', 'vote', 'd3','TASK3','TOKENC', 20, TRUE,'https://3');
+  (103,'proto','hold', 'hour', 'd3','TASK3','TOKENC', 20, TRUE,'https://3');
 
 -- Price feeds every 4h
 -- TOKENA: 2 / 3 / 4
@@ -78,44 +78,48 @@ INSERT INTO points.price_feeds (token, timestamp, price_usd) VALUES
 -- User tasks
 -- U1: three days on TOKENA (task_id = 101)
 INSERT INTO points.user_tasks (id, task_id, user_address, start, closed, amount) VALUES
-  (200001,101,'0xU1','2025-01-05 10:00+00','2025-01-05 11:00+00','1000'),
-  (200002,101,'0xU1','2025-01-06 10:00+00','2025-01-06 11:00+00','1500'),
-  (200003,101,'0xU1','2025-01-07 10:00+00','2025-01-07 11:00+00','1000');
+  (200001,101,'0xU1','2025-01-05 10:00+00','2025-01-05 11:00+00','1000000000000000000000'),
+  (200002,101,'0xU1','2025-01-06 10:00+00','2025-01-06 11:00+00','1500000000000000000000'),
+  (200003,101,'0xU1','2025-01-07 10:00+00','2025-01-07 11:00+00','1000000000000000000000');
 
 -- U2: two days on TOKENA (task_id = 101)
 INSERT INTO points.user_tasks (id, task_id, user_address, start, closed, amount) VALUES
-  (200004,101,'0xU2','2025-01-05 12:00+00','2025-01-05 13:00+00','500'),
-  (200005,101,'0xU2','2025-01-07 12:00+00','2025-01-07 13:00+00','600');
+  (200004,101,'0xU2','2025-01-05 12:00+00','2025-01-05 13:00+00','500000000000000000000'),
+  (200005,101,'0xU2','2025-01-07 12:00+00','2025-01-07 13:00+00','600000000000000000000');
 
 -- U3: two tasks same day (TOKENB, Day2), second boosted (task_id = 102)
 INSERT INTO points.user_tasks (id, task_id, user_address, start, closed, amount) VALUES
-  (200006,102,'0xU3','2025-01-06 14:00+00','2025-01-06 15:00+00','1000'),
-  (200007,102,'0xU3','2025-01-06 16:00+00','2025-01-06 17:00+00','900');
+  (200006,102,'0xU3','2025-01-06 14:00+00','2025-01-06 15:00+00','1000000000000000000000'),
+  (200007,102,'0xU3','2025-01-06 16:00+00','2025-01-06 17:00+00','900000000000000000000');
 
 -- U4: single task on TOKENB, Day3 (task_id = 102)
 INSERT INTO points.user_tasks (id, task_id, user_address, start, closed, amount) VALUES
-  (200008,102,'0xU4','2025-01-07 09:00+00','2025-01-07 10:00+00','1100');
+  (200008,102,'0xU4','2025-01-07 09:00+00','2025-01-07 10:00+00','1100000000000000000000');
 
 -- Open tasks (not closed) for User 1 and User 2
 INSERT INTO points.user_tasks (id, task_id, user_address, start, closed, amount) VALUES
   -- U1: open task on TOKENA started today
-  (200009,101,'0xU1','2025-01-08 10:00+00',NULL,'2000'),
+  (200009,101,'0xU1','2025-01-08 10:00+00',NULL,'2000000000000000000000'),
   -- U1: open task on TOKENB started yesterday  
-  (200010,102,'0xU1','2025-01-07 14:00+00',NULL,'1500'),
+  (200010,102,'0xU1','2025-01-07 14:00+00',NULL,'1500000000000000000000'),
   -- U2: open task on TOKENC started today
-  (200011,103,'0xU2','2025-01-08 12:00+00',NULL,'3000'),
+  (200011,103,'0xU2','2025-01-08 12:00+00',NULL,'3000000000000000000000'),
   -- U2: open task on TOKENA started 2 days ago
-  (200012,101,'0xU2','2025-01-06 08:00+00',NULL,'1000');
+  (200012,101,'0xU2','2025-01-06 08:00+00',NULL,'1000000000000000000000');
 
 
--- Booster: U3, second task Day2
+-- Booster: U3, second task Day2 (×2.0 during 16:00-17:00 on 2025-01-06)
 INSERT INTO points.user_boost (user_address, start_at, end_at, multiplier) VALUES
   ('0xU3','2025-01-06 16:00+00','2025-01-06 17:00+00',2.0),
+  -- U1 all-day boost on Day 4 (×1.5)
   ('0xU1','2025-01-08 00:00+00','2025-01-09 00:00+00',1.5),
-  -- Boost that covers only half of task 200010 period (starts at 14:00, boost from 16:00-18:00)
+  -- U1 boost ×2.5 from 16:00-18:00 on Day 3
   ('0xU1','2025-01-07 16:00+00','2025-01-07 18:00+00',2.5),
-  -- Second boost on the same task 200010 (overlapping/adjacent periods)
-  ('0xU1','2025-01-07 18:00+00','2025-01-07 20:00+00',1.8);
+  -- U1 boost ×1.8 from 18:00-20:00 on Day 3  
+  ('0xU1','2025-01-07 18:00+00','2025-01-07 20:00+00',1.8),
+  -- U1 boost ×1.8 from 18:00-20:00 on Day 3  
+  ('0xU2','2025-01-05 00:00+00',null,1.1)
+  ;
 
 
 -- Godfather: U2 -> U1

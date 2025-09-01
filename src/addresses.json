@@ -411,6 +411,7 @@
     "wUSR": "0x4300536b909FbA47e042fCa31B97c09F64643110"
   },
 <<<<<<< HEAD
+<<<<<<< HEAD
   "pegKeepers": {
     "USG-USDC": "0x9f90561766cEA617912925Af6F13737467C70884",
     "USG-wfrxUSD": "0x23681CeC8e4c2a9BFbC3c4F557f4BA478B903cF4"
@@ -420,3 +421,10 @@
   "pegKeepers": { "USG-USDC": "0x70274a6D27bD9173FC8fe9369FD7dcbE85231F26", "USG-wfrxUSD": "0x4924322ec75E8F8b7851CfAFAC11227873d28D67" }
 >>>>>>> 5c2c23c (fix: date issue when calling procedure)
 }
+=======
+  "pegKeepers": {
+    "USG-USDC": "0x70274a6D27bD9173FC8fe9369FD7dcbE85231F26",
+    "USG-wfrxUSD": "0x4924322ec75E8F8b7851CfAFAC11227873d28D67"
+  }
+}
+>>>>>>> 0701b60 (feat:  split request for lisibility)
