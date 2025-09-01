@@ -1,43 +1,11 @@
 {
   "utilities": {
-<<<<<<< HEAD
-<<<<<<< HEAD
-    "controlTower": "0xc44C2b82dbEef6DdB195E0432Fa5e755C345D1e3",
-    "rewardAccumulator": "0x3c1CDdEb86B96B730458C5916631312859e8D793",
-    "zappingProxy": "0x063A1D1Cfc6354FB21dC6DE6fBe4B748cbD01941",
-    "marketCreator": "0xBc43A88f3d00A16fca745Bb84f8120Ae492Ef7db",
-    "irCalculator": "0xe97a52798eE084656cc3643e30a5d2BB6E942C5d",
-    "pegKeeperRegulator": "0x42F4FA48a564D4f83085aFA056Ae90A3d891021b"
-  },
-  "tokens": {
-    "USG": "0xbd605Ad2010E12c16B0cd0F2B8FE3c6d90BB51E7",
-    "sUSG": "0x3324ad7d4d7ce75361185f6bb16a20eb50cf9480",
-    "TAN": "0xd3592042fe5E1a57c52b1A9A3d0Fb915fecA0cf5",
-    "vsTAN": "0x86B430cF6539183AaB3385Bb901272F1aeA7daDC"
-  },
-  "implementations": {
-    "convexCrvMarket": "0x6Ee53D43330c1BbdEDe31A8C12f5A32a2073Aca9",
-    "convexFxnMarket": "0x243CD2aBE3896f8Fd11AA375CEe04EA685c8fCB8",
-    "basicERC20Market": "0x8914E24eCb1900AC4cfe9b06d8d930c3504dCCBA"
-  },
-  "markets": [
-    {
-      "marketAddress": "0xB0Fa801a45960DccA5110976D3c4167739fE5136",
-=======
-    "controlTower": "0xB0f3A4aE1fDC1068f9364c5d7b1E42678B66D941",
-    "rewardAccumulator": "0xC1D6Aa467900B8A0a9F8909810fF140C9204AA05",
-    "zappingProxy": "0x6D490044dC1CA783A22cE1eEb1E4443fa16A961c",
-    "marketCreator": "0x91823a7192472998143Fb18251Df254f9bA00428",
-    "irCalculator": "0xdEb94Ed943d70A6343E18fE81eA08bF9AB0BB6F2",
-    "pegKeeperRegulator": "0xe829d9aD102BC75449B7185DaaaA2E85cd270627"
-=======
     "controlTower": "0xFEE2d383Ee292283eC43bdf0fa360296BE1e1149",
     "rewardAccumulator": "0xfA400DAD72F107baab829953a860D9cc971b1FaC",
     "zappingProxy": "0xdb88CFC18875e3eD6797de31dfAae31F942231F2",
     "marketCreator": "0x6358cCe76aD9185c37BD0e3CF976Cc132841fA68",
     "irCalculator": "0xAe0d6703E1F6a47189BE43965707C0e451C40823",
     "pegKeeperRegulator": "0x5eb0B9B87a718c6Bd45C8883913d2468180697bA"
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
   },
   "tokens": {
     "USG": "0xf0014CBe67b3aB638bdaA2e2Cb1B531935829E50",
@@ -52,296 +20,99 @@
   },
   "markets": [
     {
-<<<<<<< HEAD
-      "marketAddress": "0x540F74c5c72Bf8aca069d3c7b23be01317f18fbF",
->>>>>>> d6fe66f (feat: process points)
-=======
       "marketAddress": "0xba2c9F6cCCe7Cb58b899A46b4B09A1595740f46e",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "collatName": "crvUSD-USDC",
       "collatAddress": "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
       "marketType": "Convex_CRV"
     },
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      "marketAddress": "0x512DA1F54fC0EaAeAF82De9f81D81C8Be3DEf6fD",
-=======
-      "marketAddress": "0x3E3F7858CC6E4ff9958ccf6b8238Ef7689A5247b",
->>>>>>> d6fe66f (feat: process points)
-=======
       "marketAddress": "0xa98dfbd8B6FbEE6cc299FF9eca612945e044DD34",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "collatName": "crvUSD-USDT",
       "collatAddress": "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
       "marketType": "Convex_CRV"
     },
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      "marketAddress": "0x3665c302C574929291A3c2A7B8F1A7Fb6B375693",
-=======
-      "marketAddress": "0x1e40cfb44b7F49499A1441023E3C07D4Acc1838c",
->>>>>>> d6fe66f (feat: process points)
-=======
       "marketAddress": "0x6869fd8B5a562D9A0fe523934B0b4ccB1fdBaaE4",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "collatName": "USDC-USDT",
       "collatAddress": "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
       "marketType": "Convex_CRV"
     },
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      "marketAddress": "0xA2097A6660125037814E2b4B48E96613931D4FaC",
-=======
-      "marketAddress": "0x1B61FD3Da257DD18a941875524C5E15ad98BCD8d",
->>>>>>> d6fe66f (feat: process points)
-=======
       "marketAddress": "0xFeFD6Cd05472aeF69EB198Ea3b8435bbF3bd02D1",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "collatName": "frxUSD-USDe",
       "collatAddress": "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
       "marketType": "Convex_CRV"
     },
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      "marketAddress": "0xb4fc6767c14A57C5fA00bF45E166Ed8007084ff6",
-=======
-      "marketAddress": "0x94a2E64c983C76BDf2e8ab0717686288b8930e25",
->>>>>>> d6fe66f (feat: process points)
-=======
       "marketAddress": "0x255B6e17E41aC4C9cBC9ACFef6e1Dd9F2533b8d2",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "collatName": "frxETH-WETH",
       "collatAddress": "0x9c3b46c0ceb5b9e304fcd6d88fc50f7dd24b31bc",
       "marketType": "Convex_CRV"
     },
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      "marketAddress": "0x7648FBF40a6015FE5F7337279EF304E7aE55402b",
-=======
-      "marketAddress": "0xE81A652c6b555dbb10Af62737dEC65f280B7b81c",
->>>>>>> d6fe66f (feat: process points)
-=======
       "marketAddress": "0x6B4523a73e3BCA2bD7d14d91811E78CdCAE13BEB",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "collatName": "pxETH-WETH",
       "collatAddress": "0xC8Eb2Cf2f792F77AF0Cd9e203305a585E588179D",
       "marketType": "Convex_CRV"
     },
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      "marketAddress": "0x38A2Cff05497c775058A63CB0146447dB5BfdEBf",
-=======
-      "marketAddress": "0xFee0c4cF6ecE12F77d24cE534bB2fC210Eef290E",
->>>>>>> d6fe66f (feat: process points)
-=======
       "marketAddress": "0x650315b24C41A87306be2c555fd7818Ad9A7496c",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "collatName": "pxETH-stETH",
       "collatAddress": "0x6951bdc4734b9f7f3e1b74afebc670c736a0edb6",
       "marketType": "Convex_CRV"
     },
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      "marketAddress": "0x43D5f2F584Fa5E9614c2C0A1487C34A7C03f531f",
-=======
-      "marketAddress": "0x24b9CbcCD96Cf54f0BF6d2A154a8E08cf3D466e3",
->>>>>>> d6fe66f (feat: process points)
-=======
       "marketAddress": "0x0d7096dc6eBB2ACfcbddc4F0800109662d83c74E",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "collatName": "cbBTC-WBTC",
       "collatAddress": "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
       "marketType": "Convex_CRV"
     },
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      "marketAddress": "0xcB8f28db0aeE8Dcfd41f59d039c62f305cEB99A5",
-=======
-      "marketAddress": "0x85CcD266DE1A9E9e962d3753C9bBBEa837ac8B9E",
->>>>>>> d6fe66f (feat: process points)
-=======
       "marketAddress": "0x463753fDc594484B0C4f0CbEB006c8A5F90b61C6",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "collatName": "crvUSD-ETH-CRV",
       "collatAddress": "0x4ebdf703948ddcea3b11f675b4d1fba9d2414a14",
       "marketType": "Convex_CRV"
     },
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      "marketAddress": "0xC3da3e09CA542768e96b1eEC46CEa57E7618ec46",
-=======
-      "marketAddress": "0x23C3A16434Afe38EfF765A016B8aCd9c6Ac882BB",
->>>>>>> d6fe66f (feat: process points)
-=======
       "marketAddress": "0xea383806398217553EbF36aB4e23d6B9BdC37352",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "collatName": "GHO-cbBTC-WETH",
       "collatAddress": "0x8a4f252812dFF2A8636E4F7EB249d8FC2E3bd77f",
       "marketType": "Convex_CRV"
     },
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      "marketAddress": "0xb116D89134de3c745E23899a97422BaA64693fbE",
-=======
-      "marketAddress": "0xF3971Ea2ABBCe1DB1492BdC8Bb1aa45D7A1a8F31",
->>>>>>> d6fe66f (feat: process points)
-=======
       "marketAddress": "0x620C056bC1A1A93E2e6ca2B774374D2fb7F07310",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "collatName": "USDC-WBTC-WETH",
       "collatAddress": "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
       "marketType": "Convex_CRV"
     },
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      "marketAddress": "0xD27D2ca3078da6eCa348010B80a4429d69E03865",
-=======
-      "marketAddress": "0x3Ecc47918f1c4eE0353306bE767e075B1Dd277cD",
->>>>>>> d6fe66f (feat: process points)
-=======
       "marketAddress": "0x754F13beD844fB79Fe6c8eAfaeD500bbAB88833b",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "collatName": "USDT-WBTC-WETH",
       "collatAddress": "0xf5f5b97624542d72a9e06f04804bf81baa15e2b4",
       "marketType": "Convex_CRV"
     },
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      "marketAddress": "0xE2d5026a69cdec5746fb6d515A7169228eF69e86",
-=======
-      "marketAddress": "0xEFbD3cf4B774C5cF0fD06f27FAE0D387fD160457",
->>>>>>> d6fe66f (feat: process points)
-=======
       "marketAddress": "0xCe603eEfd4332Fb1e6Fce5041135B90636a9c2Ae",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "collatName": "USR-RLP",
       "collatAddress": "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
       "marketType": "Convex_CRV"
     },
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      "marketAddress": "0x2fADcD17471Baa8aB1dED1BD579E2B07dB60324d",
-=======
-      "marketAddress": "0x933A64986405D5a42dFF55E183Bd6254D01be325",
->>>>>>> d6fe66f (feat: process points)
-=======
       "marketAddress": "0xe0A6550F7fB3d2FEB8963D127A5dD7DD731D6DD3",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "collatName": "CVX-ETH",
       "collatAddress": "0x3a283d9c08e8b55966afb64c515f5143cf907611",
       "marketType": "Convex_CRV"
     },
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      "marketAddress": "0x7BDF35f85b1e33e5BA5F80321Eb2f1668358aC55",
-=======
-      "marketAddress": "0x2150475Cb2e7F5a8b02d79963856E75bDEe23f68",
->>>>>>> d6fe66f (feat: process points)
-=======
       "marketAddress": "0xAEF79E077e68657A0847EE5DD08871c1da9c55B5",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "collatName": "USDC-fxUSD",
       "collatAddress": "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
       "marketType": "Convex_FXN"
     },
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      "marketAddress": "0xEFE5c09cDc9327f9Ee06082CAdf75A6d384c563A",
-      "collatName": "sUSDe 09/25/25",
-      "collatAddress": "0x9F56094C450763769BA0EA9Fe2876070c0fD5F77",
-      "marketType": "Pendle_PT"
-    },
-    {
-      "marketAddress": "0xfF5FeAAB0e334bdc2D318637A031C7A64b2A8d52",
-      "collatName": "wstUSR 09/25/25",
-      "collatAddress": "0x23E60d1488525bf4685f53b3aa8E676c30321066",
-      "marketType": "Pendle_PT"
-    },
-    {
-      "marketAddress": "0x65e8cfC4181133257cFFC63A1c4DA368cD5C75e8",
-      "collatName": "USDe 09/25/25",
-      "collatAddress": "0xBC6736d346a5eBC0dEbc997397912CD9b8FAe10a",
-      "marketType": "Pendle_PT"
-    }
-  ],
-  "oracles": {
-    "crvUSD": "0xA25c35588875078ae6fe300C82b0220Faa5B22cc",
-    "USDC": "0x9E10a21449F383Cd79D2E233208BABb56A163CD8",
-    "FRAX": "0x4a916d406b5BD30aE99f9EbD8DcfDa64B82D6F4F",
-    "USDT": "0xbc749f199F7D66Ee414ed3214A5b77Ae1c8D2110",
-    "USR": "0x652eb38Fc74693437a1D508d7a831d811Be34227",
-    "GHO": "0xD946246695A9259F3B33a78629026F61B3Ab40aF",
-    "USDe": "0x23DFBc4B8B80C14CC5e25011B8491f268395BAd6",
-    "ETH": "0x142458eE914CE315F040CdCE64647e08f482AB29",
-    "stETH": "0xAF194984fa4570B8fE909c102844Bd2584E6E90b",
-    "BTC": "0x86B254F65925C372C3fe8479ec423BF55f9ebE0c",
-    "cbBTC": "0x1e5f08CC5cb9350337cEaDafeaAf41016Cb88216",
-    "frxUSD": "0xe55F53b29d5466302b5562e91847e24D0Be1F7FA",
-    "fxUSD": "0x0dA5CAdDAac598d22055F6c94C2d0e3E62C76dec",
-    "frxETH": "0x35128AC8cEFbC7D108dF719cdc7AAabbE151d875",
-    "pxETH": "0x26f708EBE6800914325aA6FF233AC5b263eeD75C",
-    "crvUSD-USDC": "0x3770f6742750Aa4584c56464cFC9390b4a696e40",
-    "crvUSD-USDT": "0x23C5e9D53CBAf6703839A503f0429C5D01796858",
-    "USDC-fxUSD": "0xDB300ECCC442bE6e8027aE7f9E04ABcCFfd2Cc89",
-    "USDC-USDT": "0x83737Ab6fC8BE5d9cc5135C83E77aFd01Ac0d7a5",
-    "frxUSD-USDe": "0x3C365c2bF5F6d8Ef0A94843e22818794b640248c",
-    "frxETH-WETH": "0xC013f347b64d5A6dE839Ea9bfa8Cd1fbE4163DF9",
-    "pxETH-WETH": "0x515f3Db6c4249919B74eA55915969944fEA4B311",
-    "pxETH-stETH": "0xacFf3908A5CA581aba3bba289536Fc7807df53c8",
-    "cbBTC-WBTC": "0x44289AA6b44DEebC9a3bdCef9678E0403F2C5377",
-    "USDT-WBTC-WETH": "0x8961423b54f06bf6D57F8dD3dD1184FA6F3aac3f",
-    "USDC-WBTC-WETH": "0x2c27F0e45e9b385bcD2AA36368693b5D4F850ea6",
-    "crvUSD-ETH-CRV": "0x0402a63780B025710197fb417Ce72f031824ccB3",
-    "GHO-cbBTC-WETH": "0xD9DcFF30dDc709877794bFBe6D18F57E68DFbdbf",
-    "CVX-ETH": "0x2Bb072674E12E8A5732743a649A4B8e9f7f59144",
-    "USR-RLP": "0x75c7682e6B360D9Be01B2588061125ab911F00C2",
-    "sUSDe": "0x8b508d33E5d52a877000C7DE4ab33977AB8515F0",
-    "wstUSR": "0x885AD11BD8009eb9Ba75ae5C682618e68D125A07",
-    "sUSDe 07/31/25": "0x8F80400c97D23F53227042bB30b42b625A4bA685",
-    "wstUSR 07/25/25": "0x9E325dF66B29277a100848b1c9cfc51c993C5617",
-    "sUSDe 09/25/25": "0xfD5c3E170916B010eCA32A9534b92a3fA9A4C8C6",
-    "USDe 09/25/25": "0xE38aF3FDa379401445FFD7b9cD57D0D33d03790E",
-    "wstUSR 09/25/25": "0x07222AA96c3e7dE26fE4EfD22d5FF00C3678041A",
-    "USR 09/04/25": "0xe9744F41F5fc466A73ebea0d0CEAaD0C42e80278",
-    "USG": "0xbCb98BeaAB4B12ad8779C79dB0C58ca8b26aD41F"
-  },
-  "lps": {
-    "USG-USDC": "0xF31de918554B56a138ccCf2d4754e90D285307fA",
-    "USG-wfrxUSD": "0xF5b697D13b3a3b9F7D5d821Fb2b6888BCc35678C",
-    "TAN-WETH": "0x84a8CD81b1601698dC840221ad49Cca66C048967"
-  },
-  "wStables": {
-    "wfrxUSD": "0xe829d9aD102BC75449B7185DaaaA2E85cd270627",
-    "wcrvUSD": "0x79fD45793DC81Da9BaB6aE577f01ba7935484C51",
-    "wUSDe": "0xc175cCaE0bFD12186951a648f3f5108D4C8BeBfB",
-    "wDOLA": "0x794892dc1afe678F55b6F8cb5c0538348EB03cbC",
-    "wUSR": "0xa03B627108Dea2fABF0F62dfA598905B74A33b8e"
-  },
-  "pegKeepers": { "USG-USDC": "0xA480452d095751Abb1D6e51Bd228A226d52e688a", "USG-wfrxUSD": "0xca42323f20E7FcEc3aE61AF72B97D4B8DFecda9f" }
-=======
-      "marketAddress": "0xBef9b630C509738C54b3f24d48Bc0874905dCF5F",
-      "collatName": "sUSDe 07/31/25",
-      "collatAddress": "0x3b3fB9C57858EF816833dC91565EFcd85D96f634",
-=======
       "marketAddress": "0xFbFE8eCD8aec493c46b276c95E8A0Cbb26026C5B",
       "collatName": "sUSDe 09/25/25",
       "collatAddress": "0x9F56094C450763769BA0EA9Fe2876070c0fD5F77",
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
       "marketType": "Pendle_PT"
     },
     {
@@ -410,21 +181,8 @@
     "wDOLA": "0xFb0a39aE8c44a0E83a1445d4d272294345fA2207",
     "wUSR": "0x4300536b909FbA47e042fCa31B97c09F64643110"
   },
-<<<<<<< HEAD
-<<<<<<< HEAD
-  "pegKeepers": {
-    "USG-USDC": "0x9f90561766cEA617912925Af6F13737467C70884",
-    "USG-wfrxUSD": "0x23681CeC8e4c2a9BFbC3c4F557f4BA478B903cF4"
-  }
->>>>>>> d6fe66f (feat: process points)
-=======
-  "pegKeepers": { "USG-USDC": "0x70274a6D27bD9173FC8fe9369FD7dcbE85231F26", "USG-wfrxUSD": "0x4924322ec75E8F8b7851CfAFAC11227873d28D67" }
->>>>>>> 5c2c23c (fix: date issue when calling procedure)
-}
-=======
   "pegKeepers": {
     "USG-USDC": "0x70274a6D27bD9173FC8fe9369FD7dcbE85231F26",
     "USG-wfrxUSD": "0x4924322ec75E8F8b7851CfAFAC11227873d28D67"
   }
 }
->>>>>>> 0701b60 (feat:  split request for lisibility)
