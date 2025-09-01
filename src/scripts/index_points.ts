@@ -31,6 +31,10 @@ async function main() {
           setTransaction(dbTransaction)
           await userPointsService.retrieveUserAddressesFromTransfers(startBlock, endBlock)
 
+          // get price
+
+          // get boost
+
           await userPointsService.updateUserTasks(startBlock)
 
           // Process points calculation for user tasks
