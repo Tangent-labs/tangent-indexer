@@ -43,10 +43,15 @@ select * from points.user_points;
 
 --- TOTAL
    SELECT points.insert_missing_user_points();
-SELECT points.get_user_points_details('2025-01-05 00:00:00+00'::timestamptz,
+SELECT points.compute_user_points('2025-01-05 00:00:00+00'::timestamptz,
      '2025-01-09 00:00:00+00'::timestamptz);
+   select * from points.user_points;
+SELECT points.compute_user_points('2025-08-01 13:44+00'::timestamptz,
+     '2025-09-30 13:45:00+00'::timestamptz);
+   select * from points.user_points;
 
-
+SELECT points.get_user_points_details('2025-01-01 13:44:00+00'::timestamptz,
+     '2025-12-30 13:45:00+00'::timestamptz);
 
 select points.compute_godfather_points();
 select * from global.user;

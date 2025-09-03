@@ -4,7 +4,7 @@ CREATE OR REPLACE FUNCTION points.get_user_points_per_task(
   end_at   timestamptz
 )
 RETURNS TABLE (
-  user_task_id    bigint,
+  user_address    varchar,
   task_id         bigint,
   points          int,
   booster_points  int
@@ -12,10 +12,10 @@ RETURNS TABLE (
 LANGUAGE sql
 AS $$
   SELECT
-    d.user_task_id,
+    d.user_address,
     d.task_id,
     SUM(d.base_points)::int     AS points,
     SUM(d.booster_points)::int  AS booster_points
   FROM points.get_user_points_details(start_at, end_at) d
-  GROUP BY d.user_task_id, d.task_id;
+  GROUP BY d.user_address, d.task_id;
 $$;

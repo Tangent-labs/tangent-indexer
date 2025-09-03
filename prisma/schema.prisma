@@ -357,9 +357,9 @@ model user_tasks {
   start        DateTime     @db.Timestamp
   closed       DateTime?    @db.Timestamp
   amount       String
-  user_points  user_points?
-
   @@index([task_id, user_address])
+  @@index([start, closed], map: "user_tasks_start_closed_idx")
+  @@index([task_id, start, closed], map: "user_tasks_taskid_start_closed_idx")
   @@schema("points")
 }
 
@@ -445,12 +445,9 @@ model user_points {
   user         user       @relation(fields: [user_address], references: [address])
   task_id      BigInt
   task         task       @relation(fields: [task_id], references: [id])
-  user_task_id BigInt     @unique
-  user_task    user_tasks @relation(fields: [user_task_id], references: [id])
   points       Int
   booster_points       Int
-
-  @@index([task_id, user_address])
+  @@unique([user_address, task_id], map: "user_points_task_user_uk")
   @@schema("points")
 }
 
@@ -459,8 +456,8 @@ model price_feeds {
   token_address tracked_erc20 @relation(fields: [token], references: [address])
   token         String
   timestamp     DateTime
-  price_usd     String
-
+  price_usd     Decimal     @db.Decimal(36, 18)
+  @@index([token, timestamp], map: "price_feeds_token_ts_idx")
   @@schema("points")
 }
 
@@ -472,7 +469,7 @@ model user_boost {
   start_at     DateTime  @db.Timestamptz(6)
   end_at       DateTime? @db.Timestamptz(6)
   created_at   DateTime  @default(now()) @db.Timestamptz(6)
-
+  @@index([user_address, start_at, end_at], map: "user_boost_user_start_end_idx")
   @@index([user_address, start_at])
   @@schema("points")
 }

@@ -14,6 +14,7 @@
     "tangent:seed-market-global-data": "tsx src/scripts/seed-market-global-data.ts",
     "tangent:check-liquidation": "tsx src/scripts/check_liquidation.ts",
     "tangent:check-votes": "tsx src/scripts/check_votes.ts",
+    "tangent:deploy-sql-functions": "tsx src/scripts/deploy_sql_functions.ts",
     "format": "prettier --write --list-different . ",
     "db:truncate": "tsx src/scripts/utils/truncate_tables.ts",
     "db:push": "npx prisma db push",
