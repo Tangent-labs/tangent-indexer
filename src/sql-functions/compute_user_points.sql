@@ -13,7 +13,7 @@ AS $$
       points         =  up.points + pt.points ,
       booster_points =  up.booster_points + pt.booster_points
     FROM points.get_user_points_per_task(start_at, end_at) pt
-    WHERE up.user_task_id = pt.user_task_id
+    WHERE up.user_address = pt.user_address
       AND up.task_id      = pt.task_id;
 
 

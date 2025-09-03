@@ -37,7 +37,7 @@ AS $$
     FROM points.user_tasks ut
     JOIN points.task t
       ON t.id = ut.task_id
-     AND t.unit = 'hour'
+     AND t.unit  in ('hour','day')
      AND t.is_active IS TRUE
     CROSS JOIN params p
     WHERE ut.start < p.end_at
@@ -47,12 +47,12 @@ AS $$
     SELECT
       c.*,
       COALESCE(
-        ( SELECT AVG(NULLIF(TRIM(pf.price_usd), '')::numeric)
+        ( SELECT AVG(NULLIF(pf.price_usd, 0)::numeric)
           FROM points.price_feeds pf
           WHERE pf.token = c.token_address
             AND pf.timestamp >= c.seg_start
             AND pf.timestamp <  c.seg_end ),
-        ( SELECT NULLIF(TRIM(pf2.price_usd), '')::numeric
+        ( SELECT NULLIF(pf2.price_usd, 0)::numeric
           FROM points.price_feeds pf2
           WHERE pf2.token = c.token_address
             AND pf2.timestamp < c.seg_start
