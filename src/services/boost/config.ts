@@ -1,0 +1,38 @@
+import { parseEther } from "ethers"
+import { NumMap } from "./types"
+
+export const SNAPSHOT_BOOST_TOKENS = [
+  "0xe127cE638293FA123Be79C25782a5652581Db234",
+  "0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2",
+  "0x72a19342e8F1838460eBFCCEf09F6585e32db86E",
+  "0x0C30476f66034E11782938DF8e4384970B6c9e8a",
+  "0xEC6B8A3F3605B083F7044C0F31f2cac0caf1d469",
+  "0x4f30A9D41B80ecC5B94306AB4364951AE3170210",
+  "0x90c1f9220d90d3966FbeE24045EDd73E1d588aD5",
+  "0x08d23468A467d2bb86FaE0e32F247A26C7E2e994",
+  "0x55769490c825CCb09b2A6Ae955203FaBF04857fd",
+  "0xfe4bce4b3949c35fb17691d8b03c3cadbe2e5e23",
+  "0x22222222E9fE38F6f1FC8C61b25228adB4D8B953",
+]
+
+export const ONCHAIN_BOOST_INFOS: { [key: string]: { min: bigint; boost: number } } = {
+  "0xe127cE638293FA123Be79C25782a5652581Db234": { min: 1n, boost: 0.5 }, // Llama NFT
+  "0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2": { min: parseEther("2500"), boost: 0.25 }, // veCRVV
+  "0x72a19342e8F1838460eBFCCEf09F6585e32db86E": { min: parseEther("500"), boost: 0.25 }, //vlCVX
+  "0x0C30476f66034E11782938DF8e4384970B6c9e8a": { min: parseEther("2500"), boost: 0.25 }, // veSDT
+  "0xEC6B8A3F3605B083F7044C0F31f2cac0caf1d469": { min: parseEther("25"), boost: 0.25 }, // veFXN
+  "0x4f30A9D41B80ecC5B94306AB4364951AE3170210": { min: parseEther("500"), boost: 0.25 }, // vePENDLE
+  "0x90c1f9220d90d3966FbeE24045EDd73E1d588aD5": { min: parseEther("25"), boost: 0.25 }, // veYFI
+  "0x08d23468A467d2bb86FaE0e32F247A26C7E2e994": { min: parseEther("50"), boost: 0.25 }, // sINV
+  "0x55769490c825CCb09b2A6Ae955203FaBF04857fd": { min: parseEther("200000"), boost: 0.25 }, // sDINERO
+  "0xfe4bce4b3949c35fb17691d8b03c3cadbe2e5e23": { min: parseEther("10000"), boost: 0.25 }, // stRESOLV
+  "0x22222222E9fE38F6f1FC8C61b25228adB4D8B953": { min: parseEther("2500"), boost: 0.25 }, // stRSUP
+}
+
+export const OFFCHAIN_BOOST_INFOS: NumMap = {
+  CVG_COMPENSATION: 1,
+  LP_DEALS: 1,
+  CVG_PEPE: 0.75,
+  DEWHALE_MEMBERS: 0.75,
+  TURTLE_CLUB: 0.5,
+}

@@ -67,7 +67,6 @@ async function main() {
           await userPointsService.insertEvents(pointsActionEventsDates.sortedParsedEvents)
 
           // Insert user events
-
           await userMarketService.insertEvents(hydratedWithCorrectDates.sortedParsedEvents)
 
           // Update active borrowers
