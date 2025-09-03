@@ -349,34 +349,61 @@ model seize_collateral {
   @@schema("events")
 }
 
-model user_tasks {
-  id           BigInt     @id(map: "user_tasks_pkey") @default(autoincrement())
-  task         task       @relation(fields: [task_id], references: [id])
-  task_id      BigInt
-  user_address String     @db.VarChar
-  start        DateTime   @db.Timestamp
-  closed       DateTime?  @db.Timestamp
-  amount       String
-  vote_task    vote_task? @relation(fields: [vote_taskId], references: [id])
-  vote_taskId  BigInt?
+model processed_proposal {
+  id           BigInt   @id @default(autoincrement())
+  proposal_id  String   @unique @db.VarChar
+  title        String?  @db.VarChar
+  processed_at DateTime @default(now()) @db.Timestamp
 
-  @@index([task_id, user_address])
+  @@schema("points")
+}
+
+model user_vote_tasks {
+  id            BigInt    @id @default(autoincrement())
+  vote_task     vote_task @relation(fields: [vote_task_id], references: [id])
+  vote_task_id  BigInt
+  user_address  String    @db.VarChar
+  proposal_id   String    @db.VarChar
+  validation_at DateTime  @db.Timestamp
+  voting_power  Float
+  points        Decimal   @db.Decimal(38, 18) // <= new
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([vote_task_id, user_address, proposal_id])
+  @@index([user_address])
+  @@index([proposal_id])
+  @@index([validation_at]) // utile pour les fenêtres temporelles
   @@schema("points")
 }
 
 model vote_task {
-  id           BigInt       @id(map: "vote_task_pkey") @default(autoincrement())
-  name         String
-  action_type  String       @db.VarChar
-  organisation String       @db.VarChar
-  protocol     String
-  point_rate   Float
-  unit         String
-  description  String
-  url          String
-  is_active    Boolean      @default(true)
-  user_tasks   user_tasks[]
+  id              BigInt            @id(map: "vote_task_pkey") @default(autoincrement())
+  name            String
+  action_type     String            @db.VarChar
+  organisation    String            @db.VarChar
+  protocol        String
+  point_rate      Float
+  unit            String
+  description     String
+  url             String
+  is_active       Boolean           @default(true)
+  user_vote_tasks user_vote_tasks[]
 
+  @@schema("points")
+}
+
+model user_tasks {
+  id           BigInt    @id(map: "user_tasks_pkey") @default(autoincrement())
+  task         task      @relation(fields: [task_id], references: [id])
+  task_id      BigInt
+  user_address String    @db.VarChar
+  start        DateTime  @db.Timestamp
+  closed       DateTime? @db.Timestamp
+  amount       String
+
+  @@index([task_id, user_address])
   @@schema("points")
 }
 
@@ -393,6 +420,12 @@ model task {
   url           String
   is_active     Boolean       @default(true)
   user_tasks    user_tasks[]
+
+  @@schema("points")
+}
+
+model last_vote_block {
+  block_id Int @id(map: "last_vote_block_pkey") @default(autoincrement())
 
   @@schema("points")
 }

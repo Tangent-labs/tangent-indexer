@@ -1,11 +1,16 @@
-query GetProposalVotesRange($proposalId: String!, $created_gte: Int!, $created_lt: Int!) {
-  votes(first: 1000, where: { proposal: $proposalId, created_gte: $created_gte, created_lt: $created_lt }, orderBy: "created", orderDirection: asc) {
+query GetProposalVotesRange($proposalId: String!, $created_gte: Int!, $created_lt: Int!, $first: Int!, $skip: Int!) {
+  votes(
+    first: $first
+    skip: $skip
+    where: { proposal: $proposalId, created_gte: $created_gte, created_lt: $created_lt }
+    orderBy: "created"
+    orderDirection: asc
+  ) {
     id
     voter
     created
     choice
     vp
-    reason
     proposal {
       id
       title

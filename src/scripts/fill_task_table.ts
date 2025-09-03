@@ -10,7 +10,7 @@ async function seedTasks() {
         name: "Hold USG",
         action_type: "hold",
         protocol: "tangent",
-        token_address: "0xB99a731406bCF702D8F2fB9bB2FcC23690F0A30f".toLowerCase(),
+        token_address: "0x86B430cF6539183AaB3385Bb901272F1aeA7daDC".toLowerCase(),
         point_rate: 1.5,
         unit: "hour",
         description: "Hold USG",

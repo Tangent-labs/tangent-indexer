@@ -2,37 +2,71 @@ import axios from "axios"
 import fs from "fs"
 import path from "path"
 import { Proposal, ValidatedTask, Reward, RewardedChoice, OrganizationConfig } from "type/data"
-import { BlockService } from "./BlockService"
-import { JsonRpcProvider } from "ethers"
+import { UserVoteRepository } from "db/UserVoteRepository"
 
 // https://snapshot.box/#/s:sdcrv.eth/proposal/0x10c44649c31c9716592c5ad92752e449d8b024d50adbd75cecea00864920941e
 // https://vote.convexfinance.com/?ref=littlemight.com#/proposal/0x662c82169a3e7c0ff0baeb3ceb20f9d76115b2cd2d9b138cee48d8f8f80812b0
 
 class SnapShotVoteService {
+  userVoteRepository: UserVoteRepository
+
+  constructor(userVoteRepository: UserVoteRepository) {
+    this.userVoteRepository = userVoteRepository
+  }
+
   private readonly GRAPHQL_ENDPOINT = "https://hub.snapshot.org/graphql"
+  private readonly PAGE_SIZE = 100
 
-  computeUserPoints = async (startDate: number, endDate: number) => {
-    const proposals = await this.listProposals()
+  computeUserVoteTasks = async (startDate: number, endDate: number) => {
+    const proposals = await this.listProposals(startDate, endDate)
 
-    console.log("Fetched proposals:", proposals.length)
+    const totalVotes: Array<ValidatedTask> = []
 
     for (const proposal of proposals) {
       const votes = await this.getProposalVotes(proposal, { fromTs: startDate, toTs: endDate })
-      //
-      console.log(votes)
+
+      votes.forEach((v) => totalVotes.push(v))
     }
 
-    //
+    const voteTasks = await this.userVoteRepository.fetchTasks()
+
+    await this.updateUserVoteTasks(totalVotes, voteTasks)
+
+    await this.userVoteRepository.markProposalsProcessed(proposals)
   }
 
-  computeVotes = async (startBlock: number, endBlock: number, blockService: BlockService, providerURL: string) => {
-    const provider = new JsonRpcProvider(providerURL)
-    const [dateStartStr, dateEndStr] = await Promise.all([
-      blockService.getBlockTimestamp(startBlock, provider),
-      blockService.getBlockTimestamp(endBlock, provider),
-    ])
+  async updateUserVoteTasks(totalVotes: Array<ValidatedTask>, voteTasks: { id: bigint; name: string; point_rate?: number; unit?: string }[]) {
+    const voteTasksMap = new Map<string, { id: bigint; point_rate?: number; unit?: string }>()
+    for (const t of voteTasks) voteTasksMap.set(t.name, t)
 
-    await this.computeUserPoints(dateStartStr, dateEndStr)
+    const rows = totalVotes
+      .map((v) => {
+        const task = voteTasksMap.get(v.task)
+        if (!task || !task.point_rate) {
+          return null
+        }
+        // Validate all required fields
+        if (!v.voterAddress || !v.proposalId || !v.validationDate || v.votingPower === undefined || v.votingPower === null) {
+          return null
+        }
+
+        return {
+          vote_task_id: task.id,
+          user_address: v.voterAddress.toLowerCase(),
+          proposal_id: v.proposalId,
+          validation_at: v.validationDate,
+          voting_power: v.votingPower,
+          rate: task.point_rate,
+        }
+      })
+      .filter((row) => row !== null)
+
+    if (!rows.length) {
+      console.log("No user_vote_tasks rows to insert (no matching vote_task names or valid data).")
+      return
+    }
+
+    await this.userVoteRepository.createUserVoteTasks(rows)
   }
 
   public getOrganizations(): OrganizationConfig[] {
@@ -68,12 +102,13 @@ class SnapShotVoteService {
     return list
   }
 
-  async listProposals(): Promise<Proposal[]> {
+  async listProposals(fromTs: number, toTs: number): Promise<Proposal[]> {
     const organizations = this.getOrganizations()
+
     const proposals = []
 
     for (const organization of organizations) {
-      const orgaProposals = await this.listProposalByOrga(organization.key, organization.title)
+      const orgaProposals = await this.listProposalsByOrga(organization.key, organization.title, { fromTs, toTs })
 
       // Add organization rewards to each proposal
       const proposalsWithRewards = orgaProposals.map((proposal: any) => ({
@@ -107,7 +142,6 @@ class SnapShotVoteService {
             if (rewardIndex > -1) {
               return {
                 choice,
-
                 rewardIndex,
                 index: index + 1,
               }
@@ -119,88 +153,69 @@ class SnapShotVoteService {
     }) as Proposal[]
   }
 
-  async listProposalByOrga(orga: string, title: string) {
-    try {
-      // Load the GraphQL query from the external file
-      const query = await this.loadGraphQLQuery("ListProposalByOrga")
+  async listProposalsByOrga(orga: string, title: string, window: { fromTs: number; toTs: number }): Promise<any[]> {
+    const query = await this.loadGraphQLQuery("ListProposalsOverlappingWindow")
+    const all: any[] = []
+    let skip = 0
 
-      // Calculate timestamp for two weeks ago (14 days)
-      const days = 20
-      const timeAgo = Math.floor((Date.now() - days * 24 * 60 * 60 * 1000) / 1000)
-
-      const response = await axios.post(this.GRAPHQL_ENDPOINT, {
+    while (true) {
+      const { data } = await axios.post(this.GRAPHQL_ENDPOINT, {
         query,
         variables: {
           orga,
-          timeAgo,
           title,
+          start_lte: window.toTs,
+          end_gte: window.fromTs,
+          first: this.PAGE_SIZE,
+          skip,
         },
       })
 
-      return response.data.data.proposals
-    } catch (error) {
-      console.error("Error fetching proposals:", error)
-      throw error
+      const batch: any[] = data?.data?.proposals ?? []
+      all.push(...batch)
+      if (batch.length < this.PAGE_SIZE) break
+      skip += this.PAGE_SIZE
     }
-  }
 
-  async test() {
-    const query = await this.loadGraphQLQuery("test")
-    const response = await axios.post(this.GRAPHQL_ENDPOINT, {
-      query,
-    })
-    console.log(response.data.data.proposals)
-    return response.data.data.proposals
+    const processedProposals = await this.userVoteRepository.getProcessedProposals()
+    return all.filter((p) => !processedProposals.some((processedP) => processedP.proposal_id === p?.id))
   }
 
   async getProposalVotes(proposal: Proposal, window?: { fromTs: number; toTs: number }): Promise<ValidatedTask[]> {
+    let allVotes: any[] = []
+    let skip = 0
+    const pageSize = 100
+
     try {
-      // Use a range-aware query when window is provided (see GraphQL below)
       const query = await this.loadGraphQLQuery(window ? "GetProposalVotesRange" : "GetProposalVotes")
-
-      let variables
-
-      if (window) {
-        variables = {
-          proposalId: proposal.id,
-          created_gte: window.fromTs,
-          created_lt: window.toTs,
-        }
-      } else {
-        variables = {
-          proposalId: proposal.id,
-        }
+      while (true) {
+        const variables = window
+          ? { proposalId: proposal.id, created_gte: window.fromTs, created_lt: window.toTs, first: pageSize, skip }
+          : { proposalId: proposal.id, first: pageSize, skip }
+        const response = await axios.post(this.GRAPHQL_ENDPOINT, { query, variables })
+        const batch = response.data.data.votes || []
+        allVotes.push(...batch)
+        if (batch.length < pageSize) break
+        skip += pageSize
       }
 
-      const response = await axios.post(this.GRAPHQL_ENDPOINT, { query, variables })
-      let votes = response.data.data.votes
-
-      // Filter out excluded voters
       if (proposal.excludedVoters && proposal.excludedVoters.length > 0) {
-        votes = votes.filter((vote: any) => !proposal.excludedVoters!.includes(vote.voter))
+        allVotes = allVotes.filter((vote: any) => !proposal.excludedVoters!.includes(vote.voter))
       }
 
-      // Filter for rewarded choices if requested
       if (proposal.rewarded && proposal.rewarded.length > 0) {
         const rewardedIndices = proposal.rewarded.map((reward: any) => reward.index)
-
-        votes = votes.filter((vote: any) => {
-          const choice = vote.choice
-          return Object.entries(choice).some(([option, weight]: [string, any]) => weight > 0 && rewardedIndices.includes(parseInt(option)))
-        })
+        allVotes = allVotes.filter((vote: any) =>
+          Object.entries(vote.choice).some(([option, weight]: [string, any]) => weight > 0 && rewardedIndices.includes(parseInt(option)))
+        )
       }
 
-      // Add task validation logic
       const validatedTasks: ValidatedTask[] = []
-
-      if (proposal.organizationRewards && votes.length > 0) {
-        for (const vote of votes) {
+      if (proposal.organizationRewards && allVotes.length > 0) {
+        for (const vote of allVotes) {
           const choice = vote.choice
-
-          // Check each vote against organization rewards
           for (const reward of proposal.organizationRewards) {
             const isValidated = this.validateVoteAgainstTask(choice, reward, proposal.rewarded || [])
-
             if (isValidated) {
               validatedTasks.push({
                 task: reward.task,
@@ -217,70 +232,10 @@ class SnapShotVoteService {
 
       return validatedTasks
     } catch (error) {
-      console.error("Error fetching proposal votes:", error)
-      throw error
+      console.error(`Error fetching votes for proposal ${proposal.id}:`, error)
+      return [] // Continue processing other proposals
     }
   }
-
-  // async getProposalVotes(proposal: Proposal): Promise<ValidatedTask[]> {
-  //   try {
-  //     // Load the GraphQL query from the external file
-  //     const query = await this.loadGraphQLQuery("GetProposalVotes")
-  //     const response = await axios.post(this.GRAPHQL_ENDPOINT, {
-  //       query,
-  //       variables: {
-  //         proposalId: proposal.id,
-  //       },
-  //     })
-
-  //     let votes = response.data.data.votes
-
-  //     // Filter out excluded voters
-  //     if (proposal.excludedVoters && proposal.excludedVoters.length > 0) {
-  //       votes = votes.filter((vote: any) => !proposal.excludedVoters!.includes(vote.voter))
-  //     }
-
-  //     // Filter for rewarded choices if requested
-  //     if (proposal.rewarded && proposal.rewarded.length > 0) {
-  //       const rewardedIndices = proposal.rewarded.map((reward: any) => reward.index)
-
-  //       votes = votes.filter((vote: any) => {
-  //         const choice = vote.choice
-  //         return Object.entries(choice).some(([option, weight]: [string, any]) => weight > 0 && rewardedIndices.includes(parseInt(option)))
-  //       })
-  //     }
-
-  //     // Add task validation logic
-  //     const validatedTasks: ValidatedTask[] = []
-
-  //     if (proposal.organizationRewards && votes.length > 0) {
-  //       for (const vote of votes) {
-  //         const choice = vote.choice
-
-  //         // Check each vote against organization rewards
-  //         for (const reward of proposal.organizationRewards) {
-  //           const isValidated = this.validateVoteAgainstTask(choice, reward, proposal.rewarded || [])
-
-  //           if (isValidated) {
-  //             validatedTasks.push({
-  //               task: reward.task,
-  //               value: reward.value,
-  //               validationDate: new Date(vote.created * 1000),
-  //               voterAddress: vote.voter,
-  //               votingPower: vote.vp || 0,
-  //               proposalId: proposal.id,
-  //             })
-  //           }
-  //         }
-  //       }
-  //     }
-
-  //     return validatedTasks
-  //   } catch (error) {
-  //     console.error("Error fetching proposal votes:", error)
-  //     throw error
-  //   }
-  // }
 
   private validateVoteAgainstTask(voteChoice: any, reward: Reward, rewardedChoices: RewardedChoice[]): boolean {
     // Check if the vote choice matches the reward value
