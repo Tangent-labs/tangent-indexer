@@ -10,7 +10,7 @@ export class UserVoteRepository extends AbstractRepository {
   }
 
   async createUserVoteTasks(
-    rows: {
+    tasks: {
       vote_task_id: bigint
       user_address: string
       proposal_id: string
@@ -19,26 +19,29 @@ export class UserVoteRepository extends AbstractRepository {
       rate: number
     }[]
   ) {
-    if (!rows.length) return { count: 0 }
+    if (tasks.length === 0) return { count: 0 }
 
-    const seen = new Set<string>()
-    const pooled = []
-    for (const r of rows) {
-      const key = `${String(r?.vote_task_id)}|${r?.user_address?.toLowerCase()}|${r.proposal_id}`
-      if (seen.has(key)) continue
-      seen.add(key)
-      pooled.push({
-        vote_task_id: BigInt(r.vote_task_id),
-        user_address: r?.user_address?.toLowerCase(),
-        proposal_id: r.proposal_id,
-        validation_at: r.validation_at,
-        voting_power: r.voting_power,
-        points: r?.voting_power * r?.rate,
+    const uniqueTaskKeys = new Set<string>()
+    const uniqueVoteTasks = []
+
+    for (const task of tasks) {
+      const deduplicatedKey = `${String(task.vote_task_id)}|${task.user_address.toLowerCase()}|${task.proposal_id}`
+      if (uniqueTaskKeys.has(deduplicatedKey)) continue
+
+      uniqueTaskKeys.add(deduplicatedKey)
+
+      uniqueVoteTasks.push({
+        vote_task_id: BigInt(task.vote_task_id),
+        user_address: task.user_address.toLowerCase(),
+        proposal_id: task.proposal_id,
+        validation_at: task.validation_at,
+        voting_power: task.voting_power,
+        points: task.voting_power * task.rate,
       })
     }
 
     return this.prismaClient.user_vote_tasks.createMany({
-      data: pooled,
+      data: uniqueVoteTasks,
       skipDuplicates: true,
     })
   }
@@ -50,19 +53,23 @@ export class UserVoteRepository extends AbstractRepository {
   }
 
   async markProposalsProcessed(proposals: Proposal[]) {
-    if (!proposals.length) return { count: 0 }
+    if (proposals.length === 0) return
 
-    const seen = new Set<string>()
-    const data = []
-    for (const it of proposals) {
-      const k = it.id
-      if (seen.has(k)) continue
-      seen.add(k)
-      data.push({ proposal_id: it.id, title: it.title ?? null })
+    const uniqueProposalIds = new Set<string>()
+    const proposalsToInsert = []
+
+    for (const proposal of proposals) {
+      if (uniqueProposalIds.has(proposal.id)) continue
+
+      uniqueProposalIds.add(proposal.id)
+      proposalsToInsert.push({
+        proposal_id: proposal.id,
+        title: proposal.title ?? null,
+      })
     }
 
     return this.prismaClient.processed_proposal.createMany({
-      data,
+      data: proposalsToInsert,
       skipDuplicates: true,
     })
   }

@@ -33,7 +33,7 @@ async function main() {
         action_type: "snapshot_vote",
         organisation: "sdcrv.eth",
         protocol: "Curve",
-        point_rate: 1,
+        point_rate: 2,
         unit: "vote",
         description: "sdCRV rewarded choice vote",
         url: "https://snapshot.box/#/s:sdcrv.eth",

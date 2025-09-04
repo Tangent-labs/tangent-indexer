@@ -1,4 +1,4 @@
-query ListProposalsOverlappingWindow($orga: String!, $start_lte: Int!, $end_gte: Int!, $first: Int!, $skip: Int!) {
+query ListProposals($orga: String!, $start_lte: Int!, $end_gte: Int!, $first: Int!, $skip: Int!) {
   proposals(
     first: $first
     skip: $skip

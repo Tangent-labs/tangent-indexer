@@ -366,7 +366,7 @@ model user_vote_tasks {
   proposal_id   String    @db.VarChar
   validation_at DateTime  @db.Timestamp
   voting_power  Float
-  points        Decimal   @db.Decimal(38, 18) // <= new
+  points        Decimal   @db.Decimal(20, 0) // <= new
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -424,8 +424,8 @@ model task {
   @@schema("points")
 }
 
-model last_vote_block {
-  block_id Int @id(map: "last_vote_block_pkey") @default(autoincrement())
+model last_vote_processed_block {
+  block_id Int @id(map: "last_vote_processed_block_pkey") @default(autoincrement())
 
   @@schema("points")
 }

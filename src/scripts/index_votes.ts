@@ -1,37 +1,47 @@
 import * as dotenv from "dotenv"
 import { PrismaClient } from "@prisma/client"
 import { TransactionPrisma } from "type/prisma"
+import { BlockRepository } from "db/BlockRepository"
 import { setUpIndexer } from "../config/indexer_setup"
-import { UserVoteRepository } from "db/UserVoteRepository"
+import { BlockService } from "../services/BlockService"
+import { indexerConfig } from "config/indexer_config"
 import SnapShotVoteService from "services/SnapShotVoteService"
+import { UserVoteRepository } from "db/UserVoteRepository"
 
 dotenv.config()
 
 async function main() {
-  const { handleError } = setUpIndexer()
-
-  const { prismaClient, snapshotService, setTransaction } = setUpIndexerBlockServices()
+  const { providers, handleError } = setUpIndexer()
+  const { prismaClient, blockService, snapShotVoteService, setTransaction } = setUpIndexerBlockServices()
 
   try {
-    const now = new Date()
-    const endDate = new Date(now.getTime()) // ajd
-    const startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) // 7 jours avant
+    const blockInfo = await BlockService.getVotesBlockInfo(providers, blockService)
+    if (blockInfo === false) {
+      console.log("Nothing to index")
+      return
+    }
 
-    const startTs = Math.floor(startDate.getTime() / 1000)
-    const endTs = Math.floor(endDate.getTime() / 1000)
+    const { startBlock, endBlock, actualBlock, bestProviderIndex } = blockInfo
 
-    console.log(`Indexing votes from ${startDate} to ${endDate}`)
+    if (startBlock && endBlock) {
+      console.log("indexing :", startBlock, "<----------------->", endBlock)
+      await prismaClient.$transaction(
+        async (dbTransaction: TransactionPrisma) => {
+          setTransaction(dbTransaction)
 
-    await prismaClient.$transaction(
-      async (dbTransaction: TransactionPrisma) => {
-        setTransaction(dbTransaction)
+          await snapShotVoteService.computeUserVoteTasks(startBlock, endBlock, blockService, indexerConfig.provider.chainRpc[bestProviderIndex])
 
-        await snapshotService.computeUserVoteTasks(startTs, endTs)
-      },
-      { timeout: 10_000_000 }
-    )
+          await blockService.updateLastVoteBlockIndexed(endBlock)
+        },
+        {
+          timeout: 10_000_000,
+        }
+      )
+    } else {
+      console.log("Nothing to index, Current block:", actualBlock)
+    }
   } catch (e: any) {
-    console.error("Error while indexing votes", e.message)
+    console.error("Error while indexing blocks", (e as Error).message)
     handleError(e as Error)
   }
 }
@@ -40,17 +50,21 @@ main().then()
 
 function setUpIndexerBlockServices() {
   const prismaClient = new PrismaClient()
+  const blockRepository = new BlockRepository(prismaClient)
   const userVoteRepository = new UserVoteRepository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
+    blockRepository.setClient(dbTransaction)
     userVoteRepository.setClient(dbTransaction)
   }
 
-  const snapshotService = new SnapShotVoteService(userVoteRepository)
+  const blockService = new BlockService(blockRepository)
+  const snapShotVoteService = new SnapShotVoteService(userVoteRepository)
 
   return {
     prismaClient,
-    snapshotService,
+    snapShotVoteService,
+    blockService,
     setTransaction,
   }
 }
