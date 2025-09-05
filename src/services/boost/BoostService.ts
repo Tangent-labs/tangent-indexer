@@ -8,7 +8,7 @@ import { NumMap, TokenBalancesForBoostOut } from "./types"
 import { OFFCHAIN_BOOST_INFOS, ONCHAIN_BOOST_INFOS, SNAPSHOT_BOOST_TOKENS } from "./config"
 import { BoostRepository } from "db/BoostRepository"
 
-//TODO
+// TODO
 // - Pull users dynamically from the database
 export class BoostService {
   provider: JsonRpcProvider

@@ -12,7 +12,7 @@ describe("UserPointsService.updateBoosts", () => {
   let deleteUserBoostsSpy: ReturnType<typeof vi.spyOn>
   let insertUserBoostsSpy: ReturnType<typeof vi.spyOn>
 
-  let onChainSnapshot = {
+  const onChainSnapshot = {
     timestamp: 100n,
     snapshot: [
       {
