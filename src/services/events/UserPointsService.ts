@@ -175,19 +175,12 @@ export class UserPointsService {
 
   processUserPoints = async (startBlock: number, endBlock: number, blockService: BlockService, providerURL: string) => {
     const provider = new JsonRpcProvider(providerURL)
-    const [dateStartStr, dateEndStr] = await Promise.all([
+    const [dateStartStr, dateEndStr] = (await Promise.all([
       blockService.getBlockTimestamp(startBlock, provider),
       blockService.getBlockTimestamp(endBlock, provider),
-    ])
+    ])) as [number, number]
 
-    const dateStart = new Date(dateStartStr * 1000)
-    const dateEnd = new Date(dateEndStr * 1000)
-
-    await this.userPointsRepository.computeUserPoints(dateStart, dateEnd)
-  }
-
-  processGodfatherPoints = async () => {
-    await this.userPointsRepository.computeGodfatherPoints()
+    await this.userPointsRepository.computeUserPoints(dateStartStr, dateEndStr)
   }
 
   insertEvents = async (sortedParsedEvents: SortedEvents) => {

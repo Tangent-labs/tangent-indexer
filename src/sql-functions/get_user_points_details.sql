@@ -1,23 +1,28 @@
--- One row per clipped segment with all intermediates
+-- Drop existing function first to allow return type modification
+
+
 CREATE OR REPLACE FUNCTION points.get_user_points_details(
-  start_at timestamptz,
-  end_at   timestamptz
+  start_at timestamp,
+  end_at   timestamp
 )
 RETURNS TABLE (
-  user_task_id    bigint,
-  task_id         bigint,
-  user_address    text,
-  token_address   text,
-  seg_start       timestamptz,
-  seg_end         timestamptz,
-  hours_in_seg    double precision,
-  amount          numeric,
-  point_rate      numeric,
-  avg_price_usd   numeric,
-  base_points     int,
-  boost_factor    double precision,
-  booster_points  int,
-  total_points    int
+  user_task_id     bigint,
+  task_id          bigint,
+  user_address     text,
+  token_address    text,
+  seg_start        timestamp,
+  seg_end          timestamp,
+  hours_in_seg     double precision,
+  amount           numeric,
+  point_rate       numeric,
+  avg_price_usd    numeric,
+  base_points      int,
+  boost_factor     double precision,
+  booster_points   int,
+  total_points     int,
+  godfather_id     bigint,
+  time_weight      double precision,
+  godfather_points int
 )
 LANGUAGE sql
 AS $$
@@ -26,18 +31,17 @@ AS $$
   ),
   clip AS (
     SELECT
-      ut.id                                   AS user_task_id,
+      ut.id                                        AS user_task_id,
       ut.task_id,
       ut.user_address,
       t.token_address,
-      t.point_rate,                           -- points per hour per USD
-      GREATEST(ut.start, p.start_at)          AS seg_start,
+      t.point_rate,                                -- points per second per USD
+      GREATEST(ut.start, p.start_at)               AS seg_start,
       LEAST(COALESCE(ut.closed, p.end_at), p.end_at) AS seg_end,
-      NULLIF(TRIM(ut.amount), '')::numeric / POWER(10, 18)    AS amount
+      NULLIF(ut.amount, '')::numeric / POWER(10, 18) AS amount
     FROM points.user_tasks ut
     JOIN points.task t
       ON t.id = ut.task_id
-     AND t.unit  in ('hour','day')
      AND t.is_active IS TRUE
     CROSS JOIN params p
     WHERE ut.start < p.end_at
@@ -46,44 +50,63 @@ AS $$
   seg_price AS (
     SELECT
       c.*,
+      EXTRACT(EPOCH FROM (c.seg_end - c.seg_start))        AS seg_seconds,
       COALESCE(
-        ( SELECT AVG(NULLIF(pf.price_usd, 0)::numeric)
-          FROM points.price_feeds pf
-          WHERE pf.token = c.token_address
-            AND pf.timestamp >= c.seg_start
-            AND pf.timestamp <  c.seg_end ),
-        ( SELECT NULLIF(pf2.price_usd, 0)::numeric
-          FROM points.price_feeds pf2
-          WHERE pf2.token = c.token_address
-            AND pf2.timestamp < c.seg_start
-          ORDER BY pf2.timestamp DESC
-          LIMIT 1 )
-      ) AS avg_price_usd
+        price_agg.avg_price_usd,
+        last_before.price_usd
+      )::numeric AS avg_price_usd
     FROM clip c
+    -- time-weighted average over overlapping price intervals
+    LEFT JOIN LATERAL (
+      SELECT
+        SUM(
+          EXTRACT(EPOCH FROM (LEAST(ps.next_ts, c.seg_end) - GREATEST(ps.ts, c.seg_start)))
+          * NULLIF(ps.price_usd, 0)::double precision
+        ) / NULLIF(EXTRACT(EPOCH FROM (c.seg_end - c.seg_start)), 0)
+        AS avg_price_usd
+      FROM (
+        SELECT
+          pf.timestamp AS ts,
+          LEAD(pf.timestamp) OVER (PARTITION BY pf.token ORDER BY pf.timestamp) AS next_ts,
+          pf.price_usd
+        FROM points.price_feeds pf
+        WHERE pf.token = c.token_address
+          AND pf.timestamp < c.seg_end              -- pre-filter for efficiency
+      ) ps
+      WHERE ps.next_ts IS NOT NULL
+        AND ps.ts < c.seg_end
+        AND ps.next_ts > c.seg_start
+    ) AS price_agg ON true
+    -- fast single-row probe for last price before seg_start (uses your covering index)
+    LEFT JOIN LATERAL (
+      SELECT NULLIF(pf2.price_usd, 0)::double precision AS price_usd
+      FROM points.price_feeds pf2
+      WHERE pf2.token = c.token_address
+        AND pf2.timestamp <= c.seg_start
+      ORDER BY pf2.timestamp DESC
+      LIMIT 1
+    ) AS last_before ON true
     WHERE c.seg_end > c.seg_start
   ),
   seg_with_mult AS (
     SELECT
       sp.*,
-      COALESCE(
-        (
-          SELECT SUM(
-            GREATEST(
-              EXTRACT(EPOCH FROM (
-                LEAST(COALESCE(ub.end_at, sp.seg_end), sp.seg_end) -
-                GREATEST(ub.start_at, sp.seg_start)
-              )) / 3600.0,
-              0
-            ) * (ub.multiplier - 1.0)
-          ) / NULLIF(EXTRACT(EPOCH FROM (sp.seg_end - sp.seg_start)) / 3600.0, 0)
-          FROM points.user_boost ub
-          WHERE ub.user_address = sp.user_address
-            AND ub.start_at < sp.seg_end
-            AND COALESCE(ub.end_at, sp.seg_end) > sp.seg_start
-        ),
-        0.0
-      ) AS boost_factor
+      COALESCE(boost_agg.boost_factor, 0.0) AS boost_factor
     FROM seg_price sp
+    LEFT JOIN LATERAL (
+      SELECT
+        SUM(
+          GREATEST(
+            EXTRACT(EPOCH FROM (LEAST(COALESCE(ub.end_at, sp.seg_end), sp.seg_end)
+                                 - GREATEST(ub.start_at, sp.seg_start))),
+            0
+          ) * (ub.multiplier - 1.0)
+        ) / NULLIF(sp.seg_seconds, 0) AS boost_factor
+      FROM points.user_boost ub
+      WHERE ub.user_address = sp.user_address
+        AND ub.start_at < sp.seg_end
+        AND COALESCE(ub.end_at, sp.seg_end) > sp.seg_start
+    ) AS boost_agg ON true
   )
   SELECT
     swm.user_task_id,
@@ -92,33 +115,69 @@ AS $$
     swm.token_address,
     swm.seg_start,
     swm.seg_end,
-    EXTRACT(EPOCH FROM (swm.seg_end - swm.seg_start)) / 3600.0 AS hours_in_seg,
-    COALESCE(swm.amount, 0)       AS amount,
+    (swm.seg_seconds / 3600.0)::double precision AS hours_in_seg,
+    COALESCE(swm.amount, 0)                      AS amount,
     swm.point_rate,
-    COALESCE(swm.avg_price_usd,0) AS avg_price_usd,
-    -- base points for the segment
+    COALESCE(swm.avg_price_usd, 0)               AS avg_price_usd,
+    -- base points
     ROUND(
       swm.point_rate
-      * (EXTRACT(EPOCH FROM (swm.seg_end - swm.seg_start)) / 3600.0)
+      * swm.seg_seconds
       * COALESCE(swm.amount, 0)
       * COALESCE(swm.avg_price_usd, 0)
-    )::int AS base_points,
-    swm.boost_factor, 
-    -- booster points for the segment
+    )::int                                        AS base_points,
+    swm.boost_factor,
+    -- booster points
     ROUND(
-      swm.point_rate
-      * (EXTRACT(EPOCH FROM (swm.seg_end - swm.seg_start)) / 3600.0)
-      * COALESCE(swm.amount, 0)
-      * COALESCE(swm.avg_price_usd, 0)
-      * swm.boost_factor
-    )::int AS booster_points,
-    -- total
+      (
+        swm.point_rate
+        * swm.seg_seconds
+        * COALESCE(swm.amount, 0)
+        * COALESCE(swm.avg_price_usd, 0)
+      ) * swm.boost_factor
+    )::int                                        AS booster_points,
+    -- total points
     ROUND(
-      swm.point_rate
-      * (EXTRACT(EPOCH FROM (swm.seg_end - swm.seg_start)) / 3600.0)
-      * COALESCE(swm.amount, 0)
-      * COALESCE(swm.avg_price_usd, 0)
-      * (1 + swm.boost_factor)
-    )::int AS total_points
-  FROM seg_with_mult swm;
+      (
+        swm.point_rate
+        * swm.seg_seconds
+        * COALESCE(swm.amount, 0)
+        * COALESCE(swm.avg_price_usd, 0)
+      ) * (1 + swm.boost_factor)
+    )::int                                        AS total_points,
+    gf.godfather_id,
+    COALESCE(gf.time_weight, 0.0)                 AS time_weight,
+    CASE
+      WHEN gf.godfather_id IS NOT NULL THEN
+        ROUND(
+          (
+            swm.point_rate
+            * swm.seg_seconds
+            * COALESCE(swm.amount, 0)
+            * COALESCE(swm.avg_price_usd, 0)
+          ) * (1 + swm.boost_factor) * 0.10 * COALESCE(gf.time_weight, 0.0)
+        )::int
+      ELSE 0
+    END                                           AS godfather_points
+  FROM seg_with_mult swm
+  LEFT JOIN global."user" u
+    ON u.address = swm.user_address
+  -- choose a single referral record to avoid row multiplication:
+  LEFT JOIN LATERAL (
+    SELECT 
+      ru.godfather_id,
+      CASE 
+        WHEN ru.used_at <= swm.seg_start THEN 1.0  -- Referral before segment start = full weight
+        WHEN ru.used_at >= swm.seg_end THEN 0.0    -- Referral after segment end = no weight
+        ELSE 
+          -- Segment crosses referral: weight = (duration after referral) / (total duration)
+          EXTRACT(EPOCH FROM (swm.seg_end - ru.used_at)) / 
+          EXTRACT(EPOCH FROM (swm.seg_end - swm.seg_start))
+      END AS time_weight
+    FROM global.referral_usages ru
+    WHERE ru.godson_id = u.id
+      AND ru.used_at <= swm.seg_end
+    ORDER BY ru.used_at ASC
+    LIMIT 1
+  ) AS gf ON true;
 $$;

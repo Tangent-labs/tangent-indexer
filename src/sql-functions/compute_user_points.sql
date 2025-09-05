@@ -1,6 +1,6 @@
 CREATE OR REPLACE FUNCTION points.compute_user_points(
-  start_at timestamptz,
-  end_at timestamptz
+  start_at timestamp,
+  end_at timestamp
 )
 RETURNS void
 LANGUAGE sql
@@ -15,6 +15,14 @@ AS $$
     FROM points.get_user_points_per_task(start_at, end_at) pt
     WHERE up.user_address = pt.user_address
       AND up.task_id      = pt.task_id;
+
+
+
+       UPDATE global."user" g
+       SET referral_points = g.referral_points + pt.godfather_points
+       FROM points.get_user_points_per_task(start_at, end_at) pt
+       WHERE g.address = pt.user_address
+         AND pt.godfather_id IS NOT NULL;
 
 
 $$;

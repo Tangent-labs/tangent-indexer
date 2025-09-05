@@ -50,6 +50,10 @@ async function main() {
           const transferToWatch = await userPointsService.getERC20ToTrack()
 
           // Call fetchTransferLogs with the addresses
+          if (!transferToWatch?.length) {
+            console.warn("ERC20 to track is not filled")
+            // TODO add  a notification
+          }
           const transferLogs = transferToWatch?.length ? await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch) : []
 
           // Parse events with their proper topics and group all user events to update active borrowers

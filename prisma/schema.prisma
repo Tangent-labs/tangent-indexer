@@ -1,6 +1,5 @@
 generator prisma {
   provider        = "prisma-client-js"
-  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
@@ -11,7 +10,7 @@ datasource db {
 
 model global_blocks {
   block_id   BigInt    @id(map: "blocks_pkey") @default(autoincrement())
-  created_at DateTime? @db.Timestamptz(6)
+  created_at DateTime? @db.Timestamp
 
   @@schema("events")
 }
@@ -22,7 +21,7 @@ model active_borrowers {
   market_id        BigInt
   debt_shares      String
   borrower_address String      @db.VarChar
-  block_date       DateTime    @default(now())
+  block_date       DateTime    @default(now()) @db.Timestamp
 
   @@schema("global")
 }
@@ -33,7 +32,7 @@ model liquidation_bot_log {
   is_error      Boolean  @default(false)
   action        String
   data          Json
-  date          DateTime @default(now())
+  date          DateTime @default(now()) @db.Timestamp
 
   @@index([execution_key], map: "liquidation_bot_log_execution_key_idx")
   @@schema("global")
@@ -43,7 +42,7 @@ model market_global_data {
   id            BigInt      @id(map: "global_data_and_aprs_markets_history_pkey") @default(autoincrement())
   market        usg_markets @relation(fields: [market_id], references: [id])
   market_id     BigInt
-  timestamp     DateTime
+  timestamp     DateTime @db.Timestamp
   apr_projected Json
   apr_current   Json
   tvl_usd       Float
@@ -93,7 +92,7 @@ model borrow {
   receiver        String      @db.VarChar
   borrowed_amount String      @db.VarChar
   debt_shares     String      @db.VarChar
-  block_date      DateTime
+  block_date      DateTime @db.Timestamp
   block_id        Int
   tx_hash         String      @db.VarChar(66)
 
@@ -108,7 +107,7 @@ model deposit {
   market_id     BigInt
   account       String      @db.VarChar
   staked_amount String      @db.VarChar
-  block_date    DateTime
+  block_date    DateTime @db.Timestamp
   block_id      Int
   tx_hash       String      @db.VarChar(66)
 
@@ -125,7 +124,7 @@ model zap_deposit {
   staked_amount String      @db.VarChar
   token_in      String      @db.VarChar
   amount_in     String      @db.VarChar
-  block_date    DateTime
+  block_date    DateTime @db.Timestamp
   block_id      Int
   tx_hash       String      @db.VarChar(66)
 
@@ -142,7 +141,7 @@ model deposit_and_borrow {
   staked_amount String      @db.VarChar
   borrow_amount String      @db.VarChar
   debt_shares   String      @db.VarChar
-  block_date    DateTime
+  block_date    DateTime @db.Timestamp
   block_id      Int
   tx_hash       String      @db.VarChar(66)
 
@@ -161,7 +160,7 @@ model zap_deposit_and_borrow {
   debt_shares   String      @db.VarChar
   token_in      String      @db.VarChar
   amount_in     String      @db.VarChar
-  block_date    DateTime
+  block_date    DateTime @db.Timestamp
   block_id      Int
   tx_hash       String      @db.VarChar(66)
 
@@ -176,7 +175,7 @@ model withdraw {
   market_id        BigInt
   account          String      @db.VarChar
   withdrawn_amount String      @db.VarChar
-  block_date       DateTime
+  block_date       DateTime @db.Timestamp
   block_id         Int
   tx_hash          String      @db.VarChar(66)
 
@@ -193,7 +192,7 @@ model repay {
   repayer       String      @db.VarChar
   repaid_amount String      @db.VarChar
   debt_shares   String      @db.VarChar
-  block_date    DateTime
+  block_date    DateTime @db.Timestamp
   block_id      Int
   tx_hash       String      @db.VarChar(66)
 
@@ -210,7 +209,7 @@ model repay_and_withdraw {
   repaid_amount    String      @db.VarChar
   withdrawn_amount String      @db.VarChar
   debt_shares      String      @db.VarChar
-  block_date       DateTime
+  block_date       DateTime @db.Timestamp
   block_id         Int
   tx_hash          String      @db.VarChar(66)
 
@@ -229,7 +228,7 @@ model zap_repay {
   debt_shares   String      @db.VarChar
   token_in      String      @db.VarChar
   amount_in     String      @db.VarChar
-  block_date    DateTime
+  block_date    DateTime @db.Timestamp
   block_id      Int
   tx_hash       String      @db.VarChar(66)
 
@@ -248,7 +247,7 @@ model zap_repay_and_withdraw {
   debt_shares      String      @db.VarChar
   token_in         String      @db.VarChar
   amount_in        String      @db.VarChar
-  block_date       DateTime
+  block_date       DateTime @db.Timestamp
   block_id         Int
   tx_hash          String      @db.VarChar(66)
 
@@ -266,7 +265,7 @@ model leverage {
   collat_bought   String      @db.VarChar
   borrowed_amount String      @db.VarChar
   debt_shares     String      @db.VarChar
-  block_date      DateTime
+  block_date      DateTime @db.Timestamp
   block_id        Int
   tx_hash         String      @db.VarChar(66)
 
@@ -287,7 +286,7 @@ model zap_leverage {
   debt_shares        String      @db.VarChar
   token_in           String      @db.VarChar
   amount_in          String      @db.VarChar
-  block_date         DateTime
+  block_date         DateTime @db.Timestamp
   block_id           Int
   tx_hash            String      @db.VarChar(66)
 
@@ -306,7 +305,7 @@ model liquidate {
   collateral_liquidated String      @db.VarChar
   liquidator            String      @db.VarChar
   debt_shares           String      @db.VarChar
-  block_date            DateTime
+  block_date            DateTime @db.Timestamp
   block_id              Int
   tx_hash               String      @db.VarChar(66)
 
@@ -324,7 +323,7 @@ model self_liquidate {
   collateral_liquidated String      @db.VarChar
   liquidator            String      @db.VarChar
   debt_shares           String      @db.VarChar
-  block_date            DateTime
+  block_date            DateTime @db.Timestamp
   block_id              Int
   tx_hash               String      @db.VarChar(66)
 
@@ -340,7 +339,7 @@ model seize_collateral {
   account           String      @db.VarChar
   bad_debt          String      @db.VarChar
   collateral_seized String      @db.VarChar
-  block_date        DateTime
+  block_date        DateTime @db.Timestamp
   block_id          Int
   tx_hash           String      @db.VarChar(66)
 
@@ -370,8 +369,7 @@ model task {
   protocol      String
   token         tracked_erc20 @relation(fields: [token_address], references: [address])
   token_address String
-  point_rate    Float
-  unit          String
+  point_rate    Decimal   @db.Decimal(8, 6)
   description   String
   url           String
   is_active     Boolean       @default(true)
@@ -406,7 +404,7 @@ model transfer_events {
   from          String        @db.VarChar
   to            String        @db.VarChar
   amount        String        @db.VarChar
-  block_date    DateTime
+  block_date    DateTime @db.Timestamp  
   block_id      Int
   tx_hash       String        @db.VarChar(66)
 
@@ -431,7 +429,7 @@ model referral_usages {
   id           BigInt   @id(map: "referral_usages_pkey") @default(autoincrement())
   godfather_id BigInt
   godson_id    BigInt
-  used_at      DateTime @default(now())
+  used_at      DateTime @default(now()) @db.Timestamp
   godfather    user     @relation(fields: [godfather_id], references: [id], name: "GodfatherRelation")
   godson       user     @relation(fields: [godson_id], references: [id], name: "GodsonRelation")
 
@@ -445,8 +443,8 @@ model user_points {
   user         user       @relation(fields: [user_address], references: [address])
   task_id      BigInt
   task         task       @relation(fields: [task_id], references: [id])
-  points       Int
-  booster_points       Int
+  points       BigInt
+  booster_points       BigInt
   @@unique([user_address, task_id], map: "user_points_task_user_uk")
   @@schema("points")
 }
@@ -455,20 +453,20 @@ model price_feeds {
   id            BigInt        @id(map: "price_feeds_pkey") @default(autoincrement())
   token_address tracked_erc20 @relation(fields: [token], references: [address])
   token         String
-  timestamp     DateTime
-  price_usd     Decimal     @db.Decimal(36, 18)
-  @@index([token, timestamp], map: "price_feeds_token_ts_idx")
+  timestamp     DateTime @db.Timestamp
+  price_usd     Decimal     @db.Decimal(12, 4)
+  // index added in  src\sql-functions\index_include_price.sql because include is not supported by prisma.
   @@schema("points")
-}
+} 
 
 model user_boost {
   id           BigInt    @id @default(autoincrement())
   user_address String    @db.VarChar
   user         user      @relation(fields: [user_address], references: [address])
   multiplier   Decimal   @db.Decimal(4, 2)
-  start_at     DateTime  @db.Timestamptz(6)
-  end_at       DateTime? @db.Timestamptz(6)
-  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  start_at     DateTime  @db.Timestamp
+  end_at       DateTime? @db.Timestamp
+  created_at   DateTime  @default(now()) @db.Timestamp
   @@index([user_address, start_at, end_at], map: "user_boost_user_start_end_idx")
   @@index([user_address, start_at])
   @@schema("points")

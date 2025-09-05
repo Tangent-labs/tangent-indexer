@@ -38,7 +38,7 @@ const sqlFunctions: string[] = [
   "get_user_points_details",
   "get_user_points_per_task",
   "compute_user_points",
-  "compute_godfather_point",
+  "idx_price_feeds_token_ts_with_price",
 ]
 
 async function deployFunction(prisma: PrismaClient, sqlFunction: string): Promise<void> {
@@ -53,7 +53,6 @@ async function deployFunction(prisma: PrismaClient, sqlFunction: string): Promis
       throw new Error(`SQL file ${sqlFilePath} is empty`)
     }
 
-    // Execute the SQL to create/replace the function
     await prisma.$executeRawUnsafe(sqlContent)
 
     console.log(`✅ Successfully deployed: ${sqlFunction}`)
