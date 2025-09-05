@@ -7,7 +7,7 @@ import { BoostRepository } from "db/BoostRepository"
 // updateTasks()
 // --------------------------------------------
 
-describe.only("UserPointsService merging functions", () => {
+describe("UserPointsService merging functions", () => {
   let boostService: BoostService
   let provider: JsonRpcProvider
 
@@ -66,7 +66,7 @@ describe.only("UserPointsService merging functions", () => {
     ])
   })
 
-  it.only("Should sort properly lines to delete and insert in user_boosts", async () => {
+  it("Should sort properly lines to delete and insert in user_boosts", async () => {
     const date0 = new Date()
     const date1 = new Date()
     const date2 = new Date(date1)
