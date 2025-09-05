@@ -7,22 +7,18 @@ async function main() {
     data: [
       {
         name: "VOTE_01",
-        action_type: "snapshot_vote",
         organisation: "cvx.eth",
         protocol: "Convex",
         point_rate: 1,
-        unit: "vote",
         description: "Convex rewarded choice vote",
         url: "https://vote.convexfinance.com/",
         is_active: true,
       },
       {
         name: "VOTE_02",
-        action_type: "snapshot_vote",
         organisation: "cvx.eth",
         protocol: "Convex",
         point_rate: 1,
-        unit: "vote",
         description: "Convex rewarded choice vote",
         url: "https://vote.convexfinance.com/",
         is_active: true,
@@ -30,11 +26,9 @@ async function main() {
       {
         // sdCRV weekly “rewarded choice” votes (sdcrv.eth)
         name: "VOTE_03",
-        action_type: "snapshot_vote",
         organisation: "sdcrv.eth",
         protocol: "Curve",
         point_rate: 2,
-        unit: "vote",
         description: "sdCRV rewarded choice vote",
         url: "https://snapshot.box/#/s:sdcrv.eth",
         is_active: true,
@@ -42,11 +36,9 @@ async function main() {
       {
         // Optional: participation reward once per proposal (any org)
         name: "VOTE_PARTICIPATION",
-        action_type: "snapshot_vote",
         organisation: "*",
         protocol: "Generic",
         point_rate: 10,
-        unit: "vote",
         description: "Flat reward for participating in a proposal (once per proposal)",
         url: "https://hub.snapshot.org",
         is_active: true,

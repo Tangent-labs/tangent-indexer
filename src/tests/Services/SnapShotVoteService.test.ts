@@ -53,14 +53,14 @@ describe("SnapShotVoteService", () => {
   let listProposalsSpy: ReturnType<typeof vi.spyOn>
   let getProposalVotesSpy: ReturnType<typeof vi.spyOn>
   let fetchTasksSpy: ReturnType<typeof vi.spyOn>
-  let markProposalsProcessedSpy: ReturnType<typeof vi.spyOn>
+  let markProcessedProposalsSpy: ReturnType<typeof vi.spyOn>
   let getProcessedProposalsSpy: ReturnType<typeof vi.spyOn>
   let createUserVoteTasksSpy: ReturnType<typeof vi.spyOn>
   let getBlockTimestampSpy: ReturnType<typeof vi.spyOn>
 
   const userVoteRepository = {
     fetchTasks: vi.fn(),
-    markProposalsProcessed: vi.fn(),
+    markProcessedProposals: vi.fn(),
     getProcessedProposals: vi.fn(),
     createUserVoteTasks: vi.fn(),
   } as any as UserVoteRepository
@@ -76,7 +76,7 @@ describe("SnapShotVoteService", () => {
     listProposalsSpy = vi.spyOn(snapShotVoteService as any, "listProposals").mockResolvedValue(undefined as any)
     getProposalVotesSpy = vi.spyOn(snapShotVoteService as any, "getProposalVotes").mockResolvedValue(undefined as any)
     fetchTasksSpy = vi.spyOn(userVoteRepository as any, "fetchTasks").mockResolvedValue(undefined as any)
-    markProposalsProcessedSpy = vi.spyOn(userVoteRepository as any, "markProposalsProcessed").mockResolvedValue(undefined as any)
+    markProcessedProposalsSpy = vi.spyOn(userVoteRepository as any, "markProcessedProposals").mockResolvedValue(undefined as any)
     getProcessedProposalsSpy = vi.spyOn(userVoteRepository as any, "getProcessedProposals").mockResolvedValue(undefined as any)
     createUserVoteTasksSpy = vi.spyOn(userVoteRepository as any, "createUserVoteTasks").mockResolvedValue(undefined as any)
     //
@@ -92,7 +92,7 @@ describe("SnapShotVoteService", () => {
     listProposalsSpy.mockResolvedValue(mockProposals)
     getProposalVotesSpy.mockResolvedValue(mockVotes)
     fetchTasksSpy.mockResolvedValue(mockTasks)
-    markProposalsProcessedSpy.mockResolvedValue(undefined)
+    markProcessedProposalsSpy.mockResolvedValue(undefined)
     getProcessedProposalsSpy.mockResolvedValue([])
     getBlockTimestampSpy.mockResolvedValue(1754308728)
 
@@ -103,7 +103,7 @@ describe("SnapShotVoteService", () => {
 
     expect(updateUserVoteTasksSpy).toHaveBeenCalledWith(mockVotes, mockTasks)
 
-    expect(markProposalsProcessedSpy).toHaveBeenCalled()
+    expect(markProcessedProposalsSpy).toHaveBeenCalled()
   })
 
   it("Should create updatedTasks inside updateUserVoteTasks()", async () => {

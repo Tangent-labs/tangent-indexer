@@ -358,6 +358,13 @@ model processed_proposal {
   @@schema("points")
 }
 
+model user_total_vote_points {
+  id     BigInt @id @default(autoincrement())
+  amount BigInt
+
+  @@schema("points")
+}
+
 model user_vote_tasks {
   id            BigInt    @id @default(autoincrement())
   vote_task     vote_task @relation(fields: [vote_task_id], references: [id])
@@ -366,7 +373,7 @@ model user_vote_tasks {
   proposal_id   String    @db.VarChar
   validation_at DateTime  @db.Timestamp
   voting_power  Float
-  points        Decimal   @db.Decimal(20, 0) // <= new
+  points        BigInt
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -374,18 +381,16 @@ model user_vote_tasks {
   @@unique([vote_task_id, user_address, proposal_id])
   @@index([user_address])
   @@index([proposal_id])
-  @@index([validation_at]) // utile pour les fenêtres temporelles
+  @@index([validation_at])
   @@schema("points")
 }
 
 model vote_task {
   id              BigInt            @id(map: "vote_task_pkey") @default(autoincrement())
   name            String
-  action_type     String            @db.VarChar
   organisation    String            @db.VarChar
   protocol        String
   point_rate      Float
-  unit            String
   description     String
   url             String
   is_active       Boolean           @default(true)
@@ -462,12 +467,13 @@ model transfer_events {
 }
 
 model user {
-  id        BigInt            @id(map: "user_pkey") @default(autoincrement())
-  address   String            @unique
-  onboarded Boolean           @default(false)
-  code      String?           @unique
-  godsons   referral_usages[] @relation("GodfatherRelation")
-  godfather referral_usages?  @relation("GodsonRelation")
+  id         BigInt            @id(map: "user_pkey") @default(autoincrement())
+  address    String            @unique
+  onboarded  Boolean           @default(false)
+  code       String?           @unique
+  godsons    referral_usages[] @relation("GodfatherRelation")
+  godfather  referral_usages?  @relation("GodsonRelation")
+  user_boost user_boost[]
 
   @@schema("global")
 }
@@ -482,4 +488,18 @@ model referral_usages {
 
   @@unique(godson_id)
   @@schema("global")
+}
+
+model user_boost {
+  id           BigInt    @id @default(autoincrement())
+  user_address String    @db.VarChar
+  user         user      @relation(fields: [user_address], references: [address])
+  multiplier   Decimal   @db.Decimal(4, 2)
+  start_at     DateTime  @db.Timestamptz(6)
+  end_at       DateTime? @db.Timestamptz(6)
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([user_address, start_at, end_at], map: "user_boost_user_start_end_idx")
+  @@index([user_address, start_at])
+  @@schema("points")
 }

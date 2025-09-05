@@ -20,6 +20,13 @@ class SnapShotVoteService {
   private readonly GRAPHQL_ENDPOINT = "https://hub.snapshot.org/graphql"
   private readonly PAGE_SIZE = 100
 
+  /**
+   * Computes the range inside which we look for closed proposals
+   * Fetches votes for those proposals
+   * Fetches vote tasks in the DB
+   * Pass to updateUserVoteTasks retrieved votes and DB registered tasks
+   * Marks fetched proposals as processed to not deal with them on the next iteration
+   */
   computeUserVoteTasks = async (startBlock: number, endBlock: number, blockService: BlockService, providerURL: string) => {
     const provider = new JsonRpcProvider(providerURL)
     const [dateStartStr, dateEndStr] = await Promise.all([
@@ -41,11 +48,11 @@ class SnapShotVoteService {
 
     await this.updateUserVoteTasks(totalVotes, voteTasks)
 
-    await this.userVoteRepository.markProposalsProcessed(proposals)
+    await this.userVoteRepository.markProcessedProposals(proposals)
   }
 
-  updateUserVoteTasks = async (totalVotes: Array<ValidatedTask>, voteTasks: { id: bigint; name: string; point_rate?: number; unit?: string }[]) => {
-    const voteTasksMap = new Map<string, { id: bigint; point_rate?: number; unit?: string }>()
+  updateUserVoteTasks = async (totalVotes: Array<ValidatedTask>, voteTasks: { id: bigint; name: string; point_rate?: number }[]) => {
+    const voteTasksMap = new Map<string, { id: bigint; point_rate?: number }>()
     for (const t of voteTasks) voteTasksMap.set(t.name, t)
 
     const rows = totalVotes
@@ -77,7 +84,7 @@ class SnapShotVoteService {
     await this.userVoteRepository.createUserVoteTasks(rows)
   }
 
-  public getOrganizations(): OrganizationConfig[] {
+  getOrganizations(): OrganizationConfig[] {
     const list = [
       {
         key: "cvx.eth",

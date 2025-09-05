@@ -117,7 +117,7 @@ export class BlockService {
     return { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex }
   }
 
-  getBlockTimestamp = async (blockNumber: number, provider: JsonRpcProvider): Promise<number> => {
+  async getBlockTimestamp(blockNumber: number, provider: JsonRpcProvider): Promise<number> {
     const block = await provider.getBlock(blockNumber)
     if (!block) {
       throw new Error("Could not fetch block")

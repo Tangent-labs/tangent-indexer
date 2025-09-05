@@ -3,15 +3,36 @@ import { AbstractRepository } from "./AbstractRepository"
 
 export class UserVoteRepository extends AbstractRepository {
   async fetchTasks() {
-    return this.prismaClient.vote_task.findMany({
+    return await this.prismaClient.vote_task.findMany({
       where: { is_active: true },
-      select: { id: true, name: true, point_rate: true, unit: true },
+      select: { id: true, name: true, point_rate: true },
     })
+  }
+
+  // Takes user addresses and return a map with associated boost
+  async fetchBoosts(addresses: Array<string>) {
+    const boosts = await this.prismaClient.user_boost.findMany({
+      where: {
+        user_address: { in: addresses },
+        end_at: null,
+      },
+      select: {
+        user_address: true,
+        multiplier: true,
+      },
+    })
+
+    const boostByUser = new Map<string, number>()
+    for (const b of boosts) {
+      boostByUser.set(b.user_address.toLowerCase(), Number(b.multiplier))
+    }
+
+    return boostByUser
   }
 
   async createUserVoteTasks(
     tasks: {
-      vote_task_id: bigint
+      vote_task_id: bigint | number | string
       user_address: string
       proposal_id: string
       validation_at: Date
@@ -19,58 +40,55 @@ export class UserVoteRepository extends AbstractRepository {
       rate: number
     }[]
   ) {
-    if (tasks.length === 0) return { count: 0 }
+    if (!tasks?.length) return
 
-    const uniqueTaskKeys = new Set<string>()
-    const uniqueVoteTasks = []
+    // Get unique addresses
+    const addresses = Array.from(new Set(tasks.map((t) => t.user_address.toLowerCase())))
 
-    for (const task of tasks) {
-      const deduplicatedKey = `${String(task.vote_task_id)}|${task.user_address.toLowerCase()}|${task.proposal_id}`
-      if (uniqueTaskKeys.has(deduplicatedKey)) continue
+    // Get each users boost
+    const boostByUser = await this.fetchBoosts(addresses)
 
-      uniqueTaskKeys.add(deduplicatedKey)
+    // Build object to insert in user_vote_tasks
+    const rows = tasks.map((t) => {
+      const voteTaskId = typeof t.vote_task_id === "bigint" ? t.vote_task_id : BigInt(String(t.vote_task_id))
+      const user = t.user_address.toLowerCase()
+      const multiplier = boostByUser.get(user) ?? 1
 
-      uniqueVoteTasks.push({
-        vote_task_id: BigInt(task.vote_task_id),
-        user_address: task.user_address.toLowerCase(),
-        proposal_id: task.proposal_id,
-        validation_at: task.validation_at,
-        voting_power: task.voting_power,
-        points: task.voting_power * task.rate,
-      })
-    }
+      const points = Number(t.voting_power.toFixed(0)) * t.rate * multiplier
+
+      return {
+        vote_task_id: voteTaskId,
+        user_address: user,
+        proposal_id: t.proposal_id,
+        validation_at: t.validation_at,
+        voting_power: t.voting_power,
+        points,
+      }
+    })
 
     return this.prismaClient.user_vote_tasks.createMany({
-      data: uniqueVoteTasks,
-      skipDuplicates: true,
+      data: rows,
     })
   }
 
   async getProcessedProposals() {
-    return this.prismaClient.processed_proposal.findMany({
+    return await this.prismaClient.processed_proposal.findMany({
       select: { id: true, proposal_id: true },
     })
   }
 
-  async markProposalsProcessed(proposals: Proposal[]) {
+  async markProcessedProposals(proposals: Proposal[]) {
     if (proposals.length === 0) return
 
-    const uniqueProposalIds = new Set<string>()
-    const proposalsToInsert = []
+    const proposalsToInsert = proposals.map((p) => {
+      return {
+        proposal_id: p.id,
+        title: p.title,
+      }
+    })
 
-    for (const proposal of proposals) {
-      if (uniqueProposalIds.has(proposal.id)) continue
-
-      uniqueProposalIds.add(proposal.id)
-      proposalsToInsert.push({
-        proposal_id: proposal.id,
-        title: proposal.title ?? null,
-      })
-    }
-
-    return this.prismaClient.processed_proposal.createMany({
+    return await this.prismaClient.processed_proposal.createMany({
       data: proposalsToInsert,
-      skipDuplicates: true,
     })
   }
 }
