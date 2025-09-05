@@ -30,6 +30,8 @@ jobs:
         run: |
           rm -rf node_modules package-lock.json
           npm install
+      - name: Generate prisma types
+        run: npm run prisma:generate
 
       - run: npm run validate
       - run: npm run test
