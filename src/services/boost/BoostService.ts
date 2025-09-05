@@ -8,6 +8,8 @@ import { NumMap, TokenBalancesForBoostOut } from "./types"
 import { OFFCHAIN_BOOST_INFOS, ONCHAIN_BOOST_INFOS, SNAPSHOT_BOOST_TOKENS } from "./config"
 import { BoostRepository } from "db/BoostRepository"
 
+//TODO
+// - Pull users dynamically from the database
 export class BoostService {
   provider: JsonRpcProvider
   boostRepository: BoostRepository
@@ -19,7 +21,13 @@ export class BoostService {
 
   // MAIN
 
-  async updateBoosts(users: string[]) {
+  /**
+   * Main function that will be called every X hours
+   * @users   All users that we want to compute onchain boost
+   */
+  async updateBoosts() {
+    // Fetch users that subscribed to boost computation
+    const users = (await this.boostRepository.getBoostSubscribers()).map((res) => res.user_address)
     // Query the bc to get the balances we want to check
     const { timestamp, snapshot } = await this.getOnchainBalancesSnapshot(users)
     // Filter and format raw data from bc with
@@ -33,6 +41,10 @@ export class BoostService {
     // Retrieve all previous opened boosts
     const lastActiveBoosts = await this.boostRepository.getActiveBoosts()
 
+    // We are using a DELETE => INSERT method to close task
+    // Compare newBoosts and lastActive boost to know which rows :
+    //  -  To update and so to delete
+    //  -  To insert ( to open or close a task)
     const { toDelete, toInsert } = this.createRowsToDeleteAndInsert(lastActiveBoosts, newBoosts, currentDate)
 
     if (toDelete.length !== 0) {
@@ -83,7 +95,7 @@ export class BoostService {
             return acc + boost.boost
           }
           return acc
-        }, 1),
+        }, 0),
       }
     }, {})
 
@@ -159,12 +171,22 @@ export class BoostService {
   }
 
   mergeOffChainAndOnChainBoosts(onchainBoosts: NumMap, offChainBoosts: NumMap): NumMap {
-    return Object.entries(offChainBoosts).reduce((acc, [user, offChainBoost]) => {
-      const onChainBoost = onchainBoosts[user] ? onchainBoosts[user] : 0
+    return Object.entries(
+      // First aggregates both boost in one object
+      Object.entries(offChainBoosts).reduce((acc, [user, offChainBoost]) => {
+        const onChainBoost = onchainBoosts[user] ? onchainBoosts[user] : 0
+        delete onchainBoosts[user]
+        return {
+          ...acc,
+          [user]: offChainBoost + onChainBoost,
+        }
+      }, onchainBoosts)
+
+      // Then iterates over the aggregation and cap the boost to 4
+    ).reduce((acc, [user, boost]) => {
       return {
         ...acc,
-        // User boost is capped at 4
-        [user]: offChainBoost + onChainBoost > 4 ? 4 : offChainBoost + onChainBoost,
+        [user]: Math.min(boost + 1, 4),
       }
     }, {})
   }

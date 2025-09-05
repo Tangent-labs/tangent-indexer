@@ -31,6 +31,10 @@ export class BoostRepository extends AbstractRepository {
   }
 
   async getOffChainBoostUsers() {
-    return await this.prismaClient.offchain_boost_user.findMany()
+    return await this.prismaClient.offchain_boost_user.findMany({ select: { type: true, user_address: true } })
+  }
+
+  async getBoostSubscribers() {
+    return await this.prismaClient.boost_subscribers.findMany({ select: { user_address: true } })
   }
 }

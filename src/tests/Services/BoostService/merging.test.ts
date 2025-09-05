@@ -1,8 +1,7 @@
-import { assert, beforeEach, describe, expect, it, vi } from "vitest"
-import { UserPointsRepository } from "db/UserPointsRepository"
-import { TRANSFER } from "../../../resources/eventSignatures"
-import { JsonRpcProvider, parseEther } from "ethers"
+import { assert, beforeEach, describe, it, vi } from "vitest"
+import { JsonRpcProvider } from "ethers"
 import { BoostService } from "services/boost/BoostService"
+import { BoostRepository } from "db/BoostRepository"
 
 // --------------------------------------------
 // updateTasks()
@@ -12,60 +11,60 @@ describe.only("UserPointsService merging functions", () => {
   let boostService: BoostService
   let provider: JsonRpcProvider
 
-  const userPointsRepository = {
+  const boostRepository = {
     getLastBoosts: vi.fn(),
     deleteUserBoosts: vi.fn(),
     insertUserBoosts: vi.fn(),
-  } as any as UserPointsRepository
+  } as any as BoostRepository
 
   beforeEach(() => {
     vi.clearAllMocks()
     provider = {} as JsonRpcProvider
 
-    boostService = new BoostService(provider, userPointsRepository)
+    boostService = new BoostService(provider, boostRepository)
   })
 
-  //   it("Should close boost on users", async () => {
-  //     const date1 = new Date()
-  //     const date2 = new Date(date1)
-  //     date2.setDate(date1.getDate() + 2)
-  //     const { toDelete, toInsert } = boostService.createRowsToDeleteAndInsert(
-  //       [
-  //         {
-  //           id: 1n,
-  //           user_address: "uA",
-  //           start_at: date1,
-  //           multiplier: 1.75,
-  //         },
-  //         {
-  //           id: 2n,
-  //           user_address: "uE",
-  //           start_at: date1,
-  //           multiplier: 1.5,
-  //         },
-  //       ],
-  //       {},
-  //       date2
-  //     )
+  it("Should close boost on users", async () => {
+    const date1 = new Date()
+    const date2 = new Date(date1)
+    date2.setDate(date1.getDate() + 2)
+    const { toDelete, toInsert } = boostService.createRowsToDeleteAndInsert(
+      [
+        {
+          id: 1n,
+          user_address: "uA",
+          start_at: date1,
+          multiplier: 1.75,
+        },
+        {
+          id: 2n,
+          user_address: "uE",
+          start_at: date1,
+          multiplier: 1.5,
+        },
+      ],
+      {},
+      date2
+    )
 
-  //     assert.deepEqual(toDelete, [1n, 2n])
-  //     assert.deepEqual(toInsert, [
-  //       {
-  //         id: 1n,
-  //         user_address: "uA",
-  //         start_at: date1,
-  //         end_at: date2,
-  //         multiplier: 1.75,
-  //       },
-  //       {
-  //         id: 2n,
-  //         user_address: "uE",
-  //         start_at: date1,
-  //         end_at: date2,
-  //         multiplier: 1.5,
-  //       },
-  //     ])
-  //   })
+    assert.deepEqual(toDelete, [1n, 2n])
+    assert.deepEqual(toInsert, [
+      {
+        id: 1n,
+        user_address: "uA",
+        start_at: date1,
+        end_at: date2,
+        multiplier: 1.75,
+      },
+      {
+        id: 2n,
+        user_address: "uE",
+        start_at: date1,
+        end_at: date2,
+        multiplier: 1.5,
+      },
+    ])
+  })
 
   it.only("Should sort properly lines to delete and insert in user_boosts", async () => {
     const date0 = new Date()
@@ -121,8 +120,8 @@ describe.only("UserPointsService merging functions", () => {
   })
 
   it("Verify the merging of onchain and offchain boost", async () => {
-    const newBoosts = boostService.mergeOffChainAndOnChainBoosts({ uA: 4, uB: 2 }, { uA: 2.75, uB: 1.75, uC: 2, uD: 500 })
+    const newBoosts = boostService.mergeOffChainAndOnChainBoosts({ uA: 4, uB: 2, uE: 1.5 }, { uA: 2.75, uB: 1.75, uC: 2, uD: 500 })
 
-    assert.deepEqual(newBoosts, { uA: 4, uB: 3.75, uC: 2, uD: 4 })
+    assert.deepEqual(newBoosts, { uA: 4, uB: 4, uC: 3, uD: 4, uE: 2.5 })
   })
 })
