@@ -153,21 +153,9 @@ export class UserPointsRepository extends AbstractRepository {
     }
   }
 
-  async computeUserPoints(startDate: Date, endDate: Date) {
-    // insert all rows  that do not exists in user_points but are in user_tasks
-    // see: src/sql-procedure/insert_missing_user_points.sql
-    await this.prismaClient.$executeRawUnsafe(`SELECT points.insert_missing_user_points()`)
-
+  async computeUserPoints(startDate: number, endDate: number) {
     // update user points
     // see: src/sql-procedure/compute_user_points.sql
-    await this.prismaClient.$executeRawUnsafe(
-      `SELECT points.compute_user_points('${startDate.toISOString()}'::timestamptz, '${endDate.toISOString()}'::timestamptz)`
-    )
-  }
-
-  async computeGodfatherPoints() {
-    // 10% of gosSon points to the godfather
-    // see: src/sql-procedure/compute_godfather_points.sql
-    await this.prismaClient.$executeRawUnsafe(`SELECT points.compute_godfather_points()`)
+    await this.prismaClient.$executeRawUnsafe(`SELECT points.compute_user_points(to_timestamp('${startDate}'), to_timestamp('${endDate}'))`)
   }
 }

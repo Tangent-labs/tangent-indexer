@@ -31,17 +31,14 @@ async function main() {
           setTransaction(dbTransaction)
           await userPointsService.retrieveUserAddressesFromTransfers(startBlock, endBlock)
 
-          // get price
+          // TODO: get price
 
-          // get boost
+          // TODO: get boost
 
           await userPointsService.updateUserTasks(startBlock)
 
           // Process points calculation for user tasks
           await userPointsService.processUserPoints(startBlock, endBlock, blockService, indexerConfig.provider.chainRpc[bestProviderIndex])
-
-          // Handle godfather points
-          await userPointsService.processGodfatherPoints()
 
           // Update block logic
           await blockService.updateLastEventBlockIndexed(endBlock)

@@ -39,10 +39,10 @@ INSERT INTO global.user (id,address, onboarded, referral_points) VALUES
     (40,'0xU4', FALSE, 0);
 
 -- Two tasks
-INSERT INTO points.task (id,protocol,action_type,unit,description, name,token_address, point_rate, is_active,url) VALUES
-  (101,'proto', 'hold', 'hour', 'd1','TASK1','TOKENA', 10, TRUE,'https://1'),
-  (102,'proto','hold', 'hour','d2', 'TASK2','TOKENB', 15, TRUE,'https://2'),
-  (103,'proto','hold', 'hour', 'd3','TASK3','TOKENC', 20, TRUE,'https://3');
+INSERT INTO points.task (id,protocol,action_type,description, name,token_address, point_rate, is_active,url) VALUES
+  (101,'proto', 'hold',  'd1','TASK1','TOKENA', 0.002778, TRUE,'https://1'),
+  (102,'proto','hold', 'd2', 'TASK2','TOKENB', 0.004167, TRUE,'https://2'),
+  (103,'proto','hold',  'd3','TASK3','TOKENC', 0.005556, TRUE,'https://3');
 
 -- Price feeds every 4h
 -- TOKENA: 2 / 3 / 4
