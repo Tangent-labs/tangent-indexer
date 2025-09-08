@@ -107,6 +107,10 @@ INSERT INTO points.user_tasks (id, task_id, user_address, start, closed, amount)
   -- U2: open task on TOKENA started 2 days ago
   (200012,101,'0xU2','2025-01-06 08:00+00',NULL,'1000000000000000000000');
 
+-- Add the crossing segment task 299999 for godfather testing
+INSERT INTO points.user_tasks (id, task_id, user_address, start, closed, amount) VALUES
+  (299999,101,'0xU1','2025-01-05 09:00+00','2025-01-05 11:00+00','500000000000000000000');
+
 
 -- Booster: U3, second task Day2 (×2.0 during 16:00-17:00 on 2025-01-06)
 INSERT INTO points.user_boost (user_address, start_at, end_at, multiplier) VALUES
