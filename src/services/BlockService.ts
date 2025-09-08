@@ -95,17 +95,12 @@ export class BlockService {
   }
 
   async fetchBlockTimestamps(blockNumbers: number[], providerURL: string) {
-    console.log(
-      "fetchBlockTimestamps",
-      blockNumbers,
-      blockNumbers.map((b) => b.toString(16))
-    ) // TODO: remove
     const requests = blockNumbers.map((blockNumber, index) => ({
       jsonrpc: "2.0",
       id: index + 1,
       method: "eth_getBlockByNumber",
       params: [
-        "0x" + blockNumber.toString(16), // format hex
+        blockNumber.toString(16), // format hex
         false,
       ],
     }))

@@ -41,7 +41,7 @@ const sqlFunctions: string[] = [
   "idx_price_feeds_token_ts_with_price",
 ]
 
-async function deployFunction(prisma: PrismaClient, sqlFunction: string): Promise<void> {
+export async function deployFunction(prisma: PrismaClient, sqlFunction: string): Promise<void> {
   try {
     console.log(`🚀 Deploying function: ${sqlFunction}`)
 

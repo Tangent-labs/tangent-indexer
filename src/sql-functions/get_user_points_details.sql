@@ -1,4 +1,25 @@
--- Drop existing function first to allow return type modification
+
+-- Pipeline (high level)
+
+-- Clip
+-- For each active task, compute seg_start = max(task.start, start_at) and seg_end = min(task.closed or end_at, end_at). Ignore if seg_end <= seg_start. Amount is normalized from wei to units. 
+-- Price
+-- Compute a time-weighted average price across the segment from price_feeds. If no feed overlaps, extend the last known price before seg_start (fallback). 
+-- Boost factor
+-- Compute a time-weighted average of (multiplier − 1.0) from user_boost records overlapping the segment. No boosts ⇒ 0.0. 
+-- Points
+-- Using point rate (token’s point_rate = points per second per USD), segment duration (seconds), amount, and avg price:
+
+-- base_points = round(rate * seconds * amount * avg_price)
+-- booster_points = round(base_points * boost_factor)
+-- total_points = round(base_points * (1 + boost_factor))
+
+-- Referral (godfather)
+-- Select at most one referral usage for the task’s user that occurs on or before seg_end (earliest by time). Compute time_weight for the segment:
+-- Referral before seg_start → time_weight = 1.0
+-- Referral after seg_end → time_weight = 0.0
+-- Referral inside the segment → fraction of segment after referral
+-- Then: godfather_points = round(total_points * 0.10 * time_weight); if no referral, 0.
 
 
 CREATE OR REPLACE FUNCTION points.get_user_points_details(
