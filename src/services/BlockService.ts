@@ -109,7 +109,6 @@ export class BlockService {
       headers: { "Content-Type": "application/json" },
     })
     const responses = res.data as BlockInfo[]
-    console.log("fetchBlockTimestamps", responses) // TODO: remove
     const timestampPerBlockId: Map<number, number> = new Map()
 
     responses.forEach((resp: BlockInfo) => {
