@@ -54,7 +54,7 @@ export class UserVoteRepository extends AbstractRepository {
       const user = t.user_address.toLowerCase()
       const multiplier = boostByUser.get(user) ?? 1
 
-      const points = Number(t.voting_power.toFixed(0)) * t.rate * multiplier
+      const points = t.voting_power * t.rate * multiplier
 
       return {
         vote_task_id: voteTaskId,
@@ -62,7 +62,7 @@ export class UserVoteRepository extends AbstractRepository {
         proposal_id: t.proposal_id,
         validation_at: t.validation_at,
         voting_power: t.voting_power,
-        points,
+        points: Number(points.toFixed(0)),
       }
     })
 

@@ -12,7 +12,7 @@ dotenv.config()
 
 async function main() {
   const { providers, handleError } = setUpIndexer()
-  const { prismaClient, blockService, snapShotVoteService, setTransaction } = setUpIndexerBlockServices()
+  const { prismaClient, blockService, snapShotVoteService, setTransaction } = setUpIndexerVoteServices()
 
   try {
     const blockInfo = await BlockService.getVotesBlockInfo(providers, blockService)
@@ -48,7 +48,7 @@ async function main() {
 
 main().then()
 
-function setUpIndexerBlockServices() {
+function setUpIndexerVoteServices() {
   const prismaClient = new PrismaClient()
   const blockRepository = new BlockRepository(prismaClient)
   const userVoteRepository = new UserVoteRepository(prismaClient)

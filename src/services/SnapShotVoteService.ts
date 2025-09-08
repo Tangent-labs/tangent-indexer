@@ -18,7 +18,9 @@ class SnapShotVoteService {
   }
 
   private readonly GRAPHQL_ENDPOINT = "https://hub.snapshot.org/graphql"
-  private readonly PAGE_SIZE = 100
+  private readonly PAGE_SIZE = 10
+  private readonly MAX_RESULTS = 500
+  private readonly MAX_VOTES_PER_PROPOSAL = 5000
 
   /**
    * Computes the range inside which we look for closed proposals
@@ -120,26 +122,22 @@ class SnapShotVoteService {
   async listProposals(fromTs: number, toTs: number): Promise<Proposal[]> {
     const organizations = this.getOrganizations()
 
-    const proposals = []
+    const organisationKeys = organizations.map((o) => o.key)
 
-    for (const organization of organizations) {
-      const orgaProposals = await this.listProposalsByOrga(organization.key, organization.title, { fromTs, toTs })
+    const orgaProposals = await this.listProposalsByOrga(organisationKeys, { fromTs, toTs })
 
-      // Add organization rewards to each proposal
-      const proposalsWithRewards = orgaProposals.map((proposal: any) => ({
-        ...proposal,
-        organizationRewards: organization.rewards,
-        excludedVoters: organization.excludedVoters || [],
-      }))
+    // Add organization rewards to each proposal
+    const proposalsWithRewards = orgaProposals.map((p) => {
+      const orga = organizations.find((o) => o.key === p.space.id)
 
-      proposals.push(...proposalsWithRewards)
-    }
+      return { ...p, organizationRewards: orga?.rewards || [], excludedVoters: orga?.excludedVoters || [] }
+    })
 
     // Get all rewarded choices from all organizations
     const allRewardedChoices = organizations.flatMap((org) => org.rewards.map((reward) => reward.value))
 
     // we search for the rewarded choice in the choices array
-    return proposals.map((proposal) => {
+    return proposalsWithRewards.map((proposal) => {
       return {
         id: proposal.id,
         title: proposal.title,
@@ -168,7 +166,7 @@ class SnapShotVoteService {
     }) as Proposal[]
   }
 
-  async listProposalsByOrga(orga: string, title: string, window: { fromTs: number; toTs: number }): Promise<any[]> {
+  async listProposalsByOrga(organisationKeys: Array<string>, range: { fromTs: number; toTs: number }): Promise<any[]> {
     const query = await this.loadGraphQLQuery("ListProposals")
     const all: any[] = []
     let skip = 0
@@ -177,10 +175,9 @@ class SnapShotVoteService {
       const { data } = await axios.post(this.GRAPHQL_ENDPOINT, {
         query,
         variables: {
-          orga,
-          title,
-          start_lte: window.toTs,
-          end_gte: window.fromTs,
+          organisationKeys,
+          start_lte: range.toTs,
+          end_gte: range.fromTs,
           first: this.PAGE_SIZE,
           skip,
         },
@@ -189,6 +186,8 @@ class SnapShotVoteService {
       const batch: any[] = data?.data?.proposals ?? []
       all.push(...batch)
       if (batch.length < this.PAGE_SIZE) break
+      if (all.length >= this.MAX_RESULTS) break
+
       skip += this.PAGE_SIZE
     }
 
@@ -209,6 +208,7 @@ class SnapShotVoteService {
         const batch = response.data.data.votes || []
         allVotes.push(...batch)
         if (batch.length < pageSize) break
+        if (allVotes.length >= this.MAX_VOTES_PER_PROPOSAL) break
         skip += pageSize
       }
 
@@ -224,14 +224,14 @@ class SnapShotVoteService {
         )
       }
 
-      const validatedTasks: ValidatedTask[] = []
+      const validatedVotes: ValidatedTask[] = []
       if (proposal.organizationRewards && allVotes.length > 0) {
         for (const vote of allVotes) {
           const choice = vote.choice
           for (const reward of proposal.organizationRewards) {
             const isValidated = this.validateVoteAgainstTask(choice, reward, proposal.rewarded || [])
             if (isValidated) {
-              validatedTasks.push({
+              validatedVotes.push({
                 task: reward.task,
                 value: reward.value,
                 validationDate: new Date(vote.created * 1000),
@@ -244,7 +244,7 @@ class SnapShotVoteService {
         }
       }
 
-      return validatedTasks
+      return validatedVotes
     } catch (error) {
       console.error(`Error fetching votes for proposal ${proposal.id}:`, error)
       return [] // Continue processing other proposals

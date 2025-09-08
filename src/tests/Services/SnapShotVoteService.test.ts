@@ -51,7 +51,6 @@ describe("SnapShotVoteService", () => {
   let snapShotVoteService: SnapShotVoteService
   let blockService: BlockService
   let listProposalsSpy: ReturnType<typeof vi.spyOn>
-  let getProposalVotesSpy: ReturnType<typeof vi.spyOn>
   let fetchTasksSpy: ReturnType<typeof vi.spyOn>
   let markProcessedProposalsSpy: ReturnType<typeof vi.spyOn>
   let getProcessedProposalsSpy: ReturnType<typeof vi.spyOn>
@@ -74,7 +73,6 @@ describe("SnapShotVoteService", () => {
 
     snapShotVoteService = new SnapShotVoteService(userVoteRepository)
     listProposalsSpy = vi.spyOn(snapShotVoteService as any, "listProposals").mockResolvedValue(undefined as any)
-    getProposalVotesSpy = vi.spyOn(snapShotVoteService as any, "getProposalVotes").mockResolvedValue(undefined as any)
     fetchTasksSpy = vi.spyOn(userVoteRepository as any, "fetchTasks").mockResolvedValue(undefined as any)
     markProcessedProposalsSpy = vi.spyOn(userVoteRepository as any, "markProcessedProposals").mockResolvedValue(undefined as any)
     getProcessedProposalsSpy = vi.spyOn(userVoteRepository as any, "getProcessedProposals").mockResolvedValue(undefined as any)
@@ -87,6 +85,7 @@ describe("SnapShotVoteService", () => {
   it("Should call computeUserVoteTasks() with votes and tasks", async () => {
     //
 
+    const getProposalVotesSpy = vi.spyOn(snapShotVoteService as any, "getProposalVotes").mockResolvedValue(undefined as any)
     const updateUserVoteTasksSpy = vi.spyOn(snapShotVoteService as any, "updateUserVoteTasks").mockResolvedValue(undefined as any)
 
     listProposalsSpy.mockResolvedValue(mockProposals)
@@ -129,5 +128,72 @@ describe("SnapShotVoteService", () => {
     ]
 
     expect(createUserVoteTasksSpy).toHaveBeenCalledWith(updatedTasks)
+  })
+
+  it("Should test getProposalVotes()", async () => {
+    const mockProposal = {
+      id: "0xde6dd14a7d7a26f4bf5029ac4dfcc1d077d8a1052e40aae8d477733df6cfdddb",
+      title: "Gauge Weight for Week of 14th Aug 2025",
+      start: 1755129600,
+      end: 1755561600,
+      snapshot: "23135571",
+      created: 1755129665,
+      state: "closed",
+      type: "weighted",
+      organizationRewards: [
+        { task: "VOTE_01", value: "crvUSD+USD0" },
+        {
+          task: "VOTE_02",
+          value: "Lending: Borrow crvUSD (ETHFI collateral)",
+        },
+        { task: "VOTE_03", value: "WETH+CVX" },
+      ],
+      excludedVoters: ["0x0000000000000000000000000000000000000000", "0x1111111111111111111111111111111111111111"],
+      rewarded: [
+        { choice: "WETH+CVX (0xB576…)", rewardIndex: 2, index: 34 },
+        { choice: "crvUSD+USD0 (0xE1c7…)", rewardIndex: 0, index: 317 },
+      ],
+    }
+
+    const result = await snapShotVoteService.getProposalVotes(mockProposal)
+
+    expect(result).toContainEqual({
+      task: "VOTE_03",
+      value: "WETH+CVX",
+      validationDate: new Date("2025-08-18T23:59:58.000Z"),
+      voterAddress: "0xde1E6A7ED0ad3F61D531a8a78E83CcDdbd6E0c49",
+      votingPower: 11619048.104955375,
+      proposalId: "0xde6dd14a7d7a26f4bf5029ac4dfcc1d077d8a1052e40aae8d477733df6cfdddb",
+    })
+
+    const allVotersAddress = result.map((el) => el.voterAddress)
+
+    const mockProposalWithExtraExcludedVoters = {
+      id: "0xde6dd14a7d7a26f4bf5029ac4dfcc1d077d8a1052e40aae8d477733df6cfdddb",
+      title: "Gauge Weight for Week of 14th Aug 2025",
+      start: 1755129600,
+      end: 1755561600,
+      snapshot: "23135571",
+      created: 1755129665,
+      state: "closed",
+      type: "weighted",
+      organizationRewards: [
+        { task: "VOTE_01", value: "crvUSD+USD0" },
+        {
+          task: "VOTE_02",
+          value: "Lending: Borrow crvUSD (ETHFI collateral)",
+        },
+        { task: "VOTE_03", value: "WETH+CVX" },
+      ],
+      excludedVoters: allVotersAddress?.concat(["0x0000000000000000000000000000000000000000", "0x1111111111111111111111111111111111111111"]) as Array<string>,
+      rewarded: [
+        { choice: "WETH+CVX (0xB576…)", rewardIndex: 2, index: 34 },
+        { choice: "crvUSD+USD0 (0xE1c7…)", rewardIndex: 0, index: 317 },
+      ],
+    }
+
+    const votesWithoutAddresses = await snapShotVoteService.getProposalVotes(mockProposalWithExtraExcludedVoters)
+
+    expect(votesWithoutAddresses).toEqual([])
   })
 })

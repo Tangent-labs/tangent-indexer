@@ -1,8 +1,8 @@
-query ListProposals($orga: String!, $start_lte: Int!, $end_gte: Int!, $first: Int!, $skip: Int!) {
+query ListProposals($organisationKeys: [String!]!, $first: Int!, $skip: Int!, $start_lte: Int!, $end_gte: Int!) {
   proposals(
     first: $first
     skip: $skip
-    where: { space: $orga, start_lte: $start_lte, end_gte: $end_gte, state: "closed" }
+    where: { space_in: $organisationKeys, start_lte: $start_lte, end_gte: $end_gte, state: "closed" }
     orderBy: "start"
     orderDirection: asc
   ) {
@@ -15,5 +15,9 @@ query ListProposals($orga: String!, $start_lte: Int!, $end_gte: Int!, $first: In
     snapshot
     type
     choices
+    space {
+      id
+      name
+    }
   }
 }

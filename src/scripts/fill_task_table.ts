@@ -10,9 +10,10 @@ async function seedTasks() {
         name: "Hold USG",
         action_type: "hold",
         protocol: "tangent",
-        token_address: "0x86B430cF6539183AaB3385Bb901272F1aeA7daDC".toLowerCase(),
+        token_address: "0x6d7EFb67236AaAeC2005ec704Bf5d755dd0703c4".toLowerCase(),
         point_rate: 1.5,
         unit: "hour",
+
         description: "Hold USG",
         url: "https://curve.fi/deposit",
         is_active: true,
