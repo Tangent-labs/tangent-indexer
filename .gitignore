@@ -11,3 +11,4 @@ src/typechain
 /src/data/*.json
 prisma/migrations
 /local/*
+/src/addresses.json
