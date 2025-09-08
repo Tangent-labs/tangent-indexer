@@ -25,7 +25,7 @@ export function setUpIndexer(): setUpIndexerType {
   }
 }
 
-function _initNetwork() {
+export function _initNetwork() {
   const {
     provider: { chainId, chainRpc },
   } = indexerConfig
