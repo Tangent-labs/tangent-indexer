@@ -82,7 +82,7 @@ export class BlockService {
     return { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex }
   }
 
-  getBlockTimestamp = async (blockNumber: number, provider: JsonRpcProvider): Promise<number> => {
+  getBlockTimestamp = async (blockNumber: number | "latest", provider: JsonRpcProvider): Promise<number> => {
     const block = await provider.getBlock(blockNumber)
     if (!block) {
       throw new Error("Could not fetch block")
@@ -91,20 +91,21 @@ export class BlockService {
   }
 
   getLatestBlockTimestamp = async (provider: JsonRpcProvider): Promise<number> => {
-    const latestBlock = await provider.getBlock("latest")
-    if (!latestBlock) {
-      throw new Error("Could not fetch latest block")
-    }
-    return this.getBlockTimestamp(latestBlock.number, provider)
+    return this.getBlockTimestamp("latest", provider)
   }
 
   async fetchBlockTimestamps(blockNumbers: number[], providerURL: string) {
+    console.log(
+      "fetchBlockTimestamps",
+      blockNumbers,
+      blockNumbers.map((b) => b.toString(16))
+    ) // TODO: remove
     const requests = blockNumbers.map((blockNumber, index) => ({
       jsonrpc: "2.0",
       id: index + 1,
       method: "eth_getBlockByNumber",
       params: [
-        blockNumber.toString(16), // format hex
+        "0x" + blockNumber.toString(16), // format hex
         false,
       ],
     }))
