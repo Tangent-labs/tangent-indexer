@@ -55,15 +55,15 @@ export class UserPointsRepository extends AbstractRepository {
       data: {
         task_id: task.id,
         user_address: user,
-        start: event.block_date, // Chain with previous closed time
-        amount: amount.toString(), // Updated running balance
+        start: event.block_date,
+        amount: amount.toString(),
         closed: null,
       },
     })
   }
 
   getOpenedTasks = async (userAddresses: Array<string>, taskIds: Array<bigint>) => {
-    return this.prismaClient.user_tasks.findMany({
+    return await this.prismaClient.user_tasks.findMany({
       where: {
         user_address: {
           in: userAddresses,

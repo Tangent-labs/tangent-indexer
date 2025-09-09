@@ -1,9 +1,7 @@
+import axios from "axios"
+import { UserVoteRepository } from "db/UserVoteRepository"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import SnapShotVoteService from "services/SnapShotVoteService"
-import { UserVoteRepository } from "db/UserVoteRepository"
-import { BlockService } from "services/BlockService"
-import { BlockRepository } from "db/BlockRepository"
-import axios from "axios"
 
 const mockProposals = [
   {
@@ -50,7 +48,6 @@ const mockTasks = [
 // --------------------------------------------
 describe("SnapShotVoteService", () => {
   let snapShotVoteService: SnapShotVoteService
-  let blockService: BlockService
   let listProposalsSpy: ReturnType<typeof vi.spyOn>
   let fetchTasksSpy: ReturnType<typeof vi.spyOn>
   let markProcessedProposalsSpy: ReturnType<typeof vi.spyOn>
@@ -67,6 +64,13 @@ describe("SnapShotVoteService", () => {
     }
   })
 
+  // at the very top of the test file, before any imports that transitively import BlockService
+  vi.mock("config/indexer_config", () => ({
+    CHAIN_RPCS: { "1": "http://127.0.0.1:8545" },
+    // if the module exports an init function, stub it too:
+    _initEnv: vi.fn(),
+  }))
+
   const userVoteRepository = {
     fetchTasks: vi.fn(),
     markProcessedProposals: vi.fn(),
@@ -74,9 +78,9 @@ describe("SnapShotVoteService", () => {
     createUserVoteTasks: vi.fn(),
   } as any as UserVoteRepository
 
-  const blockRepository = {
+  const blockService = {
     getBlockTimestamp: vi.fn(),
-  } as any as BlockRepository
+  } as any
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -87,10 +91,8 @@ describe("SnapShotVoteService", () => {
     markProcessedProposalsSpy = vi.spyOn(userVoteRepository as any, "markProcessedProposals").mockResolvedValue(undefined as any)
     getProcessedProposalsSpy = vi.spyOn(userVoteRepository as any, "getProcessedProposals").mockResolvedValue(undefined as any)
     createUserVoteTasksSpy = vi.spyOn(userVoteRepository as any, "createUserVoteTasks").mockResolvedValue(undefined as any)
-    //
-    blockService = new BlockService(blockRepository)
+
     getBlockTimestampSpy = vi.spyOn(blockService as any, "getBlockTimestamp").mockResolvedValue(undefined as any)
-    //
     ;(axios.post as any).mockReset()
   })
 
@@ -275,5 +277,3 @@ describe("SnapShotVoteService", () => {
     expect(res.length).toBe(100)
   })
 })
-
-//
