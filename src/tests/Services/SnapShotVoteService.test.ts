@@ -3,6 +3,7 @@ import SnapShotVoteService from "services/SnapShotVoteService"
 import { UserVoteRepository } from "db/UserVoteRepository"
 import { BlockService } from "services/BlockService"
 import { BlockRepository } from "db/BlockRepository"
+import axios from "axios"
 
 const mockProposals = [
   {
@@ -57,6 +58,15 @@ describe("SnapShotVoteService", () => {
   let createUserVoteTasksSpy: ReturnType<typeof vi.spyOn>
   let getBlockTimestampSpy: ReturnType<typeof vi.spyOn>
 
+  // Mock axios for Vitest
+  vi.mock("axios", () => {
+    return {
+      default: {
+        post: vi.fn(),
+      },
+    }
+  })
+
   const userVoteRepository = {
     fetchTasks: vi.fn(),
     markProcessedProposals: vi.fn(),
@@ -80,6 +90,8 @@ describe("SnapShotVoteService", () => {
     //
     blockService = new BlockService(blockRepository)
     getBlockTimestampSpy = vi.spyOn(blockService as any, "getBlockTimestamp").mockResolvedValue(undefined as any)
+    //
+    ;(axios.post as any).mockReset()
   })
 
   it("Should call computeUserVoteTasks() with votes and tasks", async () => {
@@ -131,69 +143,137 @@ describe("SnapShotVoteService", () => {
   })
 
   it("Should test getProposalVotes()", async () => {
-    const mockProposal = {
-      id: "0xde6dd14a7d7a26f4bf5029ac4dfcc1d077d8a1052e40aae8d477733df6cfdddb",
-      title: "Gauge Weight for Week of 14th Aug 2025",
-      start: 1755129600,
-      end: 1755561600,
-      snapshot: "23135571",
-      created: 1755129665,
-      state: "closed",
+    const mockProposal: any = {
+      id: "0xproposal",
       type: "weighted",
       organizationRewards: [
         { task: "VOTE_01", value: "crvUSD+USD0" },
-        {
-          task: "VOTE_02",
-          value: "Lending: Borrow crvUSD (ETHFI collateral)",
-        },
         { task: "VOTE_03", value: "WETH+CVX" },
       ],
-      excludedVoters: ["0x0000000000000000000000000000000000000000", "0x1111111111111111111111111111111111111111"],
+      excludedVoters: ["0x0000000000000000000000000000000000000000"],
       rewarded: [
         { choice: "WETH+CVX (0xB576…)", rewardIndex: 2, index: 34 },
         { choice: "crvUSD+USD0 (0xE1c7…)", rewardIndex: 0, index: 317 },
       ],
     }
+
+    const firstPage = {
+      data: {
+        data: {
+          votes: [
+            {
+              id: "v1",
+              voter: "0xde1E6A7ED0ad3F61D531a8a78E83CcDdbd6E0c49",
+              created: 1755628798,
+              vp: 11619048.104955375,
+              choice: { "34": 100 },
+              proposal: { id: "0xproposal", title: "Gauge" },
+            },
+          ],
+        },
+      },
+    }
+
+    const secondPage = { data: { data: { votes: [] } } }
+
+    ;(axios.post as any).mockResolvedValueOnce(firstPage)
 
     const result = await snapShotVoteService.getProposalVotes(mockProposal)
 
-    expect(result).toContainEqual({
+    expect(result).toHaveLength(1)
+
+    expect(result[0]).toMatchObject({
       task: "VOTE_03",
       value: "WETH+CVX",
-      validationDate: new Date("2025-08-18T23:59:58.000Z"),
       voterAddress: "0xde1E6A7ED0ad3F61D531a8a78E83CcDdbd6E0c49",
-      votingPower: 11619048.104955375,
-      proposalId: "0xde6dd14a7d7a26f4bf5029ac4dfcc1d077d8a1052e40aae8d477733df6cfdddb",
+      proposalId: "0xproposal",
     })
 
-    const allVotersAddress = result.map((el) => el.voterAddress)
+    expect(result[0]?.validationDate?.toISOString()).toBe("2025-08-19T18:39:58.000Z")
 
-    const mockProposalWithExtraExcludedVoters = {
-      id: "0xde6dd14a7d7a26f4bf5029ac4dfcc1d077d8a1052e40aae8d477733df6cfdddb",
-      title: "Gauge Weight for Week of 14th Aug 2025",
-      start: 1755129600,
-      end: 1755561600,
-      snapshot: "23135571",
-      created: 1755129665,
-      state: "closed",
-      type: "weighted",
+    const voters = result.map((r) => r?.voterAddress)
+
+    const mockProposal2 = {
+      ...mockProposal,
+      excludedVoters: voters.concat(["0x1111111111111111111111111111111111111111"]),
+    }
+
+    ;(axios.post as any).mockResolvedValueOnce(secondPage)
+
+    const emptyResult = await snapShotVoteService.getProposalVotes(mockProposal2 as any)
+
+    expect(emptyResult).toEqual([])
+  })
+
+  it("Should paginate accross 3 pages", async () => {
+    ;(snapShotVoteService as any).MAX_VOTES_PER_PROPOSAL = 300
+
+    const makeVotes = (n: number, offset = 0) =>
+      Array.from({ length: n }, (_, i) => ({
+        id: `v${i + offset}`,
+        voter: `0x${(i + offset).toString().padStart(40, "0")}`,
+        created: 1755628798,
+        vp: 1,
+        choice: { "34": 1 },
+        proposal: { id: "0xproposal" },
+      }))
+
+    const page1 = { data: { data: { votes: makeVotes(100, 0) } } }
+    const page2 = { data: { data: { votes: makeVotes(100, 100) } } }
+    const page3 = { data: { data: { votes: makeVotes(60, 200) } } }
+
+    ;(axios.post as any).mockResolvedValueOnce(page1).mockResolvedValueOnce(page2).mockResolvedValueOnce(page3)
+
+    const proposal: any = {
+      id: "0xproposal",
       organizationRewards: [
         { task: "VOTE_01", value: "crvUSD+USD0" },
-        {
-          task: "VOTE_02",
-          value: "Lending: Borrow crvUSD (ETHFI collateral)",
-        },
         { task: "VOTE_03", value: "WETH+CVX" },
       ],
-      excludedVoters: allVotersAddress?.concat(["0x0000000000000000000000000000000000000000", "0x1111111111111111111111111111111111111111"]) as Array<string>,
+      excludedVoters: ["0x0000000000000000000000000000000000000000"],
       rewarded: [
         { choice: "WETH+CVX (0xB576…)", rewardIndex: 2, index: 34 },
         { choice: "crvUSD+USD0 (0xE1c7…)", rewardIndex: 0, index: 317 },
       ],
     }
 
-    const votesWithoutAddresses = await snapShotVoteService.getProposalVotes(mockProposalWithExtraExcludedVoters)
+    const res = await snapShotVoteService.getProposalVotes(proposal)
+    expect(res.length).toBe(259)
+  })
 
-    expect(votesWithoutAddresses).toEqual([])
+  it("Should stop pagination after first page because of the MAX_VOTES limit", async () => {
+    ;(snapShotVoteService as any).MAX_VOTES_PER_PROPOSAL = 100
+
+    const makeVotes = (n: number, offset = 0) =>
+      Array.from({ length: n }, (_, i) => ({
+        id: `v${i + offset}`,
+        voter: `0x${(i + offset).toString().padStart(40, "0")}`,
+        created: 1755628798,
+        vp: 1,
+        choice: { "34": 1 },
+        proposal: { id: "0xproposal" },
+      }))
+
+    const page1 = { data: { data: { votes: makeVotes(100, 0) } } }
+    const page2 = { data: { data: { votes: makeVotes(100, 100) } } }
+
+    ;(axios.post as any).mockResolvedValueOnce(page1).mockResolvedValueOnce(page2)
+
+    const proposal: any = {
+      id: "0xproposal",
+      organizationRewards: [
+        { task: "VOTE_01", value: "crvUSD+USD0" },
+        { task: "VOTE_03", value: "WETH+CVX" },
+      ],
+      rewarded: [
+        { choice: "WETH+CVX (0xB576…)", rewardIndex: 2, index: 34 },
+        { choice: "crvUSD+USD0 (0xE1c7…)", rewardIndex: 0, index: 317 },
+      ],
+    }
+
+    const res = await snapShotVoteService.getProposalVotes(proposal)
+    expect(res.length).toBe(100)
   })
 })
+
+//
