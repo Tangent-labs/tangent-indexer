@@ -1,7 +1,7 @@
 import { formatEther, formatUnits, JsonRpcProvider } from "ethers"
 import { MarketContractsRepository } from "db/MarketContractsRepository"
 import { Prisma, PrismaClient } from "@prisma/client"
-import { commonERC20, curveLpMapping } from "defi-resources"
+import { commonERC20, curveLpMapping } from "@tangent/defi-resources"
 import { chainView } from "utils/chainView"
 import axios from "axios"
 

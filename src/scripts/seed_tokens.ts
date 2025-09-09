@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client"
-import { CURVE_CONTEXT } from "defi-resources/build/ressources/mappings/curveContext"
+import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext"
 
 const prisma = new PrismaClient()
 
