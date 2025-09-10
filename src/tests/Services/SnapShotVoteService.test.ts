@@ -54,6 +54,7 @@ describe("SnapShotVoteService", () => {
   let getProcessedProposalsSpy: ReturnType<typeof vi.spyOn>
   let createUserVoteTasksSpy: ReturnType<typeof vi.spyOn>
   let getBlockTimestampSpy: ReturnType<typeof vi.spyOn>
+  let fetchUsersBoostsSpy: ReturnType<typeof vi.spyOn>
 
   // Mock axios for Vitest
   vi.mock("axios", () => {
@@ -76,6 +77,7 @@ describe("SnapShotVoteService", () => {
     markProcessedProposals: vi.fn(),
     getProcessedProposals: vi.fn(),
     createUserVoteTasks: vi.fn(),
+    fetchUsersBoosts: vi.fn(),
   } as any as UserVoteRepository
 
   const blockService = {
@@ -91,6 +93,7 @@ describe("SnapShotVoteService", () => {
     markProcessedProposalsSpy = vi.spyOn(userVoteRepository as any, "markProcessedProposals").mockResolvedValue(undefined as any)
     getProcessedProposalsSpy = vi.spyOn(userVoteRepository as any, "getProcessedProposals").mockResolvedValue(undefined as any)
     createUserVoteTasksSpy = vi.spyOn(userVoteRepository as any, "createUserVoteTasks").mockResolvedValue(undefined as any)
+    fetchUsersBoostsSpy = vi.spyOn(userVoteRepository as any, "fetchUsersBoosts").mockResolvedValue(undefined as any)
 
     getBlockTimestampSpy = vi.spyOn(blockService as any, "getBlockTimestamp").mockResolvedValue(undefined as any)
     ;(axios.post as any).mockReset()
@@ -120,6 +123,11 @@ describe("SnapShotVoteService", () => {
   })
 
   it("Should create updatedTasks inside updateUserVoteTasks()", async () => {
+    fetchUsersBoostsSpy.mockResolvedValue([
+      { user_address: "0xvoter1", multiplier: 1.1 },
+      { user_address: "0xvoter2", multiplier: 2 },
+    ])
+
     await snapShotVoteService.updateUserVoteTasks(mockVotes, mockTasks)
 
     const updatedTasks = [
@@ -129,7 +137,7 @@ describe("SnapShotVoteService", () => {
         proposal_id: "proposalIdOne",
         validation_at: new Date("2025-07-31T00:47:17.000Z"),
         voting_power: 1234,
-        rate: 1,
+        points: Number((1234 * 1.1).toFixed(0)),
       },
       {
         vote_task_id: 3n,
@@ -137,7 +145,7 @@ describe("SnapShotVoteService", () => {
         proposal_id: "proposalIdOne",
         validation_at: new Date("2025-07-31T01:50:01.000Z"),
         voting_power: 4567,
-        rate: 1,
+        points: Number((4567 * 2).toFixed(0)),
       },
     ]
 

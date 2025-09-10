@@ -54,6 +54,10 @@ class SnapShotVoteService {
   }
 
   updateUserVoteTasks = async (totalVotes: Array<ValidatedTask>, voteTasks: { id: bigint; name: string; point_rate?: number }[]) => {
+    const userAddresses = Array.from(new Set(totalVotes.map((t) => t?.voterAddress?.toLowerCase())))
+
+    const boosts = await this.userVoteRepository.fetchUsersBoosts(userAddresses)
+
     const voteTasksMap = new Map<string, { id: bigint; point_rate?: number }>()
     for (const t of voteTasks) voteTasksMap.set(t.name, t)
 
@@ -63,10 +67,15 @@ class SnapShotVoteService {
         if (!task || !task.point_rate) {
           return null
         }
+
         // Validate all required fields
         if (!v.voterAddress || !v.proposalId || !v.validationDate || v.votingPower === undefined || v.votingPower === null) {
           return null
         }
+
+        const multiplier = Number(boosts.find((b) => b.user_address.toLowerCase() === v?.voterAddress?.toLowerCase())?.multiplier)
+
+        const points = v.votingPower * task.point_rate * multiplier
 
         return {
           vote_task_id: task.id,
@@ -74,7 +83,7 @@ class SnapShotVoteService {
           proposal_id: v.proposalId,
           validation_at: v.validationDate,
           voting_power: v.votingPower,
-          rate: task.point_rate,
+          points: Number(points.toFixed(0)),
         }
       })
       .filter((row) => row !== null)
@@ -191,7 +200,9 @@ class SnapShotVoteService {
       skip += this.PAGE_SIZE
     }
 
-    const processedProposals = await this.userVoteRepository.getProcessedProposals()
+    const allIds = all.map((p) => BigInt(p.proposal_id))
+
+    const processedProposals = await this.userVoteRepository.getProcessedProposals(allIds)
     return all.filter((p) => !processedProposals.some((processedP) => processedP.proposal_id === p?.id))
   }
 

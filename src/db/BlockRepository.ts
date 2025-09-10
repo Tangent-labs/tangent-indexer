@@ -15,19 +15,12 @@ export class BlockRepository extends AbstractRepository {
   // STORE
 
   async storeVoteBlockTracking(blockId: number) {
-    const existing = await this.prismaClient.last_vote_processed_block.findUnique({
-      where: { block_id: blockId },
+    await this.prismaClient.last_vote_processed_block.create({
+      data: {
+        block_id: blockId,
+      },
     })
-    if (!existing) {
-      await this.prismaClient.last_vote_processed_block.create({
-        data: {
-          block_id: blockId,
-        },
-      })
-    }
   }
-
-  //
 
   // GET
   async getLastEventBlockIndexed() {

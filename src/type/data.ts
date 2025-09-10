@@ -71,8 +71,8 @@ export type Reward = {
 export type ValidatedTask = {
   task: string
   value: string
+  voterAddress: string
   validationDate?: Date
-  voterAddress?: string
   votingPower?: number
   proposalId?: string
 }

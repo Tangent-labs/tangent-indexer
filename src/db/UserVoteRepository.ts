@@ -9,9 +9,9 @@ export class UserVoteRepository extends AbstractRepository {
     })
   }
 
-  // Takes user addresses and return a map with associated boost
-  async fetchBoosts(addresses: Array<string>) {
-    const boosts = await this.prismaClient.user_boost.findMany({
+  // Takes user addresses and return associated boosts
+  async fetchUsersBoosts(addresses: Array<string>) {
+    return await this.prismaClient.user_boost.findMany({
       where: {
         user_address: { in: addresses },
         end_at: null,
@@ -21,59 +21,27 @@ export class UserVoteRepository extends AbstractRepository {
         multiplier: true,
       },
     })
-
-    const boostByUser = new Map<string, number>()
-    for (const b of boosts) {
-      boostByUser.set(b.user_address.toLowerCase(), Number(b.multiplier))
-    }
-
-    return boostByUser
   }
 
   async createUserVoteTasks(
     tasks: {
-      vote_task_id: bigint | number | string
+      vote_task_id: bigint
       user_address: string
       proposal_id: string
       validation_at: Date
       voting_power: number
-      rate: number
+      points: number
     }[]
   ) {
-    if (!tasks?.length) return
-
-    // Get unique addresses
-    const addresses = Array.from(new Set(tasks.map((t) => t.user_address.toLowerCase())))
-
-    // Get each users boost
-    const boostByUser = await this.fetchBoosts(addresses)
-
-    // Build object to insert in user_vote_tasks
-    const rows = tasks.map((t) => {
-      const voteTaskId = typeof t.vote_task_id === "bigint" ? t.vote_task_id : BigInt(String(t.vote_task_id))
-      const user = t.user_address.toLowerCase()
-      const multiplier = boostByUser.get(user) ?? 1
-
-      const points = t.voting_power * t.rate * multiplier
-
-      return {
-        vote_task_id: voteTaskId,
-        user_address: user,
-        proposal_id: t.proposal_id,
-        validation_at: t.validation_at,
-        voting_power: t.voting_power,
-        points: Number(points.toFixed(0)),
-      }
-    })
-
     return await this.prismaClient.user_vote_tasks.createMany({
-      data: rows,
+      data: tasks,
     })
   }
 
-  async getProcessedProposals() {
+  async getProcessedProposals(ids: Array<bigint>) {
     return await this.prismaClient.processed_proposal.findMany({
       select: { id: true, proposal_id: true },
+      where: { id: { in: ids } },
     })
   }
 
