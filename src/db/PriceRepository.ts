@@ -1,15 +1,15 @@
+import { PriceApiInfo, PriceSource } from "type/data"
 import { AbstractRepository } from "./AbstractRepository"
-import { PriceInfo, PriceSource } from "type/data"
 
 export class PriceRepository extends AbstractRepository {
-  async insertPriceFeed(prices: PriceInfo[]) {
+  async insertPriceFeed(prices: PriceApiInfo[]) {
     if (prices?.length > 0) {
       const date = new Date()
-      await this.prismaClient.price_feed.createMany({
+      await this.prismaClient.price_feeds.createMany({
         data: prices.map((p) => ({
-          token_address: p.address,
-          price: p.price,
-          date,
+          timestamp: date,
+          price_usd: p.price,
+          address: p.address,
         })),
       })
     }

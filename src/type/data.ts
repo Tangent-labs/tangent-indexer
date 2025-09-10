@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client"
 import { AddressLike } from "ethers"
 
 export type MarketType = "ConvexFxn" | "ConvexCrv" | "Pendle PT"
@@ -125,14 +126,10 @@ export type RewardedChoiceOption = {
   value: string
 }
 
-export type PriceInfo = {
+export type PriceApiInfo = {
   address: string
   price: number
 }
 
-export type PriceSource = {
-  address: string
-  name: string
-  type: "curveApi" | "ERC4626" | "Internal" | "pendleApi" | "llamaApi"
-  refToken?: string
-}
+export type PriceSource = Prisma.price_sourceGetPayload<{}>
+export type PriceSourceCreate = Prisma.price_sourceCreateInput

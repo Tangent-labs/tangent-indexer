@@ -1,4 +1,4 @@
-import { PriceInfo } from "type/data"
+import { PriceApiInfo } from "type/data"
 import { CurvePriceApiResult, LlamaPriceApiResult, PendlePriceApiResult } from "./globalData/types"
 import axios from "axios"
 
@@ -8,7 +8,7 @@ const PENDLE_PRICE_API = "https://api-v2.pendle.finance/core/v1/1/assets/prices"
 const LLAMA_API = "https://coins.llama.fi/prices/current/"
 
 class PriceApiService {
-  async getLlamaPrice(addresses: string[]): Promise<PriceInfo[]> {
+  async getLlamaPrice(addresses: string[]): Promise<PriceApiInfo[]> {
     if (!addresses?.length) {
       return []
     }
@@ -16,7 +16,7 @@ class PriceApiService {
       const url = `${LLAMA_API}/${addresses.map((a) => "ethereum:" + a.toLowerCase()).join(",")}`
 
       const call = await axios.get<LlamaPriceApiResult>(url)
-      const prices: PriceInfo[] = []
+      const prices: PriceApiInfo[] = []
 
       for (const address of addresses) {
         if (call.data.coins["ethereum:" + address.toLowerCase()]) {
@@ -38,14 +38,14 @@ class PriceApiService {
     }
   }
 
-  async fetchCurveApiPrices(addresses: string[], curvePoolType: string): Promise<PriceInfo[]> {
+  async fetchCurveApiPrices(addresses: string[], curvePoolType: string): Promise<PriceApiInfo[]> {
     if (!addresses?.length) {
       return []
     }
     try {
       const callUrl = `${CURVE_API}/getPools/ethereum/${curvePoolType}`
       const call = await axios.get<CurvePriceApiResult>(callUrl)
-      const prices: PriceInfo[] = []
+      const prices: PriceApiInfo[] = []
 
       // fin the prices we need in the results
       for (const p of call.data.data.poolData) {
@@ -67,7 +67,7 @@ class PriceApiService {
     }
   }
 
-  async fetchPendleApiPrices(addresses: string[]): Promise<PriceInfo[]> {
+  async fetchPendleApiPrices(addresses: string[]): Promise<PriceApiInfo[]> {
     if (!addresses?.length) {
       return []
     }
@@ -76,7 +76,7 @@ class PriceApiService {
       const url = `${PENDLE_PRICE_API}?addresses=${addresses.map((a) => a.toLowerCase()).join(",")}`
 
       const call = await axios.get<PendlePriceApiResult>(url)
-      const prices: PriceInfo[] = []
+      const prices: PriceApiInfo[] = []
 
       for (const [address, price] of Object.entries(call.data.prices)) {
         prices.push({
