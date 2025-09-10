@@ -10,3 +10,5 @@ src/typechain
 .vscode
 /src/data/*.json
 prisma/migrations
+/local/*
+/src/addresses.json

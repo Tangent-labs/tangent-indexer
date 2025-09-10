@@ -1,65 +1,23 @@
-import { Prisma, PrismaClient } from "@prisma/client"
+import { Prisma } from "@prisma/client"
 import { AbstractRepository } from "./AbstractRepository"
+import { JsonRpcProvider } from "ethers"
 
 export class UserPointsRepository extends AbstractRepository {
-  returnOpenedTasks = async (
-    event: Prisma.transfer_eventsUncheckedCreateInput,
-    task: {
-      id: bigint
-      token: {
-        address: string
-      }
+  // Helper: block time at or before startBlock
+  getBlockTimeAtOrBefore = async (blockId: number, provider: JsonRpcProvider) => {
+    const latestIndexedBlock = await this.prismaClient.global_blocks.findFirst({
+      where: { block_id: { lte: BigInt(blockId) } },
+      orderBy: { block_id: "desc" },
+      select: { block_id: true },
+    })
+
+    if (latestIndexedBlock) {
+      const referenceBlock = await provider.getBlock(Number(latestIndexedBlock.block_id))
+      if (!referenceBlock) throw new Error("RPC: reference block not found")
+      return referenceBlock.timestamp
     }
-  ) => {
-    return await this.prismaClient.user_tasks.findMany({
-      where: {
-        user_address: {
-          in: [event.from, event.to],
-        },
-        task_id: task.id,
-        closed: null,
-      },
-      orderBy: { start: "desc" },
-    })
-  }
 
-  updateTask = async (
-    openTask: {
-      id: bigint
-      task_id: bigint
-      user_address: string
-      start: Date | null
-      closed: Date | null
-      amount: string
-    },
-    event: Prisma.transfer_eventsUncheckedCreateInput
-  ) => {
-    await this.prismaClient.user_tasks.update({
-      where: { id: openTask.id },
-      data: { closed: event.block_date },
-    })
-  }
-
-  createTask = async (
-    task: {
-      id: bigint
-      token: {
-        address: string
-      }
-    },
-    user: string,
-    event: Prisma.transfer_eventsUncheckedCreateInput,
-    amount: string
-  ) => {
-    await this.prismaClient.user_tasks.create({
-      data: {
-        task_id: task.id,
-        user_address: user,
-        start: event.block_date, // Chain with previous closed time
-        amount: amount.toString(), // Updated running balance
-        closed: null,
-      },
-    })
+    return 0
   }
 
   getOpenedTasks = async (userAddresses: Array<string>, taskIds: Array<bigint>) => {
@@ -87,18 +45,25 @@ export class UserPointsRepository extends AbstractRepository {
   }
 
   updateProcessedTasks = async (tasksToClose: { id: bigint; closed: Date }[], tasksToCreate: Prisma.user_tasksUncheckedCreateInput[]) => {
-    await (this.prismaClient as PrismaClient)?.$transaction([
-      ...tasksToClose.map((task) =>
-        this.prismaClient.user_tasks.update({
-          where: { id: task.id },
-          data: { closed: task.closed },
-        })
-      ),
-      this.prismaClient.user_tasks.createMany({
+    if (tasksToClose.length) {
+      const queryParam = tasksToClose.map((t) => `(${t.id}::bigint, '${t.closed.toISOString()}'::timestamptz AT TIME ZONE 'UTC')`)
+
+      await (this.prismaClient as Prisma.TransactionClient).$executeRawUnsafe(`
+        UPDATE points.user_tasks ut
+        SET closed = v.closed
+        FROM (VALUES
+          ${queryParam.join(",")}
+        ) AS v(id, closed)
+        WHERE ut.id = v.id;
+      `)
+    }
+
+    if (tasksToCreate.length > 0) {
+      await (this.prismaClient as Prisma.TransactionClient).user_tasks.createMany({
         data: tasksToCreate,
         skipDuplicates: false,
-      }),
-    ])
+      })
+    }
   }
 
   fetchTasksEventsAndAddresses = async (lastBlockId: number) => {
@@ -186,5 +151,16 @@ export class UserPointsRepository extends AbstractRepository {
         skipDuplicates: true,
       })
     }
+  }
+
+  async computeUserPoints(startDate: number, endDate: number) {
+    // update user points
+    // see: src/sql-procedure/compute_user_points.sql
+    await this.prismaClient.$executeRawUnsafe(
+      `SELECT points.compute_user_points( 
+        (to_timestamp(${startDate}) AT TIME ZONE 'UTC')::timestamp, 
+        (to_timestamp(${endDate}) AT TIME ZONE 'UTC')::timestamp
+       )`
+    )
   }
 }

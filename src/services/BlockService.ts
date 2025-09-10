@@ -1,7 +1,7 @@
-import { JsonRpcProvider } from "ethers"
 import axios from "axios"
-import { indexerConfig } from "../config/indexer_config"
+import { JsonRpcProvider } from "ethers"
 import { BlockRepository } from "../db/BlockRepository"
+import { indexerConfig } from "../config/indexer_config"
 
 export type BlockInfo = { result: { number: string; timestamp: string } }
 
@@ -82,6 +82,18 @@ export class BlockService {
     return { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex }
   }
 
+  getBlockTimestamp = async (blockNumber: number | "latest", provider: JsonRpcProvider): Promise<number> => {
+    const block = await provider.getBlock(blockNumber)
+    if (!block) {
+      throw new Error("Could not fetch block")
+    }
+    return block.timestamp
+  }
+
+  getLatestBlockTimestamp = async (provider: JsonRpcProvider): Promise<number> => {
+    return this.getBlockTimestamp("latest", provider)
+  }
+
   async fetchBlockTimestamps(blockNumbers: number[], providerURL: string) {
     const requests = blockNumbers.map((blockNumber, index) => ({
       jsonrpc: "2.0",
@@ -97,7 +109,6 @@ export class BlockService {
       headers: { "Content-Type": "application/json" },
     })
     const responses = res.data as BlockInfo[]
-
     const timestampPerBlockId: Map<number, number> = new Map()
 
     responses.forEach((resp: BlockInfo) => {
