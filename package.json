@@ -16,6 +16,7 @@
     "format": "prettier --write --list-different . ",
     "db:truncate": "tsx src/scripts/utils/truncate_tables.ts",
     "db:push": "npx prisma db push",
+    "tangent:test-timestamp": "tsx src/scripts/test_timestamp.ts",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",

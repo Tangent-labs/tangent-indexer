@@ -157,7 +157,10 @@ export class UserPointsRepository extends AbstractRepository {
     // update user points
     // see: src/sql-procedure/compute_user_points.sql
     await this.prismaClient.$executeRawUnsafe(
-      `SELECT points.compute_user_points(to_timestamp('${startDate}')::timestamp, to_timestamp('${endDate}')::timestamp)`
+      `SELECT points.compute_user_points( 
+        (to_timestamp(${startDate}) AT TIME ZONE 'UTC')::timestamp, 
+        (to_timestamp(${endDate}) AT TIME ZONE 'UTC')::timestamp
+       )`
     )
   }
 }
