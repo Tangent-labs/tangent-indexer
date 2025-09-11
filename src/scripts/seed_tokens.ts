@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 async function seedPriceFeeds() {
   const tokens = [
     {
-      address: "0xbd605Ad2010E12c16B0cd0F2B8FE3c6d90BB51E7".toLowerCase(),
+      address: "0xf0014CBe67b3aB638bdaA2e2Cb1B531935829E50".toLowerCase(),
       name: "USG",
       symbol: "USG",
     },
@@ -56,14 +56,11 @@ async function seedPriceFeeds() {
 
     // Generate price feeds for each day
     for (let ts = oneMontAgo; ts <= currentTimestamp; ts += oneDaySeconds) {
-      // Generate random price between 0.95 and 1.05 USD (assuming stablecoin-like tokens)
-      const priceUsd = Math.floor(0.95 + Math.random() * 0.1) // Store as integer (micro-USD)
-
       await prisma.price_feeds.create({
         data: {
           token: token.address,
           timestamp: new Date(ts * 1000),
-          price_usd: priceUsd.toString(),
+          price_usd: "1",
         },
       })
     }

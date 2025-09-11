@@ -66,7 +66,7 @@ export class UserPointsRepository extends AbstractRepository {
     }
   }
 
-  fetchTasksEventsAndAddresses = async (lastBlockId: number) => {
+  fetchTasksEventsAndAddresses = async (startBlock: number, endBlock: number) => {
     const userAddresses = (
       await this.prismaClient.user.findMany({
         select: { address: true },
@@ -86,7 +86,7 @@ export class UserPointsRepository extends AbstractRepository {
                   {
                     OR: [{ from: { in: userAddresses, mode: "insensitive" } }, { to: { in: userAddresses, mode: "insensitive" } }],
                   },
-                  { block_id: { gt: lastBlockId } },
+                  { block_id: { gt: startBlock, lte: endBlock } },
                 ],
               },
               orderBy: { block_id: "asc" },
