@@ -7,6 +7,7 @@ import { BlockService } from "../services/BlockService"
 import { UserEventsRepository } from "db/UserEventsRepository"
 import { UserPointsRepository } from "db/UserPointsRepository"
 import { UserPointsService } from "services/events/UserPointsService"
+import { indexerConfig } from "config/indexer_config"
 
 dotenv.config()
 
@@ -21,7 +22,7 @@ async function main() {
       return
     }
 
-    const { startBlock, endBlock, actualBlock } = blockInfo
+    const { startBlock, endBlock, actualBlock, bestProviderIndex } = blockInfo
 
     if (startBlock && endBlock) {
       console.log("indexing :", startBlock, "<----------------->", endBlock)
@@ -29,8 +30,17 @@ async function main() {
         async (dbTransaction: TransactionPrisma) => {
           setTransaction(dbTransaction)
           await userPointsService.retrieveUserAddressesFromTransfers(startBlock, endBlock)
+
+          // TODO: get price
+
+          // TODO: get boost
+
           await userPointsService.updateUserTasks(startBlock)
 
+          // Process points calculation for user tasks
+          await userPointsService.processUserPoints(startBlock, endBlock, blockService, indexerConfig.provider.chainRpc[bestProviderIndex])
+
+          // Update block logic
           await blockService.updateLastEventBlockIndexed(endBlock)
         },
         {
