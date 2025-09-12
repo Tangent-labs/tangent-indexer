@@ -35,7 +35,7 @@ async function main() {
 
           // TODO: get boost
 
-          await userPointsService.updateUserTasks(startBlock)
+          await userPointsService.updateUserTasks(startBlock, endBlock)
 
           // Process points calculation for user tasks
           await userPointsService.processUserPoints(startBlock, endBlock, blockService, indexerConfig.provider.chainRpc[bestProviderIndex])

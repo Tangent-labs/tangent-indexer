@@ -107,17 +107,18 @@ describe("UserPointsService.updateUserTasks", () => {
     fetchTasksEventsAndAddressesSpy.mockResolvedValue({ tasks, relevantEvents: [thirdEvent, secondEvent, firstEvent] })
 
     const startBlock = 1234567
-    await userPointsService.updateUserTasks(startBlock)
+    const endBlock = 1236567
+    await userPointsService.updateUserTasks(startBlock, endBlock)
 
-    expect(userPointsRepository.fetchTasksEventsAndAddresses).toHaveBeenCalledWith(startBlock)
+    expect(userPointsRepository.fetchTasksEventsAndAddresses).toHaveBeenCalledWith(startBlock, endBlock)
 
     expect(updateTasksSpy).toHaveBeenNthCalledWith(1, [firstEvent, secondEvent, thirdEvent], tasks)
   })
 
   it("Should handle empty events", async () => {
     ;(userPointsRepository.fetchTasksEventsAndAddresses as any).mockResolvedValue({ tasks: [], relevantEvents: [] })
-    await userPointsService.updateUserTasks(9)
-    expect(userPointsRepository.fetchTasksEventsAndAddresses).toHaveBeenCalledWith(9)
+    await userPointsService.updateUserTasks(9, 10)
+    expect(userPointsRepository.fetchTasksEventsAndAddresses).toHaveBeenCalledWith(9, 10)
     expect(updateTasksSpy).toHaveBeenCalledWith([], [])
   })
 })
