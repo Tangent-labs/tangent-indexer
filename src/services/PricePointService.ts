@@ -10,7 +10,7 @@ import PriceApiService from "./PriceApiService"
 import { MarketContractsRepository } from "../db/MarketContractsRepository"
 
 const curvePoolType = "factory-stable-ng"
-
+const SCALE = 10n ** 18n
 type PriceApiWarning = {
   apiName: string
   error: any
@@ -22,7 +22,7 @@ type GetPriceFeedsResult = {
 }
 
 type PointServiceChainViewOut = {
-  ervc4626shares: {
+  ervc4626Shares: {
     token: string
     shares: bigint
   }[]
@@ -47,8 +47,11 @@ export class PricePointService {
   }
 
   async getPriceFeeds(): Promise<GetPriceFeedsResult> {
+    const warnings: PriceApiWarning[] = []
     // get the info from the database to process
     const priceSource = await this.priceRepository.getPriceSources()
+
+    // get the markets from the database (=> checking debt indexes)
     const markets = (await this.marketContractsRepository.getContracts())?.map((m) => m.contract_address.toLowerCase()) || []
 
     // set the promises to fetch the prices
@@ -85,7 +88,7 @@ export class PricePointService {
     // Add ERC4626 processing to the promises
     const erc4626Addresses = priceSource.filter((p) => p.type === "ERC4626").map((p) => p.address.toLowerCase())
     if (erc4626Addresses.length > 0) {
-      promises.set("ERC4626", this.processErc4626WithChainView(erc4626Addresses, markets, priceSource))
+      promises.set("ERC4626", this.callPriceChainView(erc4626Addresses, markets))
     }
 
     // Use Promise.allSettled to handle partial failures
@@ -95,28 +98,17 @@ export class PricePointService {
 
     // Process all results in one pass
     const apiPrices: any[] = []
-    const warnings: PriceApiWarning[] = []
 
     promiseEntries.forEach(([type, _], index) => {
       const result = results[index]
 
       if (result.status === "fulfilled") {
-        // Add successful results
-        if (Array.isArray(result.value)) {
-          apiPrices.push(...result.value)
+        if (type === "ERC4626") {
+          this.procesChainViewResults(result.value, priceSource, apiPrices, markets, warnings)
         } else {
-          // Handle ERC4626 chain view result
-          const chainViewPrices = result.value
-          this.processErc4626Prices(priceSource, chainViewPrices, apiPrices)
-          this.processDebtIndexes(chainViewPrices, apiPrices)
-          apiPrices.push({
-            address: chainAddresses.tokens.USG,
-            price: Number(chainViewPrices.usgPrice) / 1e18,
-          })
-          apiPrices.push({
-            address: chainAddresses.tokens.sUSG,
-            price: Number(chainViewPrices.sUsgPrice) / 1e18,
-          })
+          if (Array.isArray(result.value)) {
+            apiPrices.push(...result.value)
+          }
         }
       } else {
         // Collect warnings instead of logging
@@ -127,9 +119,58 @@ export class PricePointService {
       }
     })
 
+    // Filter out any invalid price objects before returning
+    const validPrices =
+      apiPrices?.flat()?.filter((price) => {
+        return price && typeof price === "object" && typeof price.address === "string" && typeof price.price === "number" && price.address.length > 0
+      }) || []
+
     return {
-      prices: apiPrices?.flat() || [],
+      prices: validPrices,
       warnings,
+    }
+  }
+
+  async procesChainViewResults(
+    chainViewPrices: PointServiceChainViewOut,
+    priceSource: PriceSource[],
+    apiPrices: PriceApiInfo[],
+    markets: string[],
+    warnings: PriceApiWarning[]
+  ) {
+    // Handle ERC4626 chain view result
+
+    this.processErc4626Prices(priceSource, chainViewPrices, apiPrices, warnings)
+
+    const debtResult = this.processDebtIndexes(chainViewPrices, markets)
+
+    // Add debt indexes prices
+    if (debtResult?.prices && debtResult?.prices?.length > 0) {
+      apiPrices.push(...debtResult.prices)
+    }
+
+    // Add USG price
+    if (chainAddresses?.tokens?.USG) {
+      apiPrices.push({
+        address: chainAddresses.tokens.USG,
+        price: Number(chainViewPrices.usgPrice) / Number(SCALE),
+      })
+    }
+    // Add sUSG price
+    if (chainAddresses?.tokens?.sUSG) {
+      apiPrices.push({
+        address: chainAddresses.tokens.sUSG,
+        price: Number(chainViewPrices.sUsgPrice) / Number(SCALE),
+      })
+    }
+
+    // Add warning if there are missing debt indexes for requested markets
+
+    if (debtResult?.missingMarkets && debtResult?.missingMarkets?.length > 0) {
+      warnings.push({
+        apiName: "DebtIndexes",
+        error: new Error(`No debt index data returned for markets: ${debtResult?.missingMarkets?.join(", ")}`),
+      })
     }
   }
 
@@ -137,41 +178,65 @@ export class PricePointService {
     const result = await this.getPriceFeeds()
 
     if (result?.prices?.length > 0) {
-      this.insertPrices(result.prices)
+      await this.priceRepository.insertPriceFeed(result.prices)
     }
-
     return result
   }
 
-  processDebtIndexes(chainViewPrices: PointServiceChainViewOut, apiPrices: PriceApiInfo[]) {
-    chainViewPrices?.debtIndexes?.forEach((p) => {
-      apiPrices.push({
-        address: p.market,
-        price: Number(p.index) / 1e18,
-      })
-    })
+  rayToDecimal(ray: bigint | string): number {
+    const value = typeof ray === "bigint" ? ray : BigInt(ray)
+    // Conversion en nombre flottant
+    const asNumber = (Number(value) / Number(SCALE)).toFixed(4)
+    return Number(asNumber)
   }
 
-  processErc4626Prices(priceSource: PriceSource[], chainViewPrices: PointServiceChainViewOut, apiPrices: PriceApiInfo[]) {
-    if (!chainViewPrices?.ervc4626shares?.length) {
+  processDebtIndexes(chainViewPrices: PointServiceChainViewOut, requestedMarkets?: string[]): { missingMarkets: string[] | undefined; prices: PriceApiInfo[] } {
+    const result = { missingMarkets: [] as string[] | undefined, prices: [] as PriceApiInfo[] }
+    const proceedMarkets = [] as string[]
+    result.prices =
+      chainViewPrices?.debtIndexes?.map((p) => {
+        proceedMarkets.push(p.market.toLowerCase())
+        return {
+          address: p.market.toLowerCase(),
+          price: this.rayToDecimal(p.index),
+        }
+      }) || []
+    result.missingMarkets = requestedMarkets?.filter((market) => !proceedMarkets.includes(market.toLowerCase())) || []
+    return result
+  }
+
+  processErc4626Prices(priceSource: PriceSource[], chainViewPrices: PointServiceChainViewOut, apiPrices: PriceApiInfo[], warnings: PriceApiWarning[]) {
+    if (!chainViewPrices?.ervc4626Shares?.length) {
+      warnings.push({
+        apiName: "ERC4626",
+        error: new Error("No ERC4626 shares data returned"),
+      })
       return
     }
 
     // from the share of ERC4626 we derive the price of the token
-    chainViewPrices.ervc4626shares.forEach((p: { token: string; shares: bigint }) => {
+    chainViewPrices.ervc4626Shares.forEach((p: { token: string; shares: bigint }) => {
       let erc4626Price = 0
       // Find the reference price config for this ERC4626 vault
       const refToken = priceSource.find((conf) => conf.address.toLowerCase() === p.token.toLowerCase())?.ref_token
       if (refToken) {
         // Find the USD price for the underlying asset
         const priceObj = apiPrices.find((x) => x.address.toLowerCase() === refToken.toLowerCase())
+        if (!priceObj) {
+          warnings.push({
+            apiName: "ERC4626",
+            error: new Error(`No price found for reference token: ${refToken}`),
+          })
+          return
+        }
         if (priceObj) {
           // Shares is the amount of underlying assets per 1 share (scaled by 1e18)
           // Underlying price is in USD (decimal format)
           // erc4626Price = (shares * underlying USD price) / 1e18
-          erc4626Price = Number((BigInt(p.shares) * BigInt(Math.floor(priceObj.price * 1e18))) / 10n ** 18n) / 1e18
+          erc4626Price = Number((BigInt(p.shares) * BigInt(Math.floor(priceObj.price * 1e18))) / SCALE) / 1e18
         }
       }
+
       apiPrices.push({
         address: p.token,
         price: erc4626Price, // toString for consistency if BigInt is used
@@ -179,7 +244,7 @@ export class PricePointService {
     })
   }
 
-  async processErc4626WithChainView(erc4626: string[], markets: string[], priceSource: any[]): Promise<PointServiceChainViewOut> {
+  async callPriceChainView(erc4626: string[], markets: string[]): Promise<PointServiceChainViewOut> {
     const addressParams = {
       usg: chainAddresses.tokens.USG as AddressLike,
       usgOracle: chainAddresses.oracles.USG as AddressLike,
@@ -213,18 +278,5 @@ export class PricePointService {
     )
 
     return p?.at(0) as PointServiceChainViewOut
-  }
-
-  async insertPrices(prices: PriceApiInfo[]) {
-    const newDate = new Date()
-    return this.priceRepository.insertPriceFeed(
-      prices.map((p) => ({
-        token: p.address,
-        timestamp: newDate,
-        price_usd: p.price,
-        address: p.address,
-        price: p.price,
-      }))
-    )
   }
 }

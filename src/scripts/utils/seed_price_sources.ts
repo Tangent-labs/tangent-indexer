@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client"
 import { PriceSourceCreate } from "type/data"
+import addresses from "../../addresses.json"
 
 const prisma = new PrismaClient()
 
@@ -36,6 +37,19 @@ const priceFeedData: PriceSourceCreate[] = [
     ref_token: "0xD533a949740bb3306d119CC777fa900bA034cd52",
   },
 ]
+async function addMarkets() {
+  const markets = addresses.markets
+
+  await prisma.usg_markets.createMany({
+    skipDuplicates: true,
+    data: markets.map((market) => ({
+      contract_address: market.marketAddress,
+      contract_name: `market ${market.collatName}`,
+      collateral_address: market.collatAddress,
+      contract_type: market.marketType,
+    })),
+  })
+}
 
 async function seedPriceSources() {
   const priceSources = priceFeedData.map((item) => ({
@@ -45,15 +59,16 @@ async function seedPriceSources() {
     ref_token: item.ref_token?.toLowerCase() || null,
   }))
 
-  for (const priceSource of priceSources) {
-    await prisma.price_source.createMany({
-      data: priceSource,
-    })
-  }
+  await prisma.price_source.createMany({
+    skipDuplicates: true,
+    data: priceSources,
+  })
 
   console.log(`Price sources seeded successfully! ${priceSources.length} entries processed.`)
 }
-
-seedPriceSources()
+;(async () => {
+  await addMarkets()
+  await seedPriceSources()
+})()
   .catch((e) => console.error(e))
   .finally(async () => await prisma.$disconnect())

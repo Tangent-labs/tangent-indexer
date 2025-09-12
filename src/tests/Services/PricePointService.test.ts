@@ -53,7 +53,7 @@ describe("PricePointService", () => {
   const mockMarkets = ["0x9000000000000000000000000000000000000001", "0x9000000000000000000000000000000000000002"]
 
   const mockChainViewPrices = {
-    ervc4626shares: [{ token: "0x4000000000000000000000000000000000000004", shares: BigInt("1050000000000000000") }],
+    ervc4626Shares: [{ token: "0x4000000000000000000000000000000000000004", shares: BigInt("1050000000000000000") }],
     sUsgPrice: BigInt("1100000000000000000"),
     usgPrice: BigInt("1000000000000000000"),
     debtIndexes: [
@@ -111,10 +111,10 @@ describe("PricePointService", () => {
           { address: "0x2000000000000000000000000000000000000002", price: 1.5 },
           { address: "0x3000000000000000000000000000000000000003", price: 2.0 },
           { address: "0x4000000000000000000000000000000000000004", price: expect.any(Number) }, // ERC4626 calculated
-          { address: "0x400F4d9E2c8e33cfCb6F6b6E5B5B5B5B5B5B5B5B", price: 1.0 },
-          { address: "0x500F4d9E2c8e33cfCb6F6b6E5B5B5B5B5B5B5B5B", price: 1.1 },
           { address: "0x9000000000000000000000000000000000000001", price: 1.2 },
           { address: "0x9000000000000000000000000000000000000002", price: 1.15 },
+          { address: "0x400F4d9E2c8e33cfCb6F6b6E5B5B5B5B5B5B5B5B", price: 1.0 },
+          { address: "0x500F4d9E2c8e33cfCb6F6b6E5B5B5B5B5B5B5B5B", price: 1.1 },
         ])
       )
     })
@@ -155,7 +155,12 @@ describe("PricePointService", () => {
       expect(mockConsole.error).toHaveBeenCalledWith("Error fetching llama price", expect.any(Error))
       // With error resistance, other successful promises should still be processed
       expect(result.prices.length).toBeGreaterThan(0)
-      expect(result.warnings).toEqual([]) // Setup errors don't create warnings in the result
+      expect(result.warnings).toHaveLength(1) // ERC4626 warning for missing reference token price
+      expect(result.warnings[0]).toEqual({
+        apiName: "ERC4626",
+        error: expect.any(Error),
+      })
+      expect(result.warnings[0].error.message).toContain("No price found for reference token")
     })
 
     it("should handle partial promise failures with allSettled and return warnings", async () => {
@@ -165,12 +170,41 @@ describe("PricePointService", () => {
       const result = await pricePointService.getPriceFeeds()
 
       expect(result.prices.length).toBeGreaterThan(0) // Other promises succeed (Curve, Pendle, ERC4626)
+      expect(result.warnings).toHaveLength(2) // Llama failure + ERC4626 reference token missing
+      expect(result.warnings).toEqual(
+        expect.arrayContaining([
+          {
+            apiName: "Llama",
+            error: expect.any(Error),
+          },
+          {
+            apiName: "ERC4626",
+            error: expect.any(Error),
+          },
+        ])
+      )
+      expect(result.warnings).toBeDefined()
+      expect(result.warnings.find((w) => w?.apiName === "Llama")?.error.message).toBe("Llama failed")
+      expect(result.warnings.find((w) => w?.apiName === "ERC4626")?.error.message).toContain("No price found for reference token")
+    })
+
+    it("should handle non-found price error for ERC4626 reference token", async () => {
+      // Mock API services to return empty results (no prices found)
+      mockPriceApiService.getLlamaPrice.mockResolvedValue([])
+      mockPriceApiService.fetchCurveApiPrices.mockResolvedValue([])
+      mockPriceApiService.fetchPendleApiPrices.mockResolvedValue([])
+      vi.mocked(chainView).mockResolvedValue([mockChainViewPrices])
+
+      const result = await pricePointService.getPriceFeeds()
+
+      expect(result.prices.length).toBeGreaterThan(0) // USG/sUSG and debt prices should still be included
       expect(result.warnings).toHaveLength(1)
       expect(result.warnings[0]).toEqual({
-        apiName: "Llama",
+        apiName: "ERC4626",
         error: expect.any(Error),
       })
-      expect(result.warnings[0].error.message).toBe("Llama failed")
+      expect(result.warnings[0].error.message).toContain("No price found for reference token")
+      expect(result.warnings[0].error.message).toContain("0x1000000000000000000000000000000000000001")
     })
 
     it("should handle all promises failing gracefully", async () => {
@@ -193,6 +227,27 @@ describe("PricePointService", () => {
       )
     })
 
+    it("should add warning when debt indexes are missing for requested markets", async () => {
+      const chainViewPricesWithMissingDebt = {
+        ...mockChainViewPrices,
+        debtIndexes: [
+          { market: "0x9000000000000000000000000000000000000001", index: BigInt("1200000000000000000") },
+          // Missing market 0x9000000000000000000000000000000000000002
+        ],
+      }
+      vi.mocked(chainView).mockResolvedValue([chainViewPricesWithMissingDebt])
+
+      const result = await pricePointService.getPriceFeeds()
+
+      expect(result.warnings).toHaveLength(1)
+      expect(result.warnings[0]).toEqual({
+        apiName: "DebtIndexes",
+        error: expect.any(Error),
+      })
+      expect(result.warnings[0].error.message).toContain("No debt index data returned for markets")
+      expect(result.warnings[0].error.message).toContain("0x9000000000000000000000000000000000000002")
+    })
+
     // ... (keep other getPriceFeeds tests from previous version, adjusted for no USG/sUSG without ERC4626)
   })
 
@@ -208,9 +263,6 @@ describe("PricePointService", () => {
       expect(mockPriceRepository.insertPriceFeed).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
-            token: "0x1000000000000000000000000000000000000001",
-            timestamp: expect.any(Date),
-            price_usd: 1.0,
             address: "0x1000000000000000000000000000000000000001",
             price: 1.0,
           }),
@@ -231,26 +283,21 @@ describe("PricePointService", () => {
       const apiPrices: PriceApiInfo[] = [{ address: "0x1000000000000000000000000000000000000001", price: 1.23456789 }]
       const chainViewWithShares = {
         ...mockChainViewPrices,
-        ervc4626shares: [{ token: "0x4000000000000000000000000000000000000004", shares: BigInt("1050000000000000000") }],
+        ervc4626Shares: [{ token: "0x4000000000000000000000000000000000000004", shares: BigInt("1050000000000000000") }],
       }
 
-      pricePointService.processErc4626Prices(mockPriceSources, chainViewWithShares, apiPrices)
+      pricePointService.processErc4626Prices(mockPriceSources, chainViewWithShares, apiPrices, [])
 
-      // Exact calc: floor(1.23456789 * 1e18) = 1234567890000000000
-      // (1050000000000000000 * 1234567890000000000) / 10^18 = 1296296284500000000000000000
-      // Then / 1e18 = 1.2962962845
       expect(apiPrices).toContainEqual({ address: "0x4000000000000000000000000000000000000004", price: expect.closeTo(1.2962962845, 10) })
     })
-
-    // ... (keep other processErc4626Prices tests from previous version)
   })
 
-  describe("processErc4626WithChainView", () => {
+  describe("callPriceChainView", () => {
     it("should call chainView and return output", async () => {
       const erc4626 = ["0x4000000000000000000000000000000000000004"]
       vi.mocked(chainView).mockResolvedValue([mockChainViewPrices])
 
-      const result = await pricePointService.processErc4626WithChainView(erc4626, mockMarkets, mockPriceSources)
+      const result = await pricePointService.callPriceChainView(erc4626, mockMarkets)
 
       expect(chainView).toHaveBeenCalledWith(mockProvider, expect.any(Array), expect.any(String), [
         erc4626,
@@ -263,7 +310,7 @@ describe("PricePointService", () => {
     it("should handle errors", async () => {
       vi.mocked(chainView).mockRejectedValue(new Error("Chain error"))
 
-      await expect(pricePointService.processErc4626WithChainView([], [], [])).rejects.toThrow("Chain error")
+      await expect(pricePointService.callPriceChainView([], [])).rejects.toThrow("Chain error")
     })
   })
 
@@ -277,7 +324,9 @@ describe("PricePointService", () => {
       }
       const apiPrices: any[] = []
 
-      pricePointService.processDebtIndexes(chainViewPrices, apiPrices)
+      const result = pricePointService.processDebtIndexes(chainViewPrices)
+
+      apiPrices.push(...result.prices)
 
       expect(apiPrices).toHaveLength(2)
       expect(apiPrices).toEqual(
@@ -286,6 +335,7 @@ describe("PricePointService", () => {
           { address: "0x9000000000000000000000000000000000000002", price: 1.15 },
         ])
       )
+      expect(result.missingMarkets).toEqual([])
     })
 
     it("should handle empty debt indexes array", () => {
@@ -294,17 +344,61 @@ describe("PricePointService", () => {
       }
       const apiPrices: any[] = []
 
-      pricePointService.processDebtIndexes(chainViewPrices, apiPrices)
+      const result = pricePointService.processDebtIndexes(chainViewPrices)
+
+      apiPrices.push(...result.prices)
 
       expect(apiPrices).toHaveLength(0)
+      expect(result.missingMarkets).toEqual([])
     })
 
     it("should handle undefined chainViewPrices", () => {
       const apiPrices: any[] = []
 
-      pricePointService.processDebtIndexes(undefined as any, apiPrices)
+      const result = pricePointService.processDebtIndexes(undefined as any)
+
+      apiPrices.push(...result.prices)
 
       expect(apiPrices).toHaveLength(0)
+      expect(result.missingMarkets).toEqual([])
+    })
+
+    it("should detect missing debt share data for requested markets", () => {
+      const chainViewPrices: any = {
+        debtIndexes: [{ market: "0x9000000000000000000000000000000000000001", index: BigInt("1200000000000000000") }],
+      }
+      const apiPrices: any[] = []
+      const requestedMarkets = [
+        "0x9000000000000000000000000000000000000001",
+        "0x9000000000000000000000000000000000000002",
+        "0x9000000000000000000000000000000000000003",
+      ]
+
+      const result = pricePointService.processDebtIndexes(chainViewPrices, requestedMarkets)
+
+      apiPrices.push(...result.prices)
+
+      expect(apiPrices).toHaveLength(1)
+      expect(apiPrices).toEqual([{ address: "0x9000000000000000000000000000000000000001", price: 1.2 }])
+      expect(result.missingMarkets).toEqual(["0x9000000000000000000000000000000000000002", "0x9000000000000000000000000000000000000003"])
+    })
+
+    it("should handle case-insensitive market address comparison", () => {
+      const chainViewPrices: any = {
+        debtIndexes: [{ market: "0x9000000000000000000000000000000000000001", index: BigInt("1200000000000000000") }],
+      }
+      const apiPrices: any[] = []
+      const requestedMarkets = [
+        "0X9000000000000000000000000000000000000001", // uppercase
+        "0x9000000000000000000000000000000000000002",
+      ]
+
+      const result = pricePointService.processDebtIndexes(chainViewPrices, requestedMarkets)
+
+      apiPrices.push(...result.prices)
+
+      expect(apiPrices).toHaveLength(1)
+      expect(result.missingMarkets).toEqual(["0x9000000000000000000000000000000000000002"])
     })
   })
 })
