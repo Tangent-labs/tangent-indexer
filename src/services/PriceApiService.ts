@@ -1,4 +1,4 @@
-import { PriceApiInfo } from "type/data"
+import { PriceApiInfo, PriceApiResult, PriceApiError } from "type/data"
 import { CurvePriceApiResult, LlamaPriceApiResult, PendlePriceApiResult } from "./globalData/types"
 import axios from "axios"
 
@@ -8,9 +8,9 @@ const PENDLE_PRICE_API = "https://api-v2.pendle.finance/core/v1/1/assets/prices"
 const LLAMA_API = "https://coins.llama.fi/prices/current/"
 
 class PriceApiService {
-  async getLlamaPrice(addresses: string[]): Promise<PriceApiInfo[]> {
+  async getLlamaPrice(addresses: string[]): Promise<PriceApiResult> {
     if (!addresses?.length) {
-      return []
+      return { prices: [] }
     }
     try {
       const url = `${LLAMA_API}/${addresses.map((a) => "ethereum:" + a.toLowerCase()).join(",")}`
@@ -19,28 +19,26 @@ class PriceApiService {
       const prices: PriceApiInfo[] = []
 
       for (const address of addresses) {
-        if (call.data.coins["ethereum:" + address.toLowerCase()]) {
-          prices.push({
-            address,
-            price: call.data.coins["ethereum:" + address.toLowerCase()].price,
-          })
-        } else {
-          prices.push({
-            address,
-            price: 0,
-          })
-        }
+        const price = call?.data?.coins["ethereum:" + address.toLowerCase()]?.price || 0
+        prices.push({
+          address,
+          price,
+        })
       }
-      return prices
+      return { prices }
     } catch (error) {
-      console.error("error in getGeneralPrice", error)
-      return []
+      const apiError: PriceApiError = {
+        api: "LlamaPriceAPi",
+        reason: error instanceof Error ? error.message : "Unknown error",
+        httpCode: axios.isAxiosError(error) && error.response ? error.response.status : undefined,
+      }
+      return { prices: [], error: apiError }
     }
   }
 
-  async fetchCurveApiPrices(addresses: string[], curvePoolType: string): Promise<PriceApiInfo[]> {
+  async fetchCurveApiPrices(addresses: string[], curvePoolType: string): Promise<PriceApiResult> {
     if (!addresses?.length) {
-      return []
+      return { prices: [] }
     }
     try {
       const callUrl = `${CURVE_API}/getPools/ethereum/${curvePoolType}`
@@ -60,16 +58,20 @@ class PriceApiService {
           }
         }
       }
-      return prices
+      return { prices }
     } catch (error) {
-      console.error("error in fetchCurveApiPrices", error instanceof Error ? error.message : error)
-      return []
+      const apiError: PriceApiError = {
+        api: "CurvePriceApi",
+        reason: error instanceof Error ? error.message : "Unknown error",
+        httpCode: axios.isAxiosError(error) && error.response ? error.response.status : undefined,
+      }
+      return { prices: [], error: apiError }
     }
   }
 
-  async fetchPendleApiPrices(addresses: string[]): Promise<PriceApiInfo[]> {
+  async fetchPendleApiPrices(addresses: string[]): Promise<PriceApiResult> {
     if (!addresses?.length) {
-      return []
+      return { prices: [] }
     }
 
     try {
@@ -84,10 +86,14 @@ class PriceApiService {
           price,
         })
       }
-      return prices
+      return { prices }
     } catch (error) {
-      console.error("error in fetchPendleApiPrices", error instanceof Error ? error.message : error)
-      return []
+      const apiError: PriceApiError = {
+        api: "PendlePriceApi",
+        reason: error instanceof Error ? error.message : "Unknown error",
+        httpCode: axios.isAxiosError(error) && error.response ? error.response.status : undefined,
+      }
+      return { prices: [], error: apiError }
     }
   }
 }

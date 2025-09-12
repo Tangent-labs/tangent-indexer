@@ -2,7 +2,7 @@ import { PriceRepository } from "../db/PriceRepository"
 import PointPricesAbi from "../abis/PointPrices.json"
 import chainAddresses from "../addresses.json"
 
-import { PriceApiInfo, PriceSource } from "type/data"
+import { PriceApiInfo, PriceSource, PriceApiResult, PriceApiError } from "type/data"
 
 import { AddressLike, JsonRpcProvider } from "ethers"
 import { chainView } from "utils/chainView"
@@ -13,7 +13,7 @@ const curvePoolType = "factory-stable-ng"
 const SCALE = 10n ** 18n
 type PriceApiWarning = {
   apiName: string
-  error: any
+  error: PriceApiError | Error | any
 }
 
 type GetPriceFeedsResult = {
@@ -22,7 +22,7 @@ type GetPriceFeedsResult = {
 }
 
 type PointServiceChainViewOut = {
-  ervc4626Shares: {
+  ervc4626shares: {
     token: string
     shares: bigint
   }[]
@@ -63,32 +63,20 @@ export class PricePointService {
     const pendlePrice = priceSource.filter((p) => p.type === "pendleApi").map((p) => p.address.toLowerCase())
 
     if (llamaPrice.length > 0) {
-      try {
-        promises.set("Llama", this.priceApiService.getLlamaPrice(llamaPrice))
-      } catch (error) {
-        console.error("Error fetching llama price", error)
-      }
+      promises.set("Llama", this.priceApiService.getLlamaPrice(llamaPrice))
     }
     if (curvePrice.length > 0) {
-      try {
-        promises.set("Curve", this.priceApiService.fetchCurveApiPrices(curvePrice, curvePoolType))
-      } catch (error) {
-        console.error("Error fetching curve price", error)
-      }
+      promises.set("Curve", this.priceApiService.fetchCurveApiPrices(curvePrice, curvePoolType))
     }
 
     if (pendlePrice.length > 0) {
-      try {
-        promises.set("Pendle", this.priceApiService.fetchPendleApiPrices(pendlePrice))
-      } catch (error) {
-        console.error("Error fetching pendle price", error)
-      }
+      promises.set("Pendle", this.priceApiService.fetchPendleApiPrices(pendlePrice))
     }
 
     // Add ERC4626 processing to the promises
     const erc4626Addresses = priceSource.filter((p) => p.type === "ERC4626").map((p) => p.address.toLowerCase())
     if (erc4626Addresses.length > 0) {
-      promises.set("ERC4626", this.callPriceChainView(erc4626Addresses, markets))
+      promises.set("CHAINVIEW", this.callPriceChainView(erc4626Addresses, markets))
     }
 
     // Use Promise.allSettled to handle partial failures
@@ -103,11 +91,20 @@ export class PricePointService {
       const result = results[index]
 
       if (result.status === "fulfilled") {
-        if (type === "ERC4626") {
+        if (type === "CHAINVIEW") {
           this.procesChainViewResults(result.value, priceSource, apiPrices, markets, warnings)
         } else {
-          if (Array.isArray(result.value)) {
-            apiPrices.push(...result.value)
+          // Handle PriceApiResult objects from API services
+          const apiResult = result.value as PriceApiResult
+          if (apiResult && apiResult.prices && Array.isArray(apiResult.prices)) {
+            apiPrices.push(...apiResult.prices)
+          }
+          // Collect any API errors as warnings
+          if (apiResult?.error) {
+            warnings.push({
+              apiName: type,
+              error: apiResult.error,
+            })
           }
         }
       } else {
@@ -184,15 +181,29 @@ export class PricePointService {
   }
 
   rayToDecimal(ray: bigint | string): number {
+    const RAY = 1000000000000000000000000000n // 10^27
+
     const value = typeof ray === "bigint" ? ray : BigInt(ray)
-    // Conversion en nombre flottant
-    const asNumber = (Number(value) / Number(SCALE)).toFixed(4)
-    return Number(asNumber)
+
+    // Split into integer and fractional parts
+    const integerPart = value / RAY
+    const fractionalPart = value % RAY
+
+    // Convert fractional part to decimal string
+    const fractionalStr = fractionalPart.toString().padStart(27, "0")
+
+    // Remove trailing zeros for cleaner output
+    const trimmedFractional = fractionalStr.replace(/0+$/, "")
+    if (trimmedFractional === "") {
+      return Number(integerPart.toString())
+    }
+    return parseFloat(`${integerPart}.${trimmedFractional}`)
   }
 
   processDebtIndexes(chainViewPrices: PointServiceChainViewOut, requestedMarkets?: string[]): { missingMarkets: string[] | undefined; prices: PriceApiInfo[] } {
     const result = { missingMarkets: [] as string[] | undefined, prices: [] as PriceApiInfo[] }
     const proceedMarkets = [] as string[]
+
     result.prices =
       chainViewPrices?.debtIndexes?.map((p) => {
         proceedMarkets.push(p.market.toLowerCase())
@@ -206,16 +217,16 @@ export class PricePointService {
   }
 
   processErc4626Prices(priceSource: PriceSource[], chainViewPrices: PointServiceChainViewOut, apiPrices: PriceApiInfo[], warnings: PriceApiWarning[]) {
-    if (!chainViewPrices?.ervc4626Shares?.length) {
+    if (!chainViewPrices?.ervc4626shares?.length) {
       warnings.push({
-        apiName: "ERC4626",
+        apiName: "CHAINVIEW",
         error: new Error("No ERC4626 shares data returned"),
       })
       return
     }
 
     // from the share of ERC4626 we derive the price of the token
-    chainViewPrices.ervc4626Shares.forEach((p: { token: string; shares: bigint }) => {
+    chainViewPrices.ervc4626shares.forEach((p: { token: string; shares: bigint }) => {
       let erc4626Price = 0
       // Find the reference price config for this ERC4626 vault
       const refToken = priceSource.find((conf) => conf.address.toLowerCase() === p.token.toLowerCase())?.ref_token
@@ -224,7 +235,7 @@ export class PricePointService {
         const priceObj = apiPrices.find((x) => x.address.toLowerCase() === refToken.toLowerCase())
         if (!priceObj) {
           warnings.push({
-            apiName: "ERC4626",
+            apiName: "CHAINVIEW",
             error: new Error(`No price found for reference token: ${refToken}`),
           })
           return

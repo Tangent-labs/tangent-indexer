@@ -24,15 +24,28 @@ export const chainView = async <A extends any[], R>(
   try {
     await provider.call(deploy)
   } catch (e: any) {
+    const errorCode = checkNetworkError(e)
+    if (errorCode) {
+      throw new Error(`Network error: ${errorCode} , message: ${e.message || "-"}`)
+    }
     dataError = e.data
   }
 
   // decode data returned by the fake deployment
-  const decoded = ChainViewInterface.parseError(dataError.trim())
+  const decoded = ChainViewInterface.parseError(dataError?.trim())
   const errorName = decoded!.name
   if (!errorNamesExpected.includes(errorName)) {
     throw new Error(`ChainView Error: ${decoded?.name} with arg ${decoded?.args} at selector ${decoded?.selector}`)
   } else {
     return decoded!.args as R
   }
+}
+
+const checkNetworkError = (error: Error & { code?: string; erno?: string }): string | false => {
+  const list = ["ECONNREFUSED", "ECONNRESET", "EHOSTUNREACH", "ETIMEDOUT", "ENOTFOUND", "EPIPE"]
+
+  let errorCode = list.find((item) => error?.message.includes(item))
+  errorCode = errorCode || list.find((item) => error?.code?.includes(item) || error?.erno?.includes(item))
+
+  return errorCode || false
 }

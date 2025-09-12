@@ -5,6 +5,7 @@ export class PriceRepository extends AbstractRepository {
   async insertPriceFeed(prices: PriceApiInfo[]) {
     if (prices?.length > 0) {
       const date = new Date()
+
       await this.prismaClient.price_feeds.createMany({
         data: prices.map((p) => ({
           timestamp: date,
