@@ -1,0 +1,23 @@
+query ListProposals($organisationKeys: [String!]!, $first: Int!, $skip: Int!, $start_lte: Int!, $end_gte: Int!) {
+  proposals(
+    first: $first
+    skip: $skip
+    where: { space_in: $organisationKeys, start_lte: $start_lte, end_gte: $end_gte, state: "closed" }
+    orderBy: "start"
+    orderDirection: asc
+  ) {
+    id
+    title
+    start
+    end
+    created
+    state
+    snapshot
+    type
+    choices
+    space {
+      id
+      name
+    }
+  }
+}

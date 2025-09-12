@@ -1,11 +1,10 @@
-query GetProposalVotes($proposalId: String!) {
-  votes(first: 1000, where: { proposal: $proposalId }, orderBy: "created", orderDirection: desc) {
+query GetProposalVotes($proposalId: String!, $first: Int!, $skip: Int!) {
+  votes(first: $first, skip: $skip, where: { proposal: $proposalId }, orderBy: "created", orderDirection: asc) {
     id
     voter
     created
     choice
     vp
-    reason
     proposal {
       id
       title

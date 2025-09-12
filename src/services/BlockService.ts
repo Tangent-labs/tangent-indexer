@@ -1,7 +1,7 @@
-import axios from "axios"
 import { JsonRpcProvider } from "ethers"
-import { BlockRepository } from "../db/BlockRepository"
+import axios from "axios"
 import { indexerConfig } from "../config/indexer_config"
+import { BlockRepository } from "../db/BlockRepository"
 
 export type BlockInfo = { result: { number: string; timestamp: string } }
 
@@ -18,6 +18,41 @@ export class BlockService {
 
   async updateLastEventBlockIndexed(blockId: number) {
     await this.blockRepository.storeEventBlockTracking(blockId)
+  }
+
+  async updateLastVoteBlockIndexed(blockId: number) {
+    await this.blockRepository.storeVoteBlockTracking(blockId)
+  }
+
+  //
+
+  async getLastVoteBlockIndexed() {
+    const blocks = await this.blockRepository.getLastVoteBlockIndexed()
+    return !blocks ? Number(process.env.LAST_BLOCK_INDEXED) : blocks.block_id
+  }
+
+  static async getVotesBlockInfo(providers: JsonRpcProvider[], blockService: BlockService) {
+    const { startingBlock, blockRange } = indexerConfig
+    const startBlock = Number(await blockService.getLastVoteBlockIndexed()) + 1 || startingBlock
+    let endBlock: number
+    const actualBlocks = await Promise.all(providers.map((provider) => provider.getBlockNumber()))
+    const actualBlock = Math.max(...actualBlocks)
+    const bestProviderIndex = actualBlocks.indexOf(actualBlock)
+    const bestProvider = providers[bestProviderIndex]
+
+    // no block to index
+    if (startBlock === actualBlock + 1) {
+      return false
+    }
+
+    if (startBlock + blockRange > actualBlock!) {
+      // If the actual block is closed enough to the lastBlockIndexed we can use it
+      endBlock = actualBlock
+    } else {
+      // Else we get a step toward it
+      endBlock = startBlock + blockRange
+    }
+    return { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex }
   }
 
   //
@@ -82,16 +117,12 @@ export class BlockService {
     return { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex }
   }
 
-  getBlockTimestamp = async (blockNumber: number | "latest", provider: JsonRpcProvider): Promise<number> => {
+  async getBlockTimestamp(blockNumber: number, provider: JsonRpcProvider): Promise<number> {
     const block = await provider.getBlock(blockNumber)
     if (!block) {
       throw new Error("Could not fetch block")
     }
     return block.timestamp
-  }
-
-  getLatestBlockTimestamp = async (provider: JsonRpcProvider): Promise<number> => {
-    return this.getBlockTimestamp("latest", provider)
   }
 
   async fetchBlockTimestamps(blockNumbers: number[], providerURL: string) {
@@ -109,6 +140,7 @@ export class BlockService {
       headers: { "Content-Type": "application/json" },
     })
     const responses = res.data as BlockInfo[]
+
     const timestampPerBlockId: Map<number, number> = new Map()
 
     responses.forEach((resp: BlockInfo) => {
