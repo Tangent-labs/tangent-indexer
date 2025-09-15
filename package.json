@@ -12,7 +12,7 @@
     "tangent:indexer-points": "tsx src/scripts/index_points.ts",
     "tangent:indexer-block": "tsx src/scripts/index_block.ts",
     "tangent:indexer-vote": "tsx src/scripts/index_votes.ts",
-    "tangent:indexer-tvl-aprs": "tsx src/scripts/index_tvl_aprs.ts",
+    "tangent:indexer-global-data": "tsx src/scripts/index_global_data.ts",
     "tangent:check-liquidation": "tsx src/scripts/check_liquidation.ts",
     "tangent:check-votes": "tsx src/scripts/check_votes.ts",
     "format": "prettier --write --list-different . ",

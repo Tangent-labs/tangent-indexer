@@ -1,14 +1,19 @@
 import { PrismaClient } from "@prisma/client"
 import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext"
-
+import * as addresses from "../addresses.json"
 const prisma = new PrismaClient()
 
 async function seedPriceFeeds() {
   const tokens = [
     {
-      address: "0xbd605Ad2010E12c16B0cd0F2B8FE3c6d90BB51E7".toLowerCase(),
+      address: addresses.tokens.USG.toLowerCase(),
       name: "USG",
       symbol: "USG",
+    },
+    {
+      address: addresses.tokens.sUSG.toLowerCase(),
+      name: "sUSG",
+      symbol: "sUSG",
     },
     {
       address: CURVE_CONTEXT.USDT_crvUSD.stakeDaoGauge.toLowerCase(),

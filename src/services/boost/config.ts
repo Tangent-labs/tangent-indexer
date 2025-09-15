@@ -35,4 +35,5 @@ export const OFFCHAIN_BOOST_INFOS: NumMap = {
   CVG_PEPE: 0.75,
   DEWHALE_MEMBERS: 0.75,
   TURTLE_CLUB: 0.5,
+  ONBOARDED: 0.1,
 }
