@@ -21,8 +21,7 @@ AS $$
        UPDATE global."user" g
        SET referral_points = g.referral_points + pt.godfather_points
        FROM points.get_user_points_per_task(start_at, end_at) pt
-       WHERE g.address = pt.user_address
-         AND pt.godfather_id IS NOT NULL;
+       WHERE g.id = pt.godfather_id;
 
 
 $$;
