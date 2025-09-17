@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@tangent/defi-resources": "github:Tangent-labs/defi-resources#main",
-    "@tangent/prisma-schema-shared": "github:Tangent-labs/prisma-schema-shared#working-price-feeds",
+    "@tangent/prisma-schema-shared": "github:Tangent-labs/prisma-schema-shared#update/rework-schema-table-names",
     "@eslint/js": "^9.20.0",
     "@typescript-eslint/eslint-plugin": "^8.24.0",
     "@typescript-eslint/parser": "^8.24.0",

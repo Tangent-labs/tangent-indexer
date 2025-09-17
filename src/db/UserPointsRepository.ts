@@ -21,7 +21,7 @@ export class UserPointsRepository extends AbstractRepository {
   }
 
   getOpenedTasks = async (userAddresses: Array<string>, taskIds: Array<bigint>) => {
-    return await this.prismaClient.user_tasks.findMany({
+    return await this.prismaClient.lp_user_tasks.findMany({
       where: {
         user_address: {
           in: userAddresses,
@@ -44,12 +44,12 @@ export class UserPointsRepository extends AbstractRepository {
     })
   }
 
-  updateProcessedTasks = async (tasksToClose: { id: bigint; closed: Date }[], tasksToCreate: Prisma.user_tasksUncheckedCreateInput[]) => {
+  updateProcessedTasks = async (tasksToClose: { id: bigint; closed: Date }[], tasksToCreate: Prisma.lp_user_tasksUncheckedCreateInput[]) => {
     if (tasksToClose.length) {
       const queryParam = tasksToClose.map((t) => `(${t.id}::bigint, '${t.closed.toISOString()}'::timestamptz AT TIME ZONE 'UTC')`)
 
       await (this.prismaClient as Prisma.TransactionClient).$executeRawUnsafe(`
-        UPDATE points.user_tasks ut
+        UPDATE points.lp_user_tasks ut
         SET closed = v.closed
         FROM (VALUES
           ${queryParam.join(",")}
@@ -59,7 +59,7 @@ export class UserPointsRepository extends AbstractRepository {
     }
 
     if (tasksToCreate.length > 0) {
-      await (this.prismaClient as Prisma.TransactionClient).user_tasks.createMany({
+      await (this.prismaClient as Prisma.TransactionClient).lp_user_tasks.createMany({
         data: tasksToCreate,
         skipDuplicates: false,
       })
@@ -73,7 +73,7 @@ export class UserPointsRepository extends AbstractRepository {
       })
     ).map((user) => user.address.toLowerCase())
 
-    const result = await this.prismaClient.task.findMany({
+    const result = await this.prismaClient.lp_task.findMany({
       where: { is_active: true },
       select: {
         id: true,

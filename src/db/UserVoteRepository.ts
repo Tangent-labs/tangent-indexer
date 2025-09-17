@@ -33,7 +33,7 @@ export class UserVoteRepository extends AbstractRepository {
       points: number
     }[]
   ) {
-    return await this.prismaClient.user_vote_tasks.createMany({
+    return await this.prismaClient.vote_user_tasks.createMany({
       data: tasks,
     })
   }
