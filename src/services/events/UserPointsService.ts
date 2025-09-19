@@ -162,8 +162,8 @@ export class UserPointsService {
     await this.userPointsRepository.updateProcessedTasks(tasksToClose, tasksToCreate)
   }
 
-  updateUserTasks = async (startBlock: number) => {
-    const { tasks, relevantEvents } = await this.userPointsRepository.fetchTasksEventsAndAddresses(startBlock)
+  updateUserTasks = async (startBlock: number, endBlock: number) => {
+    const { tasks, relevantEvents } = await this.userPointsRepository.fetchTasksEventsAndAddresses(startBlock, endBlock)
 
     relevantEvents.sort((a, b) => {
       if (a.block_id !== b.block_id) return a.block_id - b.block_id

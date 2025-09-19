@@ -73,7 +73,7 @@ class SnapShotVoteService {
           return null
         }
 
-        const multiplier = Number(boosts.find((b) => b.user_address.toLowerCase() === v?.voterAddress?.toLowerCase())?.multiplier)
+        const multiplier = Number(boosts.find((b) => b.user_address.toLowerCase() === v?.voterAddress?.toLowerCase())?.multiplier) || 1
 
         const points = v.votingPower * task.point_rate * multiplier
 
@@ -200,9 +200,10 @@ class SnapShotVoteService {
       skip += this.PAGE_SIZE
     }
 
-    const allIds = all.map((p) => BigInt(p.proposal_id))
+    const allIds = all.map((p) => p.id)
 
     const processedProposals = await this.userVoteRepository.getProcessedProposals(allIds)
+
     return all.filter((p) => !processedProposals.some((processedP) => processedP.proposal_id === p?.id))
   }
 

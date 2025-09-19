@@ -27,7 +27,7 @@ CREATE OR REPLACE FUNCTION points.get_user_points_details(
   end_at   timestamp
 )
 RETURNS TABLE (
-  user_task_id     bigint,
+  lp_task_id     bigint,
   task_id          bigint,
   user_address     text,
   token_address    text,
@@ -52,7 +52,7 @@ AS $$
   ),
   clip AS (
     SELECT
-      ut.id                                        AS user_task_id,
+      ut.id                                        AS lp_task_id,
       ut.task_id,
       ut.user_address,
       t.token_address,
@@ -60,8 +60,8 @@ AS $$
       GREATEST(ut.start, p.start_at)               AS seg_start,
       LEAST(COALESCE(ut.closed, p.end_at), p.end_at) AS seg_end,
       NULLIF(ut.amount, '')::numeric / POWER(10, 18) AS amount
-    FROM points.user_tasks ut
-    JOIN points.task t
+    FROM points.lp_user_tasks ut
+    JOIN points.lp_task t
       ON t.id = ut.task_id
      AND t.is_active IS TRUE
     CROSS JOIN params p
@@ -130,7 +130,7 @@ AS $$
     ) AS boost_agg ON true
   )
   SELECT
-    swm.user_task_id,
+    swm.lp_task_id,
     swm.task_id,
     swm.user_address,
     swm.token_address,
