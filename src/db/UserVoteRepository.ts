@@ -33,15 +33,15 @@ export class UserVoteRepository extends AbstractRepository {
       points: number
     }[]
   ) {
-    return await this.prismaClient.user_vote_tasks.createMany({
+    return await this.prismaClient.vote_user_tasks.createMany({
       data: tasks,
     })
   }
 
-  async getProcessedProposals(ids: Array<bigint>) {
+  async getProcessedProposals(ids: Array<string>) {
     return await this.prismaClient.processed_proposal.findMany({
       select: { id: true, proposal_id: true },
-      where: { id: { in: ids } },
+      where: { proposal_id: { in: ids } },
     })
   }
 

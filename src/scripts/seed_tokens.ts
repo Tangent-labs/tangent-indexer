@@ -42,9 +42,9 @@ async function seedPriceFeeds() {
     },
   ]
 
-  // const currentTimestamp = 1755780359 // 12 Aout 2025
-  // const oneDaySeconds = 24 * 60 * 60
-  // const oneMontAgo = currentTimestamp - 30 * oneDaySeconds
+  const currentTimestamp = 1755780359 // 12 Aout 2025
+  const oneDaySeconds = 24 * 60 * 60
+  const oneMontAgo = currentTimestamp - 30 * oneDaySeconds
 
   for (const token of tokens) {
     // Ensure token exists in tracked_erc20 table
@@ -54,16 +54,16 @@ async function seedPriceFeeds() {
       create: token,
     })
 
-    // // Generate price feeds for each day
-    // for (let ts = oneMontAgo; ts <= currentTimestamp; ts += oneDaySeconds) {
-    //   await prisma.price_feeds.create({
-    //     data: {
-    //       token: token.address,
-    //       timestamp: new Date(ts * 1000),
-    //       price_usd: "1",
-    //     },
-    //   })
-    // }
+    // Generate price feeds for each day
+    for (let ts = oneMontAgo; ts <= currentTimestamp; ts += oneDaySeconds) {
+      await prisma.price_feeds.create({
+        data: {
+          token: token.address,
+          timestamp: new Date(ts * 1000),
+          price_usd: "1",
+        },
+      })
+    }
   }
 
   console.log("Price feeds seeded successfully!")
