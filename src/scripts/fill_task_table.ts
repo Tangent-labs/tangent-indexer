@@ -4,7 +4,7 @@ import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings
 const prisma = new PrismaClient()
 
 async function seedTasks() {
-  await prisma.task.createMany({
+  await prisma.lp_task.createMany({
     data: [
       {
         name: "USG",
