@@ -14,6 +14,14 @@ export class BoostRepository extends AbstractRepository {
     })
   }
 
+  async getUsersBoost(users: string[]) {
+    return await this.prismaClient.user_boost.findMany({
+      // Ensute that it's getting only active boosts
+      where: { end_at: { equals: null }, user_address: { in: users } },
+      select: { user_address: true, multiplier: true },
+    })
+  }
+
   async deleteUserBoosts(ids: bigint[]) {
     await this.prismaClient.user_boost.deleteMany({
       where: {

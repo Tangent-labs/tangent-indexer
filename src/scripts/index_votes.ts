@@ -6,13 +6,16 @@ import { setUpIndexer } from "../config/indexer_setup"
 import { BlockService } from "../services/BlockService"
 import { indexerConfig } from "config/indexer_config"
 import SnapShotVoteService from "services/SnapShotVoteService"
+import { OnChainVoteService } from "services/OnChainVoteService"
 import { UserVoteRepository } from "db/UserVoteRepository"
+import { JsonRpcProvider } from "ethers"
+import { BoostRepository } from "db/BoostRepository"
 
 dotenv.config()
 
 async function main() {
   const { providers, handleError } = setUpIndexer()
-  const { prismaClient, blockService, snapShotVoteService, setTransaction } = setUpIndexerVoteServices()
+  const { prismaClient, blockService, snapShotVoteService, onChainVoteService, setTransaction } = setUpIndexerVoteServices()
 
   try {
     const blockInfo = await BlockService.getVotesBlockInfo(providers, blockService)
@@ -30,6 +33,7 @@ async function main() {
           setTransaction(dbTransaction)
 
           await snapShotVoteService.computeUserVoteTasks(startBlock, endBlock, blockService, indexerConfig.provider.chainRpc[bestProviderIndex])
+          await onChainVoteService.computeUserVoteTasks()
 
           await blockService.updateLastVoteBlockIndexed(endBlock)
         },
@@ -52,18 +56,23 @@ function setUpIndexerVoteServices() {
   const prismaClient = new PrismaClient()
   const blockRepository = new BlockRepository(prismaClient)
   const userVoteRepository = new UserVoteRepository(prismaClient)
+  const boostRepository = new BoostRepository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
     blockRepository.setClient(dbTransaction)
     userVoteRepository.setClient(dbTransaction)
   }
 
+  const rpcProvider = new JsonRpcProvider()
+
   const blockService = new BlockService(blockRepository)
   const snapShotVoteService = new SnapShotVoteService(userVoteRepository)
+  const onChainVoteService = new OnChainVoteService(userVoteRepository, boostRepository, rpcProvider)
 
   return {
     prismaClient,
     snapShotVoteService,
+    onChainVoteService,
     blockService,
     setTransaction,
   }

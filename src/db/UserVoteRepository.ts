@@ -1,10 +1,10 @@
 import { Proposal } from "type/data"
 import { AbstractRepository } from "./AbstractRepository"
+import { Prisma } from "@prisma/client"
 
 export class UserVoteRepository extends AbstractRepository {
   async fetchTasks() {
     return await this.prismaClient.vote_task.findMany({
-      where: { is_active: true },
       select: { id: true, name: true, point_rate: true },
     })
   }
@@ -23,18 +23,9 @@ export class UserVoteRepository extends AbstractRepository {
     })
   }
 
-  async createUserVoteTasks(
-    tasks: {
-      vote_task_id: bigint
-      user_address: string
-      proposal_id: string
-      validation_at: Date
-      voting_power: number
-      points: number
-    }[]
-  ) {
-    return await this.prismaClient.user_vote_tasks.createMany({
-      data: tasks,
+  async createUserVoteTasks(userTasks: Prisma.vote_user_tasksCreateManyInput[]) {
+    return await this.prismaClient.vote_user_tasks.createMany({
+      data: userTasks,
     })
   }
 
@@ -57,6 +48,82 @@ export class UserVoteRepository extends AbstractRepository {
 
     return await this.prismaClient.processed_proposal.createMany({
       data: proposalsToInsert,
+    })
+  }
+
+  async insertVotesForGauge(votes: Prisma.gauges_votesCreateManyInput[]) {
+    await this.prismaClient.gauges_votes.createMany({
+      data: votes,
+    })
+  }
+
+  async getGaugeVoters() {
+    return await this.prismaClient.vote_task.findMany({
+      where: {
+        is_onchain: true,
+      },
+      select: {
+        point_rate: true,
+        id: true,
+        gauge_pools: {
+          select: {
+            gauge_controller: {
+              select: {
+                controller_address: true,
+              },
+            },
+            gauge_address: true,
+            gauge_votes: {
+              select: {
+                user_address: true,
+              },
+            },
+          },
+        },
+      },
+    })
+  }
+
+  async getOnChainTaskVotes() {
+    return await this.prismaClient.vote_task.findMany({
+      where: {
+        is_onchain: true,
+      },
+      select: {
+        point_rate: true,
+        gauge_pools: {
+          select: {
+            gauge_address: true,
+            gauge_votes: {
+              select: {
+                user_address: true,
+              },
+            },
+          },
+        },
+      },
+    })
+  }
+
+  async getVotersToExclude() {
+    return await this.prismaClient.gauge_controllers.findMany({
+      select: {
+        controller_address: true,
+        voter_to_exclude: {
+          select: {
+            user_address: true,
+          },
+        },
+      },
+    })
+  }
+
+  async getScoringGauges() {
+    return this.prismaClient.gauge_pools.findMany({
+      select: {
+        gauge_address: true,
+        id: true,
+      },
     })
   }
 }

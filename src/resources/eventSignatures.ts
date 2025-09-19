@@ -27,6 +27,8 @@ export const TRANSFER = "Transfer(address,address,uint256)"
 export const STAKED = "Staked(address,uint256)"
 export const WITHDRAWN = "Withdrawn(address,uint256)"
 
+export const VOTE_FOR_GAUGE = "VoteForGauge(uint256,address,address,uint256)"
+
 // Event signatures and topics
 export const EVENT_TOPICS = {
   [id(REPAY)]: "Repay",

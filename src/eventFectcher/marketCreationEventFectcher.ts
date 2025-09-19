@@ -36,7 +36,7 @@ const parseMarketEvent = async (log: Log, provider: JsonRpcProvider): Promise<Pr
   const decoded = ethers.AbiCoder.defaultAbiCoder().decode(["address", "string"], log.data)
   const name = decoded[1]
   const type = name.split("-")[0].trim()
-  const marketAddress = decoded[0]
+  const marketAddress = decoded[0] as string
 
   const marketContract = new Contract(
     marketAddress,
@@ -60,7 +60,7 @@ const parseMarketEvent = async (log: Log, provider: JsonRpcProvider): Promise<Pr
 
   return {
     contract_name: name,
-    contract_address: marketAddress,
+    contract_address: marketAddress.toLowerCase(),
     contract_type: type,
     collateral_address: await marketContract.collatToken(),
   }
