@@ -23,7 +23,6 @@ const mockVotes = [
   {
     task: "VOTE_03",
     value: "WETH+CVX",
-    validationDate: new Date("2025-07-31T00:47:17.000Z"),
     voterAddress: "0xvoter1",
     votingPower: 1234,
     proposalId: "proposalIdOne",
@@ -31,7 +30,6 @@ const mockVotes = [
   {
     task: "VOTE_03",
     value: "WETH+CVX",
-    validationDate: new Date("2025-07-31T01:50:01.000Z"),
     voterAddress: "0xvoter2",
     votingPower: 4567,
     proposalId: "proposalIdOne",
@@ -135,7 +133,6 @@ describe("SnapShotVoteService", () => {
         vote_task_id: 3n,
         user_address: "0xvoter1",
         proposal_id: "proposalIdOne",
-        validation_at: new Date("2025-07-31T00:47:17.000Z"),
         voting_power: 1234,
         points: Number((1234 * 1.1).toFixed(0)),
       },
@@ -143,7 +140,6 @@ describe("SnapShotVoteService", () => {
         vote_task_id: 3n,
         user_address: "0xvoter2",
         proposal_id: "proposalIdOne",
-        validation_at: new Date("2025-07-31T01:50:01.000Z"),
         voting_power: 4567,
         points: Number((4567 * 2).toFixed(0)),
       },
@@ -198,8 +194,6 @@ describe("SnapShotVoteService", () => {
       voterAddress: "0xde1E6A7ED0ad3F61D531a8a78E83CcDdbd6E0c49",
       proposalId: "0xproposal",
     })
-
-    expect(result[0]?.validationDate?.toISOString()).toBe("2025-08-19T18:39:58.000Z")
 
     const voters = result.map((r) => r?.voterAddress)
 

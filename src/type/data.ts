@@ -72,7 +72,6 @@ export type ValidatedTask = {
   task: string
   value: string
   voterAddress: string
-  validationDate?: Date
   votingPower?: number
   proposalId?: string
 }

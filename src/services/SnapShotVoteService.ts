@@ -69,7 +69,7 @@ class SnapShotVoteService {
         }
 
         // Validate all required fields
-        if (!v.voterAddress || !v.proposalId || !v.validationDate || v.votingPower === undefined || v.votingPower === null) {
+        if (!v.voterAddress || !v.proposalId || v.votingPower === undefined || v.votingPower === null) {
           return null
         }
 
@@ -81,7 +81,6 @@ class SnapShotVoteService {
           vote_task_id: task.id,
           user_address: v.voterAddress.toLowerCase(),
           proposal_id: v.proposalId,
-          validation_at: v.validationDate,
           voting_power: v.votingPower,
           points: Number(points.toFixed(0)),
         }
@@ -246,7 +245,6 @@ class SnapShotVoteService {
               validatedVotes.push({
                 task: reward.task,
                 value: reward.value,
-                validationDate: new Date(vote.created * 1000),
                 voterAddress: vote.voter,
                 votingPower: vote.vp || 0,
                 proposalId: proposal.id,
