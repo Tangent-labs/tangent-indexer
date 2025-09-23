@@ -4,7 +4,6 @@ import { AbstractRepository } from "./AbstractRepository"
 export class UserVoteRepository extends AbstractRepository {
   async fetchTasks() {
     return await this.prismaClient.vote_task.findMany({
-      where: { is_active: true },
       select: { id: true, name: true, point_rate: true },
     })
   }
@@ -28,7 +27,6 @@ export class UserVoteRepository extends AbstractRepository {
       vote_task_id: bigint
       user_address: string
       proposal_id: string
-      validation_at: Date
       voting_power: number
       points: number
     }[]

@@ -12,7 +12,7 @@ async function main() {
         point_rate: 1,
         description: "Convex rewarded choice vote",
         url: "https://vote.convexfinance.com/",
-        is_active: true,
+        is_onchain: false,
       },
       {
         name: "VOTE_02",
@@ -21,7 +21,7 @@ async function main() {
         point_rate: 1,
         description: "Convex rewarded choice vote",
         url: "https://vote.convexfinance.com/",
-        is_active: true,
+        is_onchain: false,
       },
       {
         // sdCRV weekly “rewarded choice” votes (sdcrv.eth)
@@ -31,7 +31,7 @@ async function main() {
         point_rate: 2,
         description: "sdCRV rewarded choice vote",
         url: "https://snapshot.box/#/s:sdcrv.eth",
-        is_active: true,
+        is_onchain: false,
       },
       {
         // Optional: participation reward once per proposal (any org)
@@ -41,7 +41,7 @@ async function main() {
         point_rate: 10,
         description: "Flat reward for participating in a proposal (once per proposal)",
         url: "https://hub.snapshot.org",
-        is_active: true,
+        is_onchain: false,
       },
     ],
     skipDuplicates: true,

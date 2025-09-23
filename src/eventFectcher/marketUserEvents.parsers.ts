@@ -2,7 +2,7 @@ import { Log, AbiCoder } from "ethers"
 import { Prisma } from "@prisma/client"
 
 function userAddress(topic: string): string {
-  return AbiCoder.defaultAbiCoder().decode(["address"], topic)[0]
+  return AbiCoder.defaultAbiCoder().decode(["address"], topic)[0].toLowerCase()
 }
 
 export function parseTransferEvent(log: Log): Prisma.transfer_eventsUncheckedCreateInput {
