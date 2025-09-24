@@ -13,26 +13,4 @@ export class MarketContractsRepository extends AbstractRepository {
       data: contracts,
     })
   }
-
-  async getTrackedERC20In(erc20Names: string[]) {
-    return await this.prismaClient.tracked_erc20.findMany({
-      where: {
-        name: {
-          in: erc20Names,
-        },
-      },
-    })
-  }
-
-  async insertTotalSupplies(totalSupplies: Prisma.total_suppliesCreateManyInput[]) {
-    await this.prismaClient.total_supplies.createMany({
-      data: totalSupplies,
-    })
-  }
-
-  async updateTotalSupplies(totalSupplies: Prisma.total_suppliesCreateManyInput[]) {
-    await this.prismaClient.total_supplies.createMany({
-      data: totalSupplies,
-    })
-  }
 }

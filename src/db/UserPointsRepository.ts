@@ -126,6 +126,16 @@ export class UserPointsRepository extends AbstractRepository {
     return Array.from(uniqueAddressesSet).map((address) => ({ address }))
   }
 
+  async getTrackedERC20In(erc20Names: string[]) {
+    return await this.prismaClient.tracked_erc20.findMany({
+      where: {
+        name: {
+          in: erc20Names,
+        },
+      },
+    })
+  }
+
   getERC20ToTrack = async () => {
     const tokens = await this.prismaClient.tracked_erc20.findMany({
       select: { address: true },

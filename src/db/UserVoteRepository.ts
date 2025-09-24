@@ -1,6 +1,7 @@
 import { Proposal } from "type/data"
 import { AbstractRepository } from "./AbstractRepository"
 import { Prisma } from "@prisma/client"
+import { VotesFromDb } from "services/OnChainVoteService"
 
 export class UserVoteRepository extends AbstractRepository {
   async fetchTasks() {
@@ -57,7 +58,7 @@ export class UserVoteRepository extends AbstractRepository {
     })
   }
 
-  async getGaugeVoters() {
+  async getGaugeVoters(): Promise<VotesFromDb[]> {
     return await this.prismaClient.vote_task.findMany({
       where: {
         is_onchain: true,

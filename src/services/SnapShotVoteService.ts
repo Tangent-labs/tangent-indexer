@@ -29,11 +29,10 @@ class SnapShotVoteService {
    * Pass to updateUserVoteTasks retrieved votes and DB registered tasks
    * Marks fetched proposals as processed to not deal with them on the next iteration
    */
-  computeUserVoteTasks = async (startBlock: number, endBlock: number, blockService: BlockService, providerURL: string) => {
-    const provider = new JsonRpcProvider(providerURL)
+  computeUserVoteTasks = async (startBlock: number, endBlock: number, blockService: BlockService, bestProvider: JsonRpcProvider) => {
     const [dateStartStr, dateEndStr] = await Promise.all([
-      blockService.getBlockTimestamp(startBlock, provider),
-      blockService.getBlockTimestamp(endBlock, provider),
+      blockService.getBlockTimestamp(startBlock, bestProvider),
+      blockService.getBlockTimestamp(endBlock, bestProvider),
     ])
 
     const proposals = await this.listProposals(dateStartStr, dateEndStr)

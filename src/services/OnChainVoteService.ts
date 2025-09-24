@@ -36,6 +36,20 @@ export type GaugeVoteDb = {
   controller_address: string
 }
 
+export type VotesFromDb = {
+  gauge_pools: {
+    gauge_address: string
+    gauge_controller: {
+      controller_address: string
+    }
+    gauge_votes: {
+      user_address: string
+    }[]
+  }[]
+  id: bigint
+  point_rate: number
+}
+
 export class OnChainVoteService {
   userVoteRepository: UserVoteRepository
   boostRepository: BoostRepository
@@ -45,6 +59,69 @@ export class OnChainVoteService {
     this.userVoteRepository = userVoteRepository
     this.boostRepository = boostRepository
     this.provider = provider
+  }
+
+  computeUserVoteTasks = async (rpcProvider: JsonRpcProvider) => {
+    const currentVoters = await this.userVoteRepository.getGaugeVoters()
+
+    const { paramInChainview, pointRatesPerGauge, taskIdPerGauge } = this.formatDbReturn(currentVoters)
+
+    const newPoints: Prisma.vote_user_tasksCreateManyInput[] = []
+
+    // Take the onchain snapshot containing all balances for tracked token giving boost
+    const votingPowers = await this.getOnchainData(paramInChainview, rpcProvider)
+
+    const now = new Date(votingPowers.timestamp.toString())
+
+    const allScorers: string[] = []
+    // Keeps only users that are earning points to be able to fetch only the boosts we want
+    votingPowers.gaugeControllerWeights.forEach((vp, i) => {
+      vp.weights.forEach((w, j) => {
+        if (w !== 0n) {
+          allScorers.push(paramInChainview[i].accountGauges[j].account)
+        }
+      })
+    })
+
+    const boostPerUser = await this.getBoostPerUser(allScorers)
+
+    // For each Gauge controller
+    votingPowers.gaugeControllerWeights.forEach((vp, i) => {
+      // For each votes into these controllers
+      vp.weights.forEach((w, j) => {
+        const accountGauge = paramInChainview[i].accountGauges[j]
+        const account = accountGauge.account.toLowerCase()
+        const gauge = accountGauge.gauge
+        // Composite ID created to understand what it is
+        const proposalId = vp.gaugeController + " " + gauge + " " + now.toString()
+
+        const weightInNumber = Number(formatEther(w))
+
+        newPoints.push({
+          proposal_id: proposalId,
+          user_address: account,
+          voting_power: weightInNumber,
+          vote_task_id: BigInt(taskIdPerGauge[gauge]),
+          points: weightInNumber * pointRatesPerGauge[gauge] * boostPerUser[account],
+        })
+      })
+    })
+    // Insert all the
+    await this.userVoteRepository.createUserVoteTasks(newPoints)
+  }
+
+  async getOnchainData(paramInChainview: GetGaugeVotesIn[], rpcProvider: JsonRpcProvider) {
+    const votingPowers = (
+      await chainView<[GetGaugeVotesIn[]], [GetGaugeVotesOut]>(
+        rpcProvider,
+        GetGaugeVotes.abi,
+        GetGaugeVotes.bytecode,
+        // Format the params for chainview
+        [paramInChainview]
+      )
+    )[0]
+
+    return votingPowers
   }
 
   formatDbReturn(
@@ -97,62 +174,5 @@ export class OnChainVoteService {
     }, {})
 
     return boostPerUser
-  }
-
-  computeUserVoteTasks = async () => {
-    const currentVoters = await this.userVoteRepository.getGaugeVoters()
-
-    const { paramInChainview, pointRatesPerGauge, taskIdPerGauge } = this.formatDbReturn(currentVoters)
-
-    const newPoints: Prisma.vote_user_tasksCreateManyInput[] = []
-
-    // Take the onchain snapshot containing all balances for tracked token giving boost
-    const votingPowers = (
-      await chainView<[GetGaugeVotesIn[]], [GetGaugeVotesOut]>(
-        this.provider,
-        GetGaugeVotes.abi,
-        GetGaugeVotes.bytecode,
-        // Format the params for chainview
-        [paramInChainview]
-      )
-    )[0]
-
-    const now = new Date(votingPowers.timestamp.toString())
-
-    const allScorers: string[] = []
-    // Keeps only users that are earning points to be able to fetch only the boosts we want
-    votingPowers.gaugeControllerWeights.forEach((vp, i) => {
-      vp.weights.forEach((w, j) => {
-        if (w !== 0n) {
-          allScorers.push(paramInChainview[i].accountGauges[j].account)
-        }
-      })
-    })
-
-    const boostPerUser = await this.getBoostPerUser(allScorers)
-
-    // For each Gauge controller
-    votingPowers.gaugeControllerWeights.forEach((vp, i) => {
-      // For each votes into these controllers
-      vp.weights.forEach((w, j) => {
-        const accountGauge = paramInChainview[i].accountGauges[j]
-        const account = accountGauge.account.toLowerCase()
-        const gauge = accountGauge.gauge
-        // Composite ID created to understand what it is
-        const proposalId = vp.gaugeController + " " + gauge + " " + now.toString()
-
-        const weightInNumber = Number(formatEther(w))
-
-        newPoints.push({
-          proposal_id: proposalId,
-          user_address: account,
-          voting_power: weightInNumber,
-          vote_task_id: BigInt(taskIdPerGauge[gauge]),
-          points: weightInNumber * pointRatesPerGauge[gauge] * boostPerUser[account],
-        })
-      })
-    })
-    // Insert all the
-    await this.userVoteRepository.createUserVoteTasks(newPoints)
   }
 }

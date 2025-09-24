@@ -32,8 +32,10 @@ async function main() {
         async (dbTransaction: TransactionPrisma) => {
           setTransaction(dbTransaction)
 
-          await snapShotVoteService.computeUserVoteTasks(startBlock, endBlock, blockService, indexerConfig.provider.chainRpc[bestProviderIndex])
-          await onChainVoteService.computeUserVoteTasks()
+          const bestProvider = new JsonRpcProvider(indexerConfig.provider.chainRpc[bestProviderIndex])
+
+          await snapShotVoteService.computeUserVoteTasks(startBlock, endBlock, blockService, bestProvider)
+          await onChainVoteService.computeUserVoteTasks(bestProvider)
 
           await blockService.updateLastVoteBlockIndexed(endBlock)
         },
@@ -53,7 +55,9 @@ async function main() {
 main().then()
 
 function setUpIndexerVoteServices() {
-  const prismaClient = new PrismaClient()
+  const prismaClient = new PrismaClient({
+    log: ["query"], // log all SQL queries
+  })
   const blockRepository = new BlockRepository(prismaClient)
   const userVoteRepository = new UserVoteRepository(prismaClient)
   const boostRepository = new BoostRepository(prismaClient)
