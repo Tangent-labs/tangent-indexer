@@ -10,7 +10,7 @@ const checkPrices = async () => {
   const prisma = new PrismaClient()
   const priceService = new PricePointService(new PriceRepository(prisma), new MarketContractsRepository(prisma), providers.at(0)!)
   const result = await priceService.fetchPriceFeed()
-  console.log("Prices:", result.prices)
+
   if (result.warnings.length > 0) {
     console.log("Warnings:", result.warnings)
   }

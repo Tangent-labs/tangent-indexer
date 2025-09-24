@@ -85,7 +85,7 @@ export class PricePointService {
     const results = await Promise.allSettled(promiseEntries.map(([_, promise]) => promise))
 
     // Process all results in one pass
-    const apiPrices: any[] = []
+    const apiPrices: PriceApiInfo[] = []
 
     promiseEntries.forEach(([type, _], index) => {
       const result = results[index]
