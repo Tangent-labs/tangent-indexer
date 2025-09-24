@@ -56,13 +56,6 @@ async function seedPriceFeeds() {
 
     // Generate price feeds for each day
     for (let ts = oneMontAgo; ts <= currentTimestamp; ts += oneDaySeconds) {
-<<<<<<< HEAD:src/scripts/seed_tokens.ts
-      await prisma.price_feeds.create({
-        data: {
-          token: token.address,
-          timestamp: new Date(ts * 1000),
-          price_usd: "1",
-=======
       // Generate random price between 0.95 and 1.05 USD (assuming stablecoin-like tokens)
       const priceUsd = Math.floor(0.95 + Math.random() * 0.1) // Store as integer (micro-USD)
 
@@ -71,7 +64,6 @@ async function seedPriceFeeds() {
           address: token.address,
           timestamp: new Date(ts * 1000),
           price_usd: priceUsd.toString(),
->>>>>>> 689e765 (feat: update types & tests):src/scripts/utils/seed_tokens.ts
         },
       })
     }
