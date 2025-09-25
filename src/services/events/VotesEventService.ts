@@ -12,16 +12,37 @@ type ParsedVote = {
   gauge_pool: string
 }
 
-const GAUGE_CONTROLLERS = {
-  CRV: "0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB",
-  FXN: "0xe60eB8098B34eD775ac44B1ddE864e098C6d7f37",
-}
+
+export const CONTROLLER_MAPPING: {
+  [gaugeControllerKey: string]: {
+    controller: string;
+    gauges: {
+      [gaugeKey: string]: string;
+    };
+  };
+} = {
+  CRV: {
+    controller: "0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB".toLowerCase(),
+    gauges: {
+      USDC_USDf: "0x156527deF9a2AB4F54C849575f23dC4BB439d9d9".toLowerCase(),
+      crvUSD_USDC: "0x95f00391cB5EebCd190EB58728B4CE23DbFa6ac1".toLowerCase(),
+      crvUSD_USDT: "0x4e6bB6B7447B7B2Aa268C16AB87F4Bb48BF57939".toLowerCase(),
+    },
+  },
+  FXN: {
+    controller: "0xe60eB8098B34eD775ac44B1ddE864e098C6d7f37".toLowerCase(),
+    gauges: {
+      STABILITY_POOL: "0x215D87bd3c7482E2348338815E059DE07Daf798A".toLowerCase(),
+      FXN_ETH: "0xA5250C540914E012E22e623275E290c4dC993D11".toLowerCase(),
+    },
+  },
+};
 export class VotesEventService {
   constructor(voteRepository: UserVoteRepository) {
     this.voteRepository = voteRepository
   }
   voteRepository: UserVoteRepository
-  gaugeControllers = [GAUGE_CONTROLLERS.CRV, GAUGE_CONTROLLERS.FXN]
+  gaugeControllers = [CONTROLLER_MAPPING.CRV.controller, CONTROLLER_MAPPING.FXN.controller]
 
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
     // Fetch logs from the gauge controllerts
@@ -83,7 +104,7 @@ export class VotesEventService {
 
     return {
       gauge_controller: log.address,
-      timestamp: new Date(decoded[0]),
+      timestamp: new Date(Number(decoded[0])),
       user_address: decoded[1],
       gauge_pool: decoded[2],
     }

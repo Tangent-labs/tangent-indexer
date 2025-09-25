@@ -1,9 +1,9 @@
 import { PrismaClient } from "@prisma/client"
 import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext"
-import * as addresses from "../addresses.json"
-const prisma = new PrismaClient()
+import * as addresses from "../../addresses.json"
+import { TransactionPrisma } from "type/prisma"
 
-async function seedPriceFeeds() {
+export async function seedPriceFeeds(prisma: PrismaClient | TransactionPrisma) {
   const tokens = [
     {
       address: addresses.tokens.USG.toLowerCase(),
@@ -74,6 +74,3 @@ async function seedPriceFeeds() {
   console.log("Price feeds seeded successfully!")
 }
 
-seedPriceFeeds()
-  .catch((e) => console.error(e))
-  .finally(async () => await prisma.$disconnect())

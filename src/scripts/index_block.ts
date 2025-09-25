@@ -16,11 +16,13 @@ import { getEthLogs } from "eventFectcher/_baseFectcher"
 import { fetchTransferLogs } from "eventFectcher/erc20TransferEventFetcher"
 import { UserPointsService } from "services/events/UserPointsService"
 import { UserPointsRepository } from "db/UserPointsRepository"
+import { VotesEventService } from "services/events/VotesEventService"
+import { UserVoteRepository } from "db/UserVoteRepository"
 dotenv.config()
 
 async function main() {
   const { providers, handleError } = setUpIndexer()
-  const { prismaClient, userMarketService, userPointsService, marketCreationService, blockService, activeBorrowersService, setTransaction } =
+  const { prismaClient, userMarketService, userPointsService, marketCreationService, blockService, activeBorrowersService, voteEnventService, setTransaction } =
     setUpIndexerBlockServices()
 
   try {
@@ -48,6 +50,8 @@ async function main() {
           const logs = await getEthLogs(bestProvider, startBlock, endBlock, marketAddresses, [])
 
           const transferToWatch = await userPointsService.getERC20ToTrack()
+
+          await voteEnventService.runDetection(bestProvider, startBlock, endBlock)
 
           // Call fetchTransferLogs with the addresses
           if (!transferToWatch?.length) {
@@ -102,6 +106,7 @@ function setUpIndexerBlockServices() {
   const userEventsRepository = new UserEventsRepository(prismaClient)
   const userPointsRepository = new UserPointsRepository(prismaClient)
   const activeBorrowersRepository = new ActiveBorrowersRepository(prismaClient)
+  const userVoteRepository = new UserVoteRepository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
     blockRepository.setClient(dbTransaction)
@@ -117,6 +122,8 @@ function setUpIndexerBlockServices() {
   const userMarketService = new UserMarketService(userEventsRepository)
   const userPointsService = new UserPointsService(userPointsRepository)
   const activeBorrowersService = new ActiveBorrowersService(activeBorrowersRepository)
+  const voteEnventService = new VotesEventService(userVoteRepository)
+
 
   return {
     prismaClient,
@@ -125,6 +132,7 @@ function setUpIndexerBlockServices() {
     userMarketService,
     userPointsService,
     blockService,
+    voteEnventService,
     activeBorrowersService,
     setTransaction,
     marketContractsRepository,

@@ -70,7 +70,6 @@ export class OnChainVoteService {
 
     // Take the onchain snapshot containing all balances for tracked token giving boost
     const votingPowers = await this.getOnchainData(paramInChainview, rpcProvider)
-
     const now = new Date(votingPowers.timestamp.toString())
 
     const allScorers: string[] = []
@@ -97,12 +96,13 @@ export class OnChainVoteService {
 
         const weightInNumber = Number(formatEther(w))
 
+        const boost = boostPerUser[account] ? boostPerUser[account] : 1
         newPoints.push({
           proposal_id: proposalId,
           user_address: account,
           voting_power: weightInNumber,
           vote_task_id: BigInt(taskIdPerGauge[gauge]),
-          points: weightInNumber * pointRatesPerGauge[gauge] * boostPerUser[account],
+          points: Math.trunc((weightInNumber * pointRatesPerGauge[gauge] * boost)),
         })
       })
     })
@@ -145,23 +145,30 @@ export class OnChainVoteService {
 
     tasks.forEach((task) => {
       task.gauge_pools.forEach((gp) => {
+        // Retrieve the taskID and the point rate linked to a gauge
         pointRatesPerGauge[gp.gauge_address] = task.point_rate
         taskIdPerGauge[gp.gauge_address] = task.id.toString()
+
+        // Iterates over all gauge votes done on all pools
         gp.gauge_votes.forEach((gv) => {
-          const gaugeId = paramInChainview.findIndex((p) => p.gaugeController === gp.gauge_controller.controller_address)
+
+          const gaugeControllerId = paramInChainview.findIndex((p) => {
+            return p.gaugeController === gp.gauge_controller.controller_address
+          });
+
           const accountGauge: AccountGauge = {
             account: gv.user_address,
             gauge: gp.gauge_address,
           }
-          if (gaugeId) {
-            paramInChainview[gaugeId].accountGauges.push(accountGauge)
+
+          if (gaugeControllerId !== -1) {
+            paramInChainview[gaugeControllerId].accountGauges.push(accountGauge)
           } else {
             paramInChainview.push({ gaugeController: gp.gauge_controller.controller_address, accountGauges: [accountGauge] })
           }
         })
       })
     })
-
     return { paramInChainview, pointRatesPerGauge, taskIdPerGauge }
   }
 

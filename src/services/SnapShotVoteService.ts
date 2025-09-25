@@ -5,6 +5,7 @@ import { Proposal, ValidatedTask, Reward, RewardedChoice, OrganizationConfig } f
 import { UserVoteRepository } from "db/UserVoteRepository"
 import { BlockService } from "./BlockService"
 import { JsonRpcProvider } from "ethers"
+import { Prisma } from "@prisma/client"
 
 // https://snapshot.box/#/s:sdcrv.eth/proposal/0x10c44649c31c9716592c5ad92752e449d8b024d50adbd75cecea00864920941e
 // https://vote.convexfinance.com
@@ -60,7 +61,7 @@ class SnapShotVoteService {
     const voteTasksMap = new Map<string, { id: bigint; point_rate?: number }>()
     for (const t of voteTasks) voteTasksMap.set(t.name, t)
 
-    const rows = totalVotes
+    const rows: Prisma.vote_user_tasksCreateManyInput[] = totalVotes
       .map((v) => {
         const task = voteTasksMap.get(v.task)
         if (!task || !task.point_rate) {
@@ -80,7 +81,6 @@ class SnapShotVoteService {
           vote_task_id: task.id,
           user_address: v.voterAddress.toLowerCase(),
           proposal_id: v.proposalId,
-          validation_at: v.validationDate,
           voting_power: v.votingPower,
           points: Number(points.toFixed(0)),
         }

@@ -29,6 +29,7 @@ import * as dotenv from "dotenv"
 import { PrismaClient } from "@prisma/client"
 import { readFileSync } from "fs"
 import { join } from "path"
+import { TransactionPrisma } from "type/prisma"
 
 dotenv.config()
 
@@ -41,7 +42,7 @@ const sqlFunctions: string[] = [
   "idx_price_feeds_token_ts_with_price",
 ]
 
-export async function deployFunction(prisma: PrismaClient, sqlFunction: string): Promise<void> {
+export async function deployFunction(prisma: PrismaClient | TransactionPrisma, sqlFunction: string): Promise<void> {
   try {
     console.log(`🚀 Deploying function: ${sqlFunction}`)
 
@@ -80,7 +81,7 @@ export async function deployFunction(prisma: PrismaClient, sqlFunction: string):
   }
 }
 
-async function verifySchemaExists(prisma: PrismaClient): Promise<void> {
+async function verifySchemaExists(prisma: PrismaClient | TransactionPrisma): Promise<void> {
   try {
     console.log("🔍 Verifying 'points' schema exists...")
 
@@ -103,7 +104,7 @@ async function verifySchemaExists(prisma: PrismaClient): Promise<void> {
   }
 }
 
-async function listExistingFunctions(prisma: PrismaClient): Promise<void> {
+async function listExistingFunctions(prisma: PrismaClient | TransactionPrisma): Promise<void> {
   try {
     console.log("📋 Listing existing functions in 'points' schema...")
 
@@ -128,18 +129,9 @@ async function listExistingFunctions(prisma: PrismaClient): Promise<void> {
   }
 }
 
-async function main() {
-  const prisma = new PrismaClient()
+export async function deploySQLFunctions(prisma: PrismaClient | TransactionPrisma) {
 
   try {
-    console.log("🔥 Starting SQL Functions Deployment")
-    console.log("=====================================")
-
-    // Verify database connection
-    console.log("🔗 Testing database connection...")
-    await prisma.$connect()
-    console.log("✅ Database connected successfully")
-
     // Verify schema exists
     await verifySchemaExists(prisma)
 
@@ -168,22 +160,6 @@ async function main() {
     console.error("\n💥 Deployment failed:", error.message)
     console.error("Stack trace:", error.stack)
     process.exit(1)
-  } finally {
-    await prisma.$disconnect()
-    console.log("🔌 Database connection closed")
   }
 }
 
-// Handle unhandled promise rejections
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("❌ Unhandled Rejection at:", promise, "reason:", reason)
-  process.exit(1)
-})
-
-// Handle uncaught exceptions
-process.on("uncaughtException", (error) => {
-  console.error("❌ Uncaught Exception:", error)
-  process.exit(1)
-})
-
-main().then()

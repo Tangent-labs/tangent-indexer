@@ -1,9 +1,9 @@
 import { PrismaClient } from "@prisma/client"
 import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext"
+import { TransactionPrisma } from "type/prisma"
 
-const prisma = new PrismaClient()
 
-async function seedTasks() {
+export async function seedLPTasks(prisma: PrismaClient | TransactionPrisma) {
   await prisma.lp_task.createMany({
     data: [
       {
@@ -80,11 +80,3 @@ async function seedTasks() {
   })
 }
 
-seedTasks()
-  .catch((e) => {
-    console.error(e)
-    process.exit(1)
-  })
-  .finally(async () => {
-    await prisma.$disconnect()
-  })
