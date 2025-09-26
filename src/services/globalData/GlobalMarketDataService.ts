@@ -1,4 +1,5 @@
 import { formatEther, formatUnits, JsonRpcProvider } from "ethers"
+import { ERC20Repository } from "db/ERC20Repository"
 import { MarketContractsRepository } from "db/MarketContractsRepository"
 import { Prisma, PrismaClient } from "@prisma/client"
 import { commonERC20, curveLpMapping } from "@tangent/defi-resources"
@@ -33,10 +34,12 @@ type Markets = {
   contract_address: string
 }
 export class GlobalMarketDataService {
+  erc20Repository: ERC20Repository
   marketContractsRepo: MarketContractsRepository
   provider: JsonRpcProvider
 
   constructor(prisma: PrismaClient, provider: JsonRpcProvider) {
+    this.erc20Repository = new ERC20Repository(prisma)
     this.marketContractsRepo = new MarketContractsRepository(prisma)
     this.provider = provider
   }
@@ -80,7 +83,7 @@ export class GlobalMarketDataService {
     const totalSupplyUSG = usgInfos.circulatingUsg
     const totalSupplysUSG = usgInfos.sUsgSupply
 
-    const usgAndsUSG = await this.marketContractsRepo.getTrackedERC20In(["USG", "sUSG"])
+    const usgAndsUSG = await this.erc20Repository.getTrackedERC20In(["USG", "sUSG"])
     const usgRow = usgAndsUSG.find((erc20) => erc20.name === "USG")!
     const sUsgRow = usgAndsUSG.find((erc20) => erc20.name === "sUSG")!
 
@@ -107,7 +110,7 @@ export class GlobalMarketDataService {
           usgContractAddresses.utilities.irCalculator,
           usgContractAddresses.tokens.USG,
           usgContractAddresses.tokens.sUSG,
-          [usgContractAddresses.pegKeepers["USG-USDC"], usgContractAddresses.pegKeepers["USG-wfrxUSD"]],
+          [usgContractAddresses.pegKeepers["USG-USDC"], usgContractAddresses.pegKeepers["USG-wcrvUSD"]],
           usgContractAddresses.oracles.USG,
         ]
       )

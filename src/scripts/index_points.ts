@@ -8,6 +8,7 @@ import { UserEventsRepository } from "db/UserEventsRepository"
 import { UserPointsRepository } from "db/UserPointsRepository"
 import { UserPointsService } from "services/events/UserPointsService"
 import { indexerConfig } from "config/indexer_config"
+import { ERC20Repository } from "db/ERC20Repository"
 
 dotenv.config()
 
@@ -63,6 +64,7 @@ function setUpIndexerBlockServices() {
   const blockRepository = new BlockRepository(prismaClient)
   const userEventsRepository = new UserEventsRepository(prismaClient)
   const userPointsRepository = new UserPointsRepository(prismaClient)
+  const erc20Repository = new ERC20Repository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
     blockRepository.setClient(dbTransaction)
@@ -70,7 +72,7 @@ function setUpIndexerBlockServices() {
   }
 
   const blockService = new BlockService(blockRepository)
-  const userPointsService = new UserPointsService(userPointsRepository)
+  const userPointsService = new UserPointsService(userPointsRepository, erc20Repository)
 
   return {
     prismaClient,

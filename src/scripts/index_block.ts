@@ -18,6 +18,7 @@ import { UserPointsService } from "services/events/UserPointsService"
 import { UserPointsRepository } from "db/UserPointsRepository"
 import { VotesEventService } from "services/events/VotesEventService"
 import { UserVoteRepository } from "db/UserVoteRepository"
+import { ERC20Repository } from "db/ERC20Repository"
 dotenv.config()
 
 async function main() {
@@ -107,6 +108,7 @@ function setUpIndexerBlockServices() {
   const userPointsRepository = new UserPointsRepository(prismaClient)
   const activeBorrowersRepository = new ActiveBorrowersRepository(prismaClient)
   const userVoteRepository = new UserVoteRepository(prismaClient)
+  const erc20Repository = new ERC20Repository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
     blockRepository.setClient(dbTransaction)
@@ -120,7 +122,7 @@ function setUpIndexerBlockServices() {
   const marketCreationService = new MarketCreationService(marketContractsRepository, indexerConfig.contracts.marketCreatorAddress)
 
   const userMarketService = new UserMarketService(userEventsRepository)
-  const userPointsService = new UserPointsService(userPointsRepository)
+  const userPointsService = new UserPointsService(userPointsRepository, erc20Repository)
   const activeBorrowersService = new ActiveBorrowersService(activeBorrowersRepository)
   const voteEnventService = new VotesEventService(userVoteRepository)
 

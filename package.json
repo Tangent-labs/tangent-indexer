@@ -5,6 +5,7 @@
   "description": "Will index data in a DB when some event &amp; transactions are detected",
   "main": "index.ts",
   "scripts": {
+    "build": "tsc",
     "tangent:reset-liquidation-test": "npm run db:truncate &  npm run tangent:indexer-block & npm run tangent:check-liquidation",
     "tangent:indexer-points": "tsx src/scripts/index_points.ts",
     "tangent:indexer-block": "tsx src/scripts/index_block.ts",

@@ -5,7 +5,7 @@ import { seedLPTasks } from "./seed_lp_tasks"
 import { seedVoteTasks } from "./seed_vote_tasks"
 
 
-const prisma = new PrismaClient({ log: ["query"] })
+const prisma = new PrismaClient()
 async function main() {
     await prisma.$transaction((async (tx) => {
         await deploySQLFunctions(tx)
