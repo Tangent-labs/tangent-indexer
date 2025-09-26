@@ -1,5 +1,4 @@
 import { AddressLike } from "ethers"
-import addresses from "../addresses.json"
 import * as dotenv from "dotenv"
 dotenv.config()
 
@@ -51,10 +50,6 @@ export const indexerConfig = {
   minEthBalance: Number(process.env.MIN_ETH_BALANCE) || 0.01,
   sentry: {
     dsn: process.env.SENTRY_SDN || "",
-  },
-  contracts: {
-    marketCreatorAddress: addresses.utilities.marketCreator as AddressLike,
-    curveRouterAddress: "0x45312ea0eFf7E09C83CBE249fa1d7598c4C8cd4e",
   },
   enso: {
     baseUrl: "https://api.enso.finance/api/v1/shortcuts/route",

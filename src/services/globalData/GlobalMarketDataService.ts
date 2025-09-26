@@ -6,12 +6,12 @@ import { commonERC20, curveLpMapping } from "@tangent/defi-resources"
 import { chainView } from "utils/chainView"
 import axios from "axios"
 
-import * as usgContractAddresses from "../../addresses.json"
 import * as GlobalDataChainview from "../../abis/GlobalDataChainview.json"
 import { APR_TYPE, TVLAprs, Prices, CurveApiReturn, PendleApiReturn, ConvexFxnApiReturn, USGIndexingGlobalDataOut, USGInfoOut } from "./types"
 import { defiLLamaFetchPrices, getPriceInfos } from "./DefiLLamaPriceFetcher"
 import { bigIntToNumber } from "scripts/utils/formatting"
 import { NumMap } from "services/boost/types"
+import { AddressesJson, readJsonFile } from "utils/readGDrive"
 
 // TODO This is arbitraty, need a more dynamic version
 // eslint-disable-next-line no-loss-of-precision
@@ -96,6 +96,9 @@ export class GlobalMarketDataService {
   }
 
   async fetchGlobalDataChainview(markets: Markets[]) {
+
+    const addresses = await readJsonFile<AddressesJson>(process.env.GOOGLE_ADDRESSES_FILE_ID!.toString())
+
     // Retrieve the onchain data containing everything
     const globalData = (
       await chainView<[(string | number)[][], string, string, string, string, string[], string], USGIndexingGlobalDataOut[]>(
@@ -106,12 +109,12 @@ export class GlobalMarketDataService {
           markets.map((market) => {
             return [market.contract_address, market.contract_type]
           }),
-          usgContractAddresses.utilities.rewardAccumulator,
-          usgContractAddresses.utilities.irCalculator,
-          usgContractAddresses.tokens.USG,
-          usgContractAddresses.tokens.sUSG,
-          [usgContractAddresses.pegKeepers["USG-USDC"], usgContractAddresses.pegKeepers["USG-wcrvUSD"]],
-          usgContractAddresses.oracles.USG,
+          addresses.utilities.rewardAccumulator,
+          addresses.utilities.irCalculator,
+          addresses.tokens.USG,
+          addresses.tokens.sUSG,
+          [addresses.pegKeepers["USG-USDC"], addresses.pegKeepers["USG-wcrvUSD"]],
+          addresses.oracles.USG,
         ]
       )
     )[0]

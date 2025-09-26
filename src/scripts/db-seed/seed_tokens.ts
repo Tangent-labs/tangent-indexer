@@ -1,9 +1,11 @@
 import { PrismaClient } from "@prisma/client"
 import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext"
-import * as addresses from "../../addresses.json"
 import { TransactionPrisma } from "type/prisma"
+import { AddressesJson, readJsonFile } from "utils/readGDrive"
 
 export async function seedPriceFeeds(prisma: PrismaClient | TransactionPrisma) {
+
+  const addresses = await readJsonFile<AddressesJson>(process.env.GOOGLE_ADDRESSES_FILE_ID!.toString())
   const tokens = [
     {
       address: addresses.tokens.USG.toLowerCase(),
