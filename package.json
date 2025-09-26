@@ -41,14 +41,15 @@
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "ethers": "^6.14.0",
+    "googleapis": "^160.0.0",
     "tsx": "^4.20.3",
     "typescript": "^5.7.3",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.20.0",
     "@tangent/defi-resources": "github:Tangent-labs/defi-resources#main",
     "@tangent/prisma-schema-shared": "github:Tangent-labs/prisma-schema-shared#main",
-    "@eslint/js": "^9.20.0",
     "@typescript-eslint/eslint-plugin": "^8.24.0",
     "@typescript-eslint/parser": "^8.24.0",
     "@vitest/coverage-v8": "^3.2.4",
