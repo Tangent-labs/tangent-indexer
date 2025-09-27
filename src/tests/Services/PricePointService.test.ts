@@ -38,14 +38,14 @@ describe("PricePointService", () => {
   let mockPriceApiService: any
 
   const mockPriceSources: PriceSource[] = [
-    { address: "0x1000000000000000000000000000000000000001", name: "USDC", type: "llamaApi", ref_token: null, id: BigInt(1) },
-    { address: "0x2000000000000000000000000000000000000002", name: "Curve Pool", type: "curveApi", ref_token: null, id: BigInt(2) },
-    { address: "0x3000000000000000000000000000000000000003", name: "Pendle Token", type: "pendleApi", ref_token: null, id: BigInt(3) },
+    { address: "0x1000000000000000000000000000000000000001", name: "USDC", type: "llamaApi", reference: null, id: BigInt(1) },
+    { address: "0x2000000000000000000000000000000000000002", name: "Curve Pool", type: "curveApi", reference: "factory-stable-ng", id: BigInt(2) },
+    { address: "0x3000000000000000000000000000000000000003", name: "Pendle Token", type: "pendleApi", reference: null, id: BigInt(3) },
     {
       address: "0x4000000000000000000000000000000000000004",
       name: "ERC4626 Vault",
       type: "ERC4626",
-      ref_token: "0x1000000000000000000000000000000000000001",
+      reference: "0x1000000000000000000000000000000000000001",
       id: BigInt(4),
     },
   ]
@@ -105,7 +105,6 @@ describe("PricePointService", () => {
       expect(chainView).toHaveBeenCalled()
       expect(result.prices).toHaveLength(8) // 3 APIs + 1 ERC4626 + 2 USG/sUSG + 2 debt
       expect(result.warnings).toEqual([]) // No warnings expected
-      console.log("result.prices", result.prices)
       expect(result.prices).toEqual(
         expect.arrayContaining([
           { address: "0x1000000000000000000000000000000000000001", price: 1.0 },
@@ -120,13 +119,14 @@ describe("PricePointService", () => {
       )
     })
 
-    it("should not call chainView or add USG/sUSG/debt if no ERC4626 sources", async () => {
+    it("should call chainView even if no ERC4626 sources but not add USG/sUSG/debt", async () => {
       mockPriceRepository.getPriceSources.mockResolvedValue(mockPriceSources.slice(0, 3)) // No ERC4626
+      vi.mocked(chainView).mockResolvedValue([mockChainViewPrices])
 
       const result = await pricePointService.getPriceFeeds()
 
-      expect(chainView).not.toHaveBeenCalled()
-      expect(result.prices).toHaveLength(3) // Only APIs
+      expect(chainView).toHaveBeenCalled() // chainView should always be called now
+      expect(result.prices).toHaveLength(3) // Only APIs (no USG/sUSG/debt since no ERC4626)
       expect(result.warnings).toEqual([]) // No warnings expected
       expect(result.prices).not.toEqual(
         expect.arrayContaining([
@@ -136,13 +136,14 @@ describe("PricePointService", () => {
       )
     })
 
-    it("should handle empty price sources (no chainView, empty result)", async () => {
+    it("should handle empty price sources (chainView called but empty result)", async () => {
       mockPriceRepository.getPriceSources.mockResolvedValue([])
+      vi.mocked(chainView).mockResolvedValue([mockChainViewPrices])
 
       const result = await pricePointService.getPriceFeeds()
 
-      expect(chainView).not.toHaveBeenCalled()
-      expect(result.prices).toEqual([]) // No sources, no chainView
+      expect(chainView).toHaveBeenCalled() // chainView should always be called now
+      expect(result.prices).toEqual([]) // No sources, so no prices
       expect(result.warnings).toEqual([]) // No warnings
     })
 
@@ -356,6 +357,33 @@ describe("PricePointService", () => {
       })
       expect(result.warnings[0].error.message).toContain("No debt index data returned for markets")
       expect(result.warnings[0].error.message).toContain("0x9000000000000000000000000000000000000002")
+    })
+
+    it("should add warning when Curve price source has no registry and skip it", async () => {
+      const priceSourcesWithoutRegistry = [
+        { address: "0x1000000000000000000000000000000000000001", name: "USDC", type: "llamaApi", reference: null, id: BigInt(1) },
+        { address: "0x2000000000000000000000000000000000000002", name: "Curve Pool", type: "curveApi", reference: null, id: BigInt(2) }, // No registry
+        { address: "0x3000000000000000000000000000000000000003", name: "Pendle Token", type: "pendleApi", reference: null, id: BigInt(3) },
+      ]
+      mockPriceRepository.getPriceSources.mockResolvedValue(priceSourcesWithoutRegistry)
+      vi.mocked(chainView).mockResolvedValue([mockChainViewPrices])
+
+      const result = await pricePointService.getPriceFeeds()
+
+      // Curve API should not be called since the source has no registry
+      expect(mockPriceApiService.fetchCurveApiPrices).not.toHaveBeenCalled()
+      expect(mockPriceApiService.getLlamaPrice).toHaveBeenCalled()
+      expect(mockPriceApiService.fetchPendleApiPrices).toHaveBeenCalled()
+
+      // Should have warning for missing registry
+      expect(result.warnings).toHaveLength(1)
+      expect(result.warnings[0]).toEqual({
+        apiName: "Curve",
+        error: {
+          reason: "No registry specified for price source 0x2000000000000000000000000000000000000002, skipping this price source",
+          api: "Curve",
+        },
+      })
     })
 
     // ... (keep other getPriceFeeds tests from previous version, adjusted for no USG/sUSG without ERC4626)

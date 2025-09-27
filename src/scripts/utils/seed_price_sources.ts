@@ -2,23 +2,36 @@ import { PrismaClient } from "@prisma/client"
 import { PriceSourceCreate } from "type/data"
 import addresses from "../../addresses.json"
 
+import { LPS } from "@tangent/defi-resources/build/ressources/mappings/curveLp"
+import { ConvexCrvPools } from "@tangent/defi-resources"
+import { CRV_DUO_CVG_ETH } from "@tangent/defi-resources/build/ressources/lps/curve"
+
 const prisma = new PrismaClient()
+
+const curveLP = [
+  // Stable USD
+  "USDC_crvUSD",
+  "frxUSD_USDe",
+
+  // Stable ETH
+  "pxETH_stETH",
+
+  // Stable BTC
+  "cbBTC_WBTC",
+
+  // TriCrypto
+  "crvUSD_ETH_CRV",
+  "USDC_WBTC_WETH",
+
+  // DuoCrypto
+  "USR_RLP",
+]
 
 const priceFeedData: PriceSourceCreate[] = [
   {
     address: "0xD533a949740bb3306d119CC777fa900bA034cd52",
     name: "CRVUSD",
     type: "llamaApi",
-  },
-  {
-    address: "0xDe6BF97B1cdee8a93Ddd8b45d504f247e6C9f886",
-    name: "Curve.fi FLIP/stFLIP",
-    type: "curveApi",
-  },
-  {
-    address: "0xe2Ed1dAc3A9547BC6057e32bf8133b5268D7d987",
-    name: "pxETH/stETH",
-    type: "curveApi",
   },
   {
     address: "0xf99985822fb361117fcf3768d34a6353e6022f5f",
@@ -34,9 +47,33 @@ const priceFeedData: PriceSourceCreate[] = [
     address: "0x0655977FEb2f289A4aB78af67BAB0d17aAb84367",
     name: "sCRVUSD",
     type: "ERC4626",
-    ref_token: "0xD533a949740bb3306d119CC777fa900bA034cd52",
+    reference: "0xD533a949740bb3306d119CC777fa900bA034cd52",
+  },
+  {
+    address: CRV_DUO_CVG_ETH,
+    name: "CRV_DUO_CVG_ETH",
+    type: "curveApi",
+    reference: LPS[CRV_DUO_CVG_ETH]?.type,
   },
 ]
+curveLP.forEach((lp: string) => {
+  const lpAddress = ConvexCrvPools[lp as keyof typeof ConvexCrvPools]?.lpToken
+  if (!lpAddress) {
+    return
+  }
+  const data = LPS[lpAddress as keyof typeof LPS]
+  if (!data || !data.type) {
+    return
+  }
+
+  priceFeedData.push({
+    address: lpAddress.toLowerCase(),
+    name: lp,
+    type: "curveApi",
+    reference: data.type,
+  })
+})
+
 async function addMarkets() {
   const markets = addresses.markets
 
@@ -56,7 +93,7 @@ async function seedPriceSources() {
     address: item.address.toLowerCase(),
     name: item.name,
     type: item.type,
-    ref_token: item.ref_token?.toLowerCase() || null,
+    reference: item.reference?.toLowerCase() || null,
   }))
 
   await prisma.price_source.createMany({

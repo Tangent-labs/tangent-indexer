@@ -3,6 +3,8 @@ import { AddressLike } from "ethers"
 
 export type MarketType = "ConvexFxn" | "ConvexCrv" | "Pendle PT"
 
+export type CurverRegistry = "factory" | "main" | "crypto" | "factory-crypto" | "factory-crvusd" | "factory-tricrypto" | "factory-stable-ng"
+
 export type LiquidationUserInInfo = { account: AddressLike; market: AddressLike }
 
 export type LiquidationMarketOutInfo = {

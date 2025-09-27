@@ -17,6 +17,7 @@
     "tangent:check-liquidation": "tsx src/scripts/check_liquidation.ts",
     "tangent:check-votes": "tsx src/scripts/check_votes.ts",
     "tangent:check-prices": "tsx src/scripts/check_prices.ts",
+    "tangent:update-price-source-registry": "tsx src/scripts/update_price_source_registry.ts",
     "prisma:generate": "prisma generate --schema node_modules/@tangent/prisma-schema-shared/schema.prisma",
     "prisma:push": "prisma db push --schema node_modules/@tangent/prisma-schema-shared/schema.prisma",
     "prisma:push-force": "prisma db push --schema node_modules/@tangent/prisma-schema-shared/schema.prisma  --accept-data-loss",

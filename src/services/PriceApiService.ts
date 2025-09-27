@@ -1,5 +1,5 @@
-import { PriceApiInfo, PriceApiResult, PriceApiError } from "type/data"
-import { CurvePriceApiResult, LlamaPriceApiResult, PendlePriceApiResult } from "./globalData/types"
+import { PriceApiInfo, PriceApiResult, PriceApiError, CurverRegistry } from "type/data"
+import { CurvePoolListApiResult, CurvePriceApiResult, LlamaPriceApiResult, PendlePriceApiResult } from "./globalData/types"
 import axios from "axios"
 
 export const CURVE_API = "https://api.curve.finance/api"
@@ -36,7 +36,39 @@ class PriceApiService {
     }
   }
 
-  async fetchCurveApiPrices(addresses: string[], curvePoolType: string): Promise<PriceApiResult> {
+  async fetchCurveApiRegisty(addresses: string[]): Promise<{ address: string; type: CurverRegistry }[]> {
+    addresses = addresses.map((a) => a.toLowerCase())
+    const callUrl = `${CURVE_API}/getPoolList/ethereum`
+    const call = await axios.get<CurvePoolListApiResult>(callUrl)
+    if (!call.data.success) {
+      console.error("Failed to fetch curve api registry", call.data)
+      throw new Error("Failed to fetch curve api registry")
+    }
+
+    const returnValues = [] as { address: string; type: CurverRegistry }[]
+    const list = call.data.data.poolList
+
+    for (const p of list) {
+      if (addresses.includes(p.address.toLowerCase())) {
+        returnValues.push({ address: p.address, type: p.type as unknown as CurverRegistry })
+      }
+      if (returnValues.length === addresses.length) {
+        break
+      }
+    }
+
+    if (returnValues.length !== addresses.length) {
+      console.error(
+        "Not all addresses found in the curve registry",
+        addresses.map((a) => !returnValues?.some((r) => r.address.toLowerCase() === a.toLowerCase())),
+        returnValues
+      )
+    }
+
+    return returnValues
+  }
+
+  async fetchCurveApiPrices(addresses: string[], curvePoolType: CurverRegistry): Promise<PriceApiResult> {
     if (!addresses?.length) {
       return { prices: [] }
     }
@@ -47,9 +79,9 @@ class PriceApiService {
 
       // fin the prices we need in the results
       for (const p of call.data.data.poolData) {
-        if (addresses.includes(p.address)) {
+        if (addresses.includes(p.address.toLowerCase())) {
           prices.push({
-            address: p.address,
+            address: p.address.toLowerCase(),
             price: p.totalSupply > 0 ? p.usdTotal / p.totalSupply : 0,
           })
           // if we have all the prices we need, break the loop

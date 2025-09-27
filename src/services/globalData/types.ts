@@ -1,3 +1,5 @@
+import { CurverRegistry } from "type/data"
+
 export type APR = {
   token: string
   amountPerYear: bigint
@@ -59,6 +61,18 @@ export type CurvePoolData = {
   name: string
   usdTotal: number
   totalSupply: number
+}
+
+export type CurvePoolListApiResult = {
+  success: boolean
+  data: {
+    poolList: [
+      {
+        address: string
+        type: CurverRegistry
+      },
+    ]
+  }
 }
 
 export type CurvePriceApiResult = {
