@@ -1,6 +1,9 @@
+import { Prisma } from "@prisma/client"
 import { AddressLike } from "ethers"
 
 export type MarketType = "ConvexFxn" | "ConvexCrv" | "Pendle PT"
+
+export type CurverRegistry = "factory" | "main" | "crypto" | "factory-crypto" | "factory-crvusd" | "factory-tricrypto" | "factory-stable-ng"
 
 export type LiquidationUserInInfo = { account: AddressLike; market: AddressLike }
 
@@ -124,3 +127,22 @@ export type RewardedChoiceOption = {
   key: string
   value: string
 }
+
+export type PriceApiInfo = {
+  address: string
+  price: number
+}
+
+export type PriceApiError = {
+  httpCode?: number
+  reason: string
+  api: string
+}
+
+export type PriceApiResult = {
+  prices: PriceApiInfo[]
+  error?: PriceApiError
+}
+
+export type PriceSource = Prisma.price_sourceGetPayload<{}>
+export type PriceSourceCreate = Prisma.price_sourceCreateInput
