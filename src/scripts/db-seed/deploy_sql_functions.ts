@@ -26,7 +26,6 @@
  */
 
 import * as dotenv from "dotenv"
-import { PrismaClient } from "@prisma/client"
 import { readFileSync } from "fs"
 import { join } from "path"
 import { TransactionPrisma } from "type/prisma"
@@ -42,7 +41,7 @@ const sqlFunctions: string[] = [
   "idx_price_feeds_token_ts_with_price",
 ]
 
-export async function deployFunction(prisma: PrismaClient | TransactionPrisma, sqlFunction: string): Promise<void> {
+export async function deployFunction(tx: TransactionPrisma, sqlFunction: string): Promise<void> {
   try {
     console.log(`🚀 Deploying function: ${sqlFunction}`)
 
@@ -54,12 +53,12 @@ export async function deployFunction(prisma: PrismaClient | TransactionPrisma, s
       throw new Error(`SQL file ${sqlFilePath} is empty`)
     }
 
-    await prisma.$executeRawUnsafe(sqlContent)
+    await tx.$executeRawUnsafe(sqlContent)
 
     console.log(`✅ Successfully deployed: ${sqlFunction}`)
 
     // Test that the function was created by checking if it exists
-    const functionExists = await prisma.$queryRawUnsafe(
+    const functionExists = await tx.$queryRawUnsafe(
       `
       SELECT COUNT(*) as count 
       FROM information_schema.routines 
@@ -81,11 +80,11 @@ export async function deployFunction(prisma: PrismaClient | TransactionPrisma, s
   }
 }
 
-async function verifySchemaExists(prisma: PrismaClient | TransactionPrisma): Promise<void> {
+async function verifySchemaExists(tx: TransactionPrisma): Promise<void> {
   try {
     console.log("🔍 Verifying 'points' schema exists...")
 
-    const schemaExists = await prisma.$queryRawUnsafe(`
+    const schemaExists = await tx.$queryRawUnsafe(`
       SELECT COUNT(*) as count 
       FROM information_schema.schemata 
       WHERE schema_name = 'points'
@@ -104,11 +103,11 @@ async function verifySchemaExists(prisma: PrismaClient | TransactionPrisma): Pro
   }
 }
 
-async function listExistingFunctions(prisma: PrismaClient | TransactionPrisma): Promise<void> {
+async function listExistingFunctions(tx: TransactionPrisma): Promise<void> {
   try {
     console.log("📋 Listing existing functions in 'points' schema...")
 
-    const existingFunctions = await prisma.$queryRawUnsafe(`
+    const existingFunctions = await tx.$queryRawUnsafe(`
       SELECT routine_name, routine_type
       FROM information_schema.routines 
       WHERE routine_schema = 'points'
@@ -129,14 +128,14 @@ async function listExistingFunctions(prisma: PrismaClient | TransactionPrisma): 
   }
 }
 
-export async function deploySQLFunctions(prisma: PrismaClient | TransactionPrisma) {
+export async function deploySQLFunctions(tx: TransactionPrisma) {
 
   try {
     // Verify schema exists
-    await verifySchemaExists(prisma)
+    await verifySchemaExists(tx)
 
     // List existing functions before deployment
-    await listExistingFunctions(prisma)
+    await listExistingFunctions(tx)
 
     console.log("\n🚀 Beginning function deployment...")
     console.log("===================================")
@@ -146,14 +145,14 @@ export async function deploySQLFunctions(prisma: PrismaClient | TransactionPrism
       console.log(`\n📦 Processing: ${sqlFunction}`)
 
       // Deploy the function
-      await deployFunction(prisma, sqlFunction)
+      await deployFunction(tx, sqlFunction)
     }
 
     console.log("\n🎉 All SQL functions deployed successfully!")
     console.log("==========================================")
 
     // List functions after deployment
-    await listExistingFunctions(prisma)
+    await listExistingFunctions(tx)
 
     console.log("\n✨ Deployment completed successfully!")
   } catch (error: any) {

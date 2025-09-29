@@ -1,11 +1,10 @@
-import { PrismaClient } from "@prisma/client"
+import { Prisma } from "@prisma/client"
 import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext"
 import { TransactionPrisma } from "type/prisma"
-import { AddressesJson, readJsonFile } from "utils/readGDrive"
+import { AddressesJson } from "utils/readGDrive"
 
-export async function seedPriceFeeds(prisma: PrismaClient | TransactionPrisma) {
+export async function seedPriceFeeds(tx: TransactionPrisma, addresses: AddressesJson) {
 
-  const addresses = await readJsonFile<AddressesJson>(process.env.GOOGLE_ADDRESSES_FILE_ID!.toString())
   const tokens = [
     {
       address: addresses.tokens.USG.toLowerCase(),
@@ -49,28 +48,31 @@ export async function seedPriceFeeds(prisma: PrismaClient | TransactionPrisma) {
     },
   ]
 
-  const currentTimestamp = 1755780359 // 12 Aout 2025
+  const currentTimestamp = 1759167 // 12 Aout 2025
   const oneDaySeconds = 24 * 60 * 60
   const oneMontAgo = currentTimestamp - 30 * oneDaySeconds
 
   for (const token of tokens) {
     // Ensure token exists in tracked_erc20 table
-    await prisma.tracked_erc20.upsert({
+    await tx.tracked_erc20.upsert({
       where: { address: token.address },
       update: {},
       create: token,
     })
 
+    let priceFeedsToInsert: Prisma.price_feedsCreateManyInput[] = []
     // Generate price feeds for each day
     for (let ts = oneMontAgo; ts <= currentTimestamp; ts += oneDaySeconds) {
-      await prisma.price_feeds.create({
-        data: {
-          token: token.address,
-          timestamp: new Date(ts * 1000),
-          price_usd: "1",
-        },
+      priceFeedsToInsert.push({
+        token: token.address,
+        timestamp: new Date(ts * 1000),
+        price_usd: "1",
       })
     }
+
+    await tx.price_feeds.createMany({
+      data: priceFeedsToInsert,
+    })
   }
 
   console.log("Price feeds seeded successfully!")

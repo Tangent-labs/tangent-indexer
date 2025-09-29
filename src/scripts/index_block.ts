@@ -1,9 +1,9 @@
 import * as dotenv from "dotenv"
-
+import { PrismaClient } from "@prisma/client"
 import { BlockService } from "../services/BlockService"
 import { setUpIndexer } from "../config/indexer_setup"
 import { TransactionPrisma } from "type/prisma"
-import { PrismaClient } from "@prisma/client"
+
 import { BlockRepository } from "db/BlockRepository"
 import { ActiveBorrowersRepository } from "db/ActiveBorrowersRepository"
 import { MarketContractsRepository } from "db/MarketContractsRepository"
@@ -19,12 +19,13 @@ import { UserPointsRepository } from "db/UserPointsRepository"
 import { VotesEventService } from "services/events/VotesEventService"
 import { UserVoteRepository } from "db/UserVoteRepository"
 import { ERC20Repository } from "db/ERC20Repository"
+import { AddressesJson, readJsonFile } from "utils/readGDrive"
 dotenv.config()
 
 async function main() {
   const { providers, handleError } = setUpIndexer()
   const { prismaClient, userMarketService, userPointsService, marketCreationService, blockService, activeBorrowersService, voteEnventService, setTransaction } =
-    setUpIndexerBlockServices()
+    await setUpIndexerBlockServices()
 
   try {
     const blockInfo = await BlockService.getIndexerBlockInfo(providers, blockService)
@@ -99,7 +100,7 @@ async function main() {
 
 main().then()
 
-function setUpIndexerBlockServices() {
+async function setUpIndexerBlockServices() {
   const prismaClient = new PrismaClient()
   // Setup the repositories
   const blockRepository = new BlockRepository(prismaClient)
@@ -117,9 +118,11 @@ function setUpIndexerBlockServices() {
     activeBorrowersRepository.setClient(dbTransaction)
   }
 
+
+  const addresses = await readJsonFile<AddressesJson>(process.env.GOOGLE_ADDRESSES_FILE_ID!.toString())
   // Set up the services
   const blockService = new BlockService(blockRepository)
-  const marketCreationService = new MarketCreationService(marketContractsRepository, indexerConfig.contracts.marketCreatorAddress)
+  const marketCreationService = new MarketCreationService(marketContractsRepository, addresses.utilities.marketCreator)
 
   const userMarketService = new UserMarketService(userEventsRepository)
   const userPointsService = new UserPointsService(userPointsRepository, erc20Repository)
