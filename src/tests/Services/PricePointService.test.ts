@@ -56,6 +56,7 @@ describe("PricePointService", () => {
     ervc4626shares: [{ token: "0x4000000000000000000000000000000000000004", shares: BigInt("1050000000000000000") }],
     sUsgPrice: BigInt("1100000000000000000"),
     usgPrice: BigInt("1000000000000000000"),
+    timestamp: BigInt("1717171717"), // Unix timestamp
     debtIndexes: [
       { market: "0x9000000000000000000000000000000000000001", index: BigInt("1200000000000000000000000000") },
       { market: "0x9000000000000000000000000000000000000002", index: BigInt("1150000000000000000000000000") },
@@ -105,6 +106,7 @@ describe("PricePointService", () => {
       expect(chainView).toHaveBeenCalled()
       expect(result.prices).toHaveLength(8) // 3 APIs + 1 ERC4626 + 2 USG/sUSG + 2 debt
       expect(result.warnings).toEqual([]) // No warnings expected
+      expect(result.date).toEqual(new Date(Number(mockChainViewPrices.timestamp) * 1000)) // Verify timestamp is returned
       expect(result.prices).toEqual(
         expect.arrayContaining([
           { address: "0x1000000000000000000000000000000000000001", price: 1.0 },
@@ -128,6 +130,7 @@ describe("PricePointService", () => {
       expect(chainView).toHaveBeenCalled() // chainView should always be called now
       expect(result.prices).toHaveLength(3) // Only APIs (no USG/sUSG/debt since no ERC4626)
       expect(result.warnings).toEqual([]) // No warnings expected
+      expect(result.date).toBeDefined() // No date when no ERC4626 sources
       expect(result.prices).not.toEqual(
         expect.arrayContaining([
           { address: "0x400F4d9E2c8e33cfCb6F6b6E5B5B5B5B5B5B5B5B", price: expect.any(Number) },
@@ -145,6 +148,7 @@ describe("PricePointService", () => {
       expect(chainView).toHaveBeenCalled() // chainView should always be called now
       expect(result.prices).toEqual([]) // No sources, so no prices
       expect(result.warnings).toEqual([]) // No warnings
+      expect(result.date).toBeDefined() // No date when no ERC4626 sources
     })
 
     it("should handle API errors and collect them as warnings", async () => {
@@ -386,6 +390,33 @@ describe("PricePointService", () => {
       })
     })
 
+    it("should return correct timestamp when ERC4626 sources exist", async () => {
+      const testTimestamp = BigInt("1640995200") // 2022-01-01 00:00:00 UTC
+      const chainViewWithCustomTimestamp = {
+        ...mockChainViewPrices,
+        timestamp: testTimestamp,
+      }
+      vi.mocked(chainView).mockResolvedValue([chainViewWithCustomTimestamp])
+
+      const result = await pricePointService.getPriceFeeds()
+
+      const expectedDate = new Date(Number(testTimestamp) * 1000)
+      expect(result.date).toEqual(expectedDate)
+      expect(result.date?.getTime()).toBe(1640995200000)
+    })
+
+    it("should handle chainView failure and return undefined date", async () => {
+      vi.mocked(chainView).mockRejectedValue(new Error("Chain view failed"))
+
+      const result = await pricePointService.getPriceFeeds()
+
+      expect(result.date).toBeUndefined()
+      expect(result.warnings).toContainEqual({
+        apiName: "CHAINVIEW",
+        error: expect.any(Error),
+      })
+    })
+
     // ... (keep other getPriceFeeds tests from previous version, adjusted for no USG/sUSG without ERC4626)
   })
 
@@ -404,7 +435,8 @@ describe("PricePointService", () => {
             address: "0x1000000000000000000000000000000000000001",
             price: 1.0,
           }),
-        ])
+        ]),
+        undefined
       )
     })
 
@@ -414,6 +446,47 @@ describe("PricePointService", () => {
       await pricePointService.fetchPriceFeed()
       expect(mockPriceRepository.insertPriceFeed).not.toHaveBeenCalled()
     })
+
+    it("should pass timestamp from chainView to insertPriceFeed when ERC4626 sources exist", async () => {
+      vi.mocked(chainView).mockResolvedValue([mockChainViewPrices])
+      const mockPrices = [{ address: "0x1000000000000000000000000000000000000001", price: 1.0 }]
+      const expectedDate = new Date(Number(mockChainViewPrices.timestamp) * 1000)
+      const mockResult = { prices: mockPrices, warnings: [], date: expectedDate }
+      vi.spyOn(pricePointService, "getPriceFeeds").mockResolvedValue(mockResult)
+
+      await pricePointService.fetchPriceFeed()
+
+      expect(mockPriceRepository.insertPriceFeed).toHaveBeenCalledWith(mockPrices, expectedDate)
+    })
+
+    it("should pass undefined date to insertPriceFeed when no ERC4626 sources exist", async () => {
+      mockPriceRepository.getPriceSources.mockResolvedValue(mockPriceSources.slice(0, 3)) // No ERC4626
+      vi.mocked(chainView).mockResolvedValue([mockChainViewPrices])
+      const mockPrices = [{ address: "0x1000000000000000000000000000000000000001", price: 1.0 }]
+      const mockResult = { prices: mockPrices, warnings: [], date: undefined }
+      vi.spyOn(pricePointService, "getPriceFeeds").mockResolvedValue(mockResult)
+
+      await pricePointService.fetchPriceFeed()
+
+      expect(mockPriceRepository.insertPriceFeed).toHaveBeenCalledWith(mockPrices, undefined)
+    })
+  })
+
+  describe("procesChainViewResults", () => {
+    it("should extract timestamp and convert it to Date", async () => {
+      const testTimestamp = BigInt("1717171717") // Unix timestamp
+      const chainViewWithTimestamp = {
+        ...mockChainViewPrices,
+        timestamp: testTimestamp,
+      }
+      const apiPrices: PriceApiInfo[] = []
+      const warnings: any[] = []
+
+      const result = await pricePointService.procesChainViewResults(chainViewWithTimestamp, mockPriceSources, apiPrices, mockMarkets, warnings)
+
+      const expectedDate = new Date(Number(testTimestamp) * 1000)
+      expect(result).toEqual(expectedDate)
+    })
   })
 
   describe("processErc4626Prices", () => {
@@ -422,6 +495,7 @@ describe("PricePointService", () => {
       const chainViewWithShares = {
         ...mockChainViewPrices,
         ervc4626shares: [{ token: "0x4000000000000000000000000000000000000004", shares: BigInt("1050000000000000000") }],
+        timestamp: BigInt("17171717171717171717"),
       }
 
       pricePointService.processErc4626Prices(mockPriceSources, chainViewWithShares, apiPrices, [])

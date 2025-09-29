@@ -3,7 +3,6 @@ import { CurvePoolListApiResult, CurvePriceApiResult, LlamaPriceApiResult, Pendl
 import axios from "axios"
 
 export const CURVE_API = "https://api.curve.finance/api"
-
 const PENDLE_PRICE_API = "https://api-v2.pendle.finance/core/v1/1/assets/prices"
 const LLAMA_API = "https://coins.llama.fi/prices/current/"
 
@@ -82,7 +81,7 @@ class PriceApiService {
         if (addresses.includes(p.address.toLowerCase())) {
           prices.push({
             address: p.address.toLowerCase(),
-            price: p.totalSupply > 0 ? p.usdTotal / p.totalSupply : 0,
+            price: p.totalSupply > 0 ? p.usdTotal / (p.totalSupply / 10 ** 18) : 0,
           })
           // if we have all the prices we need, break the loop
           if (prices.length === addresses.length) {

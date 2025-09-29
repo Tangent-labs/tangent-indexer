@@ -3,9 +3,9 @@ import { AbstractRepository } from "./AbstractRepository"
 import { Prisma } from "@prisma/client"
 
 export class PriceRepository extends AbstractRepository {
-  async insertPriceFeed(prices: PriceApiInfo[]) {
+  async insertPriceFeed(prices: PriceApiInfo[], _date?: Date) {
     if (prices?.length > 0) {
-      const date = new Date()
+      const date = _date || new Date()
 
       await this.prismaClient.price_feeds.createMany({
         data: prices.map((p) => ({

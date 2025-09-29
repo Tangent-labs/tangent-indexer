@@ -18,6 +18,7 @@ type PriceApiWarning = {
 type GetPriceFeedsResult = {
   prices: PriceApiInfo[]
   warnings: PriceApiWarning[]
+  date?: Date
 }
 
 type PointServiceChainViewOut = {
@@ -31,6 +32,7 @@ type PointServiceChainViewOut = {
     market: string
     index: bigint
   }[]
+  timestamp: bigint
 }
 
 export class PricePointService {
@@ -111,12 +113,14 @@ export class PricePointService {
 
     // Process all results in one pass
     const apiPrices: PriceApiInfo[] = []
+    let date: Date | undefined
 
-    promiseEntries.forEach(([type, _], index) => {
-      const result = results[index]
+    for (let i = 0; i < promiseEntries.length; i++) {
+      const [type] = promiseEntries[i]
+      const result = results[i]
       if (result.status === "fulfilled") {
         if (type === "CHAINVIEW") {
-          this.procesChainViewResults(result.value, priceSource, apiPrices, markets, warnings)
+          date = await this.procesChainViewResults(result.value, priceSource, apiPrices, markets, warnings)
         } else {
           // Handle PriceApiResult objects from API services
           const apiResult = result.value as PriceApiResult
@@ -138,7 +142,7 @@ export class PricePointService {
           error: result.reason,
         })
       }
-    })
+    }
 
     // Filter out any invalid price objects before returning
     const validPrices =
@@ -149,6 +153,7 @@ export class PricePointService {
     return {
       prices: validPrices,
       warnings,
+      date,
     }
   }
 
@@ -158,9 +163,10 @@ export class PricePointService {
     apiPrices: PriceApiInfo[],
     markets: string[],
     warnings: PriceApiWarning[]
-  ) {
+  ): Promise<Date | undefined> {
     // Check if there are ERC4626 sources
     const erc4626Sources = priceSource.filter((p) => p.type === "ERC4626")
+    const date = new Date(Number(chainViewPrices.timestamp) * 1000)
 
     // Only process USG/sUSG and debt indexes if there are ERC4626 sources
     if (erc4626Sources.length > 0) {
@@ -197,13 +203,14 @@ export class PricePointService {
         })
       }
     }
+    return date
   }
 
   async fetchPriceFeed() {
     const result = await this.getPriceFeeds()
 
     if (result?.prices?.length > 0) {
-      await this.priceRepository.insertPriceFeed(result.prices)
+      await this.priceRepository.insertPriceFeed(result.prices, result.date)
     }
     return result
   }
