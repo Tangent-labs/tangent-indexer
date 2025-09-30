@@ -5,7 +5,7 @@
   "description": "Will index data in a DB when some event &amp; transactions are detected",
   "main": "index.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "node src/utils/build.js",
     "tangent:reset-liquidation-test": "npm run db:truncate &  npm run tangent:indexer-block & npm run tangent:check-liquidation",
     "tangent:indexer-points": "tsx src/scripts/index_points.ts",
     "tangent:indexer-block": "tsx src/scripts/index_block.ts",
@@ -53,6 +53,7 @@
     "@typescript-eslint/eslint-plugin": "^8.24.0",
     "@typescript-eslint/parser": "^8.24.0",
     "@vitest/coverage-v8": "^3.2.4",
+    "esbuild": "^0.25.10",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^10.0.1",
     "eslint-config-standard": "^17.1.0",
