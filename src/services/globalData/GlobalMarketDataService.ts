@@ -47,7 +47,7 @@ export class GlobalMarketDataService {
     this.provider = provider
   }
 
-  async main() {
+  async computeAndStoreAprTvlsAndTotalSupplies() {
     // Retrieve all markets and their associated type
     const markets = await this.getAllMarkets()
 

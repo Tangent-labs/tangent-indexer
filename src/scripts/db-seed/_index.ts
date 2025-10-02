@@ -1,9 +1,9 @@
 import { Prisma, PrismaClient } from "@prisma/client"
-import { deploySQLFunctions } from "./deploy_sql_functions"
-import { seedPriceFeeds } from "./seed_tokens"
-import { seedLPTasks } from "./seed_lp_tasks"
-import { seedVoteTasks } from "./seed_vote_tasks"
-import { AddressesJson, readJsonFile } from "utils/readGDrive"
+import { deploySQLFunctions } from "./deploy_sql_functions.js"
+import { seedPriceFeeds } from "./seed_tokens.js"
+import { seedLPTasks } from "./seed_lp_tasks.js"
+import { seedVoteTasks } from "./seed_vote_tasks.js"
+import { AddressesJson, readJsonFile } from "../../utils/readGDrive.js"
 import * as dotenv from "dotenv"
 dotenv.config()
 
