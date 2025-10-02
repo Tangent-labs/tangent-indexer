@@ -22,21 +22,21 @@ async function main() {
   const marketGlobalDataRepo = new MarketGlobalDataRepository(prismaClient)
   const totalSupplyRepo = new TotalSupplyRepository(prismaClient)
 
-  // const { marketsData, totalSupplies, now } = await globalDataService.computeAndStoreAprTvlsAndTotalSupplies()
-  // const lastUpdateTimeMarkets = await marketGlobalDataRepo.fetchLastExecutionTime()
-  // const lastUpdateTimeTotalSupplies = await totalSupplyRepo.fetchLastExecutionTime()
+  const { marketsData, totalSupplies, now } = await globalDataService.computeAndStoreAprTvlsAndTotalSupplies()
+  const lastUpdateTimeMarkets = await marketGlobalDataRepo.fetchLastExecutionTime()
+  const lastUpdateTimeTotalSupplies = await totalSupplyRepo.fetchLastExecutionTime()
 
-  // if (lastUpdateTimeMarkets && lastUpdateTimeMarkets.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
-  //   await marketGlobalDataRepo.updateRows(marketsData, lastUpdateTimeMarkets)
-  // } else {
-  //   await marketGlobalDataRepo.insertRows(marketsData)
-  // }
+  if (lastUpdateTimeMarkets && lastUpdateTimeMarkets.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
+    await marketGlobalDataRepo.updateRows(marketsData, lastUpdateTimeMarkets)
+  } else {
+    await marketGlobalDataRepo.insertRows(marketsData)
+  }
 
-  // if (lastUpdateTimeTotalSupplies && lastUpdateTimeTotalSupplies.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
-  //   await totalSupplyRepo.updateRows(totalSupplies, lastUpdateTimeTotalSupplies)
-  // } else {
-  //   await totalSupplyRepo.insertRows(totalSupplies)
-  // }
+  if (lastUpdateTimeTotalSupplies && lastUpdateTimeTotalSupplies.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
+    await totalSupplyRepo.updateRows(totalSupplies, lastUpdateTimeTotalSupplies)
+  } else {
+    await totalSupplyRepo.insertRows(totalSupplies)
+  }
 }
 
 main().then()

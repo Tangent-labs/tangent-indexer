@@ -1,5 +1,5 @@
 import { build } from 'esbuild';
-import { readdirSync, readFileSync, writeFileSync, cpSync, mkdirSync, existsSync } from 'fs';
+import { readdirSync, cpSync, mkdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 
 const srcDir = 'src';
@@ -21,38 +21,6 @@ function getAllFiles(dir, ext = '.ts') {
 }
 
 const entryPoints = getAllFiles(srcDir);
-
-// Fixe les imports relatifs et ajoute assert { type: "json" } pour les JSON
-function fixImports(dir) {
-    const entries = readdirSync(dir, { withFileTypes: true });
-    for (const entry of entries) {
-        const fullPath = join(dir, entry.name);
-        if (entry.isDirectory()) {
-            fixImports(fullPath);
-        } else if (entry.isFile() && entry.name.endsWith('.js')) {
-            let content = readFileSync(fullPath, 'utf8');
-
-            // ⚡ Ajoute .js aux imports relatifs sans extension
-            content = content.replace(
-                /(from\s+['"])(\..*?)(['"])/g,
-                (match, p1, p2, p3) => {
-                    if (/\.[a-zA-Z0-9]+$/.test(p2)) {
-                        return match; // chemin déjà avec extension
-                    }
-                    return `${p1}${p2}.js${p3}`;
-                }
-            );
-
-            // ⚡ Ajoute assert { type: "json" } pour les imports JSON
-            content = content.replace(
-                /(from\s+['"].*?\.json)(['"])/g,
-                '$1$2 assert { type: "json" }'
-            );
-
-            writeFileSync(fullPath, content);
-        }
-    }
-}
 
 // Copie tous les fichiers non-TS de src → dist
 function copyAssets(src, dest) {
@@ -76,15 +44,18 @@ async function buildTS() {
     await build({
         entryPoints,
         outdir: outDir,
-        bundle: false,      // pas de bundle = faible mémoire
+        bundle: false,           // pas de bundle = faible mémoire
         platform: 'node',
-        format: 'esm',       // Node ESM
+        format: 'esm',
+        target: ['node22'],
         sourcemap: true,
         minify: false,
-        target: ['node16'],
+        loader: {
+            '.json': 'json',       // <-- IMPORTANT : permet d'importer les JSON
+        },
     });
 
-    fixImports(outDir);
+    // Copie des assets (JSON, .env, etc.)
     copyAssets(srcDir, outDir);
 }
 
