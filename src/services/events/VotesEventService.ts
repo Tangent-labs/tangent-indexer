@@ -1,9 +1,9 @@
-import { Prisma } from "@prisma/client"
-import { UserVoteRepository } from "db/UserVoteRepository"
 import { ethers, id, JsonRpcProvider, Log } from "ethers"
-import { getEthLogs } from "eventFectcher/_baseFectcher"
-import { VOTE_FOR_GAUGE } from "resources/eventSignatures"
-import { NumMap } from "services/boost/types"
+
+import { UserVoteRepository } from "../../db/UserVoteRepository.js"
+import { getEthLogs } from "../../eventFectcher/_baseFectcher.js"
+import { VOTE_FOR_GAUGE } from "../../resources/eventSignatures.js"
+import { NumMap } from "../../services/boost/types.js"
 
 type ParsedVote = {
   gauge_controller: string

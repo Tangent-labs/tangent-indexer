@@ -1,25 +1,30 @@
 import * as dotenv from "dotenv"
+import { TransactionPrisma } from "type/prisma.js"
 import { PrismaClient } from "@prisma/client"
-import { BlockService } from "../services/BlockService"
-import { setUpIndexer } from "../config/indexer_setup"
-import { TransactionPrisma } from "type/prisma"
 
-import { BlockRepository } from "db/BlockRepository"
-import { ActiveBorrowersRepository } from "db/ActiveBorrowersRepository"
-import { MarketContractsRepository } from "db/MarketContractsRepository"
-import { MarketCreationService } from "services/events/MarketCreationService"
-import { UserMarketService } from "services/events/UserMarketService"
-import { indexerConfig } from "config/indexer_config"
-import { ActiveBorrowersService } from "services/ActiveBorrowersService"
-import { UserEventsRepository } from "db/UserEventsRepository"
-import { getEthLogs } from "eventFectcher/_baseFectcher"
-import { fetchTransferLogs } from "eventFectcher/erc20TransferEventFetcher"
-import { UserPointsService } from "services/events/UserPointsService"
-import { UserPointsRepository } from "db/UserPointsRepository"
-import { VotesEventService } from "services/events/VotesEventService"
-import { UserVoteRepository } from "db/UserVoteRepository"
-import { ERC20Repository } from "db/ERC20Repository"
-import { AddressesJson, readJsonFile } from "utils/readGDrive"
+import { setUpIndexer } from "../config/indexer_setup.js"
+
+import { BlockRepository } from "../db/BlockRepository.js"
+import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository.js"
+import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
+import { UserEventsRepository } from "../db/UserEventsRepository.js"
+import { UserPointsRepository } from "../db/UserPointsRepository.js"
+import { UserVoteRepository } from "../db/UserVoteRepository.js"
+import { ERC20Repository } from "../db/ERC20Repository.js"
+
+import { BlockService } from "../services/BlockService.js"
+import { MarketCreationService } from "../services/events/MarketCreationService.js"
+import { UserMarketService } from "../services/events/UserMarketService.js"
+import { VotesEventService } from "../services/events/VotesEventService.js"
+import { UserPointsService } from "../services/events/UserPointsService.js"
+import { ActiveBorrowersService } from "../services/ActiveBorrowersService.js"
+
+import { getEthLogs } from "../eventFectcher/_baseFectcher.js"
+import { fetchTransferLogs } from "../eventFectcher/erc20TransferEventFetcher.js"
+
+import { indexerConfig } from "../config/indexer_config.js"
+
+import { AddressesJson, readJsonFile } from "../utils/readGDrive.js"
 dotenv.config()
 
 async function main() {

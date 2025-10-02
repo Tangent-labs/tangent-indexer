@@ -1,15 +1,17 @@
 import { PrismaClient } from "@prisma/client"
-import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository"
-
-import { setUpIndexer } from "config/indexer_setup"
-import { LiquidationService } from "services/LiquidationService"
 import * as dotenv from "dotenv"
-import { LiquidationExecutionContext } from "services/LiquidationExecutionContext"
-import { LiquidationBotService } from "services/LiquidationBotLogService"
-import { LiquidationBotLogRepository } from "db/LiquidationBotLogRepository"
-import NotificationService from "services/NotificationService"
-import { CheckLiquidationService } from "services/CheckLiquidationService"
-import { indexerConfig } from "config/indexer_config"
+
+import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository.js"
+import { LiquidationBotLogRepository } from "../db/LiquidationBotLogRepository.js"
+
+import { LiquidationService } from "../services/LiquidationService.js"
+import { LiquidationBotService } from "../services/LiquidationBotLogService.js"
+import { NotificationService } from "../services/NotificationService.js"
+import { CheckLiquidationService } from "../services/CheckLiquidationService.js"
+
+import { indexerConfig } from "../config/indexer_config.js"
+import { LiquidationExecutionContext } from "../services/LiquidationExecutionContext.js"
+import { setUpIndexer } from "../config/indexer_setup.js"
 
 dotenv.config()
 const { providers, walletsPks, handleError } = setUpIndexer()

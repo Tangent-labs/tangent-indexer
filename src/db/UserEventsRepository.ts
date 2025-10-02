@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client"
-import { AbstractRepository } from "./AbstractRepository"
+import { AbstractRepository } from "./AbstractRepository.js"
 
 export class UserEventsRepository extends AbstractRepository {
   async insertBorrows(events: Prisma.borrowCreateManyInput[]) {

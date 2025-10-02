@@ -1,14 +1,17 @@
 import * as dotenv from "dotenv"
 import { PrismaClient } from "@prisma/client"
-import { TransactionPrisma } from "type/prisma"
-import { BlockRepository } from "db/BlockRepository"
-import { setUpIndexer } from "../config/indexer_setup"
-import { BlockService } from "../services/BlockService"
-import { UserEventsRepository } from "db/UserEventsRepository"
-import { UserPointsRepository } from "db/UserPointsRepository"
-import { UserPointsService } from "services/events/UserPointsService"
-import { indexerConfig } from "config/indexer_config"
-import { ERC20Repository } from "db/ERC20Repository"
+import { TransactionPrisma } from "type/prisma.js"
+
+import { BlockService } from "../services/BlockService.js"
+import { UserPointsService } from "../services/events/UserPointsService.js"
+
+import { UserEventsRepository } from "../db/UserEventsRepository.js"
+import { UserPointsRepository } from "../db/UserPointsRepository.js"
+import { ERC20Repository } from "../db/ERC20Repository.js"
+import { BlockRepository } from "../db/BlockRepository.js"
+
+import { setUpIndexer } from "../config/indexer_setup.js"
+import { indexerConfig } from "../config/indexer_config.js"
 
 dotenv.config()
 

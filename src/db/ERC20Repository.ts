@@ -1,4 +1,4 @@
-import { AbstractRepository } from "./AbstractRepository"
+import { AbstractRepository } from "./AbstractRepository.js"
 
 export class ERC20Repository extends AbstractRepository {
     async getTrackedERC20In(erc20Names: string[]) {

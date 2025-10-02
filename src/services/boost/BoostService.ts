@@ -1,12 +1,12 @@
 import { JsonRpcProvider } from "ethers"
-import { chainView } from "utils/chainView"
+import { chainView } from "utils/chainView.js"
 
-import TokenBalancesForMultipleUsers from "../../abis/TokenBalancesForMultipleUsers.json"
+import TokenBalancesForMultipleUsers from "../../abis/TokenBalancesForMultipleUsers.json" with { type: "json" };
 
 import { Prisma } from "@prisma/client"
-import { NumMap, TokenBalancesForBoostOut } from "./types"
-import { OFFCHAIN_BOOST_INFOS, ONCHAIN_BOOST_INFOS, SNAPSHOT_BOOST_TOKENS } from "./config"
-import { BoostRepository } from "db/BoostRepository"
+import { NumMap, TokenBalancesForBoostOut } from "./types.js"
+import { OFFCHAIN_BOOST_INFOS, ONCHAIN_BOOST_INFOS, SNAPSHOT_BOOST_TOKENS } from "./config.js"
+import { BoostRepository } from "../../db/BoostRepository.js"
 
 // TODO
 // - Pull users dynamically from the database

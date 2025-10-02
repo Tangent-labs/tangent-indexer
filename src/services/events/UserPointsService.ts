@@ -1,9 +1,12 @@
 import { Prisma } from "@prisma/client"
-import { UserPointsRepository } from "db/UserPointsRepository"
-import { parseTransferEvent } from "../../eventFectcher/marketUserEvents.parsers"
-import { BlockService } from "../BlockService"
 import { JsonRpcProvider, Log } from "ethers"
-import { ERC20Repository } from "db/ERC20Repository"
+
+import { UserPointsRepository } from "../../db/UserPointsRepository.js"
+import { ERC20Repository } from "../../db/ERC20Repository.js"
+
+import { parseTransferEvent } from "../../eventFectcher/marketUserEvents.parsers.js"
+import { BlockService } from "../BlockService.js"
+
 
 export type SortedEvents = {
   Transfer: Prisma.transfer_eventsUncheckedCreateInput[]

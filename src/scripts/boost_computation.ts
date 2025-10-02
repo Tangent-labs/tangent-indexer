@@ -1,7 +1,8 @@
 import { PrismaClient } from "@prisma/client"
-import { BoostService } from "services/boost/BoostService"
-import { _initNetwork } from "config/indexer_setup"
-import { BoostRepository } from "db/BoostRepository"
+
+import { BoostService } from "../services/boost/BoostService.js"
+import { _initNetwork } from "../config/indexer_setup.js"
+import { BoostRepository } from "../db/BoostRepository.js"
 
 const prisma = new PrismaClient()
 

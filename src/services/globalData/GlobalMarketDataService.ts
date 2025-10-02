@@ -1,17 +1,20 @@
 import { formatEther, formatUnits, JsonRpcProvider } from "ethers"
-import { ERC20Repository } from "db/ERC20Repository"
-import { MarketContractsRepository } from "db/MarketContractsRepository"
+import axios from "axios"
 import { Prisma, PrismaClient } from "@prisma/client"
 import { commonERC20, curveLpMapping } from "@tangent/defi-resources"
-import { chainView } from "utils/chainView"
-import axios from "axios"
 
-import * as GlobalDataChainview from "../../abis/GlobalDataChainview.json"
-import { APR_TYPE, TVLAprs, Prices, CurveApiReturn, PendleApiReturn, ConvexFxnApiReturn, USGIndexingGlobalDataOut, USGInfoOut } from "./types"
-import { defiLLamaFetchPrices, getPriceInfos } from "./DefiLLamaPriceFetcher"
-import { bigIntToNumber } from "scripts/utils/formatting"
-import { NumMap } from "services/boost/types"
-import { AddressesJson, readJsonFile } from "utils/readGDrive"
+
+import { ERC20Repository } from "../../db/ERC20Repository.js"
+import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
+
+import { chainView } from "../../utils/chainView.js"
+
+import GlobalDataChainview from "../../abis/GlobalDataChainview.json" with { type: "json" };
+import { APR_TYPE, TVLAprs, Prices, CurveApiReturn, PendleApiReturn, ConvexFxnApiReturn, USGIndexingGlobalDataOut, USGInfoOut } from "./types.js"
+import { defiLLamaFetchPrices, getPriceInfos } from "./DefiLLamaPriceFetcher.js"
+import { bigIntToNumber } from "../../scripts/utils/formatting.js"
+import { NumMap } from "../../services/boost/types.js"
+import { AddressesJson, readJsonFile } from "../../utils/readGDrive.js"
 
 // TODO This is arbitraty, need a more dynamic version
 // eslint-disable-next-line no-loss-of-precision

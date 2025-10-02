@@ -1,7 +1,8 @@
-import { Proposal } from "type/data"
-import { AbstractRepository } from "./AbstractRepository"
 import { Prisma } from "@prisma/client"
-import { VotesFromDb } from "services/OnChainVoteService"
+
+import { Proposal } from "../type/data.js"
+import { AbstractRepository } from "./AbstractRepository.js"
+import { VotesFromDb } from "../services/OnChainVoteService.js"
 
 export class UserVoteRepository extends AbstractRepository {
   async fetchTasks() {

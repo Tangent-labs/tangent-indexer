@@ -1,6 +1,8 @@
-import { AbstractRepository } from "./AbstractRepository"
 import { Prisma } from "@prisma/client"
-import { UserAction } from "../services/events/UserMarketService"
+
+import { AbstractRepository } from "./AbstractRepository.js"
+import { UserAction } from "../services/events/UserMarketService.js"
+
 export class ActiveBorrowersRepository extends AbstractRepository {
   async getAll() {
     return await this.prismaClient.active_borrowers.findMany({

@@ -1,6 +1,6 @@
 import { AddressLike, JsonRpcProvider } from "ethers"
-import { MarketContractsRepository } from "../../db/MarketContractsRepository"
-import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher"
+import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
+import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher.js"
 
 export class MarketCreationService {
   marketContractsRepository: MarketContractsRepository

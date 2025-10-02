@@ -1,4 +1,4 @@
-import { AbstractRepository } from "./AbstractRepository"
+import { AbstractRepository } from "./AbstractRepository.js"
 
 export class BlockRepository extends AbstractRepository {
   // GET

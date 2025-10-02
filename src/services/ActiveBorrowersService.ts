@@ -1,5 +1,5 @@
-import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository"
-import { UserAction } from "./events/UserMarketService"
+import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository.js"
+import { UserAction } from "./events/UserMarketService.js"
 
 export class ActiveBorrowersService {
   activeBorrowersRepository: ActiveBorrowersRepository

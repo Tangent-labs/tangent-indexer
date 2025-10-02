@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client"
-import { AbstractRepository } from "./AbstractRepository"
+import { AbstractRepository } from "./AbstractRepository.js"
 
 export class TotalSupplyRepository extends AbstractRepository {
   async fetchLastExecutionTime() {

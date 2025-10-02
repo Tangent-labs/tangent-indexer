@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client"
-import { AbstractRepository } from "./AbstractRepository"
 import { JsonRpcProvider } from "ethers"
+import { AbstractRepository } from "./AbstractRepository.js"
+
 
 export class UserPointsRepository extends AbstractRepository {
   // Helper: block time at or before startBlock

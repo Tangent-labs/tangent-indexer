@@ -1,4 +1,4 @@
-import { NumMap } from "services/boost/types"
+import { NumMap } from "services/boost/types.js"
 
 export type APR = {
   token: string

@@ -1,8 +1,9 @@
 import { AddressLike, Contract, ethers, id, JsonRpcProvider, Log } from "ethers"
-import { getEthLogs } from "./_baseFectcher"
-import { MarketType } from "type/data"
 import { Prisma } from "@prisma/client"
-import { MARKET_CONVEX_CRV_CREATED, MARKET_CONVEX_FXN_CREATED, MARKET_NO_SOCIABILIZATION_CREATED } from "resources/eventSignatures"
+
+import { MARKET_CONVEX_CRV_CREATED, MARKET_CONVEX_FXN_CREATED, MARKET_NO_SOCIABILIZATION_CREATED } from "../resources/eventSignatures.js"
+import { getEthLogs } from "./_baseFectcher.js"
+import { MarketType } from "../type/data.js"
 
 // Define Event Signatures
 

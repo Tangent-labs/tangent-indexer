@@ -1,10 +1,11 @@
 import { PrismaClient } from "@prisma/client"
-import { MarketGlobalDataRepository } from "db/MarketGlobalDataRepository"
-import { TotalSupplyRepository } from "db/TotalSupplyRepository"
 import * as dotenv from "dotenv"
 import { JsonRpcProvider } from "ethers"
 
-import { GlobalMarketDataService } from "services/globalData/GlobalMarketDataService"
+import { MarketGlobalDataRepository } from "../db/MarketGlobalDataRepository.js"
+import { TotalSupplyRepository } from "../db/TotalSupplyRepository.js"
+
+import { GlobalMarketDataService } from "../services/globalData/GlobalMarketDataService.js"
 dotenv.config()
 
 const prismaClient = new PrismaClient()

@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client"
-import { AbstractRepository } from "./AbstractRepository"
+import { AbstractRepository } from "./AbstractRepository.js"
 
 export class LiquidationBotLogRepository extends AbstractRepository {
   async insertLiquidationLog(data: Prisma.liquidation_bot_logCreateInput) {

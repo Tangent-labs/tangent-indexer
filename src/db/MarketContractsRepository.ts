@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client"
 
-import { AbstractRepository } from "./AbstractRepository"
+import { AbstractRepository } from "./AbstractRepository.js"
 
 export class MarketContractsRepository extends AbstractRepository {
   async getContracts() {

@@ -1,15 +1,19 @@
 import * as dotenv from "dotenv"
 import { PrismaClient } from "@prisma/client"
-import { TransactionPrisma } from "type/prisma"
-import { BlockRepository } from "db/BlockRepository"
-import { setUpIndexer } from "../config/indexer_setup"
-import { BlockService } from "../services/BlockService"
-import { indexerConfig } from "config/indexer_config"
-import SnapShotVoteService from "services/SnapShotVoteService"
-import { OnChainVoteService } from "services/OnChainVoteService"
-import { UserVoteRepository } from "db/UserVoteRepository"
 import { JsonRpcProvider } from "ethers"
-import { BoostRepository } from "db/BoostRepository"
+
+import { TransactionPrisma } from "../type/prisma.js"
+import { BlockRepository } from "../db/BlockRepository.js"
+import { UserVoteRepository } from "../db/UserVoteRepository.js"
+import { BoostRepository } from "../db/BoostRepository.js"
+
+import { setUpIndexer } from "../config/indexer_setup.js"
+import { indexerConfig } from "../config/indexer_config.js"
+
+import { BlockService } from "../services/BlockService.js"
+import { SnapShotVoteService } from "../services/SnapShotVoteService.js"
+import { OnChainVoteService } from "../services/OnChainVoteService.js"
+
 
 dotenv.config()
 
@@ -56,7 +60,7 @@ main().then()
 
 function setUpIndexerVoteServices() {
   const prismaClient = new PrismaClient({
-    log: ["query"], // log all SQL queries
+    // log: ["query"], // log all SQL queries
   })
   const blockRepository = new BlockRepository(prismaClient)
   const userVoteRepository = new UserVoteRepository(prismaClient)

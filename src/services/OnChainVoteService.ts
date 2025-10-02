@@ -1,10 +1,10 @@
-import { UserVoteRepository } from "db/UserVoteRepository"
+import { UserVoteRepository } from "../db/UserVoteRepository.js"
 import { formatEther, JsonRpcProvider } from "ethers"
-import { chainView } from "utils/chainView"
-import * as GetGaugeVotes from "../abis/GetGaugeVotes.json"
-import { NumMap } from "./boost/types"
+import { chainView } from "../utils/chainView.js"
+import GetGaugeVotes from "../abis/GetGaugeVotes.json" with { type: "json" };
+import { NumMap } from "./boost/types.js"
 import { Prisma } from "@prisma/client"
-import { BoostRepository } from "db/BoostRepository"
+import { BoostRepository } from "../db/BoostRepository.js"
 // IN
 export type AccountGauge = {
   account: string
