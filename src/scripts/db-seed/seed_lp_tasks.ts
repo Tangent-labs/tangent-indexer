@@ -1,16 +1,16 @@
-import { PrismaClient } from "@prisma/client"
-import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext"
-import { TransactionPrisma } from "type/prisma"
+import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext.js"
+import { TransactionPrisma } from "../../type/prisma.js"
+import { AddressesJson } from "utils/readGDrive.js"
 
 
-export async function seedLPTasks(prisma: PrismaClient | TransactionPrisma) {
+export async function seedLPTasks(prisma: TransactionPrisma, addresses: AddressesJson) {
   await prisma.lp_task.createMany({
     data: [
       {
         name: "USG",
         action_type: "hold",
         protocol: "tangent",
-        token_address: "0xf0014CBe67b3aB638bdaA2e2Cb1B531935829E50".toLowerCase(),
+        token_address: addresses.tokens.USG.toLowerCase(),
         point_rate: 0.00417,
         description: "Hold USG in your wallet",
         url: "https://curve.fi/deposit",

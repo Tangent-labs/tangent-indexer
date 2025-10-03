@@ -1,9 +1,7 @@
 import { Prisma, PrismaClient } from "@prisma/client"
-import { NumMap } from "services/boost/types"
-import { CONTROLLER_MAPPING } from "services/events/VotesEventService"
-import { TransactionPrisma } from "type/prisma"
-
-
+import { NumMap } from "services/boost/types.js"
+import { CONTROLLER_MAPPING } from "services/events/VotesEventService.js"
+import { TransactionPrisma } from "type/prisma.js"
 
 export async function seedVoteTasks(prisma: PrismaClient | TransactionPrisma) {
   // INSERT GAUGE_CONTROLLER

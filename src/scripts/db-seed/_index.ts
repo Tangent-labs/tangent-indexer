@@ -9,13 +9,12 @@ dotenv.config()
 
 const prisma = new PrismaClient()
 async function main() {
-    console.log(process.env.GOOGLE_ADDRESSES_FILE_ID)
 
     const addresses = await readJsonFile<AddressesJson>(process.env.GOOGLE_ADDRESSES_FILE_ID!.toString())
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         await deploySQLFunctions(tx)
         await seedPriceFeeds(tx, addresses)
-        await seedLPTasks(tx)
+        await seedLPTasks(tx, addresses)
         await seedVoteTasks(tx)
     })
 
