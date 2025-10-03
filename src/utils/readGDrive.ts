@@ -1,4 +1,5 @@
 import { google } from "googleapis";
+import { PathOrFileDescriptor, readFileSync } from "fs"
 
 export async function readJsonFile<T>(fileId: string): Promise<T> {
     const gDriveClient = clientGDrive()
@@ -18,12 +19,23 @@ export async function readJsonFile<T>(fileId: string): Promise<T> {
 
 
 function clientGDrive() {
-    const auth = new google.auth.GoogleAuth({ scopes: ["https://www.googleapis.com/auth/drive"] })
+    // Read the service account JSON from disk (or env)
+    const raw = readFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS_PATH as PathOrFileDescriptor, "utf8");
+    const json = JSON.parse(raw);
+
+    // Construct a JWT client directly (replaces deprecated fromJSON/credentials)
+    const auth = new google.auth.JWT({
+        email: json.client_email,
+        key: json.private_key,
+        keyId: json.private_key_id,
+        scopes: ["https://www.googleapis.com/auth/drive"],
+        subject: json.subject,
+        additionalClaims: json.claims
+    });
     try {
         const drive = google.drive({ version: "v3", auth })
         return drive
     } catch (err) {
-        console.log("loulouuu")
         throw err
     }
 }
