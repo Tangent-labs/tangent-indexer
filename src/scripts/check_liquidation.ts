@@ -12,6 +12,8 @@ import { CheckLiquidationService } from "../services/CheckLiquidationService.js"
 import { indexerConfig } from "../config/indexer_config.js"
 import { LiquidationExecutionContext } from "../services/LiquidationExecutionContext.js"
 import { setUpIndexer } from "../config/indexer_setup.js"
+import { PointsBotLogRepository } from "db/PointsBotLogRepository.js"
+import { TelegramNotifierService } from "services/TelegramNotificationServices.js"
 
 dotenv.config()
 const { providers, walletsPks, handleError } = setUpIndexer()
@@ -40,7 +42,12 @@ export function setUpCheckLiquidationServices() {
   const liquidationService = new LiquidationService(activeBorrowersRepository, context, liquidationBotService)
   liquidationService.minEthBalance = indexerConfig.minEthBalance
   liquidationService.curveRouterAddress = indexerConfig.contracts.curveRouterAddress
-  const notificationService = new NotificationService()
+  const pointsBotLogRepository = new PointsBotLogRepository(prismaClient)
+  const telegramNotifierService = new TelegramNotifierService({
+    botToken: process.env.TELEGRAM_BOT_TOKEN!,
+    chatId: process.env.TELEGRAM_CHAT_ID!,
+  })
+  const notificationService = new NotificationService(pointsBotLogRepository, telegramNotifierService)
 
   return {
     liquidationService,

@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client"
+import { Prisma, PointsBotAction as PrismaPointsBotAction, ErrorLevel as PrismaErrorLevel } from "@prisma/client"
 import { AddressLike } from "ethers"
 
 export type MarketType = "ConvexFxn" | "ConvexCrv" | "Pendle PT"
@@ -170,4 +170,26 @@ export type AddressesJson = {
   oracles: { [tokenName: string]: string }
   pegKeepers: { [poolName: string]: string }
   markets: { marketAddress: string; collatName: string; collatAddress: string; marketType: string }[]
+}
+export type NotificationBotErrorLevel = PrismaErrorLevel
+
+export type NotificationBotAction = PrismaPointsBotAction
+
+export const POINTS_BOT_ACTIONS: Record<PrismaPointsBotAction, PrismaPointsBotAction> = {
+  POINTS_GENERAL: "POINTS_GENERAL",
+  POINTS_FETCH_PRICES: "POINTS_FETCH_PRICES",
+  POINTS_PROCESS_USER_TASK: "POINTS_PROCESS_USER_TASK",
+  POINTS_CALCULATE_POINTS: "POINTS_CALCULATE_POINTS",
+  POINTS_PROCESS_VOTE_ONCHAIN: "POINTS_PROCESS_VOTE_ONCHAIN",
+  POINTS_PROCESS_VOTE: "POINTS_PROCESS_VOTE",
+  POINTS_INDEXER: "POINTS_INDEXER",
+} as const
+
+export type NotificationErrorLevel = PrismaErrorLevel
+
+export type PriceApiWarning = {
+  apiName: string
+  error: PriceApiError | Error | any
+  level?: NotificationErrorLevel
+  message?: string
 }

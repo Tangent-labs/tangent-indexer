@@ -1,17 +1,15 @@
 import { AddressLike, JsonRpcProvider } from "ethers"
+
+import { v4 as uuidv4 } from "uuid"
 import { PriceRepository } from "../db/PriceRepository.js"
 import PointPricesAbi from "../abis/PointPrices.json" with { type: "json" }
-import { PriceApiInfo, PriceSource, PriceApiResult, PriceApiError, CurverRegistry, AddressesJson } from "../type/data.js"
+import { PriceApiInfo, PriceSource, PriceApiResult, CurverRegistry, AddressesJson, PriceApiWarning, NotificationErrorLevel } from "../type/data.js"
 
 import { chainView } from "../utils/chainView.js"
 import { PriceApiService } from "./PriceApiService.js"
 import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
 
 const SCALE = 10n ** 18n
-type PriceApiWarning = {
-  apiName: string
-  error: PriceApiError | Error | any
-}
 
 type GetPriceFeedsResult = {
   prices: PriceApiInfo[]
@@ -40,11 +38,13 @@ export class PricePointService {
   priceApiService: PriceApiService
   addresses: AddressesJson
 
+  executionkey: string
   constructor(priceRepository: PriceRepository, marketContractsRepository: MarketContractsRepository, providers: JsonRpcProvider, addresses: AddressesJson) {
     this.priceRepository = priceRepository
     this.marketContractsRepository = marketContractsRepository
     this.providers = providers
     this.priceApiService = new PriceApiService()
+    this.executionkey = uuidv4()
     this.addresses = addresses
   }
 
@@ -72,18 +72,20 @@ export class PricePointService {
     if (curvePriceSources.length > 0) {
       const curveGroups = new Map<string, string[]>()
 
-      curvePriceSources.forEach((source) => {
+      curvePriceSources.forEach(async (source) => {
         const registryType = source.reference // fallback to default
 
         // Add warning if no registry is specified and we're using the default
         if (!registryType) {
-          warnings.push({
+          const warning = {
             apiName: "Curve",
             error: {
               reason: `No registry specified for price source ${source.address}, skipping this price source`,
               api: "Curve",
             },
-          })
+            level: "WARNING" as NotificationErrorLevel,
+          }
+          warnings.push(warning)
           return
         }
 
@@ -131,17 +133,21 @@ export class PricePointService {
           // Collect any API errors as warnings
           if (apiResult?.error) {
             warnings.push({
-              apiName: type.startsWith("Curve-") ? "Curve" : type,
+              apiName: type,
               error: apiResult.error,
+              level: "ERROR" as NotificationErrorLevel,
             })
           }
         }
       } else {
+        console.error("error", result)
         // Collect warnings instead of logging
-        warnings.push({
-          apiName: type.startsWith("Curve-") ? "Curve" : type,
-          error: result.reason,
-        })
+        const warning = {
+          apiName: type,
+          error: result.reason as Error,
+          level: "ERROR" as NotificationErrorLevel,
+        }
+        warnings.push(warning)
       }
     }
 
@@ -170,6 +176,14 @@ export class PricePointService {
     markets: string[],
     warnings: PriceApiWarning[]
   ): Promise<Date | undefined> {
+    if (!chainViewPrices) {
+      warnings.push({
+        apiName: "CHAINVIEW",
+        error: new Error("No chain view data returned"),
+        level: "ERROR" as NotificationErrorLevel,
+      })
+      return undefined
+    }
     // Check if there are ERC4626 sources
     const erc4626Sources = priceSource.filter((p) => p.type === "ERC4626")
     const date = new Date(Number(chainViewPrices.timestamp) * 1000)
@@ -203,10 +217,12 @@ export class PricePointService {
 
       // Add warning if there are missing debt indexes for requested markets
       if (debtResult?.missingMarkets && debtResult?.missingMarkets?.length > 0) {
-        warnings.push({
+        const warning = {
           apiName: "DebtIndexes",
           error: new Error(`No debt index data returned for markets: ${debtResult?.missingMarkets?.join(", ")}`),
-        })
+          level: "WARNING" as NotificationErrorLevel,
+        }
+        warnings.push(warning)
       }
     }
     return date
@@ -262,12 +278,13 @@ export class PricePointService {
       warnings.push({
         apiName: "CHAINVIEW",
         error: new Error("No ERC4626 shares data returned"),
+        level: "WARNING" as NotificationErrorLevel,
       })
       return
     }
 
     // from the share of ERC4626 we derive the price of the token
-    chainViewPrices.ervc4626shares.forEach((p: { token: string; shares: bigint }) => {
+    chainViewPrices.ervc4626shares.forEach(async (p: { token: string; shares: bigint }) => {
       let erc4626Price = 0
       // Find the reference price config for this ERC4626 vault
       const refToken = priceSource.find((conf) => conf.address.toLowerCase() === p.token.toLowerCase())?.reference
@@ -275,10 +292,12 @@ export class PricePointService {
         // Find the USD price for the underlying asset
         const priceObj = apiPrices.find((x) => x.address.toLowerCase() === refToken.toLowerCase())
         if (!priceObj) {
-          warnings.push({
+          const warning = {
             apiName: "CHAINVIEW",
             error: new Error(`No price found for reference token: ${refToken}`),
-          })
+            level: "WARNING" as NotificationErrorLevel,
+          }
+          warnings.push(warning)
           return
         }
         if (priceObj) {
