@@ -1,6 +1,6 @@
-import { PriceApiInfo, PriceSource } from "type/data"
-import { AbstractRepository } from "./AbstractRepository"
 import { Prisma } from "@prisma/client"
+import { PriceApiInfo, PriceSource } from "../type/data.js"
+import { AbstractRepository } from "./AbstractRepository.js"
 
 export class PriceRepository extends AbstractRepository {
   async insertPriceFeed(prices: PriceApiInfo[], _date?: Date) {

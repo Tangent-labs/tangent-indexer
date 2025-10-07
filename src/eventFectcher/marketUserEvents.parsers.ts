@@ -8,11 +8,11 @@ function userAddress(topic: string): string {
 export function parseTransferEvent(log: Log): Prisma.transfer_eventsUncheckedCreateInput {
   const [amount] = AbiCoder.defaultAbiCoder().decode(["uint256"], log.data)
 
-  const from = userAddress(log.topics[1])
-  const to = userAddress(log.topics[2])
+  const from = userAddress(log.topics[1]).toLowerCase()
+  const to = userAddress(log.topics[2]).toLowerCase()
 
   return {
-    token_address: log.address,
+    token_address: log.address.toLowerCase(),
     from,
     to,
     amount: amount.toString(),
@@ -115,7 +115,7 @@ export function parseRepayEvent(log: Log, mapMarketIdPerAddress: Map<string, num
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
     account: userAddress(log.topics[1]).toLowerCase(),
-    repayer,
+    repayer: repayer.toLowerCase(),
     repaid_amount: repaidAmount.toString(),
     debt_shares: debtShares.toString(),
     block_date: new Date(), // placeholder
@@ -146,7 +146,7 @@ export function parseZapRepayEvent(log: Log, mapMarketIdPerAddress: Map<string, 
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
     account: userAddress(log.topics[1]).toLowerCase(),
-    repayer,
+    repayer: repayer.toLowerCase(),
     repaid_amount: repaidAmount.toString(),
     debt_shares: debtShares.toString(),
     token_in: tokenIn,
@@ -223,7 +223,7 @@ export function parseLiquidateEvent(log: Log, mapMarketIdPerAddress: Map<string,
     repaid_amount: repaidAmount.toString(),
     fee: fee.toString(),
     collateral_liquidated: collateralLiquidated.toString(),
-    liquidator,
+    liquidator: liquidator.toLowerCase(),
     debt_shares: debtShares.toString(),
     block_date: new Date(), // placeholder
     block_id: Number(log.blockNumber),
@@ -238,7 +238,7 @@ export function parseSelfLiquidateEvent(log: Log, mapMarketIdPerAddress: Map<str
     account: userAddress(log.topics[1]).toLowerCase(),
     repaid_amount: repaidAmount.toString(),
     collateral_liquidated: collateralLiquidated.toString(),
-    liquidator,
+    liquidator: liquidator.toLowerCase(),
     debt_shares: debtShares.toString(),
     block_date: new Date(), // placeholder
     block_id: Number(log.blockNumber),

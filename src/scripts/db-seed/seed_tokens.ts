@@ -45,11 +45,9 @@ export async function seedPriceFeeds(tx: TransactionPrisma, addresses: Addresses
       symbol: "USDe_USDC",
     },
   ]
-
   await tx.tracked_erc20.createMany({
     data: tokens,
   })
-
   console.log("Price feeds seeded successfully!")
 }
 

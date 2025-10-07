@@ -36,6 +36,7 @@ export type GaugeVoteDb = {
   controller_address: string
 }
 
+
 export type VotesFromDb = {
   gauge_pools: {
     gauge_address: string

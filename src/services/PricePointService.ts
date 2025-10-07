@@ -1,13 +1,13 @@
-import { PriceRepository } from "../db/PriceRepository"
-import PointPricesAbi from "../abis/PointPrices.json"
-import chainAddresses from "../addresses.json"
+import { AddressLike, JsonRpcProvider } from "ethers";
+import { PriceRepository } from "../db/PriceRepository.js";
+import PointPricesAbi from "../abis/PointPrices.json" with { type: "json" };
+import { PriceApiInfo, PriceSource, PriceApiResult, PriceApiError, CurverRegistry } from "../type/data.js";
 
-import { PriceApiInfo, PriceSource, PriceApiResult, PriceApiError, CurverRegistry } from "type/data"
 
-import { AddressLike, JsonRpcProvider } from "ethers"
-import { chainView } from "utils/chainView"
-import PriceApiService from "./PriceApiService"
-import { MarketContractsRepository } from "../db/MarketContractsRepository"
+import { chainView } from "../utils/chainView.js"
+import { PriceApiService } from "./PriceApiService.js"
+import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
+import { AddressesJson } from "utils/readGDrive.js";
 
 const SCALE = 10n ** 18n
 type PriceApiWarning = {
@@ -40,11 +40,14 @@ export class PricePointService {
   priceRepository: PriceRepository
   providers: JsonRpcProvider
   priceApiService: PriceApiService
-  constructor(priceRepository: PriceRepository, marketContractsRepository: MarketContractsRepository, providers: JsonRpcProvider) {
+  addresses: AddressesJson
+
+  constructor(priceRepository: PriceRepository, marketContractsRepository: MarketContractsRepository, providers: JsonRpcProvider, addresses: AddressesJson) {
     this.priceRepository = priceRepository
     this.marketContractsRepository = marketContractsRepository
     this.providers = providers
     this.priceApiService = new PriceApiService()
+    this.addresses = addresses
   }
 
   async getPriceFeeds(): Promise<GetPriceFeedsResult> {
@@ -181,16 +184,16 @@ export class PricePointService {
       }
 
       // Add USG price
-      if (chainAddresses?.tokens?.USG) {
+      if (this.addresses?.tokens?.USG) {
         apiPrices.push({
-          address: chainAddresses.tokens.USG,
+          address: this.addresses.tokens.USG,
           price: Number(chainViewPrices.usgPrice) / Number(SCALE),
         })
       }
       // Add sUSG price
-      if (chainAddresses?.tokens?.sUSG) {
+      if (this.addresses?.tokens?.sUSG) {
         apiPrices.push({
-          address: chainAddresses.tokens.sUSG,
+          address: this.addresses.tokens.sUSG,
           price: Number(chainViewPrices.sUsgPrice) / Number(SCALE),
         })
       }
@@ -292,10 +295,10 @@ export class PricePointService {
 
   async callPriceChainView(erc4626: string[], markets: string[]): Promise<PointServiceChainViewOut> {
     const addressParams = {
-      usg: chainAddresses.tokens.USG as AddressLike,
-      usgOracle: chainAddresses.oracles.USG as AddressLike,
-      sUsg: chainAddresses.tokens.sUSG as AddressLike,
-      pegKeepers: Object.values(chainAddresses.pegKeepers) as AddressLike[],
+      usg: this.addresses.tokens.USG as AddressLike,
+      usgOracle: this.addresses.oracles.USG as AddressLike,
+      sUsg: this.addresses.tokens.sUSG as AddressLike,
+      pegKeepers: Object.values(this.addresses.pegKeepers) as AddressLike[],
     }
 
     const p = await chainView<[AddressLike[], typeof addressParams, AddressLike[]], [PointServiceChainViewOut]>(
@@ -310,10 +313,10 @@ export class PricePointService {
 
   async chainViewPrices(erc4626: string[], markets: string[]): Promise<PointServiceChainViewOut> {
     const addressParams = {
-      usg: chainAddresses.tokens.USG as AddressLike,
-      usgOracle: chainAddresses.oracles.USG as AddressLike,
-      sUsg: chainAddresses.tokens.sUSG as AddressLike,
-      pegKeepers: Object.values(chainAddresses.pegKeepers) as AddressLike[],
+      usg: this.addresses.tokens.USG as AddressLike,
+      usgOracle: this.addresses.oracles.USG as AddressLike,
+      sUsg: this.addresses.tokens.sUSG as AddressLike,
+      pegKeepers: Object.values(this.addresses.pegKeepers) as AddressLike[],
     }
 
     const p = await chainView<[AddressLike[], typeof addressParams, AddressLike[]], [PointServiceChainViewOut]>(

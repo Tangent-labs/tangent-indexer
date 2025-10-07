@@ -1,33 +1,44 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { JsonRpcProvider } from "ethers"
-import { PricePointService } from "../../services/PricePointService"
-import { PriceApiInfo, PriceSource } from "../../type/data"
-import PriceApiService from "../../services/PriceApiService"
-import { chainView } from "../../utils/chainView"
+import { PricePointService } from "../../services/PricePointService.js"
+import { PriceApiInfo, PriceSource } from "../../type/data.js"
+import { PriceApiService } from "../../services/PriceApiService.js"
+import { chainView } from "../../utils/chainView.js"
+import { AddressesJson } from "utils/readGDrive.js"
 
 // Mock dependencies (including console for error logging)
 vi.mock("../../db/PriceRepository")
 vi.mock("../../db/MarketContractsRepository")
 vi.mock("../../services/PriceApiService")
 vi.mock("../../utils/chainView")
-vi.mock("../../addresses.json", () => ({
-  default: {
-    tokens: {
-      USG: "0x400F4d9E2c8e33cfCb6F6b6E5B5B5B5B5B5B5B5B",
-      sUSG: "0x500F4d9E2c8e33cfCb6F6b6E5B5B5B5B5B5B5B5B",
-    },
-    oracles: {
-      USG: "0x600F4d9E2c8e33cfCb6F6b6E5B5B5B5B5B5B5B5B",
-    },
-    pegKeepers: {
-      pegKeeper1: "0x700F4d9E2c8e33cfCb6F6b6E5B5B5B5B5B5B5B5B",
-      pegKeeper2: "0x800F4d9E2c8e33cfCb6F6b6E5B5B5B5B5B5B5B5B",
-    },
+const addresses: AddressesJson = {
+  utilities: {
+    controlTower: "0xA",
+    irCalculator: "0xB",
+    marketCreator: '0xC',
+    pegKeeperRegulator: "0xD",
+    rewardAccumulator: "0xE",
+    zappingProxy: "0xF"
   },
-}))
+  implementation: {
+    basicERC20Market: "0xG",
+    convexCrvMarket: "0xH",
+    convexFxnMarket: "0xI"
+  },
+  oracles: {},
+  markets: [],
+  pegKeepers: {},
+  tokens: {
+    sTAN: "0xJ",
+    sUSG: "0xK",
+    TAN: "0xL",
+    USG: "0xM",
+    vsTAN: "0xN"
+  }
+}
 
 const mockConsole = {
-  error: vi.spyOn(console, "error").mockImplementation(() => {}),
+  error: vi.spyOn(console, "error").mockImplementation(() => { }),
 }
 
 describe("PricePointService", () => {
@@ -86,7 +97,7 @@ describe("PricePointService", () => {
 
     vi.mocked(PriceApiService).mockImplementation(() => mockPriceApiService)
 
-    pricePointService = new PricePointService(mockPriceRepository, mockMarketContractsRepository, mockProvider)
+    pricePointService = new PricePointService(mockPriceRepository, mockMarketContractsRepository, mockProvider, addresses)
 
     // Override the priceApiService with our mock after construction
     pricePointService.priceApiService = mockPriceApiService
@@ -115,8 +126,8 @@ describe("PricePointService", () => {
           { address: "0x4000000000000000000000000000000000000004", price: expect.any(Number) }, // ERC4626 calculated
           { address: "0x9000000000000000000000000000000000000001", price: 1.2 },
           { address: "0x9000000000000000000000000000000000000002", price: 1.15 },
-          { address: "0x400F4d9E2c8e33cfCb6F6b6E5B5B5B5B5B5B5B5B", price: 1.0 },
-          { address: "0x500F4d9E2c8e33cfCb6F6b6E5B5B5B5B5B5B5B5B", price: 1.1 },
+          { address: "0xM", price: 1.0 },
+          { address: "0xK", price: 1.1 },
         ])
       )
     })

@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { UserPointsRepository } from "db/UserPointsRepository"
-import { UserPointsService } from "services/events/UserPointsService"
-import { encodeTransfer, TRANSFER } from "../../resources/eventSignatures"
+import { UserPointsRepository } from "../../db/UserPointsRepository.js"
+import { UserPointsService } from "../../services/events/UserPointsService.js"
+import { encodeTransfer, TRANSFER } from "../../resources/eventSignatures.js"
 import { AbiCoder, AddressLike, id, JsonRpcProvider, Log, parseEther } from "ethers"
-import { ERC20Repository } from "db/ERC20Repository"
+import { ERC20Repository } from "../../db/ERC20Repository.js"
 
 function buildLog(topicId: string, from: AddressLike, to: AddressLike, blockNumber: number, data: string) {
   const fromEncoded = AbiCoder.defaultAbiCoder().encode(["address"], [from])

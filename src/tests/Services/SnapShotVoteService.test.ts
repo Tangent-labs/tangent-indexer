@@ -1,7 +1,7 @@
 import axios from "axios"
-import { UserVoteRepository } from "db/UserVoteRepository"
+import { UserVoteRepository } from "../../db/UserVoteRepository.js"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import SnapShotVoteService from "services/SnapShotVoteService"
+import { SnapShotVoteService } from "../../services/SnapShotVoteService.js"
 import { JsonRpcProvider } from "ethers"
 
 const mockProposals = [
@@ -136,7 +136,6 @@ describe("SnapShotVoteService", () => {
         vote_task_id: 3n,
         user_address: "0xvoter1",
         proposal_id: "proposalIdOne",
-        validation_at: new Date("2025-07-31T00:47:17.000Z"),
         voting_power: 1234,
         points: Number((1234 * 1.1).toFixed(0)),
       },
@@ -144,7 +143,6 @@ describe("SnapShotVoteService", () => {
         vote_task_id: 3n,
         user_address: "0xvoter2",
         proposal_id: "proposalIdOne",
-        validation_at: new Date("2025-07-31T01:50:01.000Z"),
         voting_power: 4567,
         points: Number((4567 * 2).toFixed(0)),
       },

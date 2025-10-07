@@ -31,19 +31,10 @@ export class TotalSupplyRepository extends AbstractRepository {
     const params = rows.flatMap((row) => [row.token_id, previousDate, row.total_supply])
 
     await this.prismaClient.$executeRawUnsafe(
-      `
-    UPDATE global."total_supplies" AS t SET
-      total_supply = v.total_supply
-    FROM (VALUES
-      ${values}
-    ) AS v(
-      token_id,
-      timestamp,
-      total_supply
-    )
-    WHERE t.token_id = v.token_id
-      AND t.timestamp = v.timestamp
-    `,
+      `UPDATE global."total_supplies" AS t SET total_supply = v.total_supply
+       FROM (VALUES${values}) AS v(token_id,timestamp,total_supply)
+       WHERE t.token_id = v.token_id
+       AND t.timestamp = v.timestamp`,
       ...params
     )
   }
