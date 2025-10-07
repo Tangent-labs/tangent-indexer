@@ -146,3 +146,31 @@ export type PriceApiResult = {
 
 export type PriceSource = Prisma.price_sourceGetPayload<{}>
 export type PriceSourceCreate = Prisma.price_sourceCreateInput
+
+
+
+export type AddressesJson = {
+  utilities: {
+    controlTower: string;
+    rewardAccumulator: string;
+    zappingProxy: string;
+    marketCreator: string;
+    irCalculator: string;
+    pegKeeperRegulator: string;
+  },
+  tokens: {
+    USG: string;
+    sUSG: string;
+    TAN: string;
+    sTAN: string;
+    vsTAN: string
+  },
+  implementation: {
+    convexCrvMarket: string;
+    convexFxnMarket: string;
+    basicERC20Market: string;
+  },
+  oracles: { [tokenName: string]: string };
+  pegKeepers: { [poolName: string]: string };
+  markets: { marketAddress: string; collatName: string; collatAddress: string; marketType: string }[]
+}

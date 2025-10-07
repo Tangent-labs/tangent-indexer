@@ -1,5 +1,4 @@
 import { formatEther, formatUnits, JsonRpcProvider } from "ethers"
-import axios from "axios"
 import { Prisma, PrismaClient } from "@prisma/client"
 import { commonERC20, curveLpMapping } from "@tangent/defi-resources"
 
@@ -14,8 +13,9 @@ import { APR_TYPE, TVLAprs, Prices, CurveApiReturn, PendleApiReturn, ConvexFxnAp
 import { defiLLamaFetchPrices, getPriceInfos } from "./DefiLLamaPriceFetcher.js"
 import { bigIntToNumber } from "../../scripts/utils/formatting.js"
 import { NumMap } from "../../services/boost/types.js"
-import { AddressesJson, readJsonFile } from "../../utils/readGDrive.js"
+
 import { PriceApiService } from "services/PriceApiService.js"
+import { AddressesJson } from "type/data.js"
 
 // TODO This is arbitraty, need a more dynamic version
 // eslint-disable-next-line no-loss-of-precision
@@ -116,7 +116,7 @@ export class GlobalMarketDataService {
 
   async fetchGlobalDataChainview(markets: Markets[]) {
 
-    const addresses = await readJsonFile<AddressesJson>(process.env.GOOGLE_ADDRESSES_FILE_ID!.toString())
+    const addresses = await (await fetch("https://raw.githubusercontent.com/Tangent-labs/public-files/main/addresses.json")).json() as AddressesJson
 
     // Retrieve the onchain data containing everything
     const globalData = (

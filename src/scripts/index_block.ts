@@ -23,8 +23,8 @@ import { getEthLogs } from "../eventFectcher/_baseFectcher.js"
 import { fetchTransferLogs } from "../eventFectcher/erc20TransferEventFetcher.js"
 
 import { indexerConfig } from "../config/indexer_config.js"
+import { AddressesJson } from "type/data.js"
 
-import { AddressesJson, readJsonFile } from "../utils/readGDrive.js"
 dotenv.config()
 
 async function main() {
@@ -124,7 +124,7 @@ async function setUpIndexerBlockServices() {
   }
 
 
-  const addresses = await readJsonFile<AddressesJson>(process.env.GOOGLE_ADDRESSES_FILE_ID!.toString())
+  const addresses = await (await fetch("https://raw.githubusercontent.com/Tangent-labs/public-files/main/addresses.json")).json() as AddressesJson
   // Set up the services
   const blockService = new BlockService(blockRepository)
   const marketCreationService = new MarketCreationService(marketContractsRepository, addresses.utilities.marketCreator)
