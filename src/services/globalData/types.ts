@@ -1,4 +1,5 @@
 import { NumMap } from "services/boost/types.js"
+import { CurverRegistry } from "../../type/data.js"
 
 export type APR = {
   token: string
@@ -49,7 +50,7 @@ export type CurveApiReturn = {
 }
 
 export type PendleApiReturn = {
-  markets: { pt: string; details: { impliedApy: number } }[]
+  markets: { underlyingAsset: string; expiry: string; pt: string; address: string; details: { impliedApy: number }; yt: string }[]
 }
 
 export type ConvexFxnApiReturn = {
@@ -65,3 +66,49 @@ export const APR_TYPE: { [name: string]: number } = {
 }
 
 export type Aprs = { current: NumMap; projected: NumMap }
+
+export type CurvePoolData = {
+  id: string
+  address: string
+  name: string
+  usdTotal: number
+  totalSupply: number
+}
+
+export type CurvePoolListApiResult = {
+  success: boolean
+  data: {
+    poolList: [
+      {
+        address: string
+        type: CurverRegistry
+      },
+    ]
+  }
+}
+
+export type CurvePriceApiResult = {
+  success: boolean
+  data: {
+    poolData: CurvePoolData[]
+  }
+}
+
+export type TokenPriceInfo = {
+  decimals: number
+  symbol: string
+  price: number
+  timestamp: number // usually a unix timestamp (seconds since epoch)
+  confidence: number // confidence score (0–1)
+}
+export type LlamaPriceApiResult = {
+  coins: {
+    [tokenId: string]: TokenPriceInfo
+  }
+}
+
+export type PendlePriceApiResult = {
+  prices: {
+    [address: string]: number
+  }
+}

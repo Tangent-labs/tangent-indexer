@@ -15,6 +15,7 @@ import { defiLLamaFetchPrices, getPriceInfos } from "./DefiLLamaPriceFetcher.js"
 import { bigIntToNumber } from "../../scripts/utils/formatting.js"
 import { NumMap } from "../../services/boost/types.js"
 import { AddressesJson, readJsonFile } from "../../utils/readGDrive.js"
+import { PriceApiService } from "services/PriceApiService.js"
 
 // TODO This is arbitraty, need a more dynamic version
 // eslint-disable-next-line no-loss-of-precision
@@ -40,11 +41,13 @@ export class GlobalMarketDataService {
   erc20Repository: ERC20Repository
   marketContractsRepo: MarketContractsRepository
   provider: JsonRpcProvider
+  priceApiService: PriceApiService
 
-  constructor(prisma: PrismaClient, provider: JsonRpcProvider) {
+  constructor(prisma: PrismaClient, provider: JsonRpcProvider, priceApiService: PriceApiService) {
     this.erc20Repository = new ERC20Repository(prisma)
     this.marketContractsRepo = new MarketContractsRepository(prisma)
     this.provider = provider
+    this.priceApiService = priceApiService
   }
 
   async computeAndStoreAprTvlsAndTotalSupplies() {
@@ -69,13 +72,26 @@ export class GlobalMarketDataService {
     const formattedPrices = await defiLLamaFetchPrices(rewardTokens.map((a) => a.address))
 
     // Fetch Curve API data
-    const curveAPIData = await this.fetchCurveApiData()
+    const curveAPIData = await this.priceApiService.fetchCurveApiData()
 
     // Fetch CONVEX FXN informations on their API
-    const convexFXNAPIData = await this.fetchConvexFXNApiData()
+    const convexFXNAPIData = await this.priceApiService.fetchConvexFXNApiData()
 
     // Fetch PENDLE markets informations on their API
-    const pendleAPIData = await this.fetchPendleApiData()
+    const pendleAPIData = await this.priceApiService.fetchPendleApiData()
+
+
+    // Verify if there is an error field in the API returns
+    if ('error' in curveAPIData) {
+      throw new Error(`Erreur dans fetchCurveApiData: ${curveAPIData.error.reason}`);
+    }
+    if ('error' in convexFXNAPIData) {
+      throw new Error(`Erreur dans fetchConvexFXNApiData: ${convexFXNAPIData.error.reason}`);
+    }
+    if ('error' in pendleAPIData) {
+      throw new Error(`Erreur dans fetchPendleApiData: ${pendleAPIData.error.reason}`);
+    }
+
 
     const formattedMarketData = this.formatMarketData(markets, rawMarketData, formattedPrices, curveAPIData, convexFXNAPIData, pendleAPIData, now)
 
@@ -147,27 +163,6 @@ export class GlobalMarketDataService {
     return markets
   }
 
-  async fetchCurveApiData() {
-    // Fetch APY of curve LP on their API
-    const CURVE_API = "https://api.curve.finance/api"
-    const response = await axios.get(CURVE_API + "/getSubgraphData/ethereum")
-    const curveJson: CurveApiReturn = response.data
-    return curveJson
-  }
-
-  async fetchPendleApiData() {
-    const PENDLE_API = "https://api-v2.pendle.finance/core/v1/1/markets/active"
-    const pendleResponse = await axios.get(PENDLE_API)
-    const pendleJson: PendleApiReturn = pendleResponse.data
-    return pendleJson
-  }
-
-  async fetchConvexFXNApiData() {
-    const CONVEX_FXN_API = "https://fx.convexfinance.com/api/fxp/pools"
-    const convexFXNResponse = await axios.get(CONVEX_FXN_API)
-    const cvxFxnJson: ConvexFxnApiReturn = convexFXNResponse.data
-    return cvxFxnJson
-  }
 
   formatMarketData(
     markets: Markets[],

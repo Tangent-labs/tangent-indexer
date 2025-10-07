@@ -6,6 +6,7 @@ import { MarketGlobalDataRepository } from "../db/MarketGlobalDataRepository.js"
 import { TotalSupplyRepository } from "../db/TotalSupplyRepository.js"
 
 import { GlobalMarketDataService } from "../services/globalData/GlobalMarketDataService.js"
+import { PriceApiService } from "services/PriceApiService.js"
 dotenv.config()
 
 const prismaClient = new PrismaClient()
@@ -18,7 +19,8 @@ const provider = new JsonRpcProvider(chainRpcs.split(",")[0])
 const NEW_ROWS_FREQUENCY = 900_000
 
 async function main() {
-  const globalDataService = new GlobalMarketDataService(prismaClient, provider)
+  const priceApiService = new PriceApiService()
+  const globalDataService = new GlobalMarketDataService(prismaClient, provider, priceApiService)
   const marketGlobalDataRepo = new MarketGlobalDataRepository(prismaClient)
   const totalSupplyRepo = new TotalSupplyRepository(prismaClient)
 
