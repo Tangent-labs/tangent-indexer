@@ -32,7 +32,8 @@ async function main() {
       return
     }
 
-    const { startBlock, endBlock, bestProviderIndex } = blockInfo
+    const { startBlock, endBlock,  bestProviderIndex } = blockInfo
+    // const random = endBlock.totp()
 
     if (startBlock && endBlock) {
       console.log("indexing :", startBlock, "<----------------->", endBlock)
@@ -44,12 +45,27 @@ async function main() {
           // TODO: get price
 
           // TODO: get boost
+          currentAction = POINTS_BOT_ACTIONS.POINTS_PROCESS_USER_TASK
+          await userPointsService.updateLPUserTasks(startBlock, endBlock)
+          await notificationService.addPointNotification(executionKey, {
+            process: POINTS_BOT_ACTIONS.POINTS_PROCESS_USER_TASK,
+            error: null,
+            action: currentAction,
+            message: "EXEC",
+            level: "INFO",
+          })
 
           await userPointsService.updateLPUserTasks(startBlock, endBlock)
           // Process points calculation for user tasks
           currentAction = POINTS_BOT_ACTIONS.POINTS_CALCULATE_POINTS
           await userPointsService.processUserPoints(startBlock, endBlock, blockService, indexerConfig.provider.chainRpc[bestProviderIndex])
-          await notificationService.addPointNotification(executionKey, currentAction)
+          await notificationService.addPointNotification(executionKey, {
+            process: POINTS_BOT_ACTIONS.POINTS_CALCULATE_POINTS,
+            error: null,
+            action: currentAction,
+            message: "EXEC",
+            level: "INFO",
+          })
           // Update block logic
           await blockRepository.storeLPPointsBlock(endBlock)
         },
@@ -58,11 +74,23 @@ async function main() {
         }
       )
     } else {
-      console.log("Nothing to index")
+      
+      await notificationService.addPointWarningNotification(executionKey, {
+        process: "indexer points",
+        error: null,
+        message: `Nothing to index, blocks: ${startBlock} -> ${endBlock}`,
+        action: POINTS_BOT_ACTIONS.POINTS_INDEXER,
+        level: "WARNING",
+      })
     }
   } catch (e: any) {
     console.error("Error while indexing blocks", (e as Error).message)
-    await notificationService.addPointErrorNotification(executionKey, currentAction || POINTS_BOT_ACTIONS.POINTS_GENERAL, e as Error)
+    await notificationService.addPointErrorNotification(executionKey, {
+      process: "indexer points",
+      error: e as Error,
+      action: currentAction || POINTS_BOT_ACTIONS.POINTS_GENERAL,
+      level: "ERROR",
+    })
     handleError(e as Error)
   }
 }

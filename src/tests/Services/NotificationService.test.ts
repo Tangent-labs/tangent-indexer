@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { NotificationService } from "../../services/NotificationService.js"
-import { NotificationBotAction, NotificationBotErrorLevel, PriceApiWarning } from "../../type/data.js"
+import { NOTIFICATION_ERROR_LEVEL, NotificationBotAction, NotificationMessage,  } from "../../type/data.js"
 import { prepareSerialize } from "../../utils/jsonSerializer.js"
 
 // Mock dependencies
@@ -54,22 +54,22 @@ describe("NotificationService", () => {
     const mockNotifications = [
       {
         action: "POINTS_FETCH_PRICES" as NotificationBotAction,
-        errorLevel: "INFO" as NotificationBotErrorLevel,
+        errorLevel: NOTIFICATION_ERROR_LEVEL.INFO,
         date: new Date("2024-01-15T10:00:00Z"),
       },
       {
         action: "POINTS_FETCH_PRICES" as NotificationBotAction,
-        errorLevel: "WARNING" as NotificationBotErrorLevel,
+        errorLevel: NOTIFICATION_ERROR_LEVEL.WARNING,
         date: new Date("2024-01-15T11:00:00Z"),
       },
       {
         action: "POINTS_CALCULATE_POINTS" as NotificationBotAction,
-        errorLevel: "ERROR" as NotificationBotErrorLevel,
+        errorLevel: NOTIFICATION_ERROR_LEVEL.ERROR,
         date: new Date("2024-01-15T12:00:00Z"),
       },
       {
         action: "POINTS_CALCULATE_POINTS" as NotificationBotAction,
-        errorLevel: "INFO" as NotificationBotErrorLevel,
+        errorLevel: NOTIFICATION_ERROR_LEVEL.INFO,
         date: new Date("2024-01-15T13:00:00Z"),
       },
     ]
@@ -172,14 +172,19 @@ describe("NotificationService", () => {
       mockPrepareSerialize.mockReturnValue({ serialized: "error" })
       mockPointsBotLogRepository.insertPointsBotLog.mockResolvedValue({})
 
-      await notificationService.addPointErrorNotification(executionKey, action, error, customMessage)
+      await notificationService.addPointErrorNotification(executionKey, {
+        process: "TEST_API",
+        error,
+        action,
+        message: customMessage,
+      })
 
       // The current implementation has a bug: it uses error.message when custom message is provided
       // This test reflects the actual behavior until the bug is fixed
       expect(mockPointsBotLogRepository.insertPointsBotLog).toHaveBeenCalledWith({
         execution_key: executionKey,
         action,
-        errorLevel: "ERROR",
+        errorLevel: NOTIFICATION_ERROR_LEVEL.ERROR,
         message: "Test error message", // This is the actual behavior due to the bug in line 63
         data: { serialized: "error" },
       })
@@ -195,12 +200,16 @@ describe("NotificationService", () => {
       mockPrepareSerialize.mockReturnValue({ serialized: "error" })
       mockPointsBotLogRepository.insertPointsBotLog.mockResolvedValue({})
 
-      await notificationService.addPointErrorNotification(executionKey, action, error)
+      await notificationService.addPointErrorNotification(executionKey, {
+        process: "TEST_API",
+        error,
+        action,
+      })
 
       expect(mockPointsBotLogRepository.insertPointsBotLog).toHaveBeenCalledWith({
         execution_key: executionKey,
         action,
-        errorLevel: "ERROR",
+        errorLevel: NOTIFICATION_ERROR_LEVEL.ERROR,
         message: "Database connection failed",
         data: { serialized: "error" },
       })
@@ -213,12 +222,16 @@ describe("NotificationService", () => {
       mockPrepareSerialize.mockReturnValue({ serialized: "error" })
       mockPointsBotLogRepository.insertPointsBotLog.mockResolvedValue({})
 
-      await notificationService.addPointErrorNotification(executionKey, action)
+      await notificationService.addPointErrorNotification(executionKey, {
+        process: "TEST_API",
+        error: undefined,
+        action,
+      })
 
       expect(mockPointsBotLogRepository.insertPointsBotLog).toHaveBeenCalledWith({
         execution_key: executionKey,
         action,
-        errorLevel: "ERROR",
+        errorLevel: NOTIFICATION_ERROR_LEVEL.ERROR,
         message: "Unknown error",
         data: { serialized: "error" },
       })
@@ -233,7 +246,11 @@ describe("NotificationService", () => {
       mockPrepareSerialize.mockReturnValue({ serialized: "error" })
       mockPointsBotLogRepository.insertPointsBotLog.mockResolvedValue({})
 
-      await notificationService.addPointErrorNotification(executionKey, action, error)
+      await notificationService.addPointErrorNotification(executionKey, {
+        process: "TEST_API",
+        error,
+        action,
+      })
 
       // The current implementation has a bug in the logic: error?.message?.length || 0 > 100
       // This evaluates as (error?.message?.length) || (0 > 100), which is always truthy for long messages
@@ -254,7 +271,11 @@ describe("NotificationService", () => {
       mockPointsBotLogRepository.insertPointsBotLog.mockResolvedValue({})
       mockTelegramNotifierService.sendError.mockRejectedValue(new Error("Telegram error"))
 
-      await notificationService.addPointErrorNotification(executionKey, action, error)
+      await notificationService.addPointErrorNotification(executionKey, {
+        process: "TEST_API",
+        error,
+        action,
+      })
 
       expect(mockConsoleError).toHaveBeenCalledWith("Error sending immediate notification", expect.any(Error))
       expect(mockPointsBotLogRepository.insertPointsBotLog).toHaveBeenCalled()
@@ -265,21 +286,26 @@ describe("NotificationService", () => {
     it("should add warning notification", async () => {
       const executionKey = "test-execution-key"
       const action = "POINTS_FETCH_PRICES" as NotificationBotAction
-      const warningData: PriceApiWarning = {
-        apiName: "test-api",
+      const warningData: NotificationMessage = {
+        process: "test-api",
         error: new Error("API timeout"),
+        action,
       }
       const customMessage = "Custom warning message"
 
       mockPrepareSerialize.mockReturnValue({ serialized: "warning" })
       mockPointsBotLogRepository.insertPointsBotLog.mockResolvedValue({})
 
-      await notificationService.addPointWarningNotification(executionKey, action, warningData, customMessage)
+      await notificationService.addPointWarningNotification(executionKey, {
+        ...warningData,
+        action,
+        message: customMessage,
+      })
 
       expect(mockPointsBotLogRepository.insertPointsBotLog).toHaveBeenCalledWith({
         execution_key: executionKey,
         action,
-        errorLevel: "WARNING",
+        errorLevel: NOTIFICATION_ERROR_LEVEL.WARNING,
         message: customMessage,
         data: { serialized: "warning" },
       })
@@ -293,12 +319,17 @@ describe("NotificationService", () => {
       mockPrepareSerialize.mockReturnValue({ serialized: "warning" })
       mockPointsBotLogRepository.insertPointsBotLog.mockResolvedValue({})
 
-      await notificationService.addPointWarningNotification(executionKey, action, warningData)
+      await notificationService.addPointWarningNotification(executionKey, {
+        process: "TEST_API",
+        error: null,
+        action,
+        ...warningData,
+      })
 
       expect(mockPointsBotLogRepository.insertPointsBotLog).toHaveBeenCalledWith({
         execution_key: executionKey,
         action,
-        errorLevel: "WARNING",
+        errorLevel: NOTIFICATION_ERROR_LEVEL.WARNING,
         message: "WARNING in POINTS_CALCULATE_POINTS",
         data: { serialized: "warning" },
       })
@@ -311,12 +342,16 @@ describe("NotificationService", () => {
       mockPrepareSerialize.mockReturnValue({ serialized: "undefined" })
       mockPointsBotLogRepository.insertPointsBotLog.mockResolvedValue({})
 
-      await notificationService.addPointWarningNotification(executionKey, action)
+      await notificationService.addPointWarningNotification(executionKey, {
+        process: "TEST_API",
+        error: null,
+        action,
+      })
 
       expect(mockPointsBotLogRepository.insertPointsBotLog).toHaveBeenCalledWith({
         execution_key: executionKey,
         action,
-        errorLevel: "WARNING",
+        errorLevel: NOTIFICATION_ERROR_LEVEL.WARNING,
         message: "WARNING in POINTS_PROCESS_VOTE",
         data: { serialized: "undefined" },
       })
@@ -331,12 +366,16 @@ describe("NotificationService", () => {
       mockPrepareSerialize.mockReturnValue({ serialized: "info" })
       mockPointsBotLogRepository.insertPointsBotLog.mockResolvedValue({})
 
-      await notificationService.addPointNotification(executionKey, action)
+      await notificationService.addPointNotification(executionKey, {
+        process: "TEST_API",
+        error: null,
+        action,
+      })
 
       expect(mockPointsBotLogRepository.insertPointsBotLog).toHaveBeenCalledWith({
         execution_key: executionKey,
         action,
-        errorLevel: "INFO",
+        errorLevel: NOTIFICATION_ERROR_LEVEL.INFO,
         message: "Nominal action : POINTS_GENERAL",
         data: { serialized: "info" },
       })
@@ -389,7 +428,13 @@ describe("NotificationService", () => {
 
       mockPointsBotLogRepository.insertPointsBotLog.mockRejectedValue(repositoryError)
 
-      await expect(notificationService.addPointNotification(executionKey, action)).rejects.toThrow("Database connection failed")
+      await expect(
+        notificationService.addPointNotification(executionKey, {
+          process: "TEST_API",
+          error: null,
+          action,
+        })
+      ).rejects.toThrow("Database connection failed")
     })
 
     it("should handle getLogsByDateRange errors", async () => {

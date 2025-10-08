@@ -1,5 +1,5 @@
 import { PointsBotLogRepository } from "db/PointsBotLogRepository.js"
-import { LiquidationBotLogAction, NotificationBotAction, NotificationBotErrorLevel, PriceApiWarning } from "type/data.js"
+import { LiquidationBotLogAction, NotificationBotAction, NotificationBotErrorLevel, NotificationMessage } from "type/data.js"
 import { prepareSerialize } from "utils/jsonSerializer.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 
@@ -55,10 +55,11 @@ export class NotificationService {
     await this.sendNotification(message)
   }
 
-  async addPointErrorNotification(executionkey: string, action: NotificationBotAction, error?: Error, message?: string) {
+  async addPointErrorNotification(executionkey: string, notificationMessage: NotificationMessage) {
+    const { action, error, message } = notificationMessage
     const notifData = {
       execution_key: executionkey,
-      action,
+      action: action!,
       errorLevel: "ERROR" as NotificationBotErrorLevel,
       message: message || error instanceof Error ? error?.message : "Unknown error",
       data: prepareSerialize(error),
@@ -77,10 +78,11 @@ export class NotificationService {
     await this.notificationRepository.insertPointsBotLog(notifData)
   }
 
-  async addPointWarningNotification(executionkey: string, action: NotificationBotAction, data?: PriceApiWarning | unknown, message?: string) {
+  async addPointWarningNotification(executionkey: string, notificationMessage: NotificationMessage) {
+    const { action, message, ...data } = notificationMessage
     const notifData = {
       execution_key: executionkey,
-      action,
+      action: action!,
       errorLevel: "WARNING" as NotificationBotErrorLevel,
       message: message || `WARNING in ${action}`,
       data: prepareSerialize(data),
@@ -88,15 +90,37 @@ export class NotificationService {
     await this.notificationRepository.insertPointsBotLog(notifData)
   }
 
-  async addPointNotification(executionkey: string, action: NotificationBotAction) {
+  async addPointNotification(executionkey: string, notificationMessage: NotificationMessage) {
+    const { action } = notificationMessage
     const notifData = {
       execution_key: executionkey,
-      action,
+      action: action!,
       errorLevel: "INFO" as NotificationBotErrorLevel,
       message: `Nominal action : ${action}`,
       data: prepareSerialize({}),
     }
     await this.notificationRepository.insertPointsBotLog(notifData)
+  }
+
+  /**
+   * Create multiple notifications in a single batch operation
+   */
+  async createMultiNotifications(
+    executionKey: string,
+    notifications: Array<{
+      action: NotificationBotAction
+      errorLevel: NotificationBotErrorLevel
+      message: string
+      data: string
+    }>
+  ) {
+    if (notifications.length > 0) {
+      const notificationsWithExecutionKey = notifications.map((notification) => ({
+        ...notification,
+        execution_key: executionKey,
+      }))
+      await this.notificationRepository.createMulti(notificationsWithExecutionKey)
+    }
   }
 
   async sendNotification(message: string) {

@@ -186,10 +186,16 @@ export const POINTS_BOT_ACTIONS: Record<PrismaPointsBotAction, PrismaPointsBotAc
 } as const
 
 export type NotificationErrorLevel = PrismaErrorLevel
+export const NOTIFICATION_ERROR_LEVEL = {
+  INFO: "INFO",
+  WARNING: "WARNING",
+  ERROR: "ERROR",
+} as const
 
-export type PriceApiWarning = {
-  apiName: string
+export type NotificationMessage = {
+  process: string
   error: PriceApiError | Error | any
   level?: NotificationErrorLevel
   message?: string
+  action: NotificationBotAction
 }

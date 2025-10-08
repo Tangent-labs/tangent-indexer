@@ -58,4 +58,20 @@ export class BlockRepository extends AbstractRepository {
       },
     })
   }
+
+  /**
+   * Create multiple global block tracking entries in a single transaction
+   */
+  async createMultiBlockTracking(blockIds: number[]) {
+    if (blockIds.length > 0) {
+      const now = new Date()
+      return await this.prismaClient.lp_points_block.createMany({
+        data: blockIds.map((blockId) => ({
+          block_id: blockId,
+          created_at: now,
+        })),
+        skipDuplicates: true,
+      })
+    }
+  }
 }

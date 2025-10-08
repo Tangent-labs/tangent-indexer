@@ -7,4 +7,16 @@ export class LiquidationBotLogRepository extends AbstractRepository {
       data,
     })
   }
+
+  /**
+   * Create multiple liquidation bot log entries in a single transaction
+   */
+  async createMulti(data: Prisma.liquidation_bot_logCreateManyInput[]) {
+    if (data.length > 0) {
+      return await this.prismaClient.liquidation_bot_log.createMany({
+        data,
+        skipDuplicates: false,
+      })
+    }
+  }
 }

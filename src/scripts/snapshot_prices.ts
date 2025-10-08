@@ -27,18 +27,41 @@ const snapshotPrices = async () => {
   const notificationService = new NotificationService(notificationRepository, telegramNotifierService)
 
   const result = await priceService.fetchPriceFeed()
-  await notificationService.addPointNotification(executionKey, POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES)
+  await notificationService.addPointNotification(executionKey, {
+    process: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
+    error: null,
+    action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
+    message: "Execution",
+    level: "INFO",
+  })
 
-  if (result?.warnings?.length > 0) {
-    for (const warning of result.warnings) {
-      console.log("warning", warning.level, warning.level)
-      if (warning.level === "WARNING") {
-        await notificationService.addPointWarningNotification(executionKey, POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES, warning)
+  if (result?.notifications?.length > 0) {
+    // Collect all notifications to create them in batch
+    const notificationsToCreate = []
+
+    for (const notification of result.notifications) {
+      if (notification.level === "WARNING") {
+        notificationsToCreate.push({
+          action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
+          errorLevel: "WARNING" as const,
+          message: `WARNING in ${POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES}`,
+          data: JSON.stringify(notification),
+        })
       }
-      if (warning.level === "ERROR") {
-        const message = `Error in points processus : POINTS_FETCH_PRICES/${warning.apiName}, error:  ${warning.error}`
-        await notificationService.addPointErrorNotification(executionKey, POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES, warning.error, message)
+      if (notification.level === "ERROR") {
+        const message = `Error in points processus : POINTS_FETCH_PRICES/${notification.process}, error:  ${notification.error}`
+        notificationsToCreate.push({
+          action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
+          errorLevel: "ERROR" as const,
+          message,
+          data: JSON.stringify(notification),
+        })
       }
+    }
+
+    // Create all notifications in a single batch operation
+    if (notificationsToCreate.length > 0) {
+      await notificationService.createMultiNotifications(executionKey, notificationsToCreate)
     }
   }
 }

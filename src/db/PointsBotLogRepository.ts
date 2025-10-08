@@ -12,6 +12,18 @@ export class PointsBotLogRepository extends AbstractRepository {
   }
 
   /**
+   * Create multiple points bot log entries in a single transaction
+   */
+  async createMulti(data: Prisma.points_bot_logCreateManyInput[]) {
+    if (data.length > 0) {
+      return await this.prismaClient.points_bot_log.createMany({
+        data,
+        skipDuplicates: false,
+      })
+    }
+  }
+
+  /**
    * Insert multiple points bot log entries in a single transaction
    */
   async insertManyPointsBotLogs(data: Prisma.points_bot_logCreateManyInput[]) {

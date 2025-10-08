@@ -3,7 +3,7 @@ import { AddressLike, JsonRpcProvider } from "ethers"
 import { v4 as uuidv4 } from "uuid"
 import { PriceRepository } from "../db/PriceRepository.js"
 import PointPricesAbi from "../abis/PointPrices.json" with { type: "json" }
-import { PriceApiInfo, PriceSource, PriceApiResult, CurverRegistry, AddressesJson, PriceApiWarning, NotificationErrorLevel } from "../type/data.js"
+import { PriceApiInfo, PriceSource, PriceApiResult, CurverRegistry, AddressesJson,   NotificationMessage, POINTS_BOT_ACTIONS, NOTIFICATION_ERROR_LEVEL } from "../type/data.js"
 
 import { chainView } from "../utils/chainView.js"
 import { PriceApiService } from "./PriceApiService.js"
@@ -13,7 +13,7 @@ const SCALE = 10n ** 18n
 
 type GetPriceFeedsResult = {
   prices: PriceApiInfo[]
-  warnings: PriceApiWarning[]
+  notifications: NotificationMessage[]
   date?: Date
 }
 
@@ -49,7 +49,7 @@ export class PricePointService {
   }
 
   async getPriceFeeds(): Promise<GetPriceFeedsResult> {
-    const warnings: PriceApiWarning[] = []
+    const notifications: NotificationMessage[] = []
     // get the info from the database to process
     const priceSource = await this.priceRepository.getPriceSources()
 
@@ -72,28 +72,29 @@ export class PricePointService {
     if (curvePriceSources.length > 0) {
       const curveGroups = new Map<string, string[]>()
 
-      curvePriceSources.forEach(async (source) => {
+      for (const source of curvePriceSources) {
         const registryType = source.reference // fallback to default
 
-        // Add warning if no registry is specified and we're using the default
+        // Add notification if no registry is specified and we're using the default
         if (!registryType) {
-          const warning = {
-            apiName: "Curve",
+          const notification = {
+            action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
+            process: "Curve",
             error: {
               reason: `No registry specified for price source ${source.address}, skipping this price source`,
               api: "Curve",
             },
-            level: "WARNING" as NotificationErrorLevel,
+            level: NOTIFICATION_ERROR_LEVEL.WARNING,
           }
-          warnings.push(warning)
-          return
+          notifications.push(notification)
+          continue
         }
 
         if (!curveGroups.has(registryType)) {
           curveGroups.set(registryType, [])
         }
         curveGroups.get(registryType)!.push(source.address.toLowerCase())
-      })
+      }
 
       // Create separate promises for each registry type
       curveGroups.forEach((addresses, registryType) => {
@@ -123,31 +124,33 @@ export class PricePointService {
       const result = results[i]
       if (result.status === "fulfilled") {
         if (type === "CHAINVIEW") {
-          date = await this.procesChainViewResults(result.value, priceSource, apiPrices, markets, warnings)
+          date = await this.procesChainViewResults(result.value, priceSource, apiPrices, markets, notifications)
         } else {
           // Handle PriceApiResult objects from API services
           const apiResult = result.value as PriceApiResult
           if (apiResult && apiResult.prices && Array.isArray(apiResult.prices)) {
             apiPrices.push(...apiResult.prices)
           }
-          // Collect any API errors as warnings
+          // Collect any API errors as notifications
           if (apiResult?.error) {
-            warnings.push({
-              apiName: type,
+            notifications.push({
+              action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
+              process: type,
               error: apiResult.error,
-              level: "ERROR" as NotificationErrorLevel,
+              level: NOTIFICATION_ERROR_LEVEL.ERROR,
             })
           }
         }
       } else {
         console.error("error", result)
-        // Collect warnings instead of logging
-        const warning = {
-          apiName: type,
+        // Collect notifications instead of logging
+        const notification = {
+          action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
+          process: type,
           error: result.reason as Error,
-          level: "ERROR" as NotificationErrorLevel,
+          level: NOTIFICATION_ERROR_LEVEL.ERROR,
         }
-        warnings.push(warning)
+        notifications.push(notification)
       }
     }
 
@@ -164,7 +167,7 @@ export class PricePointService {
           price: price.price,
         }
       }),
-      warnings,
+      notifications,
       date,
     }
   }
@@ -174,13 +177,14 @@ export class PricePointService {
     priceSource: PriceSource[],
     apiPrices: PriceApiInfo[],
     markets: string[],
-    warnings: PriceApiWarning[]
+    notifications: NotificationMessage[]
   ): Promise<Date | undefined> {
     if (!chainViewPrices) {
-      warnings.push({
-        apiName: "CHAINVIEW",
+      notifications.push({
+        action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
+        process: "CHAINVIEW",
         error: new Error("No chain view data returned"),
-        level: "ERROR" as NotificationErrorLevel,
+        level: NOTIFICATION_ERROR_LEVEL.ERROR,
       })
       return undefined
     }
@@ -191,7 +195,7 @@ export class PricePointService {
     // Only process USG/sUSG and debt indexes if there are ERC4626 sources
     if (erc4626Sources.length > 0) {
       // Handle ERC4626 chain view result
-      this.processErc4626Prices(priceSource, chainViewPrices, apiPrices, warnings)
+      this.processErc4626Prices(priceSource, chainViewPrices, apiPrices, notifications)
 
       const debtResult = this.processDebtIndexes(chainViewPrices, markets)
 
@@ -215,14 +219,15 @@ export class PricePointService {
         })
       }
 
-      // Add warning if there are missing debt indexes for requested markets
+      // Add notification if there are missing debt indexes for requested markets
       if (debtResult?.missingMarkets && debtResult?.missingMarkets?.length > 0) {
-        const warning = {
-          apiName: "DebtIndexes",
+        const notification = {
+          action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
+          process: "DebtIndexes",
           error: new Error(`No debt index data returned for markets: ${debtResult?.missingMarkets?.join(", ")}`),
-          level: "WARNING" as NotificationErrorLevel,
+          level: NOTIFICATION_ERROR_LEVEL.WARNING,
         }
-        warnings.push(warning)
+        notifications.push(notification)
       }
     }
     return date
@@ -273,12 +278,13 @@ export class PricePointService {
     return result
   }
 
-  processErc4626Prices(priceSource: PriceSource[], chainViewPrices: PointServiceChainViewOut, apiPrices: PriceApiInfo[], warnings: PriceApiWarning[]) {
+  processErc4626Prices(priceSource: PriceSource[], chainViewPrices: PointServiceChainViewOut, apiPrices: PriceApiInfo[], notifications: NotificationMessage[]) {
     if (!chainViewPrices?.ervc4626shares?.length) {
-      warnings.push({
-        apiName: "CHAINVIEW",
+      notifications.push({
+        action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
+        process: "CHAINVIEW",
         error: new Error("No ERC4626 shares data returned"),
-        level: "WARNING" as NotificationErrorLevel,
+        level: NOTIFICATION_ERROR_LEVEL.WARNING,
       })
       return
     }
@@ -292,12 +298,13 @@ export class PricePointService {
         // Find the USD price for the underlying asset
         const priceObj = apiPrices.find((x) => x.address.toLowerCase() === refToken.toLowerCase())
         if (!priceObj) {
-          const warning = {
-            apiName: "CHAINVIEW",
+          const notification = {
+            action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
+            process: "CHAINVIEW",
             error: new Error(`No price found for reference token: ${refToken}`),
-            level: "WARNING" as NotificationErrorLevel,
+            level: NOTIFICATION_ERROR_LEVEL.WARNING,
           }
-          warnings.push(warning)
+          notifications.push(notification)
           return
         }
         if (priceObj) {

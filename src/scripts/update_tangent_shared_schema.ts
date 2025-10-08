@@ -24,15 +24,14 @@ try {
   const branch = match?.at(1) || "main"
 
   // remove the dependency ( from package.json , package-lock.json and node_modules)
+  console.log("Removing @tangent/prisma-schema-shared")
   execSync(`npm remove @tangent/prisma-schema-shared`)
 
   // reinstall the dependency with the same branch
   pkg.devDependencies["@tangent/prisma-schema-shared"] = `github:Tangent-labs/prisma-schema-shared#${branch}`
   writeFileSync(packagePath, JSON.stringify(pkg, null, 2) + "\n")
+  console.log("Installing @tangent/prisma-schema-shared")
   execSync(`npm install`)
-
-  // Generate the prisma client
-  execSync(`npm run prisma:generate`)
 
   console.log("✓ Done!")
 } catch (error) {
