@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest"
-import { MarketContractsRepository } from "../../db/MarketContractsRepository"
+import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
 import { JsonRpcProvider } from "ethers"
-import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher"
-import { MarketCreationService } from "services/events/MarketCreationService"
+import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher.js"
+import { MarketCreationService } from "services/events/MarketCreationService.js"
 
 vi.mock("../../eventFectcher/marketCreationEventFectcher", () => ({
   fetchMarketCreationLogs: vi.fn(),
@@ -25,7 +25,7 @@ describe("MarketCreationService", () => {
       { contract_address: "0xMarket2", collateral_address: "0xCollat2", contract_type: "ConvexFxn" },
     ]
 
-    ;(fetchMarketCreationLogs as any).mockResolvedValue(mockLogs)
+      ; (fetchMarketCreationLogs as any).mockResolvedValue(mockLogs)
 
     await marketCreationService.runDetection(mockProvider, startingBlock, endingBlock)
 
@@ -48,7 +48,7 @@ describe("MarketCreationService", () => {
     const startingBlock = 1000
     const endingBlock = 2000
 
-    ;(fetchMarketCreationLogs as any).mockResolvedValue([])
+      ; (fetchMarketCreationLogs as any).mockResolvedValue([])
 
     await marketCreationService.runDetection(mockProvider, startingBlock, endingBlock)
 

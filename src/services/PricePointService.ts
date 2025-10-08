@@ -1,12 +1,11 @@
 import { AddressLike, JsonRpcProvider } from "ethers"
 import { PriceRepository } from "../db/PriceRepository.js"
 import PointPricesAbi from "../abis/PointPrices.json" with { type: "json" }
-import { PriceApiInfo, PriceSource, PriceApiResult, PriceApiError, CurverRegistry } from "../type/data.js"
+import { PriceApiInfo, PriceSource, PriceApiResult, PriceApiError, CurverRegistry, AddressesJson } from "../type/data.js"
 
 import { chainView } from "../utils/chainView.js"
 import { PriceApiService } from "./PriceApiService.js"
 import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
-import { AddressesJson } from "utils/readGDrive.js"
 
 const SCALE = 10n ** 18n
 type PriceApiWarning = {

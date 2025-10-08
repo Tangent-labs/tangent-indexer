@@ -1,6 +1,6 @@
 import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext.js"
 import { TransactionPrisma } from "../../type/prisma.js"
-import { AddressesJson } from "utils/readGDrive.js"
+import { AddressesJson } from "type/data.js"
 
 export async function seedLPTasks(prisma: TransactionPrisma, addresses: AddressesJson) {
   await prisma.lp_task.createMany({

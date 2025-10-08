@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest"
-import { ActiveBorrowersService } from "../../services/ActiveBorrowersService"
-import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository"
-import { UserAction } from "services/events/UserMarketService"
+import { ActiveBorrowersService } from "../../services/ActiveBorrowersService.js"
+import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
+import { UserAction } from "../../services/events/UserMarketService.js"
 
 vi.mock("../../eventFectcher/marketBorrowerEventFetcher", () => ({
   fetchBorrowLogs: vi.fn(),
@@ -34,7 +34,7 @@ describe("MarketBorrowerService", () => {
     expect(activeBorrowersRepository.deleteActiveBorrowers).toHaveBeenCalledWith(deleted)
     expect(activeBorrowersRepository.insertActiveBorrowers).toHaveBeenCalledWith(inserted)
 
-    deleted.forEach((item, i) => {
+    deleted.forEach((item: any, i: number) => {
       const log = mockLogs[i]
       expect(item.blockId).toBe(log.blockId)
       expect(item.marketId).toBe(log.marketId)
@@ -43,7 +43,7 @@ describe("MarketBorrowerService", () => {
       expect(item.timestamp).toBe(log.timestamp)
     })
 
-    inserted.forEach((item, i) => {
+    inserted.forEach((item: any, i: number) => {
       const log = expectedInserted[i]
       expect(item.blockId).toBe(log.blockId)
       expect(item.marketId).toBe(log.marketId)

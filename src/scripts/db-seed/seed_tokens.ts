@@ -1,6 +1,6 @@
 import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext.js"
+import { AddressesJson } from "type/data.js"
 import { TransactionPrisma } from "type/prisma.js"
-import { AddressesJson } from "utils/readGDrive.js"
 
 export async function seedPriceFeeds(tx: TransactionPrisma, addresses: AddressesJson) {
   const tokens = [

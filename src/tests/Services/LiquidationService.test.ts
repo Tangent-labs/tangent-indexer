@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import fs from "fs"
 
-import { LiquidationService } from "../../../src/services/LiquidationService"
-import { ActiveBorrowersRepository } from "../../../src/db/ActiveBorrowersRepository"
+import { LiquidationService } from "../../../src/services/LiquidationService.js"
+import { ActiveBorrowersRepository } from "../../../src/db/ActiveBorrowersRepository.js"
 import { AddressLike, JsonRpcProvider } from "ethers"
 import {
   LiquidationAccountOutInfo,
@@ -11,8 +11,8 @@ import {
   LiquidationUserInfo,
   LiquidationUserInInfo,
   LiquidationUserFullInfo,
-} from "../../../src/type/data"
-import { BlockRepository } from "../../../src/db/BlockRepository"
+} from "../../../src/type/data.js"
+import { BlockRepository } from "../../../src/db/BlockRepository.js"
 
 const DECIMALS = BigInt(10 ** 18)
 
@@ -103,37 +103,37 @@ describe("LiquidationService", () => {
       }
       borrower_address: string
     }[] = [
-      {
-        market: {
-          id: 1n,
-          collateral_address: "0x1",
-          contract_address: "0x456",
-          contract_name: "A",
-          contract_type: "Convex CRV",
+        {
+          market: {
+            id: 1n,
+            collateral_address: "0x1",
+            contract_address: "0x456",
+            contract_name: "A",
+            contract_type: "Convex CRV",
+          },
+          borrower_address: "0x123",
         },
-        borrower_address: "0x123",
-      },
-      {
-        market: {
-          id: 2n,
-          collateral_address: "0x1",
-          contract_address: "0xABC",
-          contract_name: "A",
-          contract_type: "Convex CRV",
+        {
+          market: {
+            id: 2n,
+            collateral_address: "0x1",
+            contract_address: "0xABC",
+            contract_name: "A",
+            contract_type: "Convex CRV",
+          },
+          borrower_address: "0x789",
         },
-        borrower_address: "0x789",
-      },
-      {
-        market: {
-          id: 1n,
-          collateral_address: "0x1",
-          contract_address: "0x456",
-          contract_name: "A",
-          contract_type: "Convex CRV",
+        {
+          market: {
+            id: 1n,
+            collateral_address: "0x1",
+            contract_address: "0x456",
+            contract_name: "A",
+            contract_type: "Convex CRV",
+          },
+          borrower_address: "0x789",
         },
-        borrower_address: "0x789",
-      },
-    ]
+      ]
 
     const mockMarketBorrowerRepository = {
       getAll: vi.fn().mockResolvedValue(mockBorrowers),
@@ -171,17 +171,17 @@ describe("LiquidationService", () => {
       }
       borrower_address: string
     }[] = [
-      {
-        market: {
-          id: 1n,
-          collateral_address: "0x1",
-          contract_address: "0x456",
-          contract_name: "A",
-          contract_type: "Convex CRV",
+        {
+          market: {
+            id: 1n,
+            collateral_address: "0x1",
+            contract_address: "0x456",
+            contract_name: "A",
+            contract_type: "Convex CRV",
+          },
+          borrower_address: "0x123",
         },
-        borrower_address: "0x123",
-      },
-    ]
+      ]
 
     const mockMarketBorrowerRepository = {
       getAll: vi.fn().mockResolvedValue(mockBorrowers),
@@ -257,9 +257,9 @@ describe("LiquidationService - analyzeLiquidation", () => {
     liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext)
   })
 
-  it("should correctly classify accounts into hard, soft, and non-debtor categories", async () => {})
+  it("should correctly classify accounts into hard, soft, and non-debtor categories", async () => { })
 
-  it("should correctly identify soft liquidations when LTV exceeds the threshold", async () => {})
+  it("should correctly identify soft liquidations when LTV exceeds the threshold", async () => { })
 
   it("should correctly classify accounts with zero debt as non-debtors", async () => {
     const accounts: LiquidationUserInInfo[] = [{ account: "0xUser1", market: "0xMarket1" }]
@@ -576,8 +576,8 @@ describe("LiquidationService - prioritizeActions", () => {
     expect(result[1].account).toBe("0xUser2") // Second highest position value
 
     // Verify that lower value positions were not included
-    expect(result.some((r) => r.account === "0xUser3")).toBe(false)
-    expect(result.some((r) => r.account === "0xUser4")).toBe(false)
-    expect(result.some((r) => r.account === "0xUser5")).toBe(false)
+    expect(result.some((r: any) => r.account === "0xUser3")).toBe(false)
+    expect(result.some((r: any) => r.account === "0xUser4")).toBe(false)
+    expect(result.some((r: any) => r.account === "0xUser5")).toBe(false)
   })
 })
