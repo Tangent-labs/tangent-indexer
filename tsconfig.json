@@ -12,20 +12,12 @@
     "isolatedModules": false,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "rootDirs": [
-      "./"
-    ],
+    "rootDirs": ["./"],
     "baseUrl": "./src",
     "inlineSources": true,
     "sourceRoot": "/",
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "exclude": [
-    "dist"
-  ],
-  "include": [
-    "src"
-  ]
+  "exclude": ["dist"],
+  "include": ["src"]
 }

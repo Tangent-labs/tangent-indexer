@@ -15,12 +15,12 @@ export default [
     ignores: ["dist/**"], // Exclude dist/ directory
     languageOptions: {
       ecmaVersion: "latest",
-      sourceType: "module"
+      sourceType: "module",
     },
     rules: {
       ...js.configs.recommended.rules, // Inherit recommended JS rules
-      "no-undef": "off" // Disable no-undef for JS files
-    }
+      "no-undef": "off", // Disable no-undef for JS files
+    },
   },
   {
     files: ["**/*.ts"],
