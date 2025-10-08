@@ -20,8 +20,8 @@
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
-    "lint": "eslint . ",
-    "lint:fix": "eslint .  --fix",
+    "lint": "eslint . --ignore-pattern dist/",
+    "lint:fix": "eslint .  --fix --ignore-pattern dist/",
     "lint:tsc": "npx tsc --noEmit",
     "lint:prettier": "prettier --check .",
     "prepare": "husky",
@@ -41,6 +41,7 @@
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "ethers": "^6.14.0",
+    "node-fetch": "^3.3.2",
     "tsx": "^4.20.3",
     "typescript": "^5.7.3",
     "uuid": "^11.1.0"

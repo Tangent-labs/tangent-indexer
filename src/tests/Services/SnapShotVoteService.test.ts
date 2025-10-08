@@ -95,7 +95,7 @@ describe("SnapShotVoteService", () => {
     fetchUsersBoostsSpy = vi.spyOn(userVoteRepository as any, "fetchUsersBoosts").mockResolvedValue(undefined as any)
 
     getBlockTimestampSpy = vi.spyOn(blockService as any, "getBlockTimestamp").mockResolvedValue(undefined as any)
-      ; (axios.post as any).mockReset()
+    ;(axios.post as any).mockReset()
   })
 
   it("Should call computeUserVoteTasks() with votes and tasks", async () => {
@@ -183,7 +183,7 @@ describe("SnapShotVoteService", () => {
 
     const secondPage = { data: { data: { votes: [] } } }
 
-      ; (axios.post as any).mockResolvedValueOnce(firstPage)
+    ;(axios.post as any).mockResolvedValueOnce(firstPage)
 
     const result = await snapShotVoteService.getProposalVotes(mockProposal)
 
@@ -203,7 +203,7 @@ describe("SnapShotVoteService", () => {
       excludedVoters: voters.concat(["0x1111111111111111111111111111111111111111"]),
     }
 
-      ; (axios.post as any).mockResolvedValueOnce(secondPage)
+    ;(axios.post as any).mockResolvedValueOnce(secondPage)
 
     const emptyResult = await snapShotVoteService.getProposalVotes(mockProposal2 as any)
 
@@ -211,7 +211,7 @@ describe("SnapShotVoteService", () => {
   })
 
   it("Should paginate accross 3 pages", async () => {
-    ; (snapShotVoteService as any).MAX_VOTES_PER_PROPOSAL = 300
+    ;(snapShotVoteService as any).MAX_VOTES_PER_PROPOSAL = 300
 
     const makeVotes = (n: number, offset = 0) =>
       Array.from({ length: n }, (_, i) => ({
@@ -227,7 +227,7 @@ describe("SnapShotVoteService", () => {
     const page2 = { data: { data: { votes: makeVotes(100, 100) } } }
     const page3 = { data: { data: { votes: makeVotes(60, 200) } } }
 
-      ; (axios.post as any).mockResolvedValueOnce(page1).mockResolvedValueOnce(page2).mockResolvedValueOnce(page3)
+    ;(axios.post as any).mockResolvedValueOnce(page1).mockResolvedValueOnce(page2).mockResolvedValueOnce(page3)
 
     const proposal: any = {
       id: "0xproposal",
@@ -247,7 +247,7 @@ describe("SnapShotVoteService", () => {
   })
 
   it("Should stop pagination after first page because of the MAX_VOTES limit", async () => {
-    ; (snapShotVoteService as any).MAX_VOTES_PER_PROPOSAL = 100
+    ;(snapShotVoteService as any).MAX_VOTES_PER_PROPOSAL = 100
 
     const makeVotes = (n: number, offset = 0) =>
       Array.from({ length: n }, (_, i) => ({
@@ -262,7 +262,7 @@ describe("SnapShotVoteService", () => {
     const page1 = { data: { data: { votes: makeVotes(100, 0) } } }
     const page2 = { data: { data: { votes: makeVotes(100, 100) } } }
 
-      ; (axios.post as any).mockResolvedValueOnce(page1).mockResolvedValueOnce(page2)
+    ;(axios.post as any).mockResolvedValueOnce(page1).mockResolvedValueOnce(page2)
 
     const proposal: any = {
       id: "0xproposal",

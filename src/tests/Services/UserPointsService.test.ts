@@ -34,7 +34,7 @@ describe("UserPointsService", () => {
 
     const user0 = "0x4838b106fce9647bdf1e7877bf73ce8b0bad5f97"
     const user1 = "0x16c473448e770ff647c69cbe19e28528877fba1b"
-    //TODO Replace this
+
     const erc20Repository = {
       getOpenedTasks: vi.fn(),
       updateProcessedTasks: vi.fn(),
@@ -66,7 +66,7 @@ describe("UserPointsService.updateUserTasks", () => {
     getOpenedTasks: vi.fn(),
   } as any as UserPointsRepository
 
-  //TODO Replace this
+  // TODO Replace this
   const erc20Repository = {
     getOpenedTasks: vi.fn(),
     updateProcessedTasks: vi.fn(),
@@ -128,7 +128,7 @@ describe("UserPointsService.updateUserTasks", () => {
   })
 
   it("Should handle empty events", async () => {
-    ; (userPointsRepository.fetchTasksEventsAndAddresses as any).mockResolvedValue({ tasks: [], relevantEvents: [] })
+    ;(userPointsRepository.fetchTasksEventsAndAddresses as any).mockResolvedValue({ tasks: [], relevantEvents: [] })
     await userPointsService.updateUserTasks(9, 10)
     expect(userPointsRepository.fetchTasksEventsAndAddresses).toHaveBeenCalledWith(9, 10)
     expect(updateTasksSpy).toHaveBeenCalledWith([], [])
@@ -148,7 +148,6 @@ describe("UserPointsService.updateTasks", () => {
     updateProcessedTasks: vi.fn(),
   } as any as UserPointsRepository
 
-  //TODO Replace this
   const erc20Repository = {
     getOpenedTasks: vi.fn(),
     updateProcessedTasks: vi.fn(),

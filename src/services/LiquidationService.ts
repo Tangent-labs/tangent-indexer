@@ -1,10 +1,10 @@
 import fs from "fs"
 
-import MarketExternalActionsAbi from "../abis/MarketExternalActions.json" with { type: "json" };
-import MarketAccountLiquidationBotInfoAbi from "../abis/MarketAccountLiquidationBotInfo.json" with { type: "json" };
-import ICurveRouterAbi from "../abis/ICurveRouter.json" with { type: "json" };
-import QuoteLiquidationRouterAbi from "../abis/QuoteLiquidationRouter.json" with { type: "json" };
-import successRoutes from "../hydratedRoute.json" with { type: "json" };
+import MarketExternalActionsAbi from "../abis/MarketExternalActions.json" with { type: "json" }
+import MarketAccountLiquidationBotInfoAbi from "../abis/MarketAccountLiquidationBotInfo.json" with { type: "json" }
+import ICurveRouterAbi from "../abis/ICurveRouter.json" with { type: "json" }
+import QuoteLiquidationRouterAbi from "../abis/QuoteLiquidationRouter.json" with { type: "json" }
+import successRoutes from "../hydratedRoute.json" with { type: "json" }
 
 import { Addressable, AddressLike, Contract, Interface, JsonRpcProvider, MaxUint256, Wallet, ZeroAddress } from "ethers"
 import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository.js"

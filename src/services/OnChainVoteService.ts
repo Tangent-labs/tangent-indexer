@@ -1,7 +1,7 @@
 import { UserVoteRepository } from "../db/UserVoteRepository.js"
 import { formatEther, JsonRpcProvider } from "ethers"
 import { chainView } from "../utils/chainView.js"
-import GetGaugeVotes from "../abis/GetGaugeVotes.json" with { type: "json" };
+import GetGaugeVotes from "../abis/GetGaugeVotes.json" with { type: "json" }
 import { NumMap } from "./boost/types.js"
 import { Prisma } from "@prisma/client"
 import { BoostRepository } from "../db/BoostRepository.js"
@@ -16,14 +16,14 @@ export type GetGaugeVotesIn = {
 }
 
 // OUT
-export type GetGaugeVotesOut = {
-  timestamp: Number
-  gaugeControllerWeights: GaugeControllerWeights[]
-}
-
 export type GaugeControllerWeights = {
   gaugeController: string
   weights: bigint[]
+}
+
+export type GetGaugeVotesOut = {
+  timestamp: Number
+  gaugeControllerWeights: GaugeControllerWeights[]
 }
 
 export type GaugeVoteDb = {
@@ -35,7 +35,6 @@ export type GaugeVoteDb = {
   }[]
   controller_address: string
 }
-
 
 export type VotesFromDb = {
   gauge_pools: {
@@ -103,7 +102,7 @@ export class OnChainVoteService {
           user_address: account,
           voting_power: weightInNumber,
           vote_task_id: BigInt(taskIdPerGauge[gauge]),
-          points: Math.trunc((weightInNumber * pointRatesPerGauge[gauge] * boost)),
+          points: Math.trunc(weightInNumber * pointRatesPerGauge[gauge] * boost),
         })
       })
     })
@@ -152,10 +151,9 @@ export class OnChainVoteService {
 
         // Iterates over all gauge votes done on all pools
         gp.gauge_votes.forEach((gv) => {
-
           const gaugeControllerId = paramInChainview.findIndex((p) => {
             return p.gaugeController === gp.gauge_controller.controller_address
-          });
+          })
 
           const accountGauge: AccountGauge = {
             account: gv.user_address,

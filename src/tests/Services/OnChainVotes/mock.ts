@@ -1,5 +1,5 @@
-import { formatEther, parseEther } from "ethers"
-import { GetGaugeVotesOut, VotesFromDb } from "services/OnChainVoteService"
+import { parseEther } from "ethers"
+import { GetGaugeVotesOut, VotesFromDb } from "../../../services/OnChainVoteService.js"
 
 const GAUGE_A = "GAUGE_A"
 const GAUGE_B = "GAUGE_B"
@@ -9,7 +9,6 @@ const GAUGE_E = "GAUGE_D"
 
 const CONTROLLER_A = "CONTROLLER_A"
 const CONTROLLER_B = "CONTROLLER_B"
-const CONTROLLER_C = "CONTROLLER_C"
 
 const USER_A = "USER_A"
 const USER_B = "USER_B"

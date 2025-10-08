@@ -5,79 +5,73 @@ import { TransactionPrisma } from "type/prisma.js"
 
 export async function seedVoteTasks(prisma: PrismaClient | TransactionPrisma) {
   // INSERT GAUGE_CONTROLLER
-  const gauge_controllers = await prisma.gauge_controllers.createManyAndReturn({
-    data: [{ controller_address: CONTROLLER_MAPPING.CRV.controller }, { controller_address: CONTROLLER_MAPPING.FXN.controller }]
+  const gaugeControllers = await prisma.gauge_controllers.createManyAndReturn({
+    data: [{ controller_address: CONTROLLER_MAPPING.CRV.controller }, { controller_address: CONTROLLER_MAPPING.FXN.controller }],
   })
 
-  const controllerIdPerAddress: NumMap = gauge_controllers.reduce((acc, current) => {
+  const controllerIdPerAddress: NumMap = gaugeControllers.reduce((acc, current) => {
     return {
       ...acc,
-      [current.controller_address]: current.id
+      [current.controller_address]: current.id,
     }
   }, {})
 
   // INSERT VOTER_TO_EXCLUDE
 
-  const votersToExclude: Prisma.voter_to_excludeCreateManyInput[] = Object.entries(voterToExcludePerControllerId(controllerIdPerAddress)).flatMap(([controllerId, votersToExclude]) => {
-    return votersToExclude.map(ve => {
-      return {
-        gauge_controllers_id: Number(controllerId),
-        user_address: ve
-      }
-    })
-
-  })
+  const votersToExclude: Prisma.voter_to_excludeCreateManyInput[] = Object.entries(voterToExcludePerControllerId(controllerIdPerAddress)).flatMap(
+    ([controllerId, votersToExclude]) => {
+      return votersToExclude.map((ve) => {
+        return {
+          gauge_controllers_id: Number(controllerId),
+          user_address: ve,
+        }
+      })
+    }
+  )
   await prisma.voter_to_exclude.createMany({
-    data: votersToExclude
+    data: votersToExclude,
   })
-
 
   // INSERT VOTE_TASKS
   const voteTask = await prisma.vote_task.createManyAndReturn({
-    data: VOTE_TASK_INIT
+    data: VOTE_TASK_INIT,
   })
 
   const voteIdPerName: NumMap = voteTask.reduce((acc, current) => {
     return {
       ...acc,
-      [current.name]: current.id
+      [current.name]: current.id,
     }
   }, {})
 
   // INSERT GAUGE_POOLS
   await prisma.gauge_pools.createMany({
-    data: gauge_pools(controllerIdPerGaugePool(controllerIdPerAddress, voteIdPerName))
+    data: gaugePools(controllerIdPerGaugePool(controllerIdPerAddress, voteIdPerName)),
   })
 
   console.log("Vote_task seeded")
 }
 
+export type GaugePoolMapping = {
+  [gaugePool: string]: { controllerId: number; taskId: number }
+}
 
-export function gauge_pools(gaugePoolMapping: GaugePoolMapping): Prisma.gauge_poolsCreateManyInput[] {
+export function gaugePools(gaugePoolMapping: GaugePoolMapping): Prisma.gauge_poolsCreateManyInput[] {
   const gaugePools: Prisma.gauge_poolsCreateManyInput[] = []
 
   Object.entries(gaugePoolMapping).forEach(([gaugeAddress, params]) => {
-
     gaugePools.push({
       gauge_address: gaugeAddress,
       gauge_controllers_id: params.controllerId,
-      vote_task_id: params.taskId
+      vote_task_id: params.taskId,
     })
-
-
   })
 
   return gaugePools
-
 }
-
 
 export const GAUGE_CONTROLLER_INIT = [{ controller_address: CONTROLLER_MAPPING.CRV.controller }, { controller_address: CONTROLLER_MAPPING.FXN.controller }]
 
-
-export type GaugePoolMapping = {
-  [gaugePool: string]: { controllerId: number, taskId: number }
-}
 export function controllerIdPerGaugePool(controllerIdPerAddress: NumMap, taskIdPerName: NumMap): GaugePoolMapping {
   return {
     [CONTROLLER_MAPPING.CRV.gauges.USDC_USDf]: { controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.CRV.controller], taskId: taskIdPerName[VOTE_05] },
@@ -89,13 +83,11 @@ export function controllerIdPerGaugePool(controllerIdPerAddress: NumMap, taskIdP
 }
 
 export function voterToExcludePerControllerId(controllerIdPerAddress: NumMap): { [controllerId: number]: string[] } {
-
   return {
     [controllerIdPerAddress[CONTROLLER_MAPPING.CRV.controller]]: ["0XA", "0XB"],
-    [controllerIdPerAddress[CONTROLLER_MAPPING.FXN.controller]]: ["0XC", "0XD"]
+    [controllerIdPerAddress[CONTROLLER_MAPPING.FXN.controller]]: ["0XC", "0XD"],
   }
 }
-
 
 // export const taskNamePerGaugeAddress = {
 //   VOTE_05: { controller: "", gaugePools: [CONTROLLER_MAPPING.CRV.gauges.USDC_USDf] },
@@ -176,7 +168,5 @@ export const VOTE_TASK_INIT = [
     point_rate: 10,
     protocol: "FXN",
     url: "https://fx.aladdin.club/gauge/",
-  }
+  },
 ]
-
-

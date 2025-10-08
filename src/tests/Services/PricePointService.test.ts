@@ -1,10 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { JsonRpcProvider } from "ethers"
 import { PricePointService } from "../../services/PricePointService.js"
-import { PriceApiInfo, PriceSource } from "../../type/data.js"
+import { AddressesJson, PriceApiInfo, PriceSource } from "../../type/data.js"
 import { PriceApiService } from "../../services/PriceApiService.js"
 import { chainView } from "../../utils/chainView.js"
-import { AddressesJson } from "utils/readGDrive.js"
 
 // Mock dependencies (including console for error logging)
 vi.mock("../../db/PriceRepository")
@@ -15,15 +14,15 @@ const addresses: AddressesJson = {
   utilities: {
     controlTower: "0xA",
     irCalculator: "0xB",
-    marketCreator: '0xC',
+    marketCreator: "0xC",
     pegKeeperRegulator: "0xD",
     rewardAccumulator: "0xE",
-    zappingProxy: "0xF"
+    zappingProxy: "0xF",
   },
   implementation: {
     basicERC20Market: "0xG",
     convexCrvMarket: "0xH",
-    convexFxnMarket: "0xI"
+    convexFxnMarket: "0xI",
   },
   oracles: {},
   markets: [],
@@ -33,12 +32,12 @@ const addresses: AddressesJson = {
     sUSG: "0xK",
     TAN: "0xL",
     USG: "0xM",
-    vsTAN: "0xN"
-  }
+    vsTAN: "0xN",
+  },
 }
 
 const mockConsole = {
-  error: vi.spyOn(console, "error").mockImplementation(() => { }),
+  error: vi.spyOn(console, "error").mockImplementation(() => {}),
 }
 
 describe("PricePointService", () => {

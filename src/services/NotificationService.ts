@@ -5,4 +5,3 @@ export class NotificationService {
     console.log(message, action)
   }
 }
-

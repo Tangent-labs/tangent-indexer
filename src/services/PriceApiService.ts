@@ -1,5 +1,13 @@
 import { PriceApiInfo, PriceApiResult, PriceApiError, CurverRegistry } from "../type/data.js"
-import { ConvexFxnApiReturn, CurveApiReturn, CurvePoolListApiResult, CurvePriceApiResult, LlamaPriceApiResult, PendleApiReturn, PendlePriceApiResult } from "./globalData/types.js"
+import {
+  ConvexFxnApiReturn,
+  CurveApiReturn,
+  CurvePoolListApiResult,
+  CurvePriceApiResult,
+  LlamaPriceApiResult,
+  PendleApiReturn,
+  PendlePriceApiResult,
+} from "./globalData/types.js"
 import axios from "axios"
 
 export const CURVE_API = "https://api.curve.finance/api"
@@ -128,7 +136,6 @@ export class PriceApiService {
     }
   }
 
-
   async fetchCurveApiData() {
     // Fetch APY of curve LP on their API
     try {
@@ -167,8 +174,7 @@ export class PriceApiService {
       const convexFXNResponse = await axios.get(CONVEX_FXN_API)
       const cvxFxnJson: ConvexFxnApiReturn = convexFXNResponse.data
       return cvxFxnJson
-    }
-    catch (e) {
+    } catch (e) {
       const apiError: PriceApiError = {
         api: "ConvexFXNPriceApi",
         reason: e instanceof Error ? e.message : "Unknown error",
@@ -176,7 +182,5 @@ export class PriceApiService {
       }
       return { error: apiError }
     }
-
   }
 }
-

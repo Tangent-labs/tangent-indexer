@@ -1,7 +1,7 @@
 import { JsonRpcProvider } from "ethers"
 import { chainView } from "utils/chainView.js"
 
-import TokenBalancesForMultipleUsers from "../../abis/TokenBalancesForMultipleUsers.json" with { type: "json" };
+import TokenBalancesForMultipleUsers from "../../abis/TokenBalancesForMultipleUsers.json" with { type: "json" }
 
 import { Prisma } from "@prisma/client"
 import { NumMap, TokenBalancesForBoostOut } from "./types.js"

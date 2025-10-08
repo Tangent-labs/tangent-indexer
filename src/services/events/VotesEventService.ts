@@ -12,14 +12,13 @@ type ParsedVote = {
   gauge_pool: string
 }
 
-
 export const CONTROLLER_MAPPING: {
   [gaugeControllerKey: string]: {
-    controller: string;
+    controller: string
     gauges: {
-      [gaugeKey: string]: string;
-    };
-  };
+      [gaugeKey: string]: string
+    }
+  }
 } = {
   CRV: {
     controller: "0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB".toLowerCase(),
@@ -36,17 +35,18 @@ export const CONTROLLER_MAPPING: {
       FXN_ETH: "0xA5250C540914E012E22e623275E290c4dC993D11".toLowerCase(),
     },
   },
-};
+}
 export class VotesEventService {
   constructor(voteRepository: UserVoteRepository) {
     this.voteRepository = voteRepository
   }
+
   voteRepository: UserVoteRepository
   gaugeControllers = [CONTROLLER_MAPPING.CRV.controller, CONTROLLER_MAPPING.FXN.controller]
 
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
     // Fetch logs from the gauge controllerts
-    let voteLogs = await getEthLogs(provider, startingBlock, endingBlock, this.gaugeControllers, [id(VOTE_FOR_GAUGE)])
+    const voteLogs = await getEthLogs(provider, startingBlock, endingBlock, this.gaugeControllers, [id(VOTE_FOR_GAUGE)])
 
     if (voteLogs.length) {
       // Format all raw logs from the blockchain

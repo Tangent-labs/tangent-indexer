@@ -2,7 +2,6 @@ import { Prisma } from "@prisma/client"
 import { JsonRpcProvider } from "ethers"
 import { AbstractRepository } from "./AbstractRepository.js"
 
-
 export class UserPointsRepository extends AbstractRepository {
   // Helper: block time at or before startBlock
   getBlockTimeAtOrBefore = async (blockId: number, provider: JsonRpcProvider) => {
@@ -126,8 +125,6 @@ export class UserPointsRepository extends AbstractRepository {
 
     return Array.from(uniqueAddressesSet).map((address) => ({ address }))
   }
-
-
 
   insertTransfers = async (events: any) => {
     if (events.length > 0) {

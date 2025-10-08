@@ -7,7 +7,6 @@ import { ERC20Repository } from "../../db/ERC20Repository.js"
 import { parseTransferEvent } from "../../eventFectcher/marketUserEvents.parsers.js"
 import { BlockService } from "../BlockService.js"
 
-
 export type SortedEvents = {
   Transfer: Prisma.transfer_eventsUncheckedCreateInput[]
 }

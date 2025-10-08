@@ -8,7 +8,6 @@ import { UserVoteRepository } from "../db/UserVoteRepository.js"
 import { BlockService } from "./BlockService.js"
 import { JsonRpcProvider } from "ethers"
 
-
 // https://snapshot.box/#/s:sdcrv.eth/proposal/0x10c44649c31c9716592c5ad92752e449d8b024d50adbd75cecea00864920941e
 // https://vote.convexfinance.com
 // /?ref=littlemight.com#/proposal/0x662c82169a3e7c0ff0baeb3ceb20f9d76115b2cd2d9b138cee48d8f8f80812b0
@@ -291,4 +290,3 @@ export class SnapShotVoteService {
     return fs.readFileSync(queryPath, "utf-8")
   }
 }
-

@@ -73,8 +73,6 @@ curveLP.forEach((lp: string) => {
   })
 })
 
-
-
 async function seedPriceSources() {
   const priceSources = priceFeedData.map((item) => ({
     address: item.address.toLowerCase(),
@@ -90,7 +88,7 @@ async function seedPriceSources() {
 
   console.log(`Price sources seeded successfully! ${priceSources.length} entries processed.`)
 }
-; (async () => {
+;(async () => {
   await seedPriceSources()
 })()
   .catch((e) => console.error(e))

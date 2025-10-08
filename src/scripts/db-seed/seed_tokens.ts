@@ -50,4 +50,3 @@ export async function seedPriceFeeds(tx: TransactionPrisma, addresses: Addresses
   })
   console.log("Price feeds seeded successfully!")
 }
-

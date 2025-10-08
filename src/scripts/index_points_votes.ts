@@ -14,7 +14,6 @@ import { BlockService } from "../services/BlockService.js"
 import { SnapShotVoteService } from "../services/SnapShotVoteService.js"
 import { OnChainVoteService } from "../services/OnChainVoteService.js"
 
-
 dotenv.config()
 
 async function main() {

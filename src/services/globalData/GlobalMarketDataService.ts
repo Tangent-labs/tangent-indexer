@@ -1,14 +1,14 @@
 import { formatEther, formatUnits, JsonRpcProvider } from "ethers"
 import { Prisma, PrismaClient } from "@prisma/client"
 import { commonERC20, curveLpMapping } from "@tangent/defi-resources"
-
+import fetch from "node-fetch"
 
 import { ERC20Repository } from "../../db/ERC20Repository.js"
 import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
 
 import { chainView } from "../../utils/chainView.js"
 
-import GlobalDataChainview from "../../abis/GlobalDataChainview.json" with { type: "json" };
+import GlobalDataChainview from "../../abis/GlobalDataChainview.json" with { type: "json" }
 import { APR_TYPE, TVLAprs, Prices, CurveApiReturn, PendleApiReturn, ConvexFxnApiReturn, USGIndexingGlobalDataOut, USGInfoOut } from "./types.js"
 import { defiLLamaFetchPrices, getPriceInfos } from "./DefiLLamaPriceFetcher.js"
 import { bigIntToNumber } from "../../scripts/utils/formatting.js"
@@ -80,18 +80,16 @@ export class GlobalMarketDataService {
     // Fetch PENDLE markets informations on their API
     const pendleAPIData = await this.priceApiService.fetchPendleApiData()
 
-
     // Verify if there is an error field in the API returns
-    if ('error' in curveAPIData) {
-      throw new Error(`Erreur dans fetchCurveApiData: ${curveAPIData.error.reason}`);
+    if ("error" in curveAPIData) {
+      throw new Error(`Erreur dans fetchCurveApiData: ${curveAPIData.error.reason}`)
     }
-    if ('error' in convexFXNAPIData) {
-      throw new Error(`Erreur dans fetchConvexFXNApiData: ${convexFXNAPIData.error.reason}`);
+    if ("error" in convexFXNAPIData) {
+      throw new Error(`Erreur dans fetchConvexFXNApiData: ${convexFXNAPIData.error.reason}`)
     }
-    if ('error' in pendleAPIData) {
-      throw new Error(`Erreur dans fetchPendleApiData: ${pendleAPIData.error.reason}`);
+    if ("error" in pendleAPIData) {
+      throw new Error(`Erreur dans fetchPendleApiData: ${pendleAPIData.error.reason}`)
     }
-
 
     const formattedMarketData = this.formatMarketData(markets, rawMarketData, formattedPrices, curveAPIData, convexFXNAPIData, pendleAPIData, now)
 
@@ -115,8 +113,7 @@ export class GlobalMarketDataService {
   }
 
   async fetchGlobalDataChainview(markets: Markets[]) {
-
-    const addresses = await (await fetch("https://raw.githubusercontent.com/Tangent-labs/public-files/main/addresses.json")).json() as AddressesJson
+    const addresses = (await (await fetch("https://raw.githubusercontent.com/Tangent-labs/public-files/main/addresses.json")).json()) as AddressesJson
 
     // Retrieve the onchain data containing everything
     const globalData = (
@@ -162,7 +159,6 @@ export class GlobalMarketDataService {
 
     return markets
   }
-
 
   formatMarketData(
     markets: Markets[],

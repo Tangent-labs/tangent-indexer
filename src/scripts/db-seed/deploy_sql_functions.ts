@@ -129,7 +129,6 @@ async function listExistingFunctions(tx: TransactionPrisma): Promise<void> {
 }
 
 export async function deploySQLFunctions(tx: TransactionPrisma) {
-
   try {
     // Verify schema exists
     await verifySchemaExists(tx)
@@ -161,4 +160,3 @@ export async function deploySQLFunctions(tx: TransactionPrisma) {
     process.exit(1)
   }
 }
-
