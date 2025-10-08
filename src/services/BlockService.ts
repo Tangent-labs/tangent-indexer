@@ -1,7 +1,7 @@
 import { JsonRpcProvider } from "ethers"
 import axios from "axios"
-import { indexerConfig } from "../config/indexer_config"
-import { BlockRepository } from "../db/BlockRepository"
+import { indexerConfig } from "../config/indexer_config.js"
+import { BlockRepository } from "../db/BlockRepository.js"
 
 export type BlockInfo = { result: { number: string; timestamp: string } }
 

@@ -1,5 +1,5 @@
 import { parseEther } from "ethers"
-import { NumMap } from "./types"
+import { NumMap } from "./types.js"
 
 export const SNAPSHOT_BOOST_TOKENS = [
   "0xe127cE638293FA123Be79C25782a5652581Db234",
@@ -35,4 +35,5 @@ export const OFFCHAIN_BOOST_INFOS: NumMap = {
   CVG_PEPE: 0.75,
   DEWHALE_MEMBERS: 0.75,
   TURTLE_CLUB: 0.5,
+  ONBOARDED: 0.1,
 }

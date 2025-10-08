@@ -8,11 +8,23 @@ import promisePlugin from "eslint-plugin-promise"
 import prettier from "eslint-plugin-prettier"
 import prettierConfig from "eslint-config-prettier"
 
-/** @type {import('eslint').Linter.FlatConfig[]} */
 export default [
-  js.configs.recommended,
+  {
+    // Apply to all JavaScript files
+    files: ["**/*.js"],
+    ignores: ["dist/**"], // Exclude dist/ directory
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+    },
+    rules: {
+      ...js.configs.recommended.rules, // Inherit recommended JS rules
+      "no-undef": "off", // Disable no-undef for JS files
+    },
+  },
   {
     files: ["**/*.ts"],
+    ignores: ["dist/**"],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
@@ -37,7 +49,7 @@ export default [
     rules: {
       ...standard.rules,
       "no-multiple-empty-lines": ["error", { max: 1, maxBOF: 0, maxEOF: 0 }],
-      "no-undef": "error", // Ensure no undefined variables
+      "no-undef": "off", // Ensure no undefined variables
       "prettier/prettier": [
         "error",
         {

@@ -1,27 +1,37 @@
 import * as dotenv from "dotenv"
-
-import { BlockService } from "../services/BlockService"
-import { setUpIndexer } from "../config/indexer_setup"
-import { TransactionPrisma } from "type/prisma"
+import { TransactionPrisma } from "type/prisma.js"
 import { PrismaClient } from "@prisma/client"
-import { BlockRepository } from "db/BlockRepository"
-import { ActiveBorrowersRepository } from "db/ActiveBorrowersRepository"
-import { MarketContractsRepository } from "db/MarketContractsRepository"
-import { MarketCreationService } from "services/events/MarketCreationService"
-import { UserMarketService } from "services/events/UserMarketService"
-import { indexerConfig } from "config/indexer_config"
-import { ActiveBorrowersService } from "services/ActiveBorrowersService"
-import { UserEventsRepository } from "db/UserEventsRepository"
-import { getEthLogs } from "eventFectcher/_baseFectcher"
-import { fetchTransferLogs } from "eventFectcher/erc20TransferEventFetcher"
-import { UserPointsService } from "services/events/UserPointsService"
-import { UserPointsRepository } from "db/UserPointsRepository"
+import fetch from "node-fetch"
+
+import { setUpIndexer } from "../config/indexer_setup.js"
+
+import { BlockRepository } from "../db/BlockRepository.js"
+import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository.js"
+import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
+import { UserEventsRepository } from "../db/UserEventsRepository.js"
+import { UserPointsRepository } from "../db/UserPointsRepository.js"
+import { UserVoteRepository } from "../db/UserVoteRepository.js"
+import { ERC20Repository } from "../db/ERC20Repository.js"
+
+import { BlockService } from "../services/BlockService.js"
+import { MarketCreationService } from "../services/events/MarketCreationService.js"
+import { UserMarketService } from "../services/events/UserMarketService.js"
+import { VotesEventService } from "../services/events/VotesEventService.js"
+import { UserPointsService } from "../services/events/UserPointsService.js"
+import { ActiveBorrowersService } from "../services/ActiveBorrowersService.js"
+
+import { getEthLogs } from "../eventFectcher/_baseFectcher.js"
+import { fetchTransferLogs } from "../eventFectcher/erc20TransferEventFetcher.js"
+
+import { indexerConfig } from "../config/indexer_config.js"
+import { AddressesJson } from "type/data.js"
+
 dotenv.config()
 
 async function main() {
   const { providers, handleError } = setUpIndexer()
-  const { prismaClient, userMarketService, userPointsService, marketCreationService, blockService, activeBorrowersService, setTransaction } =
-    setUpIndexerBlockServices()
+  const { prismaClient, userMarketService, userPointsService, marketCreationService, blockService, activeBorrowersService, voteEnventService, setTransaction } =
+    await setUpIndexerBlockServices()
 
   try {
     const blockInfo = await BlockService.getIndexerBlockInfo(providers, blockService)
@@ -48,6 +58,8 @@ async function main() {
           const logs = await getEthLogs(bestProvider, startBlock, endBlock, marketAddresses, [])
 
           const transferToWatch = await userPointsService.getERC20ToTrack()
+
+          await voteEnventService.runDetection(bestProvider, startBlock, endBlock)
 
           // Call fetchTransferLogs with the addresses
           if (!transferToWatch?.length) {
@@ -94,7 +106,7 @@ async function main() {
 
 main().then()
 
-function setUpIndexerBlockServices() {
+async function setUpIndexerBlockServices() {
   const prismaClient = new PrismaClient()
   // Setup the repositories
   const blockRepository = new BlockRepository(prismaClient)
@@ -102,6 +114,8 @@ function setUpIndexerBlockServices() {
   const userEventsRepository = new UserEventsRepository(prismaClient)
   const userPointsRepository = new UserPointsRepository(prismaClient)
   const activeBorrowersRepository = new ActiveBorrowersRepository(prismaClient)
+  const userVoteRepository = new UserVoteRepository(prismaClient)
+  const erc20Repository = new ERC20Repository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
     blockRepository.setClient(dbTransaction)
@@ -110,13 +124,15 @@ function setUpIndexerBlockServices() {
     activeBorrowersRepository.setClient(dbTransaction)
   }
 
+  const addresses = (await (await fetch("https://raw.githubusercontent.com/Tangent-labs/public-files/main/addresses.json")).json()) as AddressesJson
   // Set up the services
   const blockService = new BlockService(blockRepository)
-  const marketCreationService = new MarketCreationService(marketContractsRepository, indexerConfig.contracts.marketCreatorAddress)
+  const marketCreationService = new MarketCreationService(marketContractsRepository, addresses.utilities.marketCreator)
 
   const userMarketService = new UserMarketService(userEventsRepository)
-  const userPointsService = new UserPointsService(userPointsRepository)
+  const userPointsService = new UserPointsService(userPointsRepository, erc20Repository)
   const activeBorrowersService = new ActiveBorrowersService(activeBorrowersRepository)
+  const voteEnventService = new VotesEventService(userVoteRepository)
 
   return {
     prismaClient,
@@ -125,6 +141,7 @@ function setUpIndexerBlockServices() {
     userMarketService,
     userPointsService,
     blockService,
+    voteEnventService,
     activeBorrowersService,
     setTransaction,
     marketContractsRepository,

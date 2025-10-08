@@ -1,7 +1,8 @@
 import axios from "axios"
-import { UserVoteRepository } from "db/UserVoteRepository"
+import { UserVoteRepository } from "../../db/UserVoteRepository.js"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import SnapShotVoteService from "services/SnapShotVoteService"
+import { SnapShotVoteService } from "../../services/SnapShotVoteService.js"
+import { JsonRpcProvider } from "ethers"
 
 const mockProposals = [
   {
@@ -112,8 +113,8 @@ describe("SnapShotVoteService", () => {
 
     const startBlock = 23067443
     const endBlock = 23097443
-
-    await snapShotVoteService.computeUserVoteTasks(startBlock, endBlock, blockService, "http://127.0.0.1:8545/")
+    const provider = new JsonRpcProvider("http://127.0.0.1:8545/")
+    await snapShotVoteService.computeUserVoteTasks(startBlock, endBlock, blockService, provider)
 
     expect(updateUserVoteTasksSpy).toHaveBeenCalledWith(mockVotes, mockTasks)
 

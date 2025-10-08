@@ -1,9 +1,7 @@
-import { LiquidationBotLogAction } from "type/data"
+import { LiquidationBotLogAction } from "../type/data.js"
 
-class NotificationService {
+export class NotificationService {
   async sendImmediateNotification(message: string, action?: LiquidationBotLogAction) {
     console.log(message, action)
   }
 }
-
-export default NotificationService

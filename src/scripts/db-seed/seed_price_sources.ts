@@ -1,10 +1,9 @@
 import { PrismaClient } from "@prisma/client"
-import { PriceSourceCreate } from "type/data"
-import addresses from "../../addresses.json"
+import { PriceSourceCreate } from "../../type/data.js"
 
-import { LPS } from "@tangent/defi-resources/build/ressources/mappings/curveLp"
+import { LPS } from "@tangent/defi-resources/build/ressources/mappings/curveLp.js"
 import { ConvexCrvPools } from "@tangent/defi-resources"
-import { CRV_DUO_CVG_ETH } from "@tangent/defi-resources/build/ressources/lps/curve"
+import { CRV_DUO_CVG_ETH } from "@tangent/defi-resources/build/ressources/lps/curve.js"
 
 const prisma = new PrismaClient()
 
@@ -74,20 +73,6 @@ curveLP.forEach((lp: string) => {
   })
 })
 
-async function addMarkets() {
-  const markets = addresses.markets
-
-  await prisma.usg_markets.createMany({
-    skipDuplicates: true,
-    data: markets.map((market) => ({
-      contract_address: market.marketAddress,
-      contract_name: `market ${market.collatName}`,
-      collateral_address: market.collatAddress,
-      contract_type: market.marketType,
-    })),
-  })
-}
-
 async function seedPriceSources() {
   const priceSources = priceFeedData.map((item) => ({
     address: item.address.toLowerCase(),
@@ -104,7 +89,6 @@ async function seedPriceSources() {
   console.log(`Price sources seeded successfully! ${priceSources.length} entries processed.`)
 }
 ;(async () => {
-  await addMarkets()
   await seedPriceSources()
 })()
   .catch((e) => console.error(e))

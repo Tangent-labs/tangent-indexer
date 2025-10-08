@@ -1,8 +1,11 @@
 import { Prisma } from "@prisma/client"
-import { UserPointsRepository } from "db/UserPointsRepository"
-import { parseTransferEvent } from "../../eventFectcher/marketUserEvents.parsers"
-import { BlockService } from "../BlockService"
 import { JsonRpcProvider, Log } from "ethers"
+
+import { UserPointsRepository } from "../../db/UserPointsRepository.js"
+import { ERC20Repository } from "../../db/ERC20Repository.js"
+
+import { parseTransferEvent } from "../../eventFectcher/marketUserEvents.parsers.js"
+import { BlockService } from "../BlockService.js"
 
 export type SortedEvents = {
   Transfer: Prisma.transfer_eventsUncheckedCreateInput[]
@@ -19,9 +22,11 @@ type TaskPoolItem = {
 
 export class UserPointsService {
   userPointsRepository: UserPointsRepository
+  erc20Repository: ERC20Repository
 
-  constructor(userPointsRepository: UserPointsRepository) {
+  constructor(userPointsRepository: UserPointsRepository, erc20Repository: ERC20Repository) {
     this.userPointsRepository = userPointsRepository
+    this.erc20Repository = erc20Repository
   }
 
   retrieveUserAddressesFromTransfers = async (startBlock: number, endBlock: number) => {
@@ -198,7 +203,7 @@ export class UserPointsService {
   }
 
   getERC20ToTrack = async () => {
-    return await this.userPointsRepository.getERC20ToTrack()
+    return await this.erc20Repository.getERC20ToTrack()
   }
 
   sortPointsActionsLogs = (logs: Log[]) => {

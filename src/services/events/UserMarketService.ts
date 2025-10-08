@@ -1,7 +1,7 @@
 import { AddressLike, Log } from "ethers"
 import { Prisma } from "@prisma/client"
 
-import { EVENT_TOPICS } from "../../resources/eventSignatures"
+import { EVENT_TOPICS } from "../../resources/eventSignatures.js"
 import {
   parseBorrowEvent,
   parseDepositAndBorrowEvent,
@@ -18,8 +18,8 @@ import {
   parseZapLeverageEvent,
   parseZapRepayAndWithdrawEvent,
   parseZapRepayEvent,
-} from "../../eventFectcher/marketUserEvents.parsers"
-import { UserEventsRepository } from "../../db/UserEventsRepository"
+} from "../../eventFectcher/marketUserEvents.parsers.js"
+import { UserEventsRepository } from "../../db/UserEventsRepository.js"
 
 export type UserAction = {
   user: AddressLike

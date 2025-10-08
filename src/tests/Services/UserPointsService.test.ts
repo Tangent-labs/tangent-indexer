@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { UserPointsRepository } from "db/UserPointsRepository"
-import { UserPointsService } from "services/events/UserPointsService"
-import { encodeTransfer, TRANSFER } from "../../resources/eventSignatures"
+import { UserPointsRepository } from "../../db/UserPointsRepository.js"
+import { UserPointsService } from "../../services/events/UserPointsService.js"
+import { encodeTransfer, TRANSFER } from "../../resources/eventSignatures.js"
 import { AbiCoder, AddressLike, id, JsonRpcProvider, Log, parseEther } from "ethers"
+import { ERC20Repository } from "../../db/ERC20Repository.js"
 
 function buildLog(topicId: string, from: AddressLike, to: AddressLike, blockNumber: number, data: string) {
   const fromEncoded = AbiCoder.defaultAbiCoder().encode(["address"], [from])
@@ -34,7 +35,12 @@ describe("UserPointsService", () => {
     const user0 = "0x4838b106fce9647bdf1e7877bf73ce8b0bad5f97"
     const user1 = "0x16c473448e770ff647c69cbe19e28528877fba1b"
 
-    const userPointsService = new UserPointsService(userPointsRepository)
+    const erc20Repository = {
+      getOpenedTasks: vi.fn(),
+      updateProcessedTasks: vi.fn(),
+    } as any as ERC20Repository
+
+    const userPointsService = new UserPointsService(userPointsRepository, erc20Repository)
 
     const transfer0 = buildLog(id(TRANSFER), user0, user1, 100, encodeTransfer(user0, user1, parseEther("1000000000000000000")))
     const transfer1 = buildLog(id(TRANSFER), user1, user0, 100, encodeTransfer(user1, user0, parseEther("1000000000000000000")))
@@ -60,9 +66,15 @@ describe("UserPointsService.updateUserTasks", () => {
     getOpenedTasks: vi.fn(),
   } as any as UserPointsRepository
 
+  // TODO Replace this
+  const erc20Repository = {
+    getOpenedTasks: vi.fn(),
+    updateProcessedTasks: vi.fn(),
+  } as any as ERC20Repository
+
   beforeEach(() => {
     vi.clearAllMocks()
-    userPointsService = new UserPointsService(userPointsRepository)
+    userPointsService = new UserPointsService(userPointsRepository, erc20Repository)
     updateTasksSpy = vi.spyOn(userPointsService as any, "updateTasks").mockResolvedValue(undefined as any)
     fetchTasksEventsAndAddressesSpy = vi.spyOn(userPointsRepository as any, "fetchTasksEventsAndAddresses").mockResolvedValue(undefined as any)
   })
@@ -136,9 +148,14 @@ describe("UserPointsService.updateTasks", () => {
     updateProcessedTasks: vi.fn(),
   } as any as UserPointsRepository
 
+  const erc20Repository = {
+    getOpenedTasks: vi.fn(),
+    updateProcessedTasks: vi.fn(),
+  } as any as ERC20Repository
+
   beforeEach(() => {
     vi.clearAllMocks()
-    userPointsService = new UserPointsService(userPointsRepository)
+    userPointsService = new UserPointsService(userPointsRepository, erc20Repository)
     getOpenedTasksSpy = vi.spyOn(userPointsRepository as any, "getOpenedTasks").mockResolvedValue(undefined as any)
     updateProcessedTasksSpy = vi.spyOn(userPointsRepository as any, "updateProcessedTasks")
   })

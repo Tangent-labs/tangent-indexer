@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { PrismaClient } from "@prisma/client"
 
-import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository"
-import { UserAction } from "services/events/UserMarketService"
+import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
+import { UserAction } from "../../services/events/UserMarketService.js"
 
 // Import the mock version of Prisma
 export const prismaMock = {

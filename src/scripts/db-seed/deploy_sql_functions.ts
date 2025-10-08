@@ -26,9 +26,9 @@
  */
 
 import * as dotenv from "dotenv"
-import { PrismaClient } from "@prisma/client"
 import { readFileSync } from "fs"
 import { join } from "path"
+import { TransactionPrisma } from "../../type/prisma.js"
 
 dotenv.config()
 
@@ -41,7 +41,7 @@ const sqlFunctions: string[] = [
   "idx_price_feeds_token_ts_with_price",
 ]
 
-export async function deployFunction(prisma: PrismaClient, sqlFunction: string): Promise<void> {
+export async function deployFunction(tx: TransactionPrisma, sqlFunction: string): Promise<void> {
   try {
     console.log(`🚀 Deploying function: ${sqlFunction}`)
 
@@ -53,12 +53,12 @@ export async function deployFunction(prisma: PrismaClient, sqlFunction: string):
       throw new Error(`SQL file ${sqlFilePath} is empty`)
     }
 
-    await prisma.$executeRawUnsafe(sqlContent)
+    await tx.$executeRawUnsafe(sqlContent)
 
     console.log(`✅ Successfully deployed: ${sqlFunction}`)
 
     // Test that the function was created by checking if it exists
-    const functionExists = await prisma.$queryRawUnsafe(
+    const functionExists = await tx.$queryRawUnsafe(
       `
       SELECT COUNT(*) as count 
       FROM information_schema.routines 
@@ -80,11 +80,11 @@ export async function deployFunction(prisma: PrismaClient, sqlFunction: string):
   }
 }
 
-async function verifySchemaExists(prisma: PrismaClient): Promise<void> {
+async function verifySchemaExists(tx: TransactionPrisma): Promise<void> {
   try {
     console.log("🔍 Verifying 'points' schema exists...")
 
-    const schemaExists = await prisma.$queryRawUnsafe(`
+    const schemaExists = await tx.$queryRawUnsafe(`
       SELECT COUNT(*) as count 
       FROM information_schema.schemata 
       WHERE schema_name = 'points'
@@ -103,11 +103,11 @@ async function verifySchemaExists(prisma: PrismaClient): Promise<void> {
   }
 }
 
-async function listExistingFunctions(prisma: PrismaClient): Promise<void> {
+async function listExistingFunctions(tx: TransactionPrisma): Promise<void> {
   try {
     console.log("📋 Listing existing functions in 'points' schema...")
 
-    const existingFunctions = await prisma.$queryRawUnsafe(`
+    const existingFunctions = await tx.$queryRawUnsafe(`
       SELECT routine_name, routine_type
       FROM information_schema.routines 
       WHERE routine_schema = 'points'
@@ -128,23 +128,13 @@ async function listExistingFunctions(prisma: PrismaClient): Promise<void> {
   }
 }
 
-async function main() {
-  const prisma = new PrismaClient()
-
+export async function deploySQLFunctions(tx: TransactionPrisma) {
   try {
-    console.log("🔥 Starting SQL Functions Deployment")
-    console.log("=====================================")
-
-    // Verify database connection
-    console.log("🔗 Testing database connection...")
-    await prisma.$connect()
-    console.log("✅ Database connected successfully")
-
     // Verify schema exists
-    await verifySchemaExists(prisma)
+    await verifySchemaExists(tx)
 
     // List existing functions before deployment
-    await listExistingFunctions(prisma)
+    await listExistingFunctions(tx)
 
     console.log("\n🚀 Beginning function deployment...")
     console.log("===================================")
@@ -154,36 +144,19 @@ async function main() {
       console.log(`\n📦 Processing: ${sqlFunction}`)
 
       // Deploy the function
-      await deployFunction(prisma, sqlFunction)
+      await deployFunction(tx, sqlFunction)
     }
 
     console.log("\n🎉 All SQL functions deployed successfully!")
     console.log("==========================================")
 
     // List functions after deployment
-    await listExistingFunctions(prisma)
+    await listExistingFunctions(tx)
 
     console.log("\n✨ Deployment completed successfully!")
   } catch (error: any) {
     console.error("\n💥 Deployment failed:", error.message)
     console.error("Stack trace:", error.stack)
     process.exit(1)
-  } finally {
-    await prisma.$disconnect()
-    console.log("🔌 Database connection closed")
   }
 }
-
-// Handle unhandled promise rejections
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("❌ Unhandled Rejection at:", promise, "reason:", reason)
-  process.exit(1)
-})
-
-// Handle uncaught exceptions
-process.on("uncaughtException", (error) => {
-  console.error("❌ Uncaught Exception:", error)
-  process.exit(1)
-})
-
-main().then()

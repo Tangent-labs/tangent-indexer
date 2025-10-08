@@ -1,8 +1,8 @@
-import { LiquidationBotLogRepository } from "db/LiquidationBotLogRepository"
+import { LiquidationBotLogRepository } from "../db/LiquidationBotLogRepository.js"
 import { AddressLike } from "ethers"
-import { LiquidationBotLogAction, LiquidationMarketAccountOutInfo, LiquidationUserInfo, LiquidationUserInInfo } from "type/data"
-import { LiquidationExecutionContext } from "./LiquidationExecutionContext"
-import { prepareSerialize } from "utils/jsonSerializer"
+import { LiquidationBotLogAction, LiquidationMarketAccountOutInfo, LiquidationUserInfo, LiquidationUserInInfo } from "../type/data.js"
+import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
+import { prepareSerialize } from "../utils/jsonSerializer.js"
 
 export class LiquidationBotService {
   liquidationBotLogRepository: LiquidationBotLogRepository

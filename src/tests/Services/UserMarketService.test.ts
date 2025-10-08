@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 
 import { AbiCoder, AddressLike, id, JsonRpcProvider, Log, parseEther } from "ethers"
-import { UserMarketService } from "../../services/events/UserMarketService"
+import { UserMarketService } from "../../services/events/UserMarketService.js"
 import {
   BORROW,
   DEPOSIT,
@@ -33,10 +33,10 @@ import {
   encodeLiquidate,
   encodeSelfLiquidate,
   encodeSeizeCollateral,
-} from "../../resources/eventSignatures"
-import { ActiveBorrowersService } from "../../services/ActiveBorrowersService"
-import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository"
-import { UserEventsRepository } from "db/UserEventsRepository"
+} from "../../resources/eventSignatures.js"
+import { ActiveBorrowersService } from "../../services/ActiveBorrowersService.js"
+import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
+import { UserEventsRepository } from "../../db/UserEventsRepository.js"
 
 function buildLog(topicId: string, address: string, user: AddressLike, blockNumber: number, data: string) {
   const userEncoded = AbiCoder.defaultAbiCoder().encode(["address"], [user])

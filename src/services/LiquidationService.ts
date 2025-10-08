@@ -1,13 +1,13 @@
 import fs from "fs"
 
-import MarketExternalActionsAbi from "../abis/MarketExternalActions.json"
-import MarketAccountLiquidationBotInfoAbi from "../abis/MarketAccountLiquidationBotInfo.json"
-import ICurveRouterAbi from "../abis/ICurveRouter.json"
-import QuoteLiquidationRouterAbi from "../abis/QuoteLiquidationRouter.json"
-import successRoutes from "../hydratedRoute.json"
+import MarketExternalActionsAbi from "../abis/MarketExternalActions.json" with { type: "json" }
+import MarketAccountLiquidationBotInfoAbi from "../abis/MarketAccountLiquidationBotInfo.json" with { type: "json" }
+import ICurveRouterAbi from "../abis/ICurveRouter.json" with { type: "json" }
+import QuoteLiquidationRouterAbi from "../abis/QuoteLiquidationRouter.json" with { type: "json" }
+import successRoutes from "../hydratedRoute.json" with { type: "json" }
 
 import { Addressable, AddressLike, Contract, Interface, JsonRpcProvider, MaxUint256, Wallet, ZeroAddress } from "ethers"
-import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository"
+import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository.js"
 
 import {
   CurveQuote,
@@ -17,11 +17,11 @@ import {
   LiquidationMarketOutInfo,
   LiquidationUserFullInfo,
   LiquidationUserInInfo,
-} from "../type/data"
-import { chainView } from "../utils/chainView"
-import { LiquidationExecutionContext } from "./LiquidationExecutionContext"
-import { BlockRepository } from "../db/BlockRepository"
-import { LiquidationBotService } from "./LiquidationBotLogService"
+} from "../type/data.js"
+import { chainView } from "../utils/chainView.js"
+import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
+import { BlockRepository } from "../db/BlockRepository.js"
+import { LiquidationBotService } from "./LiquidationBotLogService.js"
 
 const DENOMINATOR = 100_000n
 

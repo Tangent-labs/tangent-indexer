@@ -1,4 +1,5 @@
-import { CurverRegistry } from "type/data"
+import { NumMap } from "services/boost/types.js"
+import { CurverRegistry } from "../../type/data.js"
 
 export type APR = {
   token: string
@@ -29,6 +30,19 @@ export type TVLAprs = {
   projectedAPR: TVLStreamingData
 }
 
+export type USGInfoOut = {
+  circulatingUsg: bigint
+  UsgPrice: bigint
+  sUsgSupply: bigint
+  usgStakedOnSgUsd: bigint
+}
+
+export type USGIndexingGlobalDataOut = {
+  timestamp: bigint
+  marketData: TVLAprs[]
+  usgInfo: USGInfoOut
+}
+
 export type CurveApiReturn = {
   data: {
     poolList: { address: string; latestWeeklyApy: number }[]
@@ -45,15 +59,13 @@ export type ConvexFxnApiReturn = {
 
 export type Prices = { [address: string]: { decimals: number; symbol: string; price: number; timestamp: number; confidence: number } }
 
-export type KeyStringValueNumber = { [key: string]: number }
-
 export const APR_TYPE: { [name: string]: number } = {
   "Convex CRV": 0,
   "Convex FXN": 1,
   "PENDLE PT": 2,
 }
 
-export type Aprs = { current: KeyStringValueNumber; projected: KeyStringValueNumber }
+export type Aprs = { current: NumMap; projected: NumMap }
 
 export type CurvePoolData = {
   id: string

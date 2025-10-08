@@ -2,6 +2,7 @@ node_modules
 .env
 ethers-contracts
 build
+dist
 .nyc_output
 coverage
 src/typechain
@@ -12,3 +13,4 @@ src/typechain
 prisma/migrations
 /local/*
 /src/addresses.json
+/src/config/credentials-gDrive.json

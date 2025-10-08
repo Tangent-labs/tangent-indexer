@@ -1,9 +1,9 @@
 import { AddressLike, JsonRpcProvider } from "ethers"
-import { LiquidationService } from "./LiquidationService"
-import { LiquidationExecutionContext } from "./LiquidationExecutionContext"
-import { LiquidationBotService } from "./LiquidationBotLogService"
-import { LiquidationBotLogAction, LiquidationUserFullInfo, LiquidationUserInInfo } from "../type/data"
-import NotificationService from "./NotificationService"
+import { LiquidationService } from "./LiquidationService.js"
+import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
+import { LiquidationBotService } from "./LiquidationBotLogService.js"
+import { LiquidationBotLogAction, LiquidationUserFullInfo, LiquidationUserInInfo } from "../type/data.js"
+import { NotificationService } from "./NotificationService.js"
 
 export class CheckLiquidationService {
   private liquidationService: LiquidationService

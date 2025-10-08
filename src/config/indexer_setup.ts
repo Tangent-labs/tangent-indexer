@@ -2,7 +2,7 @@ import "dotenv/config"
 import { JsonRpcProvider, Network } from "ethers"
 import * as Sentry from "@sentry/node"
 // import { ProfilingIntegration } from "@sentry/profiling-node"
-import { indexerConfig } from "./indexer_config"
+import { indexerConfig } from "./indexer_config.js"
 
 export type setUpIndexerType = {
   providers: JsonRpcProvider[]

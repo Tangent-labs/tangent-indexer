@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client"
-import { AbstractRepository } from "./AbstractRepository"
+import { AbstractRepository } from "./AbstractRepository.js"
 
 export class BoostRepository extends AbstractRepository {
   async getActiveBoosts() {
@@ -11,6 +11,14 @@ export class BoostRepository extends AbstractRepository {
         { user_address: "asc" },
         { start_at: "desc" }, // ensures latest boost per user
       ],
+    })
+  }
+
+  async getUsersBoost(users: string[]) {
+    return await this.prismaClient.user_boost.findMany({
+      // Ensute that it's getting only active boosts
+      where: { end_at: { equals: null }, user_address: { in: users } },
+      select: { user_address: true, multiplier: true },
     })
   }
 

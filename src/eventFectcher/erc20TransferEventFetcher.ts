@@ -1,5 +1,5 @@
 import { AddressLike, ethers, JsonRpcProvider } from "ethers"
-import { getEthLogs } from "./_baseFectcher"
+import { getEthLogs } from "./_baseFectcher.js"
 
 // Define Event Signatures
 const TRANSFER_TOPICS = {

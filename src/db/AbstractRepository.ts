@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client"
-import { TransactionPrisma } from "type/prisma"
+import { TransactionPrisma } from "../type/prisma.js"
 
 export class AbstractRepository {
   prismaClient: PrismaClient | TransactionPrisma

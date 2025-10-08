@@ -1,5 +1,5 @@
 import axios from "axios"
-import { Prices } from "./types"
+import { Prices } from "./types.js"
 
 export async function defiLLamaFetchPrices(tokens: string[]): Promise<Prices> {
   const DEFILLAMA_API = `https://coins.llama.fi/prices/current/${tokens.map((token) => `ethereum:${token}`)}?searchWidth=4h`

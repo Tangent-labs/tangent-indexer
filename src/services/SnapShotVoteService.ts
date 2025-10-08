@@ -1,16 +1,18 @@
 import axios from "axios"
 import fs from "fs"
 import path from "path"
-import { Proposal, ValidatedTask, Reward, RewardedChoice, OrganizationConfig } from "type/data"
-import { UserVoteRepository } from "db/UserVoteRepository"
-import { BlockService } from "./BlockService"
+import { Prisma } from "@prisma/client"
+
+import { Proposal, ValidatedTask, Reward, RewardedChoice, OrganizationConfig } from "type/data.js"
+import { UserVoteRepository } from "../db/UserVoteRepository.js"
+import { BlockService } from "./BlockService.js"
 import { JsonRpcProvider } from "ethers"
 
 // https://snapshot.box/#/s:sdcrv.eth/proposal/0x10c44649c31c9716592c5ad92752e449d8b024d50adbd75cecea00864920941e
 // https://vote.convexfinance.com
 // /?ref=littlemight.com#/proposal/0x662c82169a3e7c0ff0baeb3ceb20f9d76115b2cd2d9b138cee48d8f8f80812b0
 
-class SnapShotVoteService {
+export class SnapShotVoteService {
   userVoteRepository: UserVoteRepository
 
   constructor(userVoteRepository: UserVoteRepository) {
@@ -29,11 +31,10 @@ class SnapShotVoteService {
    * Pass to updateUserVoteTasks retrieved votes and DB registered tasks
    * Marks fetched proposals as processed to not deal with them on the next iteration
    */
-  computeUserVoteTasks = async (startBlock: number, endBlock: number, blockService: BlockService, providerURL: string) => {
-    const provider = new JsonRpcProvider(providerURL)
+  computeUserVoteTasks = async (startBlock: number, endBlock: number, blockService: BlockService, bestProvider: JsonRpcProvider) => {
     const [dateStartStr, dateEndStr] = await Promise.all([
-      blockService.getBlockTimestamp(startBlock, provider),
-      blockService.getBlockTimestamp(endBlock, provider),
+      blockService.getBlockTimestamp(startBlock, bestProvider),
+      blockService.getBlockTimestamp(endBlock, bestProvider),
     ])
 
     const proposals = await this.listProposals(dateStartStr, dateEndStr)
@@ -61,7 +62,7 @@ class SnapShotVoteService {
     const voteTasksMap = new Map<string, { id: bigint; point_rate?: number }>()
     for (const t of voteTasks) voteTasksMap.set(t.name, t)
 
-    const rows = totalVotes
+    const rows: Prisma.vote_user_tasksCreateManyInput[] = totalVotes
       .map((v) => {
         const task = voteTasksMap.get(v.task)
         if (!task || !task.point_rate) {
@@ -289,5 +290,3 @@ class SnapShotVoteService {
     return fs.readFileSync(queryPath, "utf-8")
   }
 }
-
-export default SnapShotVoteService

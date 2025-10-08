@@ -1,12 +1,20 @@
-import { PriceApiInfo, PriceApiResult, PriceApiError, CurverRegistry } from "type/data"
-import { CurvePoolListApiResult, CurvePriceApiResult, LlamaPriceApiResult, PendlePriceApiResult } from "./globalData/types"
+import { PriceApiInfo, PriceApiResult, PriceApiError, CurverRegistry } from "../type/data.js"
+import {
+  ConvexFxnApiReturn,
+  CurveApiReturn,
+  CurvePoolListApiResult,
+  CurvePriceApiResult,
+  LlamaPriceApiResult,
+  PendleApiReturn,
+  PendlePriceApiResult,
+} from "./globalData/types.js"
 import axios from "axios"
 
 export const CURVE_API = "https://api.curve.finance/api"
 const PENDLE_PRICE_API = "https://api-v2.pendle.finance/core/v1/1/assets/prices"
 const LLAMA_API = "https://coins.llama.fi/prices/current/"
 
-class PriceApiService {
+export class PriceApiService {
   async getLlamaPrice(addresses: string[]): Promise<PriceApiResult> {
     if (!addresses?.length) {
       return { prices: [] }
@@ -127,6 +135,52 @@ class PriceApiService {
       return { prices: [], error: apiError }
     }
   }
-}
 
-export default PriceApiService
+  async fetchCurveApiData() {
+    // Fetch APY of curve LP on their API
+    try {
+      const response = await axios.get(CURVE_API + "/getSubgraphData/ethereum")
+      const curveJson: CurveApiReturn = response.data
+      return curveJson
+    } catch (e) {
+      const apiError: PriceApiError = {
+        api: "CurvePriceApi",
+        reason: e instanceof Error ? e.message : "Unknown error",
+        httpCode: axios.isAxiosError(e) && e.response ? e.response.status : undefined,
+      }
+      return { error: apiError }
+    }
+  }
+
+  async fetchPendleApiData() {
+    try {
+      const PENDLE_API = "https://api-v2.pendle.finance/core/v1/1/markets/active"
+      const pendleResponse = await axios.get(PENDLE_API)
+      const pendleJson: PendleApiReturn = pendleResponse.data
+      return pendleJson
+    } catch (e) {
+      const apiError: PriceApiError = {
+        api: "PendlePriceApi",
+        reason: e instanceof Error ? e.message : "Unknown error",
+        httpCode: axios.isAxiosError(e) && e.response ? e.response.status : undefined,
+      }
+      return { error: apiError }
+    }
+  }
+
+  async fetchConvexFXNApiData() {
+    try {
+      const CONVEX_FXN_API = "https://fx.convexfinance.com/api/fxp/pools"
+      const convexFXNResponse = await axios.get(CONVEX_FXN_API)
+      const cvxFxnJson: ConvexFxnApiReturn = convexFXNResponse.data
+      return cvxFxnJson
+    } catch (e) {
+      const apiError: PriceApiError = {
+        api: "ConvexFXNPriceApi",
+        reason: e instanceof Error ? e.message : "Unknown error",
+        httpCode: axios.isAxiosError(e) && e.response ? e.response.status : undefined,
+      }
+      return { error: apiError }
+    }
+  }
+}

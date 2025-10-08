@@ -1,15 +1,21 @@
 import { formatEther, formatUnits, JsonRpcProvider } from "ethers"
-import { MarketContractsRepository } from "db/MarketContractsRepository"
 import { Prisma, PrismaClient } from "@prisma/client"
 import { commonERC20, curveLpMapping } from "@tangent/defi-resources"
-import { chainView } from "utils/chainView"
-import axios from "axios"
+import fetch from "node-fetch"
 
-import * as usgContractAddresses from "../../addresses.json"
-import * as MarketCurrentAPR from "../../abis/MarketCurrentAPR.json"
-import { APR_TYPE, TVLAprs, Prices, KeyStringValueNumber, CurveApiReturn, PendleApiReturn, ConvexFxnApiReturn } from "./types"
-import { defiLLamaFetchPrices, getPriceInfos } from "./DefiLLamaPriceFetcher"
-import { bigIntToNumber } from "scripts/utils/formatting"
+import { ERC20Repository } from "../../db/ERC20Repository.js"
+import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
+
+import { chainView } from "../../utils/chainView.js"
+
+import GlobalDataChainview from "../../abis/GlobalDataChainview.json" with { type: "json" }
+import { APR_TYPE, TVLAprs, Prices, CurveApiReturn, PendleApiReturn, ConvexFxnApiReturn, USGIndexingGlobalDataOut, USGInfoOut } from "./types.js"
+import { defiLLamaFetchPrices, getPriceInfos } from "./DefiLLamaPriceFetcher.js"
+import { bigIntToNumber } from "../../scripts/utils/formatting.js"
+import { NumMap } from "../../services/boost/types.js"
+
+import { PriceApiService } from "services/PriceApiService.js"
+import { AddressesJson } from "type/data.js"
 
 // TODO This is arbitraty, need a more dynamic version
 // eslint-disable-next-line no-loss-of-precision
@@ -24,71 +30,164 @@ const rewardTokens = [
   { symbol: "wstETH", address: commonERC20.wstETH },
 ]
 
+type Markets = {
+  contract_type: number
+  id: bigint
+  contract_name: string
+  collateral_address: string
+  contract_address: string
+}
 export class GlobalMarketDataService {
+  erc20Repository: ERC20Repository
   marketContractsRepo: MarketContractsRepository
   provider: JsonRpcProvider
+  priceApiService: PriceApiService
 
-  constructor(prisma: PrismaClient, provider: JsonRpcProvider) {
+  constructor(prisma: PrismaClient, provider: JsonRpcProvider, priceApiService: PriceApiService) {
+    this.erc20Repository = new ERC20Repository(prisma)
     this.marketContractsRepo = new MarketContractsRepository(prisma)
     this.provider = provider
+    this.priceApiService = priceApiService
   }
 
-  async fetchAndFormatData() {
+  async computeAndStoreAprTvlsAndTotalSupplies() {
+    // Retrieve all markets and their associated type
+    const markets = await this.getAllMarkets()
+
+    // Retrieve the onchain data containing market data + total supplies
+    const onchainDatas = await this.fetchGlobalDataChainview(markets)
+
+    const now = new Date(Number(onchainDatas.timestamp) * 1000)
+
+    const marketsData = await this.fetchAndFormatMarketData(markets, onchainDatas.marketData, now)
+    const totalSupplies = await this.fetchAndFormatTotalSupplies(onchainDatas.usgInfo, now)
+
+    return { marketsData, totalSupplies, now }
+  }
+
+  //  MARKET DATA FETCHING AND FORMATTING
+
+  async fetchAndFormatMarketData(markets: Markets[], rawMarketData: TVLAprs[], now: Date) {
+    // Fetch from DefiLlama prices of ERC20 tokens distributed in the underlying protocols
+    const formattedPrices = await defiLLamaFetchPrices(rewardTokens.map((a) => a.address))
+
+    // Fetch Curve API data
+    const curveAPIData = await this.priceApiService.fetchCurveApiData()
+
+    // Fetch CONVEX FXN informations on their API
+    const convexFXNAPIData = await this.priceApiService.fetchConvexFXNApiData()
+
+    // Fetch PENDLE markets informations on their API
+    const pendleAPIData = await this.priceApiService.fetchPendleApiData()
+
+    // Verify if there is an error field in the API returns
+    if ("error" in curveAPIData) {
+      throw new Error(`Erreur dans fetchCurveApiData: ${curveAPIData.error.reason}`)
+    }
+    if ("error" in convexFXNAPIData) {
+      throw new Error(`Erreur dans fetchConvexFXNApiData: ${convexFXNAPIData.error.reason}`)
+    }
+    if ("error" in pendleAPIData) {
+      throw new Error(`Erreur dans fetchPendleApiData: ${pendleAPIData.error.reason}`)
+    }
+
+    const formattedMarketData = this.formatMarketData(markets, rawMarketData, formattedPrices, curveAPIData, convexFXNAPIData, pendleAPIData, now)
+
+    return formattedMarketData
+  }
+
+  async fetchAndFormatTotalSupplies(usgInfos: USGInfoOut, now: Date) {
+    const totalSupplyUSG = usgInfos.circulatingUsg
+    const totalSupplysUSG = usgInfos.sUsgSupply
+
+    const usgAndsUSG = await this.erc20Repository.getTrackedERC20In(["USG", "sUSG"])
+    const usgRow = usgAndsUSG.find((erc20) => erc20.name === "USG")!
+    const sUsgRow = usgAndsUSG.find((erc20) => erc20.name === "sUSG")!
+
+    const totalSupplies: Prisma.total_suppliesUncheckedCreateInput[] = [
+      { token_id: usgRow?.id, timestamp: now, total_supply: totalSupplyUSG.toString() },
+      { token_id: sUsgRow?.id, timestamp: now, total_supply: totalSupplysUSG.toString() },
+    ]
+
+    return totalSupplies
+  }
+
+  async fetchGlobalDataChainview(markets: Markets[]) {
+    const addresses = (await (await fetch("https://raw.githubusercontent.com/Tangent-labs/public-files/main/addresses.json")).json()) as AddressesJson
+
+    // Retrieve the onchain data containing everything
+    const globalData = (
+      await chainView<[(string | number)[][], string, string, string, string, string[], string], USGIndexingGlobalDataOut[]>(
+        this.provider,
+        GlobalDataChainview.abi,
+        GlobalDataChainview.bytecode,
+        [
+          markets.map((market) => {
+            return [market.contract_address, market.contract_type]
+          }),
+          addresses.utilities.rewardAccumulator,
+          addresses.utilities.irCalculator,
+          addresses.tokens.USG,
+          addresses.tokens.sUSG,
+          [addresses.pegKeepers["USG-USDC"], addresses.pegKeepers["USG-wcrvUSD"]],
+          addresses.oracles.USG,
+        ]
+      )
+    )[0]
+
+    return globalData
+  }
+
+  computeCurrentStreamedAPR(onchainData: TVLAprs, prices: Prices): NumMap {
+    const tvlTangent = Number(formatEther(onchainData.globalData.totalStakedUSD))
+    const actualAPRs: { [aprKey: string]: number } = {} // APY: item?.latestWeeklyApy
+    onchainData.currentAPR.forEach((streamData) => {
+      const rewardAddress = streamData.token.toLowerCase()
+      const priceInfo = prices[rewardAddress]
+      const usdPerYear = Number(formatUnits(streamData.amountPerYear, priceInfo.decimals)) * priceInfo.price
+      const key = rewardTokens.find((rewardToken) => rewardToken.address.toLowerCase() === rewardAddress.toLowerCase())!.symbol
+      actualAPRs[key] = (usdPerYear * 100) / tvlTangent
+    })
+    return actualAPRs
+  }
+
+  async getAllMarkets() {
     // Retrieve all markets indexed in the database
     const markets = (await this.marketContractsRepo.getContracts()).map((a) => {
       return { ...a, contract_type: APR_TYPE[a.contract_type] }
     })
 
-    // Retrieve the onchain data containing everything
-    const APRTvlData = (
-      await chainView<[(string | number)[][], string, string], TVLAprs[][]>(this.provider, MarketCurrentAPR.abi, MarketCurrentAPR.bytecode, [
-        markets.map((market) => {
-          return [market.contract_address, market.contract_type]
-        }),
-        usgContractAddresses.utilities.rewardAccumulator,
-        usgContractAddresses.utilities.irCalculator,
-      ])
-    )[0]
+    return markets
+  }
 
-    // Fetch from DefiLlama prices of ERC20 tokens distributed in the underlying protocols
-    const formattedPrices = await defiLLamaFetchPrices(rewardTokens.map((a) => a.address))
-
-    // Fetch APY of curve LP on their API
-    const CURVE_API = "https://api.curve.finance/api"
-    const response = await axios.get(CURVE_API + "/getSubgraphData/ethereum")
-    const curveJson: CurveApiReturn = response.data
-
-    // Fetch PENDLE markets informations on their API
-    const PENDLE_API = "https://api-v2.pendle.finance/core/v1/1/markets/active"
-    const pendleResponse = await axios.get(PENDLE_API)
-    const pendleJson: PendleApiReturn = pendleResponse.data
-
-    // Fetch CONVEX FXN informations on their API
-    const CONVEX_FXN_API = "https://fx.convexfinance.com/api/fxp/pools"
-    const convexFXNResponse = await axios.get(CONVEX_FXN_API)
-    const cvxFxnJson: ConvexFxnApiReturn = convexFXNResponse.data
-
-    const now = new Date()
-
+  formatMarketData(
+    markets: Markets[],
+    marketData: TVLAprs[],
+    formattedPrices: Prices,
+    curveAPIData: CurveApiReturn,
+    convexFXNAPIData: ConvexFxnApiReturn,
+    pendleAPIData: PendleApiReturn,
+    now: Date
+  ) {
     // Iterates over all markets and hydrate them with data previously fetched through a reduce
     const formattedData: Prisma.market_global_dataUncheckedCreateInput[] = markets.map((market) => {
       // Find the corresponding market in the onchain data
-      const aprTvlData = APRTvlData.find((onChainData) => onChainData.globalData.marketAddress === market.contract_address)!
-
+      const aprTvlData = marketData.find((onChainData) => onChainData.globalData.marketAddress.toLowerCase() === market.contract_address.toLowerCase())!
       // Find the corresponding market in the onchain data
-      const currentAPR = computeCurrentStreamedAPR(aprTvlData, formattedPrices)
-      const projectedAPR: KeyStringValueNumber = {}
+      const currentAPR = this.computeCurrentStreamedAPR(aprTvlData, formattedPrices)
+      const projectedAPR: NumMap = {}
 
       if (market.contract_type === APR_TYPE["Convex CRV"] || market.contract_type === APR_TYPE["Convex FXN"]) {
         // Get the APY fees of curve LP
-        let item = curveJson.data.poolList.find((pool: { address: string }) => pool.address === market.collateral_address)
+        let item = curveAPIData.data.poolList.find((pool: { address: string }) => pool.address.toLowerCase() === market.collateral_address)
         if (!item) {
           const mappingRes = curveLpMapping.LPS[market.collateral_address]
           if (mappingRes) {
             const curvePool = mappingRes.curve_pool
-            item = curveJson.data.poolList.find((pool: { address: string }) => pool.address.toLowerCase() === curvePool?.toLowerCase())
+            item = curveAPIData.data.poolList.find((pool: { address: string }) => pool.address.toLowerCase() === curvePool?.toLowerCase())
           }
         }
+
         currentAPR.APY = item!.latestWeeklyApy
         projectedAPR.APY = item!.latestWeeklyApy
 
@@ -109,7 +208,7 @@ export class GlobalMarketDataService {
 
         // Convex FXN
         else {
-          const data = cvxFxnJson.pools.augmentedPoolData.find((cvxFxnPool: any) => {
+          const data = convexFXNAPIData.pools.augmentedPoolData.find((cvxFxnPool: any) => {
             if (!cvxFxnPool?.curvePoolData) {
               return false
             }
@@ -124,7 +223,7 @@ export class GlobalMarketDataService {
       }
       // PENDLE PT
       else if (market.contract_type === APR_TYPE["PENDLE PT"]) {
-        const item = pendleJson.markets.find((pendleMarket) => {
+        const item = pendleAPIData.markets.find((pendleMarket) => {
           const ptAddress = pendleMarket.pt.split("-")[1]
           return ptAddress.toLowerCase() === market.collateral_address.toLowerCase()
         })!
@@ -151,17 +250,4 @@ export class GlobalMarketDataService {
 
     return formattedData
   }
-}
-
-function computeCurrentStreamedAPR(onchainData: TVLAprs, prices: Prices): KeyStringValueNumber {
-  const tvlTangent = Number(formatEther(onchainData.globalData.totalStakedUSD))
-  const actualAPRs: { [aprKey: string]: number } = {} // APY: item?.latestWeeklyApy
-  onchainData.currentAPR.forEach((streamData) => {
-    const rewardAddress = streamData.token.toLowerCase()
-    const priceInfo = prices[rewardAddress]
-    const usdPerYear = Number(formatUnits(streamData.amountPerYear, priceInfo.decimals)) * priceInfo.price
-    const key = rewardTokens.find((rewardToken) => rewardToken.address.toLowerCase() === rewardAddress.toLowerCase())!.symbol
-    actualAPRs[key] = (usdPerYear * 100) / tvlTangent
-  })
-  return actualAPRs
 }

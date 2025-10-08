@@ -88,10 +88,10 @@ AS $$
       FROM (
         SELECT
           pf.timestamp AS ts,
-          LEAD(pf.timestamp) OVER (PARTITION BY pf.token ORDER BY pf.timestamp) AS next_ts,
+          LEAD(pf.timestamp) OVER (PARTITION BY pf.address ORDER BY pf.timestamp) AS next_ts,
           pf.price_usd
         FROM points.price_feeds pf
-        WHERE pf.token = c.token_address
+        WHERE pf.address = c.token_address
           AND pf.timestamp < c.seg_end              -- pre-filter for efficiency
       ) ps
       WHERE ps.next_ts IS NOT NULL
@@ -102,7 +102,7 @@ AS $$
     LEFT JOIN LATERAL (
       SELECT NULLIF(pf2.price_usd, 0)::double precision AS price_usd
       FROM points.price_feeds pf2
-      WHERE pf2.token = c.token_address
+      WHERE pf2.address = c.token_address
         AND pf2.timestamp <= c.seg_start
       ORDER BY pf2.timestamp DESC
       LIMIT 1

@@ -1,8 +1,9 @@
 import { AddressLike, Contract, ethers, id, JsonRpcProvider, Log } from "ethers"
-import { getEthLogs } from "./_baseFectcher"
-import { MarketType } from "type/data"
 import { Prisma } from "@prisma/client"
-import { MARKET_CONVEX_CRV_CREATED, MARKET_CONVEX_FXN_CREATED, MARKET_NO_SOCIABILIZATION_CREATED } from "resources/eventSignatures"
+
+import { MARKET_CONVEX_CRV_CREATED, MARKET_CONVEX_FXN_CREATED, MARKET_NO_SOCIABILIZATION_CREATED } from "../resources/eventSignatures.js"
+import { getEthLogs } from "./_baseFectcher.js"
+import { MarketType } from "../type/data.js"
 
 // Define Event Signatures
 
@@ -36,7 +37,7 @@ const parseMarketEvent = async (log: Log, provider: JsonRpcProvider): Promise<Pr
   const decoded = ethers.AbiCoder.defaultAbiCoder().decode(["address", "string"], log.data)
   const name = decoded[1]
   const type = name.split("-")[0].trim()
-  const marketAddress = decoded[0]
+  const marketAddress = decoded[0] as string
 
   const marketContract = new Contract(
     marketAddress,
@@ -60,7 +61,7 @@ const parseMarketEvent = async (log: Log, provider: JsonRpcProvider): Promise<Pr
 
   return {
     contract_name: name,
-    contract_address: marketAddress,
+    contract_address: marketAddress.toLowerCase(),
     contract_type: type,
     collateral_address: await marketContract.collatToken(),
   }

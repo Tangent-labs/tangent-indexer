@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import fs from "fs"
 
-import { LiquidationService } from "../../../src/services/LiquidationService"
-import { ActiveBorrowersRepository } from "../../../src/db/ActiveBorrowersRepository"
+import { LiquidationService } from "../../../src/services/LiquidationService.js"
+import { ActiveBorrowersRepository } from "../../../src/db/ActiveBorrowersRepository.js"
 import { AddressLike, JsonRpcProvider } from "ethers"
 import {
   LiquidationAccountOutInfo,
@@ -11,8 +11,8 @@ import {
   LiquidationUserInfo,
   LiquidationUserInInfo,
   LiquidationUserFullInfo,
-} from "../../../src/type/data"
-import { BlockRepository } from "../../../src/db/BlockRepository"
+} from "../../../src/type/data.js"
+import { BlockRepository } from "../../../src/db/BlockRepository.js"
 
 const DECIMALS = BigInt(10 ** 18)
 
@@ -576,8 +576,8 @@ describe("LiquidationService - prioritizeActions", () => {
     expect(result[1].account).toBe("0xUser2") // Second highest position value
 
     // Verify that lower value positions were not included
-    expect(result.some((r) => r.account === "0xUser3")).toBe(false)
-    expect(result.some((r) => r.account === "0xUser4")).toBe(false)
-    expect(result.some((r) => r.account === "0xUser5")).toBe(false)
+    expect(result.some((r: any) => r.account === "0xUser3")).toBe(false)
+    expect(result.some((r: any) => r.account === "0xUser4")).toBe(false)
+    expect(result.some((r: any) => r.account === "0xUser5")).toBe(false)
   })
 })

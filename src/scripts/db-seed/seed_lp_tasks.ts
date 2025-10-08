@@ -1,16 +1,15 @@
-import { PrismaClient } from "@prisma/client"
-import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext"
+import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext.js"
+import { TransactionPrisma } from "../../type/prisma.js"
+import { AddressesJson } from "type/data.js"
 
-const prisma = new PrismaClient()
-
-async function seedTasks() {
+export async function seedLPTasks(prisma: TransactionPrisma, addresses: AddressesJson) {
   await prisma.lp_task.createMany({
     data: [
       {
         name: "USG",
         action_type: "hold",
         protocol: "tangent",
-        token_address: "0xf0014CBe67b3aB638bdaA2e2Cb1B531935829E50".toLowerCase(),
+        token_address: addresses.tokens.USG.toLowerCase(),
         point_rate: 0.00417,
         description: "Hold USG in your wallet",
         url: "https://curve.fi/deposit",
@@ -79,12 +78,3 @@ async function seedTasks() {
     ],
   })
 }
-
-seedTasks()
-  .catch((e) => {
-    console.error(e)
-    process.exit(1)
-  })
-  .finally(async () => {
-    await prisma.$disconnect()
-  })

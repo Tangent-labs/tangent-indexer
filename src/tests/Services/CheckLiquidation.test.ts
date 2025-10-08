@@ -1,14 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { PrismaClient } from "@prisma/client"
-import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository"
-import { LiquidationBotLogRepository } from "db/LiquidationBotLogRepository"
-import { LiquidationBotService } from "services/LiquidationBotLogService"
-import { LiquidationService } from "services/LiquidationService"
-import { LiquidationExecutionContext } from "services/LiquidationExecutionContext"
 import { AddressLike, JsonRpcProvider } from "ethers"
-import { LiquidationUserFullInfo } from "type/data"
-import NotificationService from "services/NotificationService"
-import { CheckLiquidationService } from "services/CheckLiquidationService"
+import { PrismaClient } from "@prisma/client"
+import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
+import { LiquidationBotLogRepository } from "../../db/LiquidationBotLogRepository.js"
+import { LiquidationBotService } from "../../services/LiquidationBotLogService.js"
+import { LiquidationService } from "../../services/LiquidationService.js"
+import { LiquidationExecutionContext } from "../../services/LiquidationExecutionContext.js"
+
+import { LiquidationUserFullInfo } from "../../type/data.js"
+import { NotificationService } from "../../services/NotificationService.js"
+import { CheckLiquidationService } from "services/CheckLiquidationService.js"
 
 const DECIMALS = BigInt(10 ** 18)
 
