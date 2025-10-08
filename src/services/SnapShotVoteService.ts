@@ -71,7 +71,7 @@ export class SnapShotVoteService {
         }
 
         // Validate all required fields
-        if (!v.voterAddress || !v.proposalId || !v.validationDate || v.votingPower === undefined || v.votingPower === null) {
+        if (!v.voterAddress || !v.proposalId || v.votingPower === undefined || v.votingPower === null) {
           return null
         }
 
@@ -247,7 +247,6 @@ export class SnapShotVoteService {
               validatedVotes.push({
                 task: reward.task,
                 value: reward.value,
-                validationDate: new Date(vote.created * 1000),
                 voterAddress: vote.voter,
                 votingPower: vote.vp || 0,
                 proposalId: proposal.id,
