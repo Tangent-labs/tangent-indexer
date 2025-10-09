@@ -30,11 +30,20 @@ dotenv.config()
 
 async function main() {
   const { providers, handleError } = setUpIndexer()
-  const { prismaClient, userMarketService, userPointsService, marketCreationService, blockService, activeBorrowersService, voteEnventService, setTransaction } =
-    await setUpIndexerBlockServices()
+  const {
+    prismaClient,
+    userMarketService,
+    userPointsService,
+    marketCreationService,
+    blockService,
+    activeBorrowersService,
+    voteEnventService,
+    blockRepository,
+    setTransaction,
+  } = await setUpIndexerBlockServices()
 
   try {
-    const blockInfo = await BlockService.getIndexerBlockInfo(providers, blockService)
+    const blockInfo = await blockService.getIndexerBlockInfo(providers)
     if (blockInfo === false) {
       console.log("Nothing to index")
       return
@@ -64,7 +73,6 @@ async function main() {
           // Call fetchTransferLogs with the addresses
           if (!transferToWatch?.length) {
             console.warn("ERC20 to track is not filled")
-            // TODO add  a notification
           }
           const transferLogs = transferToWatch?.length ? await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch) : []
 
@@ -72,7 +80,7 @@ async function main() {
           const { activeBorrowActions, sortedAndParsedEvents, blockIds } = userMarketService.sortUserMarketLogs(logs, mapMarketIdAddresses)
           const { sortedAndParsedPointsEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs(transferLogs)
 
-          const uniqueBlockIds = [...new Set([...blockIds, ...pointsEventsBlockIds])]
+          const uniqueBlockIds = [...new Set([...blockIds, ...pointsEventsBlockIds, endBlock])]
           // Find block timestamps of the unique blockIDs
           const blocks = await blockService.fetchBlockTimestamps(uniqueBlockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
 
@@ -89,7 +97,7 @@ async function main() {
           await activeBorrowersService.updateActiveBorrowers(hydratedWithCorrectDates.userActions)
 
           // Update the last indexed block
-          await blockService.updateLastBlockIndexed(endBlock)
+          await blockRepository.storeEventBlock(endBlock, new Date(blocks.get(endBlock)! * 1000))
         },
         {
           timeout: 10_000_000,
@@ -145,5 +153,6 @@ async function setUpIndexerBlockServices() {
     activeBorrowersService,
     setTransaction,
     marketContractsRepository,
+    blockRepository,
   }
 }

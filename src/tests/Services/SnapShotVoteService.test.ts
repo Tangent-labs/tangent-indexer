@@ -2,7 +2,6 @@ import axios from "axios"
 import { UserVoteRepository } from "../../db/UserVoteRepository.js"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { SnapShotVoteService } from "../../services/SnapShotVoteService.js"
-import { JsonRpcProvider } from "ethers"
 
 const mockProposals = [
   {
@@ -52,7 +51,7 @@ describe("SnapShotVoteService", () => {
   let markProcessedProposalsSpy: ReturnType<typeof vi.spyOn>
   let getProcessedProposalsSpy: ReturnType<typeof vi.spyOn>
   let createUserVoteTasksSpy: ReturnType<typeof vi.spyOn>
-  let getBlockTimestampSpy: ReturnType<typeof vi.spyOn>
+  let fetchBlockTimestampsSpy: ReturnType<typeof vi.spyOn>
   let fetchUsersBoostsSpy: ReturnType<typeof vi.spyOn>
 
   // Mock axios for Vitest
@@ -80,7 +79,7 @@ describe("SnapShotVoteService", () => {
   } as any as UserVoteRepository
 
   const blockService = {
-    getBlockTimestamp: vi.fn(),
+    fetchBlockTimestamps: vi.fn(),
   } as any
 
   beforeEach(() => {
@@ -94,7 +93,7 @@ describe("SnapShotVoteService", () => {
     createUserVoteTasksSpy = vi.spyOn(userVoteRepository as any, "createUserVoteTasks").mockResolvedValue(undefined as any)
     fetchUsersBoostsSpy = vi.spyOn(userVoteRepository as any, "fetchUsersBoosts").mockResolvedValue(undefined as any)
 
-    getBlockTimestampSpy = vi.spyOn(blockService as any, "getBlockTimestamp").mockResolvedValue(undefined as any)
+    fetchBlockTimestampsSpy = vi.spyOn(blockService as any, "fetchBlockTimestamps").mockResolvedValue(undefined as any)
     ;(axios.post as any).mockReset()
   })
 
@@ -109,12 +108,12 @@ describe("SnapShotVoteService", () => {
     fetchTasksSpy.mockResolvedValue(mockTasks)
     markProcessedProposalsSpy.mockResolvedValue(undefined)
     getProcessedProposalsSpy.mockResolvedValue([])
-    getBlockTimestampSpy.mockResolvedValue(1754308728)
+    fetchBlockTimestampsSpy.mockResolvedValue(new Map<number, number>())
 
     const startBlock = 23067443
     const endBlock = 23097443
-    const provider = new JsonRpcProvider("http://127.0.0.1:8545/")
-    await snapShotVoteService.computeUserVoteTasks(startBlock, endBlock, blockService, provider)
+    const url = "http://127.0.0.1:8545/"
+    await snapShotVoteService.computeUserVoteTasks(startBlock, endBlock, blockService, url)
 
     expect(updateUserVoteTasksSpy).toHaveBeenCalledWith(mockVotes, mockTasks)
 

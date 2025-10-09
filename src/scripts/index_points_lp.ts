@@ -17,16 +17,16 @@ dotenv.config()
 
 async function main() {
   const { providers, handleError } = setUpIndexer()
-  const { prismaClient, userPointsService, blockService, setTransaction } = setUpIndexerBlockServices()
+  const { prismaClient, userPointsService, blockService, setTransaction, blockRepository } = setUpIndexerBlockServices()
 
   try {
-    const blockInfo = await BlockService.getPointsBlockInfo(providers, blockService)
+    const blockInfo = await blockService.getLPPointsBlockInfo(providers)
     if (blockInfo === false) {
       console.log("Nothing to index")
       return
     }
 
-    const { startBlock, endBlock, actualBlock, bestProviderIndex } = blockInfo
+    const { startBlock, endBlock, bestProviderIndex } = blockInfo
 
     if (startBlock && endBlock) {
       console.log("indexing :", startBlock, "<----------------->", endBlock)
@@ -45,14 +45,14 @@ async function main() {
           await userPointsService.processUserPoints(startBlock, endBlock, blockService, indexerConfig.provider.chainRpc[bestProviderIndex])
 
           // Update block logic
-          await blockService.updateLastEventBlockIndexed(endBlock)
+          await blockRepository.storeLPPointsBlock(endBlock)
         },
         {
           timeout: 10_000_000,
         }
       )
     } else {
-      console.log("Nothing to index, Current block:", actualBlock)
+      console.log("Nothing to index")
     }
   } catch (e: any) {
     console.error("Error while indexing blocks", (e as Error).message)
@@ -82,5 +82,6 @@ function setUpIndexerBlockServices() {
     userPointsService,
     blockService,
     setTransaction,
+    blockRepository,
   }
 }
