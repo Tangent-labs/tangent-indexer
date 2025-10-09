@@ -11,6 +11,7 @@
     "tangent:indexer-points-lp": "tsx src/scripts/index_points_lp.ts",
     "tangent:indexer-points-votes": "tsx src/scripts/index_points_votes.ts",
     "tangent:indexer-global-data": "tsx src/scripts/index_global_data.ts",
+    "tangent:snapshot-prices": "tsx src/scripts/snapshot_prices.ts",
     "tangent:check-liquidation": "tsx src/scripts/check_liquidation.ts",
     "prisma:actualize-views": "tsx src/scripts/actualize-views.ts",
     "prisma:truncate": "tsx src/scripts/utils/truncate_tables.ts",

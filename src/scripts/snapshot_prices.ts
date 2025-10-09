@@ -6,7 +6,7 @@ import { setUpIndexer } from "../config/indexer_setup.js"
 import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
 import { getAddressesJson } from "utils/jsonReader.js"
 
-const checkPrices = async () => {
+const snapshotPrices = async () => {
   const { providers } = setUpIndexer()
 
   const prisma = new PrismaClient()
@@ -19,4 +19,4 @@ const checkPrices = async () => {
   }
 }
 
-checkPrices()
+snapshotPrices()
