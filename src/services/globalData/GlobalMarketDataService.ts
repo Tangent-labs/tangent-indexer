@@ -1,7 +1,6 @@
 import { formatEther, formatUnits, JsonRpcProvider } from "ethers"
 import { Prisma, PrismaClient } from "@prisma/client"
 import { commonERC20, curveLpMapping } from "@tangent/defi-resources"
-import fetch from "node-fetch"
 
 import { ERC20Repository } from "../../db/ERC20Repository.js"
 import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
@@ -15,7 +14,7 @@ import { bigIntToNumber } from "../../scripts/utils/formatting.js"
 import { NumMap } from "../../services/boost/types.js"
 
 import { PriceApiService } from "services/PriceApiService.js"
-import { AddressesJson } from "type/data.js"
+import { getAddressesJson } from "utils/jsonReader.js"
 
 // TODO This is arbitraty, need a more dynamic version
 // eslint-disable-next-line no-loss-of-precision
@@ -113,7 +112,7 @@ export class GlobalMarketDataService {
   }
 
   async fetchGlobalDataChainview(markets: Markets[]) {
-    const addresses = (await (await fetch("https://raw.githubusercontent.com/Tangent-labs/public-files/main/addresses.json")).json()) as AddressesJson
+    const addresses = await getAddressesJson()
 
     // Retrieve the onchain data containing everything
     const globalData = (

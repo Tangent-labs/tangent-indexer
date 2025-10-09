@@ -1,7 +1,6 @@
 import * as dotenv from "dotenv"
 import { TransactionPrisma } from "type/prisma.js"
 import { PrismaClient } from "@prisma/client"
-import fetch from "node-fetch"
 
 import { setUpIndexer } from "../config/indexer_setup.js"
 
@@ -24,7 +23,7 @@ import { getEthLogs } from "../eventFectcher/_baseFectcher.js"
 import { fetchTransferLogs } from "../eventFectcher/erc20TransferEventFetcher.js"
 
 import { indexerConfig } from "../config/indexer_config.js"
-import { AddressesJson } from "type/data.js"
+import { getAddressesJson } from "utils/jsonReader.js"
 
 dotenv.config()
 
@@ -132,7 +131,7 @@ async function setUpIndexerBlockServices() {
     activeBorrowersRepository.setClient(dbTransaction)
   }
 
-  const addresses = (await (await fetch("https://raw.githubusercontent.com/Tangent-labs/public-files/main/addresses.json")).json()) as AddressesJson
+  const addresses = await getAddressesJson()
   // Set up the services
   const blockService = new BlockService(blockRepository)
   const marketCreationService = new MarketCreationService(marketContractsRepository, addresses.utilities.marketCreator)

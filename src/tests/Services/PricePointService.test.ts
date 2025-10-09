@@ -19,7 +19,7 @@ const addresses: AddressesJson = {
     rewardAccumulator: "0xE",
     zappingProxy: "0xF",
   },
-  implementation: {
+  implementations: {
     basicERC20Market: "0xG",
     convexCrvMarket: "0xH",
     convexFxnMarket: "0xI",

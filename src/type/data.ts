@@ -162,7 +162,7 @@ export type AddressesJson = {
     sTAN: string
     vsTAN: string
   }
-  implementation: {
+  implementations: {
     convexCrvMarket: string
     convexFxnMarket: string
     basicERC20Market: string
