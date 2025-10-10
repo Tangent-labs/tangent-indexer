@@ -71,7 +71,7 @@ async function main() {
 
           // Call fetchTransferLogs with the addresses
           if (!transferToWatch?.length) {
-            console.warn("ERC20 to track is not filled")
+            throw Error("ERC20 to track is not filled")
           }
           const transferLogs = transferToWatch?.length ? await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch) : []
 
@@ -79,7 +79,7 @@ async function main() {
           const { activeBorrowActions, sortedAndParsedEvents, blockIds } = userMarketService.sortUserMarketLogs(logs, mapMarketIdAddresses)
           const { sortedAndParsedPointsEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs(transferLogs)
 
-          const uniqueBlockIds = [...new Set([...blockIds, ...pointsEventsBlockIds, endBlock])]
+          const uniqueBlockIds = [...new Set([...blockIds, ...pointsEventsBlockIds, "0x" + endBlock.toString(16)])]
           // Find block timestamps of the unique blockIDs
           const blocks = await blockService.fetchBlockTimestamps(uniqueBlockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
 

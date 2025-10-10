@@ -101,20 +101,27 @@ export class BlockService {
     return { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex }
   }
 
-  async fetchBlockTimestamps(blockNumbers: number[], providerURL: string) {
-    const requests = blockNumbers.map((blockNumber, index) => ({
-      jsonrpc: "2.0",
-      id: index + 1,
-      method: "eth_getBlockByNumber",
-      params: [
-        blockNumber.toString(16), // format hex
-        false,
-      ],
-    }))
+  async fetchBlockTimestamps(blockNumbers: (number | string)[], providerURL: string) {
+    const requests = blockNumbers.map((blockNumber, index) => {
+      // This kind of black magic is mandatory because of Log from ethers returns sometimes a string
+      if (typeof blockNumber === "number") {
+        blockNumber = "0x" + blockNumber.toString(16)
+      }
+      return {
+        jsonrpc: "2.0",
+        id: index + 1,
+        method: "eth_getBlockByNumber",
+        params: [
+          blockNumber, // format hex
+          false,
+        ],
+      }
+    })
 
     const res = await axios.post(providerURL, requests, {
       headers: { "Content-Type": "application/json" },
     })
+
     const responses = res.data as BlockInfo[]
 
     const timestampPerBlockId: Map<number, number> = new Map()
