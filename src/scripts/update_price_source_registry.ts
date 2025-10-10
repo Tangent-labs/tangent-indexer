@@ -3,7 +3,7 @@ import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
 import { PriceRepository } from "../db/PriceRepository.js"
 import { JsonRpcProvider } from "ethers"
 import { PricePointService } from "../services/PricePointService.js"
-import { getAddressesJson } from "utils/jsonReader.js"
+import { getAddressesJson } from "../utils/jsonReader.js"
 
 async function Main() {
   const prismaClient = new PrismaClient()

@@ -23,7 +23,7 @@ import { getEthLogs } from "../eventFectcher/_baseFectcher.js"
 import { fetchTransferLogs } from "../eventFectcher/erc20TransferEventFetcher.js"
 
 import { indexerConfig } from "../config/indexer_config.js"
-import { getAddressesJson } from "utils/jsonReader.js"
+import { getAddressesJson } from "../utils/jsonReader.js"
 
 dotenv.config()
 

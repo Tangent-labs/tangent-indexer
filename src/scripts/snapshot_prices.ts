@@ -4,7 +4,7 @@ import { PriceRepository } from "../db/PriceRepository.js"
 import { PricePointService } from "../services/PricePointService.js"
 import { setUpIndexer } from "../config/indexer_setup.js"
 import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
-import { getAddressesJson } from "utils/jsonReader.js"
+import { getAddressesJson } from "../utils/jsonReader.js"
 
 const snapshotPrices = async () => {
   const { providers } = setUpIndexer()

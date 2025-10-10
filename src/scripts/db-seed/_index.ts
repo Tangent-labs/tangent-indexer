@@ -5,7 +5,7 @@ import { seedTokensToTrack } from "./seed_tokens.js"
 import { seedLPTasks } from "./seed_lp_tasks.js"
 import { seedVoteTasks } from "./seed_vote_tasks.js"
 import * as dotenv from "dotenv"
-import { getAddressesJson } from "utils/jsonReader.js"
+import { getAddressesJson } from "../../utils/jsonReader.js"
 import { seedPriceSources } from "./seed_price_sources.js"
 dotenv.config()
 

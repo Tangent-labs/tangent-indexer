@@ -13,8 +13,8 @@ import { defiLLamaFetchPrices, getPriceInfos } from "./DefiLLamaPriceFetcher.js"
 import { bigIntToNumber } from "../../scripts/utils/formatting.js"
 import { NumMap } from "../../services/boost/types.js"
 
-import { PriceApiService } from "services/PriceApiService.js"
-import { getAddressesJson } from "utils/jsonReader.js"
+import { PriceApiService } from "../../services/PriceApiService.js"
+import { getAddressesJson } from "../../utils/jsonReader.js"
 
 // TODO This is arbitraty, need a more dynamic version
 // eslint-disable-next-line no-loss-of-precision
