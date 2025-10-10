@@ -54,7 +54,7 @@ export class BlockRepository extends AbstractRepository {
     await this.prismaClient.event_blocks.create({
       data: {
         block_id: blockId,
-        created_at: new Date(),
+        created_at: date,
       },
     })
   }
