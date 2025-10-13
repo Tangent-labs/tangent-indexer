@@ -1,7 +1,6 @@
 import * as dotenv from "dotenv"
 import { TransactionPrisma } from "type/prisma.js"
 import { PrismaClient } from "@prisma/client"
-import fetch from "node-fetch"
 
 import { setUpIndexer } from "../config/indexer_setup.js"
 
@@ -24,17 +23,26 @@ import { getEthLogs } from "../eventFectcher/_baseFectcher.js"
 import { fetchTransferLogs } from "../eventFectcher/erc20TransferEventFetcher.js"
 
 import { indexerConfig } from "../config/indexer_config.js"
-import { AddressesJson } from "type/data.js"
+import { getAddressesJson } from "../utils/jsonReader.js"
 
 dotenv.config()
 
 async function main() {
   const { providers, handleError } = setUpIndexer()
-  const { prismaClient, userMarketService, userPointsService, marketCreationService, blockService, activeBorrowersService, voteEnventService, setTransaction } =
-    await setUpIndexerBlockServices()
+  const {
+    prismaClient,
+    userMarketService,
+    userPointsService,
+    marketCreationService,
+    blockService,
+    activeBorrowersService,
+    voteEnventService,
+    blockRepository,
+    setTransaction,
+  } = await setUpIndexerBlockServices()
 
   try {
-    const blockInfo = await BlockService.getIndexerBlockInfo(providers, blockService)
+    const blockInfo = await blockService.getIndexerBlockInfo(providers)
     if (blockInfo === false) {
       console.log("Nothing to index")
       return
@@ -63,8 +71,7 @@ async function main() {
 
           // Call fetchTransferLogs with the addresses
           if (!transferToWatch?.length) {
-            console.warn("ERC20 to track is not filled")
-            // TODO add  a notification
+            throw Error("ERC20 to track is not filled")
           }
           const transferLogs = transferToWatch?.length ? await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch) : []
 
@@ -72,7 +79,7 @@ async function main() {
           const { activeBorrowActions, sortedAndParsedEvents, blockIds } = userMarketService.sortUserMarketLogs(logs, mapMarketIdAddresses)
           const { sortedAndParsedPointsEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs(transferLogs)
 
-          const uniqueBlockIds = [...new Set([...blockIds, ...pointsEventsBlockIds])]
+          const uniqueBlockIds = [...new Set([...blockIds, ...pointsEventsBlockIds, "0x" + endBlock.toString(16)])]
           // Find block timestamps of the unique blockIDs
           const blocks = await blockService.fetchBlockTimestamps(uniqueBlockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
 
@@ -89,7 +96,7 @@ async function main() {
           await activeBorrowersService.updateActiveBorrowers(hydratedWithCorrectDates.userActions)
 
           // Update the last indexed block
-          await blockService.updateLastBlockIndexed(endBlock)
+          await blockRepository.storeEventBlock(endBlock, new Date(blocks.get(endBlock)! * 1000))
         },
         {
           timeout: 10_000_000,
@@ -124,7 +131,7 @@ async function setUpIndexerBlockServices() {
     activeBorrowersRepository.setClient(dbTransaction)
   }
 
-  const addresses = (await (await fetch("https://raw.githubusercontent.com/Tangent-labs/public-files/main/addresses.json")).json()) as AddressesJson
+  const addresses = await getAddressesJson()
   // Set up the services
   const blockService = new BlockService(blockRepository)
   const marketCreationService = new MarketCreationService(marketContractsRepository, addresses.utilities.marketCreator)
@@ -145,5 +152,6 @@ async function setUpIndexerBlockServices() {
     activeBorrowersService,
     setTransaction,
     marketContractsRepository,
+    blockRepository,
   }
 }

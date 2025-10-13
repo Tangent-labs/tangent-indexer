@@ -1,32 +1,58 @@
-import { PrismaClient } from "@prisma/client"
 import { PriceSourceCreate } from "../../type/data.js"
+import { TransactionPrisma } from "type/prisma.js"
 
-import { LPS } from "@tangent/defi-resources/build/ressources/mappings/curveLp.js"
-import { ConvexCrvPools } from "@tangent/defi-resources"
 import { CRV_DUO_CVG_ETH } from "@tangent/defi-resources/build/ressources/lps/curve.js"
 
-const prisma = new PrismaClient()
-
-const curveLP = [
+const priceFeedData: PriceSourceCreate[] = [
   // Stable USD
-  "USDC_crvUSD",
-  "frxUSD_USDe",
-
+  {
+    address: "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+    name: "USDC_crvUSD",
+    type: "curveApi",
+    reference: "factory-crvUSD",
+  },
+  {
+    address: "0xdBb1d219d84eaCEFb850ee04caCf2f1830934580",
+    name: "frxUSD_USDe",
+    type: "curveApi",
+    reference: "factory-crvUSD", // TBD
+  },
   // Stable ETH
-  "pxETH_stETH",
-
+  {
+    address: "0x6951bDC4734b9f7F3E1B74afeBC670c736A0EDB6",
+    name: "pxETH_stETH",
+    type: "curveApi",
+    reference: "factory-stable-ng",
+  },
   // Stable BTC
-  "cbBTC_WBTC",
+  {
+    address: "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+    name: "cbBTC_WBTC",
+    type: "curveApi",
+    reference: "factory-stable-ng", // TBD
+  },
 
   // TriCrypto
-  "crvUSD_ETH_CRV",
-  "USDC_WBTC_WETH",
+  {
+    address: "0x4ebdf703948ddcea3b11f675b4d1fba9d2414a14",
+    name: "crvUSD_ETH_CRV",
+    type: "curveApi",
+    reference: "factory-tricrypto",
+  },
+  {
+    address: "0x7f86bf177dd4f3494b841a37e810a34dd56c829b",
+    name: "USDC_WBTC_WETH",
+    type: "curveApi",
+    reference: "factory-tricrypto",
+  },
 
   // DuoCrypto
-  "USR_RLP",
-]
-
-const priceFeedData: PriceSourceCreate[] = [
+  {
+    address: "0xC907ba505C2E1cbc4658c395d4a2c7E6d2c32656",
+    name: "USR_RLP",
+    type: "curveApi",
+    reference: "factory-tricrypto", // TBD
+  },
   {
     address: "0xD533a949740bb3306d119CC777fa900bA034cd52",
     name: "CRVUSD",
@@ -52,28 +78,11 @@ const priceFeedData: PriceSourceCreate[] = [
     address: CRV_DUO_CVG_ETH,
     name: "CRV_DUO_CVG_ETH",
     type: "curveApi",
-    reference: LPS[CRV_DUO_CVG_ETH]?.type,
+    reference: "factory-twocrypto",
   },
 ]
-curveLP.forEach((lp: string) => {
-  const lpAddress = ConvexCrvPools[lp as keyof typeof ConvexCrvPools]?.lpToken
-  if (!lpAddress) {
-    return
-  }
-  const data = LPS[lpAddress as keyof typeof LPS]
-  if (!data || !data.type) {
-    return
-  }
 
-  priceFeedData.push({
-    address: lpAddress.toLowerCase(),
-    name: lp,
-    type: "curveApi",
-    reference: data.type,
-  })
-})
-
-async function seedPriceSources() {
+export async function seedPriceSources(prisma: TransactionPrisma) {
   const priceSources = priceFeedData.map((item) => ({
     address: item.address.toLowerCase(),
     name: item.name,
@@ -82,14 +91,8 @@ async function seedPriceSources() {
   }))
 
   await prisma.price_source.createMany({
-    skipDuplicates: true,
     data: priceSources,
   })
 
   console.log(`Price sources seeded successfully! ${priceSources.length} entries processed.`)
 }
-;(async () => {
-  await seedPriceSources()
-})()
-  .catch((e) => console.error(e))
-  .finally(async () => await prisma.$disconnect())

@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client"
-import { JsonRpcProvider, Log } from "ethers"
+import { Log } from "ethers"
 
 import { UserPointsRepository } from "../../db/UserPointsRepository.js"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
@@ -179,13 +179,8 @@ export class UserPointsService {
   }
 
   processUserPoints = async (startBlock: number, endBlock: number, blockService: BlockService, providerURL: string) => {
-    const provider = new JsonRpcProvider(providerURL)
-    const [dateStartStr, dateEndStr] = (await Promise.all([
-      blockService.getBlockTimestamp(startBlock, provider),
-      blockService.getBlockTimestamp(endBlock, provider),
-    ])) as [number, number]
-
-    await this.userPointsRepository.computeUserPoints(dateStartStr, dateEndStr)
+    const blockDates = await blockService.fetchBlockTimestamps([startBlock, endBlock], providerURL)
+    await this.userPointsRepository.computeUserPoints(blockDates.get(startBlock)!, blockDates.get(endBlock)!)
   }
 
   insertEvents = async (sortedParsedEvents: SortedEvents) => {

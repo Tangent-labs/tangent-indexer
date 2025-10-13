@@ -47,7 +47,7 @@ describe("LiquidationService", () => {
       getLastBlockIndexed: vi.fn(),
       setClient: vi.fn(),
     }
-    vi.spyOn(BlockRepository.prototype, "getLastBlockIndexed").mockImplementation(mockBlockRepository.getLastBlockIndexed)
+    vi.spyOn(BlockRepository.prototype, "getLastEventBlock").mockImplementation(mockBlockRepository.getLastBlockIndexed)
     vi.spyOn(BlockRepository.prototype, "setClient").mockImplementation(mockBlockRepository.setClient)
   })
 

@@ -18,36 +18,35 @@ dotenv.config()
 
 async function main() {
   const { providers, handleError } = setUpIndexer()
-  const { prismaClient, blockService, snapShotVoteService, onChainVoteService, setTransaction } = setUpIndexerVoteServices()
+  const { prismaClient, blockService, snapShotVoteService, onChainVoteService, blockRepository, setTransaction } = setUpIndexerVoteServices()
 
   try {
-    const blockInfo = await BlockService.getVotesBlockInfo(providers, blockService)
+    const blockInfo = await blockService.getVotesBlockInfo(providers)
     if (blockInfo === false) {
       console.log("Nothing to index")
       return
     }
 
-    const { startBlock, endBlock, actualBlock, bestProviderIndex } = blockInfo
+    const { startBlock, endBlock, bestProviderIndex, bestProvider } = blockInfo
 
     if (startBlock && endBlock) {
       console.log("indexing :", startBlock, "<----------------->", endBlock)
       await prismaClient.$transaction(
         async (dbTransaction: TransactionPrisma) => {
           setTransaction(dbTransaction)
+          const providerURL = indexerConfig.provider.chainRpc[bestProviderIndex]
 
-          const bestProvider = new JsonRpcProvider(indexerConfig.provider.chainRpc[bestProviderIndex])
-
-          await snapShotVoteService.computeUserVoteTasks(startBlock, endBlock, blockService, bestProvider)
+          await snapShotVoteService.computeUserVoteTasks(startBlock, endBlock, blockService, providerURL)
           await onChainVoteService.computeUserVoteTasks(bestProvider)
 
-          await blockService.updateLastVoteBlockIndexed(endBlock)
+          await blockRepository.storeVotesPointsBlock(endBlock)
         },
         {
           timeout: 10_000_000,
         }
       )
     } else {
-      console.log("Nothing to index, Current block:", actualBlock)
+      console.log("Nothing to index")
     }
   } catch (e: any) {
     console.error("Error while indexing blocks", (e as Error).message)
@@ -82,5 +81,6 @@ function setUpIndexerVoteServices() {
     onChainVoteService,
     blockService,
     setTransaction,
+    blockRepository,
   }
 }

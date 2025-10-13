@@ -152,7 +152,12 @@ export class PricePointService {
       }) || []
 
     return {
-      prices: validPrices,
+      prices: validPrices.map((price) => {
+        return {
+          address: price.address.toLowerCase(),
+          price: price.price,
+        }
+      }),
       warnings,
       date,
     }

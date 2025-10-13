@@ -51,7 +51,7 @@ export class LiquidationService {
 
     // try the database connectivty
     try {
-      await blockRepository.getLastBlockIndexed()
+      await blockRepository.getLastEventBlock()
       this.context.isDbAlive = true
     } catch (error) {
       this.context.isDbAlive = false

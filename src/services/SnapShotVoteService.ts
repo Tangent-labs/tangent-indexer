@@ -6,7 +6,6 @@ import { Prisma } from "@prisma/client"
 import { Proposal, ValidatedTask, Reward, RewardedChoice, OrganizationConfig } from "type/data.js"
 import { UserVoteRepository } from "../db/UserVoteRepository.js"
 import { BlockService } from "./BlockService.js"
-import { JsonRpcProvider } from "ethers"
 
 // https://snapshot.box/#/s:sdcrv.eth/proposal/0x10c44649c31c9716592c5ad92752e449d8b024d50adbd75cecea00864920941e
 // https://vote.convexfinance.com
@@ -31,13 +30,10 @@ export class SnapShotVoteService {
    * Pass to updateUserVoteTasks retrieved votes and DB registered tasks
    * Marks fetched proposals as processed to not deal with them on the next iteration
    */
-  computeUserVoteTasks = async (startBlock: number, endBlock: number, blockService: BlockService, bestProvider: JsonRpcProvider) => {
-    const [dateStartStr, dateEndStr] = await Promise.all([
-      blockService.getBlockTimestamp(startBlock, bestProvider),
-      blockService.getBlockTimestamp(endBlock, bestProvider),
-    ])
+  computeUserVoteTasks = async (startBlock: number, endBlock: number, blockService: BlockService, bestProvider: string) => {
+    const blockDates = await blockService.fetchBlockTimestamps([startBlock, endBlock], bestProvider)
 
-    const proposals = await this.listProposals(dateStartStr, dateEndStr)
+    const proposals = await this.listProposals(blockDates.get(startBlock)!, blockDates.get(endBlock)!)
 
     const totalVotes: Array<ValidatedTask> = []
 

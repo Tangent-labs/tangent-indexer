@@ -2,7 +2,7 @@ import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings
 import { AddressesJson } from "type/data.js"
 import { TransactionPrisma } from "type/prisma.js"
 
-export async function seedPriceFeeds(tx: TransactionPrisma, addresses: AddressesJson) {
+export async function seedTokensToTrack(tx: TransactionPrisma, addresses: AddressesJson) {
   const tokens = [
     {
       address: addresses.tokens.USG.toLowerCase(),

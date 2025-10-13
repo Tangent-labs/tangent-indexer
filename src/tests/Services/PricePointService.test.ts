@@ -19,7 +19,7 @@ const addresses: AddressesJson = {
     rewardAccumulator: "0xE",
     zappingProxy: "0xF",
   },
-  implementation: {
+  implementations: {
     basicERC20Market: "0xG",
     convexCrvMarket: "0xH",
     convexFxnMarket: "0xI",
@@ -125,8 +125,8 @@ describe("PricePointService", () => {
           { address: "0x4000000000000000000000000000000000000004", price: expect.any(Number) }, // ERC4626 calculated
           { address: "0x9000000000000000000000000000000000000001", price: 1.2 },
           { address: "0x9000000000000000000000000000000000000002", price: 1.15 },
-          { address: "0xM", price: 1.0 },
-          { address: "0xK", price: 1.1 },
+          { address: "0xm", price: 1.0 },
+          { address: "0xk", price: 1.1 },
         ])
       )
     })

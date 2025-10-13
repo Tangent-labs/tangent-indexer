@@ -6,7 +6,7 @@ import { MarketGlobalDataRepository } from "../db/MarketGlobalDataRepository.js"
 import { TotalSupplyRepository } from "../db/TotalSupplyRepository.js"
 
 import { GlobalMarketDataService } from "../services/globalData/GlobalMarketDataService.js"
-import { PriceApiService } from "services/PriceApiService.js"
+import { PriceApiService } from "../services/PriceApiService.js"
 dotenv.config()
 
 const prismaClient = new PrismaClient()

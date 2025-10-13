@@ -5,7 +5,7 @@ import { AbstractRepository } from "./AbstractRepository.js"
 export class UserPointsRepository extends AbstractRepository {
   // Helper: block time at or before startBlock
   getBlockTimeAtOrBefore = async (blockId: number, provider: JsonRpcProvider) => {
-    const latestIndexedBlock = await this.prismaClient.global_blocks.findFirst({
+    const latestIndexedBlock = await this.prismaClient.event_blocks.findFirst({
       where: { block_id: { lte: BigInt(blockId) } },
       orderBy: { block_id: "desc" },
       select: { block_id: true },

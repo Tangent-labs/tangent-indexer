@@ -12,59 +12,74 @@ export class BlockService {
     this.blockRepository = blockRepository
   }
 
-  async updateLastBlockIndexed(blockId: number) {
-    await this.blockRepository.storeBlockTracking(blockId)
-  }
-
-  async updateLastEventBlockIndexed(blockId: number) {
-    await this.blockRepository.storeEventBlockTracking(blockId)
-  }
-
-  async updateLastVoteBlockIndexed(blockId: number) {
-    await this.blockRepository.storeVoteBlockTracking(blockId)
-  }
-
-  //
+  // VOTES POINTS
 
   async getLastVoteBlockIndexed() {
-    const blocks = await this.blockRepository.getLastVoteBlockIndexed()
-    return !blocks ? Number(process.env.LAST_BLOCK_INDEXED) : blocks.block_id
+    const blocks = await this.blockRepository.getLastVotesPointsBlock()
+    return !blocks ? Number(process.env.STARTING_BLOCK) : blocks.block_id
   }
 
-  static async getVotesBlockInfo(providers: JsonRpcProvider[], blockService: BlockService) {
+  async getVotesBlockInfo(providers: JsonRpcProvider[]) {
     const { startingBlock, blockRange } = indexerConfig
-    const startBlock = Number(await blockService.getLastVoteBlockIndexed()) + 1 || startingBlock
-    let endBlock: number
+    const startBlock = Number(await this.getLastVoteBlockIndexed()) + 1 || startingBlock
+    let endBlock = Number(await this.getLastEventBlockIndexed())
+
     const actualBlocks = await Promise.all(providers.map((provider) => provider.getBlockNumber()))
     const actualBlock = Math.max(...actualBlocks)
+
     const bestProviderIndex = actualBlocks.indexOf(actualBlock)
     const bestProvider = providers[bestProviderIndex]
 
     // no block to index
-    if (startBlock === actualBlock + 1) {
+    if (startBlock === endBlock + 1) {
       return false
     }
 
-    if (startBlock + blockRange > actualBlock!) {
-      // If the actual block is closed enough to the lastBlockIndexed we can use it
-      endBlock = actualBlock
-    } else {
+    if (startBlock + blockRange < actualBlock!) {
       // Else we get a step toward it
       endBlock = startBlock + blockRange
     }
-    return { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex }
+    return { startBlock, endBlock, bestProvider, bestProviderIndex }
   }
 
-  //
+  // LP POINTS
+  async getLastLPBlockIndexed() {
+    const blocks = await this.blockRepository.getLastLPPointsBlock()
+    return !blocks ? Number(process.env.STARTING_BLOCK) : blocks.block_id
+  }
 
+  async getLPPointsBlockInfo(providers: JsonRpcProvider[]) {
+    const { startingBlock, blockRange } = indexerConfig
+    const startBlock = Number(await this.getLastLPBlockIndexed()) + 1 || startingBlock
+    let endBlock = Number(await this.getLastEventBlockIndexed())
+
+    const actualBlocks = await Promise.all(providers.map((provider) => provider.getBlockNumber()))
+    const actualBlock = Math.max(...actualBlocks)
+
+    const bestProviderIndex = actualBlocks.indexOf(actualBlock)
+    const bestProvider = providers[bestProviderIndex]
+
+    // no block to index
+    if (startBlock === endBlock + 1) {
+      return false
+    }
+
+    if (startBlock + blockRange < actualBlock!) {
+      // Else we get a step toward it
+      endBlock = startBlock + blockRange
+    }
+    return { startBlock, endBlock, bestProvider, bestProviderIndex }
+  }
+
+  // EVENTS
   async getLastEventBlockIndexed() {
-    const blocks = await this.blockRepository.getLastEventBlockIndexed()
-    return !blocks ? Number(process.env.LAST_BLOCK_INDEXED) : blocks.block_id
+    const blocks = await this.blockRepository.getLastEventBlock()
+    return !blocks ? Number(process.env.STARTING_BLOCK) : blocks.block_id
   }
 
-  static async getPointsBlockInfo(providers: JsonRpcProvider[], blockService: BlockService) {
+  async getIndexerBlockInfo(providers: JsonRpcProvider[]) {
     const { startingBlock, blockRange } = indexerConfig
-    const startBlock = Number(await blockService.getLastEventBlockIndexed()) + 1 || startingBlock
+    const startBlock = Number(await this.getLastEventBlockIndexed()) + 1 || startingBlock
     let endBlock: number
     const actualBlocks = await Promise.all(providers.map((provider) => provider.getBlockNumber()))
     const actualBlock = Math.max(...actualBlocks)
@@ -86,59 +101,27 @@ export class BlockService {
     return { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex }
   }
 
-  //
-
-  async getLastBlockIndexed() {
-    const blocks = await this.blockRepository.getLastBlockIndexed()
-    return !blocks ? Number(process.env.LAST_BLOCK_INDEXED) : blocks.block_id
-  }
-
-  static async getIndexerBlockInfo(providers: JsonRpcProvider[], blockService: BlockService) {
-    const { startingBlock, blockRange } = indexerConfig
-    const startBlock = Number(await blockService.getLastBlockIndexed()) + 1 || startingBlock
-    let endBlock: number
-    const actualBlocks = await Promise.all(providers.map((provider) => provider.getBlockNumber()))
-    const actualBlock = Math.max(...actualBlocks)
-    const bestProviderIndex = actualBlocks.indexOf(actualBlock)
-    const bestProvider = providers[bestProviderIndex]
-
-    // no block to index
-    if (startBlock === actualBlock + 1) {
-      return false
-    }
-
-    if (startBlock + blockRange > actualBlock!) {
-      // If the actual block is closed enough to the lastBlockIndexed we can use it
-      endBlock = actualBlock
-    } else {
-      // Else we get a step toward it
-      endBlock = startBlock + blockRange
-    }
-    return { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex }
-  }
-
-  async getBlockTimestamp(blockNumber: number, provider: JsonRpcProvider): Promise<number> {
-    const block = await provider.getBlock(blockNumber)
-    if (!block) {
-      throw new Error("Could not fetch block")
-    }
-    return block.timestamp
-  }
-
-  async fetchBlockTimestamps(blockNumbers: number[], providerURL: string) {
-    const requests = blockNumbers.map((blockNumber, index) => ({
-      jsonrpc: "2.0",
-      id: index + 1,
-      method: "eth_getBlockByNumber",
-      params: [
-        blockNumber.toString(16), // format hex
-        false,
-      ],
-    }))
+  async fetchBlockTimestamps(blockNumbers: (number | string)[], providerURL: string) {
+    const requests = blockNumbers.map((blockNumber, index) => {
+      // This kind of black magic is mandatory because of Log from ethers returns sometimes a string
+      if (typeof blockNumber === "number") {
+        blockNumber = "0x" + blockNumber.toString(16)
+      }
+      return {
+        jsonrpc: "2.0",
+        id: index + 1,
+        method: "eth_getBlockByNumber",
+        params: [
+          blockNumber, // format hex
+          false,
+        ],
+      }
+    })
 
     const res = await axios.post(providerURL, requests, {
       headers: { "Content-Type": "application/json" },
     })
+
     const responses = res.data as BlockInfo[]
 
     const timestampPerBlockId: Map<number, number> = new Map()
