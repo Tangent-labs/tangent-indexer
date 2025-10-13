@@ -77,7 +77,7 @@ export class UserPointsRepository extends AbstractRepository {
             address: true,
             transfer_events: {
               where: {
-                AND: [{ block_id: { gt: startBlock, lte: endBlock } }],
+                block_id: { gt: startBlock, lte: endBlock },
               },
               orderBy: { block_id: "asc" },
             },
