@@ -18,9 +18,9 @@ type GetPriceFeedsResult = {
 }
 
 type PointServiceChainViewOut = {
-  ervc4626shares: {
+  erc4626shares: {
     token: string
-    shares: bigint
+    index: bigint
   }[]
   sUsgPrice: bigint
   usgPrice: bigint
@@ -279,7 +279,7 @@ export class PricePointService {
   }
 
   processErc4626Prices(priceSource: PriceSource[], chainViewPrices: PointServiceChainViewOut, apiPrices: PriceApiInfo[], notifications: NotificationMessage[]) {
-    if (!chainViewPrices?.ervc4626shares?.length) {
+    if (!chainViewPrices?.erc4626shares?.length) {
       notifications.push({
         action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
         process: "CHAINVIEW",
@@ -290,7 +290,7 @@ export class PricePointService {
     }
 
     // from the share of ERC4626 we derive the price of the token
-    chainViewPrices.ervc4626shares.forEach(async (p: { token: string; shares: bigint }) => {
+    chainViewPrices.erc4626shares.forEach(async (p: { token: string; index: bigint }) => {
       let erc4626Price = 0
       // Find the reference price config for this ERC4626 vault
       const refToken = priceSource.find((conf) => conf.address.toLowerCase() === p.token.toLowerCase())?.reference
@@ -311,7 +311,7 @@ export class PricePointService {
           // Shares is the amount of underlying assets per 1 share (scaled by 1e18)
           // Underlying price is in USD (decimal format)
           // erc4626Price = (shares * underlying USD price) / 1e18
-          erc4626Price = Number((BigInt(p.shares) * BigInt(Math.floor(priceObj.price * 1e18))) / SCALE) / 1e18
+          erc4626Price = Number((BigInt(p.index) * BigInt(Math.floor(priceObj.price * 1e18))) / SCALE) / 1e18
         }
       }
 

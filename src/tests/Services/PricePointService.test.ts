@@ -63,7 +63,7 @@ describe("PricePointService", () => {
   const mockMarkets = ["0x9000000000000000000000000000000000000001", "0x9000000000000000000000000000000000000002"]
 
   const mockChainViewPrices = {
-    ervc4626shares: [{ token: "0x4000000000000000000000000000000000000004", shares: BigInt("1050000000000000000") }],
+    erc4626shares: [{ token: "0x4000000000000000000000000000000000000004", index: BigInt("1050000000000000000") }],
     sUsgPrice: BigInt("1100000000000000000"),
     usgPrice: BigInt("1000000000000000000"),
     timestamp: BigInt("1717171717"), // Unix timestamp
@@ -523,7 +523,7 @@ describe("PricePointService", () => {
       const apiPrices: PriceApiInfo[] = [{ address: "0x1000000000000000000000000000000000000001", price: 1.23456789 }]
       const chainViewWithShares = {
         ...mockChainViewPrices,
-        ervc4626shares: [{ token: "0x4000000000000000000000000000000000000004", shares: BigInt("1050000000000000000") }],
+        erc4626shares: [{ token: "0x4000000000000000000000000000000000000004", index: BigInt("1050000000000000000") }],
         timestamp: BigInt("17171717171717171717"),
       }
 
