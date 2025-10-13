@@ -57,7 +57,7 @@ describe("UserPointsService", () => {
 // --------------------------------------------
 describe("UserPointsService.updateUserTasks", () => {
   let userPointsService: UserPointsService
-  let updateTasksSpy: ReturnType<typeof vi.spyOn>
+  let getOpenedTasksSpy: ReturnType<typeof vi.spyOn>
   let fetchTasksEventsAndAddressesSpy: ReturnType<typeof vi.spyOn>
 
   const userPointsRepository = {
@@ -68,15 +68,14 @@ describe("UserPointsService.updateUserTasks", () => {
 
   // TODO Replace this
   const erc20Repository = {
-    getOpenedTasks: vi.fn(),
     updateProcessedTasks: vi.fn(),
   } as any as ERC20Repository
 
   beforeEach(() => {
     vi.clearAllMocks()
     userPointsService = new UserPointsService(userPointsRepository, erc20Repository)
-    updateTasksSpy = vi.spyOn(userPointsService as any, "updateTasks").mockResolvedValue(undefined as any)
     fetchTasksEventsAndAddressesSpy = vi.spyOn(userPointsRepository as any, "fetchTasksEventsAndAddresses").mockResolvedValue(undefined as any)
+    getOpenedTasksSpy = vi.spyOn(userPointsRepository as any, "getOpenedTasks")
   })
 
   it("Should call updateTasks() with sorted events", async () => {
@@ -116,22 +115,21 @@ describe("UserPointsService.updateUserTasks", () => {
       tx_hash: "0xHash",
     }
 
-    fetchTasksEventsAndAddressesSpy.mockResolvedValue({ tasks, relevantEvents: [thirdEvent, secondEvent, firstEvent] })
+    fetchTasksEventsAndAddressesSpy.mockResolvedValue({ tasks, transferEvents: [thirdEvent, secondEvent, firstEvent] })
+    getOpenedTasksSpy.mockResolvedValue([])
 
     const startBlock = 1234567
     const endBlock = 1236567
-    await userPointsService.updateUserTasks(startBlock, endBlock)
+    await userPointsService.updateLPUserTasks(startBlock, endBlock)
 
     expect(userPointsRepository.fetchTasksEventsAndAddresses).toHaveBeenCalledWith(startBlock, endBlock)
-
-    expect(updateTasksSpy).toHaveBeenNthCalledWith(1, [firstEvent, secondEvent, thirdEvent], tasks)
   })
 
   it("Should handle empty events", async () => {
-    ;(userPointsRepository.fetchTasksEventsAndAddresses as any).mockResolvedValue({ tasks: [], relevantEvents: [] })
-    await userPointsService.updateUserTasks(9, 10)
+    fetchTasksEventsAndAddressesSpy.mockResolvedValue({ tasks: [], transferEvents: [] })
+
+    await userPointsService.updateLPUserTasks(9, 10)
     expect(userPointsRepository.fetchTasksEventsAndAddresses).toHaveBeenCalledWith(9, 10)
-    expect(updateTasksSpy).toHaveBeenCalledWith([], [])
   })
 })
 
@@ -142,10 +140,12 @@ describe("UserPointsService.updateTasks", () => {
   let userPointsService: UserPointsService
   let getOpenedTasksSpy: ReturnType<typeof vi.spyOn>
   let updateProcessedTasksSpy: ReturnType<typeof vi.spyOn>
+  let fetchTasksEventsAndAddressesSpy: ReturnType<typeof vi.spyOn>
 
   const userPointsRepository = {
     getOpenedTasks: vi.fn(),
     updateProcessedTasks: vi.fn(),
+    fetchTasksEventsAndAddresses: vi.fn(),
   } as any as UserPointsRepository
 
   const erc20Repository = {
@@ -158,6 +158,7 @@ describe("UserPointsService.updateTasks", () => {
     userPointsService = new UserPointsService(userPointsRepository, erc20Repository)
     getOpenedTasksSpy = vi.spyOn(userPointsRepository as any, "getOpenedTasks").mockResolvedValue(undefined as any)
     updateProcessedTasksSpy = vi.spyOn(userPointsRepository as any, "updateProcessedTasks")
+    fetchTasksEventsAndAddressesSpy = vi.spyOn(userPointsRepository as any, "fetchTasksEventsAndAddresses")
   })
 
   const USG = "0xUSGTOKEN"
@@ -166,8 +167,9 @@ describe("UserPointsService.updateTasks", () => {
 
   it("Should not open any tasks", async () => {
     getOpenedTasksSpy.mockResolvedValue([])
+    fetchTasksEventsAndAddressesSpy.mockResolvedValue({ tasks: [{ id: 1n, token: { address: USG } }], transferEvents: [] })
 
-    await userPointsService.updateTasks([], [{ id: 1n, token: { address: USG } }])
+    await userPointsService.updateLPUserTasks(1, 100)
 
     expect(userPointsRepository.getOpenedTasks).toHaveBeenCalledWith([], [1n])
 
@@ -190,8 +192,9 @@ describe("UserPointsService.updateTasks", () => {
     }
 
     getOpenedTasksSpy.mockResolvedValue([])
+    fetchTasksEventsAndAddressesSpy.mockResolvedValue({ tasks: [{ id: 1n, token: { address: USG } }], transferEvents: [newEvent] })
 
-    await userPointsService.updateTasks([newEvent], [{ id: 1n, token: { address: USG } }])
+    await userPointsService.updateLPUserTasks(1, 100)
 
     expect(userPointsRepository.getOpenedTasks).toHaveBeenCalledWith([USER1.toLowerCase(), USER2.toLowerCase()], [1n])
 
@@ -231,8 +234,9 @@ describe("UserPointsService.updateTasks", () => {
     }
 
     getOpenedTasksSpy.mockResolvedValue([openedTask])
+    fetchTasksEventsAndAddressesSpy.mockResolvedValue({ tasks: [{ id: 906n, token: { address: USG } }], transferEvents: [newEvent] })
 
-    await userPointsService.updateTasks([newEvent], [{ id: openedTask.task_id, token: { address: USG } }])
+    await userPointsService.updateLPUserTasks(1, 100)
 
     expect(userPointsRepository.getOpenedTasks).toHaveBeenCalledWith([USER1.toLowerCase(), USER2.toLowerCase()], [openedTask.task_id])
 
@@ -271,8 +275,9 @@ describe("UserPointsService.updateTasks", () => {
     }
 
     getOpenedTasksSpy.mockResolvedValue([openedTask])
+    fetchTasksEventsAndAddressesSpy.mockResolvedValue({ tasks: [{ id: 906n, token: { address: USG } }], transferEvents: [newEvent] })
 
-    await userPointsService.updateTasks([newEvent], [{ id: openedTask.task_id, token: { address: USG } }])
+    await userPointsService.updateLPUserTasks(1, 100)
 
     expect(userPointsRepository.getOpenedTasks).toHaveBeenCalledWith([USER2.toLowerCase(), USER1.toLowerCase()], [openedTask.task_id])
 
@@ -323,8 +328,9 @@ describe("UserPointsService.updateTasks", () => {
     }
 
     getOpenedTasksSpy.mockResolvedValue([openedTask])
+    fetchTasksEventsAndAddressesSpy.mockResolvedValue({ tasks: [{ id: 906n, token: { address: USG } }], transferEvents: [firstEvent, secondEvent] })
 
-    await userPointsService.updateTasks([firstEvent, secondEvent], [{ id: openedTask.task_id, token: { address: USG } }])
+    await userPointsService.updateLPUserTasks(1, 100)
 
     expect(userPointsRepository.getOpenedTasks).toHaveBeenCalledWith([USER1.toLowerCase(), USER2.toLowerCase()], [openedTask.task_id])
 

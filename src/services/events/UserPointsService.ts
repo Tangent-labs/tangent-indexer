@@ -8,10 +8,10 @@ import { parseTransferEvent } from "../../eventFectcher/marketUserEvents.parsers
 import { BlockService } from "../BlockService.js"
 
 export type SortedEvents = {
-  Transfer: Prisma.transfer_eventsUncheckedCreateInput[]
+  Transfer: Prisma.transfer_eventsCreateManyInput[]
 }
 
-type TaskPoolItem = {
+type LpUserTaskPoolItem = {
   id: bigint
   task_id: bigint
   user_address: string
@@ -41,7 +41,7 @@ export class UserPointsService {
     start: Date,
     amount: string,
     createdIndexByKey: Map<string, number>,
-    taskPool: TaskPoolItem[],
+    taskPool: LpUserTaskPoolItem[],
     openTaskMap: Map<
       string,
       {
@@ -54,7 +54,7 @@ export class UserPointsService {
       }
     >
   ) => {
-    const newTask: TaskPoolItem = {
+    const newTask: LpUserTaskPoolItem = {
       id: 0n, // synthetic
       task_id: taskId,
       user_address: userAddress,
@@ -69,41 +69,45 @@ export class UserPointsService {
     openTaskMap.set(`${userAddress}_${taskId}`, newTask)
   }
 
-  updateTasks = async (
-    relevantEvents: Prisma.transfer_eventsUncheckedCreateInput[],
-    tasks: {
-      id: bigint
-      token: { address: string }
-    }[]
-  ) => {
-    const taskPool: TaskPoolItem[] = []
+  async updateLPUserTasks(startBlock: number, endBlock: number) {
+    // Retrieve transfer events
+    const { tasks, transferEvents } = await this.userPointsRepository.fetchTasksEventsAndAddresses(startBlock, endBlock)
 
-    const allUserAddresses = new Set<string>()
-    relevantEvents.forEach((event) => {
-      if (event.from) allUserAddresses.add(event.from.toLowerCase())
-      if (event.to) allUserAddresses.add(event.to.toLowerCase())
+    transferEvents.sort((a, b) => {
+      if (a.block_id !== b.block_id) return a.block_id - b.block_id
+      return a.block_date.getTime() - b.block_date.getTime()
     })
+
+    // Merge all concerned account in one set
+    const allUserAddresses = new Set<string>()
+    transferEvents.forEach((event) => {
+      allUserAddresses.add(event.from.toLowerCase())
+      allUserAddresses.add(event.to.toLowerCase())
+    })
+
+    // TODO Delete zeroAddress
 
     const openUserTasks = await this.userPointsRepository.getOpenedTasks(
       Array.from(allUserAddresses),
       tasks.map((task) => task.id)
     )
 
+    const taskPool: LpUserTaskPoolItem[] = []
+
     // Add all open tasks from DB to taskPool
     for (const openUserTask of openUserTasks) {
-      taskPool.push(openUserTask as TaskPoolItem)
+      taskPool.push(openUserTask as LpUserTaskPoolItem)
     }
 
-    for (const event of relevantEvents) {
+    for (const event of transferEvents) {
       const task = tasks.find((t) => t.token.address.toLowerCase() === event.token_address?.toLowerCase())
 
       if (!task) {
         console.warn(`No matching task for token ${event.token_address}, skipping`)
-        continue
+        break
       }
 
       for (const userAddressRaw of [event.from, event.to]) {
-        if (!userAddressRaw) continue
         const userAddress = userAddressRaw.toLowerCase()
         const isSender = userAddress === event.from?.toLowerCase()
 
@@ -119,7 +123,6 @@ export class UserPointsService {
             amount: event.amount,
             closed: null,
           })
-          continue
         }
 
         if (openTask) {
@@ -165,17 +168,6 @@ export class UserPointsService {
       })
 
     await this.userPointsRepository.updateProcessedTasks(tasksToClose, tasksToCreate)
-  }
-
-  updateUserTasks = async (startBlock: number, endBlock: number) => {
-    const { tasks, relevantEvents } = await this.userPointsRepository.fetchTasksEventsAndAddresses(startBlock, endBlock)
-
-    relevantEvents.sort((a, b) => {
-      if (a.block_id !== b.block_id) return a.block_id - b.block_id
-      return a.block_date.getTime() - b.block_date.getTime()
-    })
-
-    await this.updateTasks(relevantEvents, tasks)
   }
 
   processUserPoints = async (startBlock: number, endBlock: number, blockService: BlockService, providerURL: string) => {

@@ -1,14 +1,18 @@
 import { AddressLike, JsonRpcProvider } from "ethers"
 import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
 import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher.js"
+import { UserPointsRepository } from "db/UserPointsRepository.js"
+import { PTS_PER_HOUR_TO_SECONDS_RATE } from "scripts/db-seed/seed_lp_tasks.js"
 
 export class MarketCreationService {
   marketContractsRepository: MarketContractsRepository
   marketCreatorAddress: AddressLike
+  userPointRepository: UserPointsRepository
 
-  constructor(marketContractsRepository: MarketContractsRepository, marketCreatorAddress: AddressLike) {
+  constructor(marketContractsRepository: MarketContractsRepository, marketCreatorAddress: AddressLike, userPointRepository: UserPointsRepository) {
     this.marketContractsRepository = marketContractsRepository
     this.marketCreatorAddress = marketCreatorAddress
+    this.userPointRepository = userPointRepository
   }
 
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
@@ -25,6 +29,19 @@ export class MarketCreationService {
         }
       })
       await this.marketContractsRepository.insertContracts(marketsCreated)
+      // TODO We need to create a new lp_task here
+
+      await this.userPointRepository.insertLpTasks(
+        marketsCreated.map((market) => ({
+          name: "Debt on " + market.contract_name,
+          action_type: "Borrow",
+          description: "Have some debt on " + market.contract_name,
+          point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[5],
+          protocol: "Tangent",
+          token_address: market.contract_address.toLowerCase(),
+          url: "usg.tangent.finance",
+        }))
+      )
     }
   }
 

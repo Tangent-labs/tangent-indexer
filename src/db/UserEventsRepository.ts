@@ -121,4 +121,20 @@ export class UserEventsRepository extends AbstractRepository {
       })
     }
   }
+
+  async insertMigrateFrom(events: Prisma.migrate_fromCreateManyInput[]) {
+    if (events.length > 0) {
+      await this.prismaClient.migrate_from.createMany({
+        data: events,
+      })
+    }
+  }
+
+  async insertMigrateTo(events: Prisma.migrate_toCreateManyInput[]) {
+    if (events.length > 0) {
+      await this.prismaClient.migrate_to.createMany({
+        data: events,
+      })
+    }
+  }
 }
