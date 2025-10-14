@@ -32,8 +32,9 @@ async function main() {
     await marketGlobalDataRepo.updateRows(marketsData, lastUpdateTimeMarkets)
   } else {
     await marketGlobalDataRepo.insertRows(marketsData)
-    await marketGlobalDataRepo.wipeAndInsertLatestDataRows(marketsData)
   }
+
+  await marketGlobalDataRepo.wipeAndInsertLatestDataRows(marketsData)
 
   if (lastUpdateTimeTotalSupplies && lastUpdateTimeTotalSupplies.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
     await totalSupplyRepo.updateRows(totalSupplies, lastUpdateTimeTotalSupplies)
