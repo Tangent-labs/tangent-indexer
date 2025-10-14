@@ -20,6 +20,16 @@ export class MarketGlobalDataRepository extends AbstractRepository {
     })
   }
 
+  async wipeAndInsertLatestDataRows(data: Prisma.latest_global_dataUncheckedCreateInput[]) {
+    await this.prismaClient.$executeRawUnsafe(`TRUNCATE "global"."latest_global_data";`)
+
+    if (data.length > 0) {
+      await this.prismaClient.latest_global_data.createMany({
+        data,
+      })
+    }
+  }
+
   async updateRows(rows: Prisma.market_global_dataUncheckedCreateInput[], previousDate: Date) {
     // Columns to update
     const columns = [
