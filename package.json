@@ -19,6 +19,7 @@
     "prisma:push": "prisma db push --schema node_modules/@tangent/prisma-schema-shared/schema.prisma",
     "prisma:seed-db": "tsx src/scripts/db-seed/_index.ts",
     "prisma:mock-db-data": "tsx src/scripts/db-mock/_index.ts",
+    "prisma:deactivate-tasks": "tsx src/scripts/close_unactive_tasks.ts",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
