@@ -4,6 +4,7 @@ import { MarketContractsRepository } from "../../db/MarketContractsRepository.js
 import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher.js"
 import { MarketCreationService } from "../../services/events/MarketCreationService.js"
 import { UserPointsRepository } from "../../db/UserPointsRepository.js"
+import { ERC20Repository } from "db/ERC20Repository.js"
 
 vi.mock("../../eventFectcher/marketCreationEventFectcher", () => ({
   fetchMarketCreationLogs: vi.fn(),
@@ -18,7 +19,16 @@ describe("MarketCreationService", () => {
       insertLpTasks: vi.fn(),
     } as any as UserPointsRepository
 
-    const marketCreationService = new MarketCreationService(mockMarketContractsRepository as any as MarketContractsRepository, "COUCOU", userPointsRepository)
+    const erc20Repository = {
+      insertManyERC20ToTrack: vi.fn(),
+    } as any as ERC20Repository
+
+    const marketCreationService = new MarketCreationService(
+      mockMarketContractsRepository as any as MarketContractsRepository,
+      "COUCOU",
+      userPointsRepository,
+      erc20Repository
+    )
 
     const mockProvider = {} as JsonRpcProvider
     const startingBlock = 1000
@@ -50,7 +60,15 @@ describe("MarketCreationService", () => {
       insertLpTasks: vi.fn(),
     } as any as UserPointsRepository
 
-    const marketCreationService = new MarketCreationService(mockMarketContractsRepository as any as MarketContractsRepository, "COUCOU", userPointsRepository)
+    const erc20Repository = {
+      insertManyERC20ToTrack: vi.fn(),
+    } as any as ERC20Repository
+    const marketCreationService = new MarketCreationService(
+      mockMarketContractsRepository as any as MarketContractsRepository,
+      "COUCOU",
+      userPointsRepository,
+      erc20Repository
+    )
 
     const mockProvider = {} as JsonRpcProvider
     const startingBlock = 1000

@@ -139,7 +139,7 @@ async function setUpIndexerBlockServices() {
   const addresses = await getAddressesJson()
   // Set up the services
   const blockService = new BlockService(blockRepository)
-  const marketCreationService = new MarketCreationService(marketContractsRepository, addresses.utilities.marketCreator, userPointsRepository)
+  const marketCreationService = new MarketCreationService(marketContractsRepository, addresses.utilities.marketCreator, userPointsRepository, erc20Repository)
 
   const userMarketService = new UserMarketService(userEventsRepository)
   const userPointsService = new UserPointsService(userPointsRepository, erc20Repository)
