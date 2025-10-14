@@ -21,7 +21,7 @@ async function main() {
     .$transaction(
       async (dbTransaction: TransactionPrisma) => {
         setTransaction(dbTransaction)
-        const { marketsData, totalSupplies, now } = await globalDataService.computeAndStoreAprTvlsAndTotalSupplies()
+        const { marketsData, totalSupplies, now } = await globalDataService.computeAprTvlsAndTotalSupplies()
         const lastUpdateTimeMarkets = await marketGlobalDataRepo.fetchLastExecutionTime()
         const lastUpdateTimeTotalSupplies = await totalSupplyRepo.fetchLastExecutionTime()
 
@@ -41,9 +41,7 @@ async function main() {
         timeout: 10_000_000,
       }
     )
-    .then((r) => {
-      console.log(r)
-    })
+    .then((_) => {})
     .catch((e) => {
       console.error(e)
     })

@@ -54,7 +54,7 @@ export class GlobalMarketDataService {
     this.marketContractsRepo = marketContractsRepository
   }
 
-  async computeAndStoreAprTvlsAndTotalSupplies() {
+  async computeAprTvlsAndTotalSupplies() {
     // Retrieve all markets and their associated type
     const markets = await this.getAllMarkets()
 
@@ -104,9 +104,9 @@ export class GlobalMarketDataService {
     const totalSupplyUSG = usgInfos.circulatingUsg
     const totalSupplysUSG = usgInfos.sUsgSupply
 
-    const usgAndsUSG = await this.erc20Repository.getTrackedERC20In(["USG", "sUSG"])
-    const usgRow = usgAndsUSG.find((erc20) => erc20.name === "USG")!
-    const sUsgRow = usgAndsUSG.find((erc20) => erc20.name === "sUSG")!
+    const usgAndsUSG = await this.erc20Repository.getTrackedERC20In(["USG Tangent", "sUSG Tangent"])
+    const usgRow = usgAndsUSG.find((erc20) => erc20.name === "USG Tangent")!
+    const sUsgRow = usgAndsUSG.find((erc20) => erc20.name === "sUSG Tangent")!
 
     const totalSupplies: Prisma.total_suppliesUncheckedCreateInput[] = [
       { token_id: usgRow?.id, timestamp: now, total_supply: totalSupplyUSG.toString() },
