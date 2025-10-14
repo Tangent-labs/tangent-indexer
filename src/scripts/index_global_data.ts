@@ -8,8 +8,8 @@ import { TotalSupplyRepository } from "../db/TotalSupplyRepository.js"
 import { GlobalMarketDataService } from "../services/globalData/GlobalMarketDataService.js"
 import { PriceApiService } from "../services/PriceApiService.js"
 import { TransactionPrisma } from "../type/prisma.js"
-import { MarketContractsRepository } from "db/MarketContractsRepository.js"
-import { ERC20Repository } from "db/ERC20Repository.js"
+import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
+import { ERC20Repository } from "../db/ERC20Repository.js"
 dotenv.config()
 
 const NEW_ROWS_FREQUENCY = 900_000
