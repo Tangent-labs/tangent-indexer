@@ -1,5 +1,5 @@
 import { formatEther, formatUnits, JsonRpcProvider } from "ethers"
-import { Prisma, PrismaClient } from "@prisma/client"
+import { Prisma } from "@prisma/client"
 import { commonERC20, curveLpMapping } from "@tangent/defi-resources"
 
 import { ERC20Repository } from "../../db/ERC20Repository.js"
@@ -42,11 +42,16 @@ export class GlobalMarketDataService {
   provider: JsonRpcProvider
   priceApiService: PriceApiService
 
-  constructor(prisma: PrismaClient, provider: JsonRpcProvider, priceApiService: PriceApiService) {
-    this.erc20Repository = new ERC20Repository(prisma)
-    this.marketContractsRepo = new MarketContractsRepository(prisma)
+  constructor(
+    provider: JsonRpcProvider,
+    priceApiService: PriceApiService,
+    erc20Repository: ERC20Repository,
+    marketContractsRepository: MarketContractsRepository
+  ) {
     this.provider = provider
     this.priceApiService = priceApiService
+    this.erc20Repository = erc20Repository
+    this.marketContractsRepo = marketContractsRepository
   }
 
   async computeAndStoreAprTvlsAndTotalSupplies() {
