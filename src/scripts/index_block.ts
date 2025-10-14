@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv"
-import { TransactionPrisma } from "type/prisma.js"
+import { TransactionPrisma } from "../type/prisma.js"
 import { PrismaClient } from "@prisma/client"
 
 import { setUpIndexer } from "../config/indexer_setup.js"
