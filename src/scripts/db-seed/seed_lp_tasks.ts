@@ -1,6 +1,6 @@
 import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext.js"
 import { TransactionPrisma } from "../../type/prisma.js"
-import { AddressesJson } from "type/data.js"
+import { AddressesJson } from "../../type/data.js"
 
 const ONE_HOUR = 3600
 export const PTS_PER_HOUR_TO_SECONDS_RATE = {
