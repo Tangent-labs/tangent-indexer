@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client"
 import { JsonRpcProvider } from "ethers"
 import { AbstractRepository } from "./AbstractRepository.js"
+export type DebtModifyingEvent = { account: string; market_id: string; debt_shares: string; block_id: number; block_date: Date }
 
 export class UserPointsRepository extends AbstractRepository {
   // Helper: block time at or before startBlock
@@ -20,12 +21,12 @@ export class UserPointsRepository extends AbstractRepository {
     return 0
   }
 
-  getOpenedTasks = async (userAddresses: Array<string>, taskIds: Array<bigint>) => {
+  getOpenedTasks = async (userAddresses: string[], taskIds: bigint[]) => {
     return await this.prismaClient.lp_user_tasks.findMany({
       where: {
         user_address: {
           in: userAddresses,
-          mode: "insensitive",
+          mode: "insensitive", // TODO, we need to remove this to don't break the index
         },
         task_id: {
           in: taskIds,
@@ -67,12 +68,6 @@ export class UserPointsRepository extends AbstractRepository {
   }
 
   fetchTasksEventsAndAddresses = async (startBlock: number, endBlock: number) => {
-    const userAddresses = (
-      await this.prismaClient.user.findMany({
-        select: { address: true },
-      })
-    ).map((user) => user.address.toLowerCase())
-
     const result = await this.prismaClient.lp_task.findMany({
       where: { is_active: true },
       select: {
@@ -82,12 +77,7 @@ export class UserPointsRepository extends AbstractRepository {
             address: true,
             transfer_events: {
               where: {
-                AND: [
-                  {
-                    OR: [{ from: { in: userAddresses, mode: "insensitive" } }, { to: { in: userAddresses, mode: "insensitive" } }],
-                  },
-                  { block_id: { gt: startBlock, lte: endBlock } },
-                ],
+                block_id: { gt: startBlock, lte: endBlock },
               },
               orderBy: { block_id: "asc" },
             },
@@ -103,7 +93,7 @@ export class UserPointsRepository extends AbstractRepository {
 
     const relevantEvents = result.flatMap((task) => task.token.transfer_events)
 
-    return { tasks, relevantEvents }
+    return { tasks, transferEvents: relevantEvents }
   }
 
   getUniqueAddressesFromTransfers = async (startBlock: number, endBlock: number) => {
@@ -138,6 +128,15 @@ export class UserPointsRepository extends AbstractRepository {
     if (addresses.length > 0) {
       await this.prismaClient.user.createMany({
         data: addresses,
+        skipDuplicates: true,
+      })
+    }
+  }
+
+  async insertLpTasks(lpTasks: Prisma.lp_taskCreateManyInput[]) {
+    if (lpTasks.length > 0) {
+      await this.prismaClient.lp_task.createMany({
+        data: lpTasks,
         skipDuplicates: true,
       })
     }

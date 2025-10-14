@@ -1,8 +1,8 @@
 import { Prisma, PrismaClient } from "@prisma/client"
 
 import { deploySQLFunctions } from "./deploy_sql_functions.js"
-import { seedTokensToTrack } from "./seed_tokens.js"
-import { seedLPTasks } from "./seed_lp_tasks.js"
+
+import { seedLPTasksAndTrackedERC20 } from "./seed_lp_tasks.js"
 import { seedVoteTasks } from "./seed_vote_tasks.js"
 import * as dotenv from "dotenv"
 import { getAddressesJson } from "../../utils/jsonReader.js"
@@ -15,12 +15,10 @@ async function main() {
   await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // Deploy the SQL functions
     await deploySQLFunctions(tx)
-    // Add the ERC20 that we want to track tranfers for the point programs
-    await seedTokensToTrack(tx, addresses)
     // Insert the pricing sources of the tokens for the point programs
     await seedPriceSources(tx)
     // Insert the points LP tasks
-    await seedLPTasks(tx, addresses)
+    await seedLPTasksAndTrackedERC20(tx, addresses)
     // Insert the points Votes tasks
     await seedVoteTasks(tx)
   })

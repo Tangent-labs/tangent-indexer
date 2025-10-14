@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv"
-import { TransactionPrisma } from "type/prisma.js"
+import { TransactionPrisma } from "../type/prisma.js"
 import { PrismaClient } from "@prisma/client"
 
 import { setUpIndexer } from "../config/indexer_setup.js"
@@ -76,7 +76,7 @@ async function main() {
           const transferLogs = transferToWatch?.length ? await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch) : []
 
           // Parse events with their proper topics and group all user events to update active borrowers
-          const { activeBorrowActions, sortedAndParsedEvents, blockIds } = userMarketService.sortUserMarketLogs(logs, mapMarketIdAddresses)
+          const { activeBorrowActions, sortedAndParsedEvents, blockIds, debtTransferEvents } = userMarketService.sortUserMarketLogs(logs, mapMarketIdAddresses)
           const { sortedAndParsedPointsEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs(transferLogs)
 
           const uniqueBlockIds = [...new Set([...blockIds, ...pointsEventsBlockIds, "0x" + endBlock.toString(16)])]
@@ -84,6 +84,8 @@ async function main() {
           const blocks = await blockService.fetchBlockTimestamps(uniqueBlockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
 
           const hydratedWithCorrectDates = userMarketService.replaceRightDates(sortedAndParsedEvents, activeBorrowActions, blocks)
+
+          sortedAndParsedPointsEvents.Transfer = sortedAndParsedPointsEvents.Transfer.concat(debtTransferEvents)
           const pointsActionEventsDates = userPointsService.replaceDates(sortedAndParsedPointsEvents, blocks)
 
           // Insert user points actions
@@ -128,13 +130,16 @@ async function setUpIndexerBlockServices() {
     blockRepository.setClient(dbTransaction)
     marketContractsRepository.setClient(dbTransaction)
     userEventsRepository.setClient(dbTransaction)
+    userPointsRepository.setClient(dbTransaction)
     activeBorrowersRepository.setClient(dbTransaction)
+    userVoteRepository.setClient(dbTransaction)
+    erc20Repository.setClient(dbTransaction)
   }
 
   const addresses = await getAddressesJson()
   // Set up the services
   const blockService = new BlockService(blockRepository)
-  const marketCreationService = new MarketCreationService(marketContractsRepository, addresses.utilities.marketCreator)
+  const marketCreationService = new MarketCreationService(marketContractsRepository, addresses.utilities.marketCreator, userPointsRepository, erc20Repository)
 
   const userMarketService = new UserMarketService(userEventsRepository)
   const userPointsService = new UserPointsService(userPointsRepository, erc20Repository)

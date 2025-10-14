@@ -19,6 +19,9 @@ export const LIQUIDATE = "Liquidate(address,uint256,uint256,uint256,uint256,addr
 export const SELF_LIQUIDATE = "SelfLiquidate(address,uint256,uint256,uint256,address)"
 export const SEIZE_COLLATERAL = "SeizeCollateral(address,uint256,uint256)"
 
+export const MIGRATE_FROM = "MigrateFrom(address,uint256,uint256,uint256,uint256)"
+export const MIGRATE_TO = "MigrateTo(address,uint256,uint256,uint256)"
+
 export const MARKET_CONVEX_CRV_CREATED = "MarketConvexCrvCreated(address,string)"
 export const MARKET_CONVEX_FXN_CREATED = "MarketConvexFxnCreated(address,string)"
 export const MARKET_NO_SOCIABILIZATION_CREATED = "MarketNoSociabilizationCreated(address,string)"
@@ -46,6 +49,8 @@ export const EVENT_TOPICS = {
   [id(LIQUIDATE)]: "Liquidate",
   [id(SELF_LIQUIDATE)]: "SelfLiquidate",
   [id(SEIZE_COLLATERAL)]: "SeizeCollateral",
+  [id(MIGRATE_FROM)]: "MigrateFrom",
+  [id(MIGRATE_TO)]: "MigrateTo",
   [id(TRANSFER)]: "Transfer",
   [id(STAKED)]: "Staked",
   [id(WITHDRAWN)]: "Withdrawn",

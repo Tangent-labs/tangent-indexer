@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client"
 import { AbstractRepository } from "./AbstractRepository.js"
 
 export class ERC20Repository extends AbstractRepository {
@@ -17,5 +18,13 @@ export class ERC20Repository extends AbstractRepository {
     })
     const transferToWatch: string[] = tokens.map((token) => token.address)
     return transferToWatch
+  }
+
+  async insertManyERC20ToTrack(data: Prisma.tracked_erc20CreateManyInput[]) {
+    if (data.length >= 0) {
+      await this.prismaClient.tracked_erc20.createMany({
+        data,
+      })
+    }
   }
 }

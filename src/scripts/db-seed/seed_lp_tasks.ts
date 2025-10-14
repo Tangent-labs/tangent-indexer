@@ -1,40 +1,176 @@
 import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext.js"
+import { AddressesJson } from "../../type/data.js"
 import { TransactionPrisma } from "../../type/prisma.js"
-import { AddressesJson } from "type/data.js"
 
-export async function seedLPTasks(prisma: TransactionPrisma, addresses: AddressesJson) {
+const ONE_HOUR = 3600
+export const PTS_PER_HOUR_TO_SECONDS_RATE = {
+  5: 5 / ONE_HOUR,
+  10: 10 / ONE_HOUR,
+  15: 15 / ONE_HOUR,
+  20: 20 / ONE_HOUR,
+  30: 30 / ONE_HOUR,
+  40: 40 / ONE_HOUR,
+}
+
+export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addresses: AddressesJson) {
+  const tasks = [
+    // USG
+    {
+      name: "USG",
+      action_type: "Hold",
+      protocol: "Tangent",
+      token_address: addresses.tokens.USG.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[15],
+      description: "Hold USG in your wallet",
+      url: "https://usg.tangent.finance",
+      is_active: true,
+    },
+    {
+      name: "sUSG",
+      action_type: "Hold",
+      protocol: "Tangent",
+      token_address: addresses.tokens.sUSG.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[10],
+      description: "Hold sUSG in your wallet",
+      url: "https://usg.tangent.finance",
+      is_active: true,
+    },
+    // Hold Curve LP unstaked
+    {
+      name: "crvUSD_USDC",
+      action_type: "LP",
+      protocol: "Curve",
+      token_address: CURVE_CONTEXT.USDC_crvUSD.curveLp.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[40],
+      description: "Hold Curve crvUSD/USDC LP tokens",
+      url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-0/deposit",
+      is_active: true,
+    },
+    {
+      name: "DOLA_sUSDS",
+      action_type: "LP",
+      protocol: "Curve",
+      token_address: CURVE_CONTEXT.DOLA_sUSDS.curveLp.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[30],
+      description: "Hold Curve DOLA/sUSDS LP tokens",
+      url: "https://www.curve.finance/dex/ethereum/pools/factory-stable-ng-12/deposit",
+      is_active: true,
+    },
+    {
+      name: "crvUSD-USDT",
+      action_type: "LP",
+      protocol: "Curve",
+      token_address: CURVE_CONTEXT.USDT_crvUSD.curveLp.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[30],
+      description: "Hold Curve crvUSD/USDT LP tokens",
+      url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-1/deposit",
+      is_active: true,
+    },
+    // Stake Curve LP in Curve Gauge
+    {
+      name: "crvUSD_USDC",
+      action_type: "LP",
+      protocol: "Curve",
+      token_address: CURVE_CONTEXT.USDC_crvUSD.curveGauge.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
+      description: "Stake crvUSD/USDC LP in Curve gauge",
+      url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-1/deposit",
+      is_active: true,
+    },
+    {
+      name: "DOLA_sUSDS",
+      action_type: "LP",
+      protocol: "Curve",
+      token_address: CURVE_CONTEXT.DOLA_sUSDS.curveGauge.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[15],
+      description: "Stake USDe/USDC LP in Curve gauge",
+      url: "https://www.curve.finance/dex/ethereum/pools/factory-stable-ng-12/deposit",
+      is_active: true,
+    },
+    {
+      name: "crvUSD-USDT",
+      action_type: "LP",
+      protocol: "Curve",
+      token_address: CURVE_CONTEXT.USDT_crvUSD.curveGauge.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[15],
+      description: "Stake crvUSD/USDT LP in Curve gauge",
+      url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-1/deposit",
+      is_active: true,
+    },
+    // Stake Curve LP in StakeDao
+    {
+      name: "crvUSD_USDC",
+      action_type: "LP",
+      protocol: "StakeDAO",
+      token_address: CURVE_CONTEXT.USDC_crvUSD.stakeDaoVault.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
+      description: "Stake crvUSD/USDC LP in StakeDAO gauge",
+      url: "https://www.stakedao.org/yield",
+      is_active: true,
+    },
+    {
+      name: "DOLA_sUSDS",
+      action_type: "LP",
+      protocol: "StakeDAO",
+      token_address: CURVE_CONTEXT.DOLA_sUSDS.stakeDaoVault.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[15],
+      description: "Stake DOLA/sUSDS LP in StakeDAO gauge",
+      url: "https://www.stakedao.org/yield",
+      is_active: true,
+    },
+    {
+      name: "crvUSD_USDT",
+      action_type: "LP",
+      protocol: "StakeDAO",
+      token_address: CURVE_CONTEXT.USDT_crvUSD.stakeDaoVault.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[15],
+      description: "Stake crvUSD/USDT LP in StakeDAO gauge",
+      url: "https://www.stakedao.org/yield",
+      is_active: true,
+    },
+
+    // Stake Curve LP in Convex
+    {
+      name: "crvUSD_USDC",
+      action_type: "LP",
+      protocol: "Convex",
+      token_address: CURVE_CONTEXT.USDC_crvUSD.convexRewardToken.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
+      description: "Stake crvUSD/USDC LP on Convex",
+      url: "https://curve.convexfinance.com/stake/ethereum/444",
+      is_active: true,
+    },
+    {
+      name: "DOLA_sUSDS",
+      action_type: "LP",
+      protocol: "Convex",
+      token_address: CURVE_CONTEXT.DOLA_sUSDS.convexRewardToken.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[15],
+      description: "Stake DOLA/sUSDS LP on Convex",
+      url: "https://curve.convexfinance.com/stake/ethereum/444",
+      is_active: true,
+    },
+    {
+      name: "crvUSD_USDT",
+      action_type: "LP",
+      protocol: "Convex",
+      token_address: CURVE_CONTEXT.USDT_crvUSD.convexRewardToken.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[15],
+      description: "Stake crvUSD/USDT LP on Convex",
+      url: "https://curve.convexfinance.com/stake/ethereum/444",
+      is_active: true,
+    },
+  ]
+
+  await prisma.tracked_erc20.createMany({
+    data: tasks.map((t) => ({
+      address: t.token_address,
+      name: t.name + " " + t.protocol,
+      symbol: t.name + " " + t.protocol,
+    })),
+  })
+
   await prisma.lp_task.createMany({
-    data: [
-      {
-        name: "USG",
-        action_type: "hold",
-        protocol: "tangent",
-        token_address: addresses.tokens.USG.toLowerCase(),
-        point_rate: 0.00417,
-        description: "Hold USG in your wallet",
-        url: "https://curve.fi/deposit",
-        is_active: true,
-      },
-      {
-        name: "crvUSD_USDC",
-        action_type: "LP",
-        protocol: "Curve",
-        token_address: CURVE_CONTEXT.USDC_crvUSD.curveLp.toLowerCase(),
-        point_rate: 0.00417,
-        description: "Hold Curve crvUSD/USDC LP tokens",
-        url: "https://curve.fi/",
-        is_active: true,
-      },
-      {
-        name: "crvUSD-USDT",
-        action_type: "LP",
-        protocol: "Curve",
-        token_address: CURVE_CONTEXT.USDT_crvUSD.curveLp.toLowerCase(),
-        point_rate: 0.0556,
-        description: "Hold Curve crvUSD/USDT LP tokens",
-        url: "https://curve.fi/",
-        is_active: true,
-      },
-    ],
+    data: tasks,
   })
 }

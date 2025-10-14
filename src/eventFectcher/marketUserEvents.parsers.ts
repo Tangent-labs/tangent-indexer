@@ -8,8 +8,8 @@ function userAddress(topic: string): string {
 export function parseTransferEvent(log: Log): Prisma.transfer_eventsUncheckedCreateInput {
   const [amount] = AbiCoder.defaultAbiCoder().decode(["uint256"], log.data)
 
-  const from = userAddress(log.topics[1]).toLowerCase()
-  const to = userAddress(log.topics[2]).toLowerCase()
+  const from = userAddress(log.topics[1])
+  const to = userAddress(log.topics[2])
 
   return {
     token_address: log.address.toLowerCase(),
@@ -27,7 +27,7 @@ export function parseBorrowEvent(log: Log, mapMarketIdPerAddress: Map<string, nu
 
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
-    account: userAddress(log.topics[1]).toLowerCase(),
+    account: userAddress(log.topics[1]),
     receiver,
     borrowed_amount: borrowedAmount.toString(),
     debt_shares: debtShares.toString(),
@@ -42,7 +42,7 @@ export function parseDepositEvent(log: Log, mapMarketIdPerAddress: Map<string, n
 
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
-    account: userAddress(log.topics[1]).toLowerCase(),
+    account: userAddress(log.topics[1]),
     staked_amount: stakedAmount.toString(),
     block_date: new Date(), // placeholder
     block_id: Number(log.blockNumber),
@@ -55,7 +55,7 @@ export function parseDepositAndBorrowEvent(log: Log, mapMarketIdPerAddress: Map<
 
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
-    account: userAddress(log.topics[1]).toLowerCase(),
+    account: userAddress(log.topics[1]),
     staked_amount: stakedAmount.toString(),
     borrow_amount: borrowAmount.toString(),
     debt_shares: debtShares.toString(),
@@ -69,7 +69,7 @@ export function parseZapDepositEvent(log: Log, mapMarketIdPerAddress: Map<string
   const [stakedAmount, tokenIn, amountIn] = AbiCoder.defaultAbiCoder().decode(["uint256", "address", "uint256"], log.data)
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
-    account: userAddress(log.topics[1]).toLowerCase(),
+    account: userAddress(log.topics[1]),
     staked_amount: stakedAmount.toString(),
     token_in: tokenIn,
     amount_in: amountIn.toString(),
@@ -87,7 +87,7 @@ export function parseZapDepositAndBorrowEvent(log: Log, mapMarketIdPerAddress: M
 
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
-    account: userAddress(log.topics[1]).toLowerCase(),
+    account: userAddress(log.topics[1]),
     staked_amount: stakedAmount.toString(),
     borrow_amount: borrowAmount.toString(),
     debt_shares: debtShares.toString(),
@@ -102,7 +102,7 @@ export function parseWithdrawEvent(log: Log, mapMarketIdPerAddress: Map<string, 
   const [withdrawnAmount] = AbiCoder.defaultAbiCoder().decode(["uint256"], log.data)
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
-    account: userAddress(log.topics[1]).toLowerCase(),
+    account: userAddress(log.topics[1]),
     withdrawn_amount: withdrawnAmount.toString(),
     block_date: new Date(), // placeholder
     block_id: Number(log.blockNumber),
@@ -114,7 +114,7 @@ export function parseRepayEvent(log: Log, mapMarketIdPerAddress: Map<string, num
   const [repayer, repaidAmount, debtShares] = AbiCoder.defaultAbiCoder().decode(["address", "uint256", "uint256"], log.data)
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
-    account: userAddress(log.topics[1]).toLowerCase(),
+    account: userAddress(log.topics[1]),
     repayer: repayer.toLowerCase(),
     repaid_amount: repaidAmount.toString(),
     debt_shares: debtShares.toString(),
@@ -128,7 +128,7 @@ export function parseRepayAndWithdrawEvent(log: Log, mapMarketIdPerAddress: Map<
   const [repaidAmount, withdrawnAmount, debtShares] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "uint256"], log.data)
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
-    account: userAddress(log.topics[1]).toLowerCase(),
+    account: userAddress(log.topics[1]),
     repaid_amount: repaidAmount.toString(),
     withdrawn_amount: withdrawnAmount.toString(),
     debt_shares: debtShares.toString(),
@@ -145,7 +145,7 @@ export function parseZapRepayEvent(log: Log, mapMarketIdPerAddress: Map<string, 
   )
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
-    account: userAddress(log.topics[1]).toLowerCase(),
+    account: userAddress(log.topics[1]),
     repayer: repayer.toLowerCase(),
     repaid_amount: repaidAmount.toString(),
     debt_shares: debtShares.toString(),
@@ -164,7 +164,7 @@ export function parseZapRepayAndWithdrawEvent(log: Log, mapMarketIdPerAddress: M
   )
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
-    account: userAddress(log.topics[1]).toLowerCase(),
+    account: userAddress(log.topics[1]),
     withdrawn_amount: withdrawnAmount.toString(),
     repaid_amount: repaidAmount.toString(),
     debt_shares: debtShares.toString(),
@@ -180,7 +180,7 @@ export function parseLeverageEvent(log: Log, mapMarketIdPerAddress: Map<string, 
   const [stakedAmount, collatBought, borrowedAmount, debtShares] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "uint256", "uint256"], log.data)
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
-    account: userAddress(log.topics[1]).toLowerCase(),
+    account: userAddress(log.topics[1]),
     staked_amount: stakedAmount.toString(),
     collat_bought: collatBought.toString(),
     borrowed_amount: borrowedAmount.toString(),
@@ -198,7 +198,7 @@ export function parseZapLeverageEvent(log: Log, mapMarketIdPerAddress: Map<strin
   )
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
-    account: userAddress(log.topics[1]).toLowerCase(),
+    account: userAddress(log.topics[1]),
     staked_amount: stakedAmount.toString(),
     collat_zap_deposit: collatZapDeposit.toString(),
     collat_leverage: collatLeverage.toString(),
@@ -219,7 +219,7 @@ export function parseLiquidateEvent(log: Log, mapMarketIdPerAddress: Map<string,
   )
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
-    account: userAddress(log.topics[1]).toLowerCase(),
+    account: userAddress(log.topics[1]),
     repaid_amount: repaidAmount.toString(),
     fee: fee.toString(),
     collateral_liquidated: collateralLiquidated.toString(),
@@ -235,7 +235,7 @@ export function parseSelfLiquidateEvent(log: Log, mapMarketIdPerAddress: Map<str
   const [repaidAmount, debtShares, collateralLiquidated, liquidator] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "uint256", "address"], log.data)
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
-    account: userAddress(log.topics[1]).toLowerCase(),
+    account: userAddress(log.topics[1]),
     repaid_amount: repaidAmount.toString(),
     collateral_liquidated: collateralLiquidated.toString(),
     liquidator: liquidator.toLowerCase(),
@@ -250,9 +250,38 @@ export function parseSeizeCollateralEvent(log: Log, mapMarketIdPerAddress: Map<s
   const [badDebt, collateralSeized] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256"], log.data)
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
-    account: userAddress(log.topics[1]).toLowerCase(),
+    account: userAddress(log.topics[1]),
     bad_debt: badDebt.toString(),
     collateral_seized: collateralSeized.toString(),
+    block_date: new Date(), // placeholder
+    block_id: Number(log.blockNumber),
+    tx_hash: log.transactionHash,
+  }
+}
+
+export function parseMigrateFromEvent(log: Log, mapMarketIdPerAddress: Map<string, number>): Prisma.migrate_fromCreateManyInput {
+  const [collatWithdrawn, debtRemoved, debtRepaid, debtShares] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "uint256", "uint256"], log.data)
+  return {
+    market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
+    account: userAddress(log.topics[1]),
+    collat_withdrawn: collatWithdrawn,
+    debt_removed: debtRemoved,
+    debt_repaid: debtRepaid,
+    debt_shares: debtShares,
+    block_date: new Date(), // placeholder
+    block_id: Number(log.blockNumber),
+    tx_hash: log.transactionHash,
+  }
+}
+
+export function parseMigrateToEvent(log: Log, mapMarketIdPerAddress: Map<string, number>): Prisma.migrate_toCreateManyInput {
+  const [collatAdded, debtAdded, debtShares] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "uint256"], log.data)
+  return {
+    market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
+    account: userAddress(log.topics[1]),
+    collat_added: collatAdded,
+    debt_added: debtAdded,
+    debt_shares: debtShares,
     block_date: new Date(), // placeholder
     block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,

@@ -1,5 +1,5 @@
 import { formatEther, formatUnits, JsonRpcProvider } from "ethers"
-import { Prisma, PrismaClient } from "@prisma/client"
+import { Prisma } from "@prisma/client"
 import { commonERC20, curveLpMapping } from "@tangent/defi-resources"
 
 import { ERC20Repository } from "../../db/ERC20Repository.js"
@@ -42,14 +42,19 @@ export class GlobalMarketDataService {
   provider: JsonRpcProvider
   priceApiService: PriceApiService
 
-  constructor(prisma: PrismaClient, provider: JsonRpcProvider, priceApiService: PriceApiService) {
-    this.erc20Repository = new ERC20Repository(prisma)
-    this.marketContractsRepo = new MarketContractsRepository(prisma)
+  constructor(
+    provider: JsonRpcProvider,
+    priceApiService: PriceApiService,
+    erc20Repository: ERC20Repository,
+    marketContractsRepository: MarketContractsRepository
+  ) {
     this.provider = provider
     this.priceApiService = priceApiService
+    this.erc20Repository = erc20Repository
+    this.marketContractsRepo = marketContractsRepository
   }
 
-  async computeAndStoreAprTvlsAndTotalSupplies() {
+  async computeAprTvlsAndTotalSupplies() {
     // Retrieve all markets and their associated type
     const markets = await this.getAllMarkets()
 
@@ -99,9 +104,9 @@ export class GlobalMarketDataService {
     const totalSupplyUSG = usgInfos.circulatingUsg
     const totalSupplysUSG = usgInfos.sUsgSupply
 
-    const usgAndsUSG = await this.erc20Repository.getTrackedERC20In(["USG", "sUSG"])
-    const usgRow = usgAndsUSG.find((erc20) => erc20.name === "USG")!
-    const sUsgRow = usgAndsUSG.find((erc20) => erc20.name === "sUSG")!
+    const usgAndsUSG = await this.erc20Repository.getTrackedERC20In(["USG Tangent", "sUSG Tangent"])
+    const usgRow = usgAndsUSG.find((erc20) => erc20.name === "USG Tangent")!
+    const sUsgRow = usgAndsUSG.find((erc20) => erc20.name === "sUSG Tangent")!
 
     const totalSupplies: Prisma.total_suppliesUncheckedCreateInput[] = [
       { token_id: usgRow?.id, timestamp: now, total_supply: totalSupplyUSG.toString() },
