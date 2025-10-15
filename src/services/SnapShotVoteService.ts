@@ -3,7 +3,7 @@ import fs from "fs"
 import path from "path"
 import { Prisma } from "@prisma/client"
 
-import { Proposal, ValidatedTask, Reward, RewardedChoice, OrganizationConfig } from "type/data.js"
+import { Proposal, ValidatedTask, Reward, RewardedChoice, OrganizationConfig } from "../type/data.js"
 import { UserVoteRepository } from "../db/UserVoteRepository.js"
 import { BlockService } from "./BlockService.js"
 

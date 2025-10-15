@@ -9,7 +9,7 @@ import { LiquidationExecutionContext } from "../../services/LiquidationExecution
 
 import { LiquidationUserFullInfo } from "../../type/data.js"
 import { NotificationService } from "../../services/NotificationService.js"
-import { CheckLiquidationService } from "services/CheckLiquidationService.js"
+import { CheckLiquidationService } from "../../services/CheckLiquidationService.js"
 
 const DECIMALS = BigInt(10 ** 18)
 

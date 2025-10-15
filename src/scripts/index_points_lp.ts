@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv"
 import { PrismaClient } from "@prisma/client"
-import { TransactionPrisma } from "type/prisma.js"
+import { TransactionPrisma } from "../type/prisma.js"
 
 import { BlockService } from "../services/BlockService.js"
 import { UserPointsService } from "../services/events/UserPointsService.js"

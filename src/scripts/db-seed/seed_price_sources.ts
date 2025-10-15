@@ -1,5 +1,5 @@
 import { PriceSourceCreate } from "../../type/data.js"
-import { TransactionPrisma } from "type/prisma.js"
+import { TransactionPrisma } from "../../type/prisma.js"
 
 import { CRV_DUO_CVG_ETH } from "@tangent/defi-resources/build/ressources/lps/curve.js"
 

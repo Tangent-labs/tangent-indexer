@@ -3,7 +3,7 @@ import { MarketContractsRepository } from "../../db/MarketContractsRepository.js
 import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher.js"
 import { UserPointsRepository } from "../../db/UserPointsRepository.js"
 import { PTS_PER_HOUR_TO_SECONDS_RATE } from "../../scripts/db-seed/seed_lp_tasks.js"
-import { ERC20Repository } from "db/ERC20Repository.js"
+import { ERC20Repository } from "../../db/ERC20Repository.js"
 
 export class MarketCreationService {
   marketContractsRepository: MarketContractsRepository

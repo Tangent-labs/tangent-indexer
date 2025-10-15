@@ -4,7 +4,7 @@ import { MarketContractsRepository } from "../../db/MarketContractsRepository.js
 import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher.js"
 import { MarketCreationService } from "../../services/events/MarketCreationService.js"
 import { UserPointsRepository } from "../../db/UserPointsRepository.js"
-import { ERC20Repository } from "db/ERC20Repository.js"
+import { ERC20Repository } from "../../db/ERC20Repository.js"
 
 vi.mock("../../eventFectcher/marketCreationEventFectcher", () => ({
   fetchMarketCreationLogs: vi.fn(),

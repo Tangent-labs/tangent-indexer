@@ -4,8 +4,9 @@ import { Log } from "ethers"
 import { UserPointsRepository } from "../../db/UserPointsRepository.js"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
 
-import { parseTransferEvent } from "../../eventFectcher/marketUserEvents.parsers.js"
+import { parseStakeConvexEvent, parseTransferEvent, parseWithdrawConvexEvent } from "../../eventFectcher/marketUserEvents.parsers.js"
 import { BlockService } from "../BlockService.js"
+import { TRANSFER_TOPICS } from "../../eventFectcher/erc20TransferEventFetcher.js"
 
 export type SortedEvents = {
   Transfer: Prisma.transfer_eventsCreateManyInput[]
@@ -201,9 +202,20 @@ export class UserPointsService {
     const uniqueBlockId: Set<number> = new Set()
 
     logs.forEach((log) => {
-      const transferEvent = parseTransferEvent(log)
-      uniqueBlockId.add(log.blockNumber)
+      let transferEvent: Prisma.transfer_eventsUncheckedCreateInput
+      switch (log.topics[0]) {
+        case TRANSFER_TOPICS.Staked:
+          transferEvent = parseStakeConvexEvent(log)
+          break
+        case TRANSFER_TOPICS.Withdrawn:
+          transferEvent = parseWithdrawConvexEvent(log)
+          break
+        default:
+          transferEvent = parseTransferEvent(log)
+          break
+      }
       sortedAndParsedPointsEvents.Transfer.push(transferEvent)
+      uniqueBlockId.add(log.blockNumber)
     })
 
     return { sortedAndParsedPointsEvents, pointsEventsBlockIds: Array.from(uniqueBlockId) }

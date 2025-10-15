@@ -1,5 +1,5 @@
 import { JsonRpcProvider } from "ethers"
-import { chainView } from "utils/chainView.js"
+import { chainView } from "../../utils/chainView.js"
 
 import TokenBalancesForMultipleUsers from "../../abis/TokenBalancesForMultipleUsers.json" with { type: "json" }
 
