@@ -186,7 +186,7 @@ export const POINTS_BOT_ACTIONS: Record<PrismaPointsBotAction, PrismaPointsBotAc
 } as const
 
 export type NotificationErrorLevel = PrismaErrorLevel
-export const NOTIFICATION_ERROR_LEVEL = {
+export const NOTIFICATION_LEVEL = {
   INFO: "INFO",
   WARNING: "WARNING",
   ERROR: "ERROR",

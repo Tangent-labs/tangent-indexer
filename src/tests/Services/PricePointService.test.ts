@@ -385,7 +385,7 @@ describe("PricePointService", () => {
       expect(result.notifications[0]).toEqual({
         process: "DebtIndexes",
         error: expect.any(Error),
-        level: "WARNING",
+        level: "ERROR",
         action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
       } as NotificationMessage)
       expect(result.notifications[0].error.message).toContain("No debt index data returned for markets")

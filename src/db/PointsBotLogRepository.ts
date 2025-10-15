@@ -30,7 +30,6 @@ export class PointsBotLogRepository extends AbstractRepository {
     if (data.length > 0) {
       return await this.prismaClient.points_bot_log.createMany({
         data,
-        skipDuplicates: false,
       })
     }
   }

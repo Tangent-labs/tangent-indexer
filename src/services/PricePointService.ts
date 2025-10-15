@@ -11,7 +11,7 @@ import {
   AddressesJson,
   NotificationMessage,
   POINTS_BOT_ACTIONS,
-  NOTIFICATION_ERROR_LEVEL,
+  NOTIFICATION_LEVEL,
 } from "../type/data.js"
 
 import { chainView } from "../utils/chainView.js"
@@ -93,7 +93,7 @@ export class PricePointService {
               reason: `No registry specified for price source ${source.address}, skipping this price source`,
               api: "Curve",
             },
-            level: NOTIFICATION_ERROR_LEVEL.WARNING,
+            level: NOTIFICATION_LEVEL.WARNING,
           }
           notifications.push(notification)
           continue
@@ -146,7 +146,7 @@ export class PricePointService {
               action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
               process: type,
               error: apiResult.error,
-              level: NOTIFICATION_ERROR_LEVEL.ERROR,
+              level: NOTIFICATION_LEVEL.ERROR,
             })
           }
         }
@@ -157,7 +157,7 @@ export class PricePointService {
           action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
           process: type,
           error: result.reason as Error,
-          level: NOTIFICATION_ERROR_LEVEL.ERROR,
+          level: NOTIFICATION_LEVEL.ERROR,
         }
         notifications.push(notification)
       }
@@ -193,7 +193,7 @@ export class PricePointService {
         action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
         process: "CHAINVIEW",
         error: new Error("No chain view data returned"),
-        level: NOTIFICATION_ERROR_LEVEL.ERROR,
+        level: NOTIFICATION_LEVEL.ERROR,
       })
       return undefined
     }
@@ -234,7 +234,7 @@ export class PricePointService {
           action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
           process: "DebtIndexes",
           error: new Error(`No debt index data returned for markets: ${debtResult?.missingMarkets?.join(", ")}`),
-          level: NOTIFICATION_ERROR_LEVEL.WARNING,
+          level: NOTIFICATION_LEVEL.ERROR,
         }
         notifications.push(notification)
       }
@@ -293,7 +293,7 @@ export class PricePointService {
         action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
         process: "CHAINVIEW",
         error: new Error("No ERC4626 shares data returned"),
-        level: NOTIFICATION_ERROR_LEVEL.WARNING,
+        level: NOTIFICATION_LEVEL.ERROR,
       })
       return
     }
@@ -311,7 +311,7 @@ export class PricePointService {
             action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
             process: "CHAINVIEW",
             error: new Error(`No price found for reference token: ${refToken}`),
-            level: NOTIFICATION_ERROR_LEVEL.WARNING,
+            level: NOTIFICATION_LEVEL.WARNING,
           }
           notifications.push(notification)
           return

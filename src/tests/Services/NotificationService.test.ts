@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { NotificationService } from "../../services/NotificationService.js"
-import { NOTIFICATION_ERROR_LEVEL, NotificationBotAction, NotificationMessage } from "../../type/data.js"
+import { NOTIFICATION_LEVEL, NotificationBotAction, NotificationMessage } from "../../type/data.js"
 import { prepareSerialize } from "../../utils/jsonSerializer.js"
 
 // Mock dependencies
@@ -54,22 +54,22 @@ describe("NotificationService", () => {
     const mockNotifications = [
       {
         action: "POINTS_FETCH_PRICES" as NotificationBotAction,
-        errorLevel: NOTIFICATION_ERROR_LEVEL.INFO,
+        errorLevel: NOTIFICATION_LEVEL.INFO,
         date: new Date("2024-01-15T10:00:00Z"),
       },
       {
         action: "POINTS_FETCH_PRICES" as NotificationBotAction,
-        errorLevel: NOTIFICATION_ERROR_LEVEL.WARNING,
+        errorLevel: NOTIFICATION_LEVEL.WARNING,
         date: new Date("2024-01-15T11:00:00Z"),
       },
       {
         action: "POINTS_CALCULATE_POINTS" as NotificationBotAction,
-        errorLevel: NOTIFICATION_ERROR_LEVEL.ERROR,
+        errorLevel: NOTIFICATION_LEVEL.ERROR,
         date: new Date("2024-01-15T12:00:00Z"),
       },
       {
         action: "POINTS_CALCULATE_POINTS" as NotificationBotAction,
-        errorLevel: NOTIFICATION_ERROR_LEVEL.INFO,
+        errorLevel: NOTIFICATION_LEVEL.INFO,
         date: new Date("2024-01-15T13:00:00Z"),
       },
     ]
@@ -184,7 +184,7 @@ describe("NotificationService", () => {
       expect(mockPointsBotLogRepository.insertPointsBotLog).toHaveBeenCalledWith({
         execution_key: executionKey,
         action,
-        errorLevel: NOTIFICATION_ERROR_LEVEL.ERROR,
+        errorLevel: NOTIFICATION_LEVEL.ERROR,
         message: "Test error message", // This is the actual behavior due to the bug in line 63
         data: { serialized: "error" },
       })
@@ -209,7 +209,7 @@ describe("NotificationService", () => {
       expect(mockPointsBotLogRepository.insertPointsBotLog).toHaveBeenCalledWith({
         execution_key: executionKey,
         action,
-        errorLevel: NOTIFICATION_ERROR_LEVEL.ERROR,
+        errorLevel: NOTIFICATION_LEVEL.ERROR,
         message: "Database connection failed",
         data: { serialized: "error" },
       })
@@ -231,7 +231,7 @@ describe("NotificationService", () => {
       expect(mockPointsBotLogRepository.insertPointsBotLog).toHaveBeenCalledWith({
         execution_key: executionKey,
         action,
-        errorLevel: NOTIFICATION_ERROR_LEVEL.ERROR,
+        errorLevel: NOTIFICATION_LEVEL.ERROR,
         message: "Unknown error",
         data: { serialized: "error" },
       })
@@ -257,7 +257,7 @@ describe("NotificationService", () => {
       // So it will always use the full message, not truncated
       expect(mockTelegramNotifierService.sendError).toHaveBeenCalledWith(
         expect.stringContaining(
-          "Error in points processus : POINTS_FETCH_PRICES, error: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA... "
+          "Error in points process : POINTS_FETCH_PRICES, error: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA... "
         )
       )
     })
@@ -305,7 +305,7 @@ describe("NotificationService", () => {
       expect(mockPointsBotLogRepository.insertPointsBotLog).toHaveBeenCalledWith({
         execution_key: executionKey,
         action,
-        errorLevel: NOTIFICATION_ERROR_LEVEL.WARNING,
+        errorLevel: NOTIFICATION_LEVEL.WARNING,
         message: customMessage,
         data: { serialized: "warning" },
       })
@@ -329,7 +329,7 @@ describe("NotificationService", () => {
       expect(mockPointsBotLogRepository.insertPointsBotLog).toHaveBeenCalledWith({
         execution_key: executionKey,
         action,
-        errorLevel: NOTIFICATION_ERROR_LEVEL.WARNING,
+        errorLevel: NOTIFICATION_LEVEL.WARNING,
         message: "WARNING in POINTS_CALCULATE_POINTS",
         data: { serialized: "warning" },
       })
@@ -351,7 +351,7 @@ describe("NotificationService", () => {
       expect(mockPointsBotLogRepository.insertPointsBotLog).toHaveBeenCalledWith({
         execution_key: executionKey,
         action,
-        errorLevel: NOTIFICATION_ERROR_LEVEL.WARNING,
+        errorLevel: NOTIFICATION_LEVEL.WARNING,
         message: "WARNING in POINTS_PROCESS_VOTE",
         data: { serialized: "undefined" },
       })
@@ -375,7 +375,7 @@ describe("NotificationService", () => {
       expect(mockPointsBotLogRepository.insertPointsBotLog).toHaveBeenCalledWith({
         execution_key: executionKey,
         action,
-        errorLevel: NOTIFICATION_ERROR_LEVEL.INFO,
+        errorLevel: NOTIFICATION_LEVEL.INFO,
         message: "Nominal action : POINTS_GENERAL",
         data: { serialized: "info" },
       })

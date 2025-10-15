@@ -67,7 +67,7 @@ export class NotificationService {
     try {
       let notifErrorMessage = message
       if (!notifErrorMessage) {
-        notifErrorMessage = `Error in points processus : ${action}, error: ${(error?.message?.length || 0) > 100 ? error?.message.slice(0, 100) + "..." : error?.message} `
+        notifErrorMessage = `Error in points process : ${action}, error: ${(error?.message?.length || 0) > 100 ? error?.message.slice(0, 100) + "..." : error?.message} `
       }
 
       await this.sendErrorNotification(notifErrorMessage)

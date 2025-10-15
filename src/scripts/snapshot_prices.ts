@@ -49,7 +49,7 @@ const snapshotPrices = async () => {
         })
       }
       if (notification.level === "ERROR") {
-        const message = `Error in points processus : POINTS_FETCH_PRICES/${notification.process}, error:  ${notification.error}`
+        const message = `Error in points process : POINTS_FETCH_PRICES/${notification.process}, error:  ${notification.error}`
         notificationsToCreate.push({
           action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
           errorLevel: "ERROR" as const,
