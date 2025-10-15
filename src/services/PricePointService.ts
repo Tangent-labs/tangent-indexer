@@ -3,7 +3,16 @@ import { AddressLike, JsonRpcProvider } from "ethers"
 import { v4 as uuidv4 } from "uuid"
 import { PriceRepository } from "../db/PriceRepository.js"
 import PointPricesAbi from "../abis/PointPrices.json" with { type: "json" }
-import { PriceApiInfo, PriceSource, PriceApiResult, CurverRegistry, AddressesJson,   NotificationMessage, POINTS_BOT_ACTIONS, NOTIFICATION_ERROR_LEVEL } from "../type/data.js"
+import {
+  PriceApiInfo,
+  PriceSource,
+  PriceApiResult,
+  CurverRegistry,
+  AddressesJson,
+  NotificationMessage,
+  POINTS_BOT_ACTIONS,
+  NOTIFICATION_ERROR_LEVEL,
+} from "../type/data.js"
 
 import { chainView } from "../utils/chainView.js"
 import { PriceApiService } from "./PriceApiService.js"

@@ -29,7 +29,7 @@
     "seed:tokens": "tsx src/scripts/utils/seed_tokens.ts",
     "seed:price-sources": "tsx src/scripts/utils/seed_price_sources.ts",
     "db:truncate": "tsx src/scripts/utils/truncate_tables.ts",
-    "db:refresh-schema": "tsx src/scripts/update-tangent-shared-schema.ts",
+    "db:refresh-schema": "tsx src/scripts/update_tangent_shared_schema.ts",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",

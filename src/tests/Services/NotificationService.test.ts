@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { NotificationService } from "../../services/NotificationService.js"
-import { NOTIFICATION_ERROR_LEVEL, NotificationBotAction, NotificationMessage,  } from "../../type/data.js"
+import { NOTIFICATION_ERROR_LEVEL, NotificationBotAction, NotificationMessage } from "../../type/data.js"
 import { prepareSerialize } from "../../utils/jsonSerializer.js"
 
 // Mock dependencies

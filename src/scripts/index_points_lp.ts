@@ -32,7 +32,7 @@ async function main() {
       return
     }
 
-    const { startBlock, endBlock,  bestProviderIndex } = blockInfo
+    const { startBlock, endBlock, bestProviderIndex } = blockInfo
     // const random = endBlock.totp()
 
     if (startBlock && endBlock) {
@@ -74,7 +74,6 @@ async function main() {
         }
       )
     } else {
-      
       await notificationService.addPointWarningNotification(executionKey, {
         process: "indexer points",
         error: null,
