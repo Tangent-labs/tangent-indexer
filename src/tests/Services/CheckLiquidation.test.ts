@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { AddressLike, JsonRpcProvider } from "ethers"
+
 import { PrismaClient } from "@prisma/client"
 import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
 import { LiquidationBotLogRepository } from "../../db/LiquidationBotLogRepository.js"
@@ -10,6 +11,8 @@ import { LiquidationExecutionContext } from "../../services/LiquidationExecution
 import { LiquidationUserFullInfo } from "../../type/data.js"
 import { NotificationService } from "../../services/NotificationService.js"
 import { CheckLiquidationService } from "services/CheckLiquidationService.js"
+import { PointsBotLogRepository } from "db/PointsBotLogRepository.js"
+import { TelegramNotifierService } from "services/TelegramNotificationServices.js"
 
 const DECIMALS = BigInt(10 ** 18)
 
@@ -45,6 +48,7 @@ describe("CheckLiquidationService", () => {
   let mockNotificationService: NotificationService
   let mockProviders: JsonRpcProvider[]
   let checkLiquidationService: CheckLiquidationService
+  let mockTelegramNotifierService: TelegramNotifierService
 
   beforeEach(() => {
     // Reset all mocks
@@ -61,7 +65,12 @@ describe("CheckLiquidationService", () => {
     // Setup mock services
     mockLiquidationBotService = new LiquidationBotService(mockLiquidationBotLogRepository)
     mockLiquidationService = new LiquidationService(activeBorrowersRepository, mockContext, mockLiquidationBotService)
-    mockNotificationService = new NotificationService()
+    mockNotificationService = new NotificationService(new PointsBotLogRepository({} as PrismaClient), mockTelegramNotifierService)
+    mockTelegramNotifierService = new TelegramNotifierService({
+      botToken: process.env.TELEGRAM_BOT_TOKEN!,
+      chatId: process.env.TELEGRAM_CHAT_ID!,
+    })
+    mockNotificationService = new NotificationService(new PointsBotLogRepository({} as PrismaClient), mockTelegramNotifierService)
     mockProviders = [{} as JsonRpcProvider]
 
     // Mock service methods

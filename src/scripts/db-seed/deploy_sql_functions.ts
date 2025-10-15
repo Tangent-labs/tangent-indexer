@@ -29,11 +29,13 @@ import * as dotenv from "dotenv"
 import { readFileSync } from "fs"
 import { join } from "path"
 import { TransactionPrisma } from "../../type/prisma.js"
+import { PrismaClient } from "@prisma/client"
 
 dotenv.config()
 
 // Define the SQL functions to deploy in order of dependencies
 const sqlFunctions: string[] = [
+  "drop_functions",
   "insert_missing_user_points",
   "get_user_points_details",
   "get_user_points_per_task",
@@ -42,12 +44,22 @@ const sqlFunctions: string[] = [
 ]
 
 export async function deployFunction(tx: TransactionPrisma, sqlFunction: string): Promise<void> {
+  const prisma = new PrismaClient()
   try {
     console.log(`🚀 Deploying function: ${sqlFunction}`)
 
     // Read the SQL file
     const sqlFilePath = join("./src/sql-functions/", `${sqlFunction}.sql`)
     const sqlContent = readFileSync(sqlFilePath, "utf-8")
+
+    if (sqlFunction === "drop_functions") {
+      const functionsToDrop = sqlContent.split(";")
+      for (const functionToDrop of functionsToDrop) {
+        await prisma.$executeRawUnsafe(functionToDrop)
+      }
+      console.log(`✅ Successfully dropped functions`)
+      return
+    }
 
     if (!sqlContent.trim()) {
       throw new Error(`SQL file ${sqlFilePath} is empty`)
