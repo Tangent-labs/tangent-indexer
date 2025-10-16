@@ -11,7 +11,7 @@ export class PriceRepository extends AbstractRepository {
         data: prices.map((p) => ({
           timestamp: date,
           price_usd: p.price,
-          address: p.address,
+          price_source_id: 1,
         })),
       })
     }

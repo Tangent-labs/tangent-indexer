@@ -38,25 +38,36 @@ export class MarketCreationService {
       })
       await this.marketContractsRepository.insertContracts(marketsCreated)
 
-      await this.erc20Repository.insertManyERC20ToTrack(
-        marketsCreated.map((market) => ({
-          address: market.contract_address.toLowerCase(),
-          name: "Debt on " + market.contract_name,
-          symbol: "Debt on " + market.contract_name,
-        }))
-      )
+      if (marketsCreated.length !== 0) {
+        await this.erc20Repository.insertManyERC20ToTrack(
+          marketsCreated.map((market) => ({
+            address: market.contract_address.toLowerCase(),
+            name: "Debt on " + market.contract_name,
+            symbol: "Debt on " + market.contract_name,
+          }))
+        )
 
-      await this.userPointRepository.insertLpTasks(
-        marketsCreated.map((market) => ({
-          name: "Debt on " + market.contract_name,
-          action_type: "Borrow",
-          description: "Have some debt on " + market.contract_name,
-          point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[5],
-          protocol: "Tangent",
-          token_address: market.contract_address.toLowerCase(),
-          url: "usg.tangent.finance",
-        }))
-      )
+        const priceFeeds = await this.erc20Repository.insertAndReturnManyPriceSource(
+          marketsCreated.map((market) => ({
+            address: market.contract_address.toLowerCase(),
+            name: "Market " + market.contract_name,
+            type: "market",
+          }))
+        )
+
+        await this.userPointRepository.insertLpTasks(
+          marketsCreated.map((market, i) => ({
+            price_source_id: priceFeeds[i].id,
+            name: "Debt on " + market.contract_name,
+            action_type: "Borrow",
+            description: "Have some debt on " + market.contract_name,
+            point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[5],
+            protocol: "Tangent",
+            token_address: market.contract_address.toLowerCase(),
+            url: "usg.tangent.finance",
+          }))
+        )
+      }
     }
   }
 
