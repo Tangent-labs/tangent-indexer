@@ -51,7 +51,7 @@ function TASKS(addresses: AddressesJson, priceSources: Prisma.price_sourceCreate
       description: "Hold Curve crvUSD/USDC LP tokens",
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-0/deposit",
       is_active: true,
-      price_source_id: priceSources.find((p) => p.name.includes("crvUSD_USDC"))!.id!,
+      price_source_id: priceSources.find((p) => p.name.includes("USDC_crvUSD"))!.id!,
     },
     {
       name: "DOLA_sUSDS",
@@ -73,7 +73,7 @@ function TASKS(addresses: AddressesJson, priceSources: Prisma.price_sourceCreate
       description: "Hold Curve crvUSD/USDT LP tokens",
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-1/deposit",
       is_active: true,
-      price_source_id: priceSources.find((p) => p.name.includes("crvUSD_USDT"))!.id!,
+      price_source_id: priceSources.find((p) => p.name.includes("USDT_crvUSD"))!.id!,
     },
     {
       name: "Llamalend sDOLA/crvUSD",
@@ -96,7 +96,7 @@ function TASKS(addresses: AddressesJson, priceSources: Prisma.price_sourceCreate
       description: "Stake crvUSD/USDC LP in Curve gauge",
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-1/deposit",
       is_active: true,
-      price_source_id: priceSources.find((p) => p.name.includes("crvUSD_USDC"))!.id!,
+      price_source_id: priceSources.find((p) => p.name.includes("USDC_crvUSD"))!.id!,
     },
     {
       name: "DOLA_sUSDS",
@@ -118,7 +118,7 @@ function TASKS(addresses: AddressesJson, priceSources: Prisma.price_sourceCreate
       description: "Stake crvUSD/USDT LP in Curve gauge",
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-1/deposit",
       is_active: true,
-      price_source_id: priceSources.find((p) => p.name.includes("crvUSD_USDT"))!.id!,
+      price_source_id: priceSources.find((p) => p.name.includes("USDT_crvUSD"))!.id!,
     },
 
     {
@@ -142,7 +142,7 @@ function TASKS(addresses: AddressesJson, priceSources: Prisma.price_sourceCreate
       description: "Stake crvUSD/USDC LP in StakeDAO gauge",
       url: "https://www.stakedao.org/yield",
       is_active: true,
-      price_source_id: priceSources.find((p) => p.name.includes("crvUSD_USDC"))!.id!,
+      price_source_id: priceSources.find((p) => p.name.includes("USDC_crvUSD"))!.id!,
     },
     {
       name: "DOLA_sUSDS",
@@ -164,7 +164,7 @@ function TASKS(addresses: AddressesJson, priceSources: Prisma.price_sourceCreate
       description: "Stake crvUSD/USDT LP in StakeDAO gauge",
       url: "https://www.stakedao.org/yield",
       is_active: true,
-      price_source_id: priceSources.find((p) => p.name.includes("crvUSD_USDT"))!.id!,
+      price_source_id: priceSources.find((p) => p.name.includes("USDT_crvUSD"))!.id!,
     },
     {
       name: "Llamalend sDola/crvUSD",
@@ -188,7 +188,7 @@ function TASKS(addresses: AddressesJson, priceSources: Prisma.price_sourceCreate
       description: "Stake crvUSD/USDC LP on Convex",
       url: "https://curve.convexfinance.com/stake/ethereum/444",
       is_active: true,
-      price_source_id: priceSources.find((p) => p.name.includes("crvUSD_USDC"))!.id!,
+      price_source_id: priceSources.find((p) => p.name.includes("USDC_crvUSD"))!.id!,
     },
     {
       name: "DOLA_sUSDS",
@@ -210,7 +210,7 @@ function TASKS(addresses: AddressesJson, priceSources: Prisma.price_sourceCreate
       description: "Stake crvUSD/USDT LP on Convex",
       url: "https://curve.convexfinance.com/stake/ethereum/444",
       is_active: true,
-      price_source_id: priceSources.find((p) => p.name.includes("crvUSD_USDT"))!.id!,
+      price_source_id: priceSources.find((p) => p.name.includes("USDT_crvUSD"))!.id!,
     },
     {
       name: "Llamalend sDola/crvUSD",
