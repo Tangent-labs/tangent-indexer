@@ -3,6 +3,7 @@ import { AddressesJson } from "../../type/data.js"
 import { TransactionPrisma } from "../../type/prisma.js"
 import { ZeroAddress } from "ethers"
 import { CONVEX_LOCKER } from "@tangent/defi-resources/build/ressources/contracts/convex.js"
+import { PendlePools } from "@tangent/defi-resources"
 
 const ONE_HOUR = 3600
 export const PTS_PER_HOUR_TO_SECONDS_RATE = {
@@ -68,6 +69,16 @@ export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addr
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-1/deposit",
       is_active: true,
     },
+    {
+      name: "Llamalend sDola/crvUSD",
+      action_type: "LP",
+      protocol: "Llamalend",
+      token_address: CURVE_CONTEXT.LLAMALEND_sDOLA_crvUSD.curveLp.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[40],
+      description: "Supply crvUSD to sDOLA lenders",
+      url: "https://www.curve.finance/lend/ethereum/markets/one-way-market-30/create",
+      is_active: true,
+    },
     // Stake Curve LP in Curve Gauge
     {
       name: "crvUSD_USDC",
@@ -99,6 +110,17 @@ export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addr
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-1/deposit",
       is_active: true,
     },
+
+    {
+      name: "Llamalend sDola/crvUSD",
+      action_type: "LP",
+      protocol: "Llamalend",
+      token_address: CURVE_CONTEXT.LLAMALEND_sDOLA_crvUSD.curveGauge.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
+      description: "Supply crvUSD to sDOLA lenders and stake on Curve",
+      url: "https://www.curve.finance/lend/ethereum/markets/one-way-market-30/create",
+      is_active: true,
+    },
     // Stake Curve LP in StakeDao
     {
       name: "crvUSD_USDC",
@@ -128,6 +150,16 @@ export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addr
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[15],
       description: "Stake crvUSD/USDT LP in StakeDAO gauge",
       url: "https://www.stakedao.org/yield",
+      is_active: true,
+    },
+    {
+      name: "Llamalend sDola/crvUSD",
+      action_type: "LP",
+      protocol: "StakeDao",
+      token_address: CURVE_CONTEXT.LLAMALEND_sDOLA_crvUSD.stakeDaoVault.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
+      description: "Supply crvUSD to sDOLA lenders and stake on StakeDao",
+      url: "https://www.curve.finance/lend/ethereum/markets/one-way-market-30/create",
       is_active: true,
     },
 
@@ -162,6 +194,47 @@ export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addr
       url: "https://curve.convexfinance.com/stake/ethereum/444",
       is_active: true,
     },
+    {
+      name: "Llamalend sDola/crvUSD",
+      action_type: "LP",
+      protocol: "Convex",
+      token_address: CURVE_CONTEXT.LLAMALEND_sDOLA_crvUSD.convexRewardToken.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
+      description: "Supply crvUSD to sDOLA lenders and stake on Convex",
+      url: "https://www.curve.finance/lend/ethereum/markets/one-way-market-30/create",
+      is_active: true,
+    },
+    // PENDLE
+    {
+      name: "YT sUSDe 27/11/25",
+      action_type: "YT",
+      protocol: "Pendle",
+      token_address: PendlePools["sUSDe 27/11/25"].YT.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[30],
+      description: "Hold YT sUSDe 27/11/25",
+      url: "https://app.pendle.finance/trade/markets/0xb6ac3d5da138918ac4e84441e924a20daa60dbdd/swap?view=yt&chain=ethereum",
+      is_active: true,
+    },
+    {
+      name: "LP sUSDe 27/11/25",
+      action_type: "LP",
+      protocol: "Pendle",
+      token_address: PendlePools["sUSDe 27/11/25"].MARKET.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[30],
+      description: "Hold LP sUSDe 27/11/25",
+      url: "https://app.pendle.finance/trade/pools/0xb6ac3d5da138918ac4e84441e924a20daa60dbdd/zap/in?chain=ethereum",
+      is_active: true,
+    },
+    {
+      name: "PT sUSDe 27/11/25",
+      action_type: "PT",
+      protocol: "Pendle",
+      token_address: PendlePools["sUSDe 27/11/25"].PT.toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[15],
+      description: "Hold PT sUSDe 27/11/25",
+      url: "https://app.pendle.finance/trade/markets/0xb6ac3d5da138918ac4e84441e924a20daa60dbdd/swap?view=pt&chain=ethereum",
+      is_active: true,
+    },
   ]
 
   await prisma.tracked_erc20.createMany({
@@ -180,9 +253,15 @@ export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addr
     ZeroAddress.toLowerCase(),
     CONVEX_LOCKER.toLowerCase(),
     // TODO add addresses of StakeDao and StakeDao staking on Convex
+
+    // Remove curve gauge
     CURVE_CONTEXT.USDC_crvUSD.curveGauge.toLowerCase(),
     CURVE_CONTEXT.USDT_crvUSD.curveGauge.toLowerCase(),
     CURVE_CONTEXT.DOLA_sUSDS.curveGauge.toLowerCase(),
+    CURVE_CONTEXT.LLAMALEND_sDOLA_crvUSD.curveGauge.toLowerCase(),
+
+    // Remove Pendle Market because it holds PT
+    PendlePools["sUSDe 27/11/25"].MARKET.toLowerCase(),
   ].map((uE) => ({ user: uE }))
 
   await prisma.lp_points_users_excluded.createMany({
