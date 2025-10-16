@@ -96,6 +96,14 @@ export class UserPointsRepository extends AbstractRepository {
     return { tasks, transferEvents: relevantEvents }
   }
 
+  async getAddressesExcludedFromLpPoints() {
+    return await this.prismaClient.lp_points_users_excluded.findMany({
+      select: {
+        user: true,
+      },
+    })
+  }
+
   getUniqueAddressesFromTransfers = async (startBlock: number, endBlock: number) => {
     const transferEvents = await this.prismaClient.transfer_events.findMany({
       where: {

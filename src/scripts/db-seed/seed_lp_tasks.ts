@@ -1,6 +1,8 @@
 import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext.js"
 import { AddressesJson } from "../../type/data.js"
 import { TransactionPrisma } from "../../type/prisma.js"
+import { ZeroAddress } from "ethers"
+import { CONVEX_LOCKER } from "@tangent/defi-resources/build/ressources/contracts/convex.js"
 
 const ONE_HOUR = 3600
 export const PTS_PER_HOUR_TO_SECONDS_RATE = {
@@ -172,5 +174,18 @@ export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addr
 
   await prisma.lp_task.createMany({
     data: tasks,
+  })
+
+  const addressesToExclude = [
+    ZeroAddress.toLowerCase(),
+    CONVEX_LOCKER.toLowerCase(),
+    // TODO add addresses of StakeDao and StakeDao staking on Convex
+    CURVE_CONTEXT.USDC_crvUSD.curveGauge.toLowerCase(),
+    CURVE_CONTEXT.USDT_crvUSD.curveGauge.toLowerCase(),
+    CURVE_CONTEXT.DOLA_sUSDS.curveGauge.toLowerCase(),
+  ].map((uE) => ({ user: uE }))
+
+  await prisma.lp_points_users_excluded.createMany({
+    data: addressesToExclude,
   })
 }
