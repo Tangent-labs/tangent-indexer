@@ -38,8 +38,7 @@ function PRICE_SOURCES(addresses: AddressesJson): PriceSourceCreate[] {
     },
     {
       name: "sUSG",
-      type: "ERC4626",
-      reference: addresses.tokens.USG,
+      type: "chainview",
       address: addresses.tokens.sUSG,
     },
     // PENDLE
