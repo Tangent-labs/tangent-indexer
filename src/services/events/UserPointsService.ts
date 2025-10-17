@@ -74,7 +74,6 @@ export class UserPointsService {
     // Retrieve transfer events
     const { tasks, transferEvents } = await this.userPointsRepository.fetchTasksEventsAndAddresses(startBlock, endBlock)
     const toExclude = (await this.userPointsRepository.getAddressesExcludedFromLpPoints()).map((u) => u.user)
-
     transferEvents.sort((a, b) => {
       if (a.block_id !== b.block_id) return a.block_id - b.block_id
       return a.block_date.getTime() - b.block_date.getTime()
@@ -92,7 +91,6 @@ export class UserPointsService {
         allUserAddresses.delete(u)
       }
     })
-
     const openUserTasks = await this.userPointsRepository.getOpenedTasks(
       Array.from(allUserAddresses),
       tasks.map((task) => task.id)
@@ -138,11 +136,11 @@ export class UserPointsService {
             openTask.closed = closedAt
 
             // Calculate new amount and create a new task if needed
-            const currentAmount = Number(openTask.amount)
-            const delta = Number(event.amount)
+            const currentAmount = BigInt(openTask.amount)
+            const delta = BigInt(event.amount)
             const newAmount = isSender ? currentAmount - delta : currentAmount + delta
 
-            if (newAmount !== 0) {
+            if (newAmount !== 0n) {
               // Create new open task
               taskPool.push({
                 id: 0n, // synthetic
@@ -156,26 +154,26 @@ export class UserPointsService {
           }
         }
       }
-      // const taskToclose= openTaskMap.values().filter((t) => t.closed !== null && id!==Bigint(0))
-      // const tasksToCreate= openTaskMap.values().filter((t) => id===Bigint(0))
-
-      const tasksToClose = taskPool.filter((t) => t.id !== 0n && t.closed !== null).map((t) => ({ id: t.id, closed: t.closed as Date }))
-
-      // Remove "ids=0n" for prisma not to push them
-      const tasksToCreate = taskPool
-        .filter((t) => t.id === 0n)
-        .map((el) => {
-          return {
-            task_id: el.task_id,
-            user_address: el.user_address,
-            start: el.start,
-            closed: el.closed,
-            amount: el.amount,
-          }
-        })
-
-      await this.userPointsRepository.updateProcessedTasks(tasksToClose, tasksToCreate)
     }
+    // const taskToclose= openTaskMap.values().filter((t) => t.closed !== null && id!==Bigint(0))
+    // const tasksToCreate= openTaskMap.values().filter((t) => id===Bigint(0))
+
+    const tasksToClose = taskPool.filter((t) => t.id !== 0n && t.closed !== null).map((t) => ({ id: t.id, closed: t.closed as Date }))
+
+    // Remove "ids=0n" for prisma not to push them
+    const tasksToCreate = taskPool
+      .filter((t) => t.id === 0n)
+      .map((el) => {
+        return {
+          task_id: el.task_id,
+          user_address: el.user_address,
+          start: el.start,
+          closed: el.closed,
+          amount: el.amount.toString(),
+        }
+      })
+
+    await this.userPointsRepository.updateProcessedTasks(tasksToClose, tasksToCreate)
   }
 
   processUserPoints = async (startBlock: number, endBlock: number, blockService: BlockService, providerURL: string) => {

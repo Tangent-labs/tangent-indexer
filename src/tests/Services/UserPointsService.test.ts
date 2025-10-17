@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { UserPointsRepository } from "../../db/UserPointsRepository.js"
 import { UserPointsService } from "../../services/events/UserPointsService.js"
 import { encodeTransfer, TRANSFER } from "../../resources/eventSignatures.js"
-import { AbiCoder, AddressLike, id, JsonRpcProvider, Log, parseEther } from "ethers"
+import { AbiCoder, AddressLike, id, JsonRpcProvider, Log, parseEther, ZeroAddress } from "ethers"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
 
 function buildLog(topicId: string, from: AddressLike, to: AddressLike, blockNumber: number, data: string) {
@@ -24,6 +24,10 @@ function buildLog(topicId: string, from: AddressLike, to: AddressLike, blockNumb
     new JsonRpcProvider()
   )
 }
+
+const date0 = new Date("2025-08-26T08:07:45.000Z")
+const date1 = new Date("2025-08-26T08:08:45.000Z")
+const date2 = new Date("2025-08-26T08:09:45.000Z")
 
 // --------------------------------------------
 // sortPointsActionsLogs()
@@ -64,6 +68,7 @@ describe("UserPointsService.updateUserTasks", () => {
     fetchTasksEventsAndAddresses: vi.fn(),
     updateProcessedTasks: vi.fn(),
     getOpenedTasks: vi.fn(),
+    getAddressesExcludedFromLpPoints: vi.fn(),
   } as any as UserPointsRepository
 
   // TODO Replace this
@@ -146,6 +151,7 @@ describe("UserPointsService.updateTasks", () => {
     getOpenedTasks: vi.fn(),
     updateProcessedTasks: vi.fn(),
     fetchTasksEventsAndAddresses: vi.fn(),
+    getAddressesExcludedFromLpPoints: vi.fn(),
   } as any as UserPointsRepository
 
   const erc20Repository = {
@@ -183,10 +189,10 @@ describe("UserPointsService.updateTasks", () => {
     const newEvent = {
       id: 2954n,
       token_address: USG,
-      from: USER1,
+      from: ZeroAddress,
       to: USER2,
-      amount: "2000000000000000000000",
-      block_date: "2025-08-26T08:23:45.000Z",
+      amount: parseEther("200").toString(),
+      block_date: date0,
       block_id: 23224248,
       tx_hash: "0xHash",
     }
@@ -196,30 +202,30 @@ describe("UserPointsService.updateTasks", () => {
 
     await userPointsService.updateLPUserTasks(1, 100)
 
-    expect(userPointsRepository.getOpenedTasks).toHaveBeenCalledWith([USER1.toLowerCase(), USER2.toLowerCase()], [1n])
+    expect(userPointsRepository.getOpenedTasks).toHaveBeenCalledWith([USER2.toLowerCase()], [1n])
 
-    const [tasksToClose, tasksToCreate] = updateProcessedTasksSpy.mock.calls[0]
-
-    expect(tasksToClose).toEqual([])
-
-    expect(tasksToCreate).toHaveLength(2)
-    expect(tasksToCreate).toContainEqual({
-      amount: "2000000000000000000000",
-      closed: null,
-      start: new Date("2025-08-26T08:23:45.000Z"),
-      task_id: 1n,
-      user_address: USER1,
-    })
+    expect(userPointsRepository.updateProcessedTasks).toHaveBeenCalledWith(
+      [],
+      [
+        {
+          amount: parseEther("200").toString(),
+          start: date0,
+          closed: null,
+          task_id: 1n,
+          user_address: USER2,
+        },
+      ]
+    )
   })
 
   it("Should open 1 new task for the user and close an existing one", async () => {
     const newEvent = {
-      id: 2954n,
+      id: 1n,
       token_address: USG,
       from: USER1,
       to: USER2,
-      amount: "2000000000000000000000",
-      block_date: "2025-08-26T08:23:45.000Z",
+      amount: parseEther("200"),
+      block_date: date1,
       block_id: 23224248,
       tx_hash: "0xHash",
     }
@@ -228,8 +234,8 @@ describe("UserPointsService.updateTasks", () => {
       id: 2953n,
       task_id: 906n,
       user_address: USER2,
-      amount: "6e+21",
-      start: "2025-08-26T08:07:45.000Z",
+      amount: parseEther("600000"),
+      start: date0,
       closed: null,
     }
 
@@ -240,27 +246,35 @@ describe("UserPointsService.updateTasks", () => {
 
     expect(userPointsRepository.getOpenedTasks).toHaveBeenCalledWith([USER1.toLowerCase(), USER2.toLowerCase()], [openedTask.task_id])
 
-    const [tasksToClose, tasksToCreate] = updateProcessedTasksSpy.mock.calls[0]
-
-    expect(tasksToClose).toEqual([{ id: openedTask.id, closed: new Date(newEvent?.block_date) }])
-    expect(tasksToCreate).toHaveLength(2)
-    expect(tasksToCreate).toContainEqual({
-      amount: "8e+21",
-      closed: null,
-      start: new Date("2025-08-26T08:23:45.000Z"),
-      task_id: 906n,
-      user_address: USER2,
-    })
+    expect(userPointsRepository.updateProcessedTasks).toHaveBeenCalledWith(
+      [{ id: 2953n, closed: date1 }],
+      [
+        {
+          amount: parseEther("200").toString(),
+          start: date1,
+          closed: null,
+          task_id: 906n,
+          user_address: USER1,
+        },
+        {
+          amount: parseEther((600000 + 200).toString()).toString(),
+          start: date1,
+          closed: null,
+          task_id: 906n,
+          user_address: USER2,
+        },
+      ]
+    )
   })
 
   it("Open 0 new task for the user and close the existing one", async () => {
     const newEvent = {
-      id: 2954n,
+      id: 1,
       token_address: USG,
       from: USER2,
       to: USER1,
-      amount: "2000000000000000000000",
-      block_date: "2025-08-26T08:23:45.000Z",
+      amount: parseEther("200"),
+      block_date: date1,
       block_id: 23224248,
       tx_hash: "0xHash",
     }
@@ -269,8 +283,8 @@ describe("UserPointsService.updateTasks", () => {
       id: 2953n,
       task_id: 906n,
       user_address: USER2,
-      amount: "2000000000000000000000",
-      start: "2025-08-26T08:07:45.000Z",
+      amount: parseEther("200"),
+      start: date0,
       closed: null,
     }
 
@@ -281,50 +295,50 @@ describe("UserPointsService.updateTasks", () => {
 
     expect(userPointsRepository.getOpenedTasks).toHaveBeenCalledWith([USER2.toLowerCase(), USER1.toLowerCase()], [openedTask.task_id])
 
-    const [tasksToClose, tasksToCreate] = updateProcessedTasksSpy.mock.calls[0]
-
-    expect(tasksToClose).toEqual([{ id: openedTask.id, closed: new Date(newEvent?.block_date) }])
-
-    expect(tasksToCreate).toHaveLength(1)
-    expect(tasksToCreate).toContainEqual({
-      amount: "2000000000000000000000",
-      closed: null,
-      start: new Date("2025-08-26T08:23:45.000Z"),
-      task_id: 906n,
-      user_address: USER1,
-    })
+    expect(userPointsRepository.updateProcessedTasks).toHaveBeenCalledWith(
+      [{ id: 2953n, closed: date1 }],
+      [
+        {
+          amount: parseEther("200").toString(),
+          start: date1,
+          closed: null,
+          task_id: 906n,
+          user_address: USER1,
+        },
+      ]
+    )
   })
 
   it("Close one existing task, create a newly opened task closed within the batch, and open 1 new task", async () => {
+    const openedTask = {
+      id: 2953n,
+      task_id: 906n,
+      user_address: USER1,
+      amount: parseEther("4000"),
+      start: date0,
+      closed: null,
+    }
+
     const firstEvent = {
-      id: 2954n,
+      id: 1n,
       token_address: USG,
       from: USER1,
       to: USER2,
-      amount: "2000000000000000000000",
-      block_date: "2025-08-26T08:23:45.000Z",
+      amount: parseEther("500"),
+      block_date: date1,
       block_id: 23224248,
       tx_hash: "0xHash",
     }
 
     const secondEvent = {
-      id: 2955n,
+      id: 2n,
       token_address: USG,
-      from: USER1,
-      to: USER2,
-      amount: "1500000000000000000000",
-      block_date: "2025-08-26T08:32:45.000Z",
+      from: USER2,
+      to: USER1,
+      amount: parseEther("200"),
+      block_date: date2,
       block_id: 23224249,
       tx_hash: "0xHash",
-    }
-
-    const openedTask = {
-      id: 2953n,
-      task_id: 906n,
-      user_address: USER2,
-      amount: "1000000000000000000000",
-      start: "2025-08-26T08:07:45.000Z",
-      closed: null,
     }
 
     getOpenedTasksSpy.mockResolvedValue([openedTask])
@@ -334,23 +348,38 @@ describe("UserPointsService.updateTasks", () => {
 
     expect(userPointsRepository.getOpenedTasks).toHaveBeenCalledWith([USER1.toLowerCase(), USER2.toLowerCase()], [openedTask.task_id])
 
-    const [tasksToClose, tasksToCreate] = updateProcessedTasksSpy.mock.calls[0]
-
-    expect(tasksToClose).toEqual([{ id: openedTask.id, closed: new Date(firstEvent?.block_date) }])
-    expect(tasksToCreate).toHaveLength(4)
-    expect(tasksToCreate).toContainEqual({
-      amount: "3e+21",
-      closed: new Date("2025-08-26T08:32:45.000Z"),
-      start: new Date("2025-08-26T08:23:45.000Z"),
-      task_id: 906n,
-      user_address: USER2,
-    })
-    expect(tasksToCreate).toContainEqual({
-      amount: "4.5e+21",
-      closed: null,
-      start: new Date("2025-08-26T08:32:45.000Z"),
-      task_id: 906n,
-      user_address: USER2,
-    })
+    expect(userPointsRepository.updateProcessedTasks).toHaveBeenCalledWith(
+      [{ id: 2953n, closed: date1 }],
+      [
+        {
+          amount: parseEther("3500").toString(),
+          start: date1,
+          closed: date2,
+          task_id: 906n,
+          user_address: USER1,
+        },
+        {
+          amount: parseEther("500").toString(),
+          start: date1,
+          closed: date2,
+          task_id: 906n,
+          user_address: USER2,
+        },
+        {
+          amount: parseEther("300").toString(),
+          start: date2,
+          closed: null,
+          task_id: 906n,
+          user_address: USER2,
+        },
+        {
+          amount: parseEther("3700").toString(),
+          start: date2,
+          closed: null,
+          task_id: 906n,
+          user_address: USER1,
+        },
+      ]
+    )
   })
 })

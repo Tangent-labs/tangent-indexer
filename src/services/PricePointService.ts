@@ -20,7 +20,7 @@ import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
 
 const SCALE = 10n ** 18n
 
-type GetPriceFeedsResult = {
+export type GetPriceFeedsResult = {
   prices: PriceApiInfo[]
   notifications: NotificationMessage[]
   date?: Date
