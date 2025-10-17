@@ -60,10 +60,6 @@ describe("UserPointsService", () => {
 // updateUserTasks() test
 // --------------------------------------------
 describe("UserPointsService.updateUserTasks", () => {
-  let userPointsService: UserPointsService
-  let getOpenedTasksSpy: ReturnType<typeof vi.spyOn>
-  let fetchTasksEventsAndAddressesSpy: ReturnType<typeof vi.spyOn>
-
   const userPointsRepository = {
     fetchTasksEventsAndAddresses: vi.fn(),
     updateProcessedTasks: vi.fn(),
@@ -75,6 +71,11 @@ describe("UserPointsService.updateUserTasks", () => {
   const erc20Repository = {
     updateProcessedTasks: vi.fn(),
   } as any as ERC20Repository
+
+  let userPointsService: UserPointsService
+  let getOpenedTasksSpy: ReturnType<typeof vi.spyOn>
+  let fetchTasksEventsAndAddressesSpy: ReturnType<typeof vi.spyOn>
+  vi.spyOn(userPointsRepository as any, "getAddressesExcludedFromLpPoints").mockResolvedValue([{ user: ZeroAddress }])
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -90,32 +91,32 @@ describe("UserPointsService.updateUserTasks", () => {
     ]
 
     const firstEvent = {
-      id: 2707n,
+      id: 1n,
       token_address: "0x9b894b86f16ec30656ab6dd51e0fd620e70f630b",
       from: "0x0000000000000000000000000000000000000000",
       to: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
       amount: "10000000000000000000000",
-      block_date: new Date("2025-08-25T12:10:16.000Z"),
+      block_date: date0,
       block_id: 23218290,
       tx_hash: "0xHash",
     }
     const secondEvent = {
-      id: 2708n,
+      id: 2n,
       token_address: "0x9b894b86f16ec30656ab6dd51e0fd620e70f630b",
       from: "0x0000000000000000000000000000000000000000",
       to: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
       amount: "2000000000000000000000",
-      block_date: new Date("2025-08-26T12:10:16.000Z"),
+      block_date: date1,
       block_id: 23218291,
       tx_hash: "0xHash",
     }
     const thirdEvent = {
-      id: 2709n,
+      id: 3n,
       token_address: "0x9b894b86f16ec30656ab6dd51e0fd620e70f630b",
       from: "0x0000000000000000000000000000000000000000",
       to: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
       amount: "15000000000000000000000",
-      block_date: new Date("2025-08-27T12:10:16.000Z"),
+      block_date: date2,
       block_id: 23218291,
       tx_hash: "0xHash",
     }
@@ -142,11 +143,6 @@ describe("UserPointsService.updateUserTasks", () => {
 // updateTasks()
 // --------------------------------------------
 describe("UserPointsService.updateTasks", () => {
-  let userPointsService: UserPointsService
-  let getOpenedTasksSpy: ReturnType<typeof vi.spyOn>
-  let updateProcessedTasksSpy: ReturnType<typeof vi.spyOn>
-  let fetchTasksEventsAndAddressesSpy: ReturnType<typeof vi.spyOn>
-
   const userPointsRepository = {
     getOpenedTasks: vi.fn(),
     updateProcessedTasks: vi.fn(),
@@ -158,6 +154,12 @@ describe("UserPointsService.updateTasks", () => {
     getOpenedTasks: vi.fn(),
     updateProcessedTasks: vi.fn(),
   } as any as ERC20Repository
+
+  let userPointsService: UserPointsService
+  let getOpenedTasksSpy: ReturnType<typeof vi.spyOn>
+  let updateProcessedTasksSpy: ReturnType<typeof vi.spyOn>
+  let fetchTasksEventsAndAddressesSpy: ReturnType<typeof vi.spyOn>
+  vi.spyOn(userPointsRepository as any, "getAddressesExcludedFromLpPoints").mockResolvedValue([{ user: ZeroAddress }])
 
   beforeEach(() => {
     vi.clearAllMocks()
