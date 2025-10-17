@@ -1,4 +1,4 @@
-import { PointsBotLogRepository } from "../db/PointsBotLogRepository.js"
+import { PointsBotLogRepository } from "../db/Points/PointsBotLogRepository.js"
 import { LiquidationBotLogAction, NotificationBotAction, NotificationBotErrorLevel, NotificationMessage } from "../type/data.js"
 import { prepareSerialize } from "../utils/jsonSerializer.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"

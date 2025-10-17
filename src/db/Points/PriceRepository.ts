@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client"
-import { PriceSource } from "../type/data.js"
-import { AbstractRepository } from "./AbstractRepository.js"
+import { PriceSource } from "../../type/data.js"
+import { AbstractRepository } from "../AbstractRepository.js"
 
 export class PriceRepository extends AbstractRepository {
   async insertPriceFeed(data: Prisma.price_feedsCreateManyInput[]) {

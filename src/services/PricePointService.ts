@@ -1,7 +1,7 @@
 import { AddressLike, JsonRpcProvider } from "ethers"
 
 import { v4 as uuidv4 } from "uuid"
-import { PriceRepository } from "../db/PriceRepository.js"
+import { PriceRepository } from "../db/Points/PriceRepository.js"
 import PointPricesAbi from "../abis/PointPrices.json" with { type: "json" }
 import {
   PriceApiInfo,

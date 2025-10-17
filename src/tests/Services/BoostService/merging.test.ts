@@ -1,7 +1,7 @@
 import { assert, beforeEach, describe, it, vi } from "vitest"
 import { JsonRpcProvider } from "ethers"
 import { BoostService } from "../../../services/boost/BoostService.js"
-import { BoostRepository } from "../../../db/BoostRepository.js"
+import { BoostRepository } from "../../../db/Points/BoostRepository.js"
 
 // --------------------------------------------
 // updateTasks()

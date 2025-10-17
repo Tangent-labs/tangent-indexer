@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client"
-import { PointsBotLogRepository } from "../db/PointsBotLogRepository.js"
+import { PointsBotLogRepository } from "../db/Points/PointsBotLogRepository.js"
 import { TelegramNotifierService } from "../services/TelegramNotificationServices.js"
 import dotenv from "dotenv"
 import { NotificationService } from "../services/NotificationService.js"

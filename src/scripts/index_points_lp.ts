@@ -6,7 +6,7 @@ import { BlockService } from "../services/BlockService.js"
 import { UserPointsService } from "../services/events/UserPointsService.js"
 
 import { UserEventsRepository } from "../db/UserEventsRepository.js"
-import { UserPointsRepository } from "../db/UserPointsRepository.js"
+import { UserPointsLPRepository } from "../db/Points/UserPointsLPRepository.js"
 import { ERC20Repository } from "../db/ERC20Repository.js"
 import { BlockRepository } from "../db/BlockRepository.js"
 
@@ -16,7 +16,8 @@ import { POINTS_BOT_ACTIONS } from "../type/data.js"
 import { v4 as uuidv4 } from "uuid"
 import { TelegramNotifierService } from "../services/TelegramNotificationServices.js"
 import { NotificationService } from "../services/NotificationService.js"
-import { PointsBotLogRepository } from "../db/PointsBotLogRepository.js"
+import { PointsBotLogRepository } from "../db/Points/PointsBotLogRepository.js"
+import { ActiveBorrowersRepository } from "src/db/ActiveBorrowersRepository.js"
 
 dotenv.config()
 
@@ -100,9 +101,10 @@ function setUpIndexerPointServices() {
   const prismaClient = new PrismaClient()
   const blockRepository = new BlockRepository(prismaClient)
   const userEventsRepository = new UserEventsRepository(prismaClient)
-  const userPointsRepository = new UserPointsRepository(prismaClient)
+  const userPointsLPRepository = new UserPointsLPRepository(prismaClient)
   const erc20Repository = new ERC20Repository(prismaClient)
   const notificationRepository = new PointsBotLogRepository(prismaClient)
+  const activeBorrowerRepository = new ActiveBorrowersRepository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
     blockRepository.setClient(dbTransaction)
@@ -114,7 +116,7 @@ function setUpIndexerPointServices() {
     chatId: process.env.TELEGRAM_CHAT_ID!,
   })
   const blockService = new BlockService(blockRepository)
-  const userPointsService = new UserPointsService(userPointsRepository, erc20Repository)
+  const userPointsService = new UserPointsService(userPointsLPRepository, erc20Repository, activeBorrowerRepository)
   const notificationService = new NotificationService(notificationRepository, telegramNotifierService)
 
   return {

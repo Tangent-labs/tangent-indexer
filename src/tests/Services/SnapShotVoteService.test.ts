@@ -1,5 +1,5 @@
 import axios from "axios"
-import { UserVoteRepository } from "../../db/UserVoteRepository.js"
+import { UserPointsVoteRepository } from "../../db/Points/UserPointsVoteRepository.js"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { SnapShotVoteService } from "../../services/SnapShotVoteService.js"
 
@@ -76,7 +76,7 @@ describe("SnapShotVoteService", () => {
     getProcessedProposals: vi.fn(),
     createUserVoteTasks: vi.fn(),
     fetchUsersBoosts: vi.fn(),
-  } as any as UserVoteRepository
+  } as any as UserPointsVoteRepository
 
   const blockService = {
     fetchBlockTimestamps: vi.fn(),

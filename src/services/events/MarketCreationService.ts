@@ -1,20 +1,20 @@
 import { AddressLike, JsonRpcProvider } from "ethers"
 import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
 import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher.js"
-import { UserPointsRepository } from "../../db/UserPointsRepository.js"
+import { UserPointsLPRepository } from "../../db/Points/UserPointsLPRepository.js"
 import { PTS_PER_HOUR_TO_SECONDS_RATE } from "../../scripts/db-seed/seed_lp_tasks.js"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
 
 export class MarketCreationService {
   marketContractsRepository: MarketContractsRepository
   marketCreatorAddress: AddressLike
-  userPointRepository: UserPointsRepository
+  userPointRepository: UserPointsLPRepository
   erc20Repository: ERC20Repository
 
   constructor(
     marketContractsRepository: MarketContractsRepository,
     marketCreatorAddress: AddressLike,
-    userPointRepository: UserPointsRepository,
+    userPointRepository: UserPointsLPRepository,
     erc20Repository: ERC20Repository
   ) {
     this.marketContractsRepository = marketContractsRepository

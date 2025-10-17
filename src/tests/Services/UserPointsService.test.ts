@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { UserPointsRepository } from "../../db/UserPointsRepository.js"
+import { UserPointsLPRepository } from "../../db/Points/UserPointsLPRepository.js"
 import { UserPointsService } from "../../services/events/UserPointsService.js"
 import { encodeTransfer, TRANSFER } from "../../resources/eventSignatures.js"
 import { AbiCoder, AddressLike, id, JsonRpcProvider, Log, parseEther, ZeroAddress } from "ethers"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
+import { ActiveBorrowersRepository } from "src/db/ActiveBorrowersRepository.js"
 
 function buildLog(topicId: string, from: AddressLike, to: AddressLike, blockNumber: number, data: string) {
   const fromEncoded = AbiCoder.defaultAbiCoder().encode(["address"], [from])
@@ -34,7 +35,7 @@ const date2 = new Date("2025-08-26T08:09:45.000Z")
 // --------------------------------------------
 describe("UserPointsService", () => {
   it("Decode and sort transfer logs", async () => {
-    const userPointsRepository = {} as any as UserPointsRepository
+    const userPointsRepository = {} as any as UserPointsLPRepository
 
     const user0 = "0x4838b106fce9647bdf1e7877bf73ce8b0bad5f97"
     const user1 = "0x16c473448e770ff647c69cbe19e28528877fba1b"
@@ -44,7 +45,9 @@ describe("UserPointsService", () => {
       updateProcessedTasks: vi.fn(),
     } as any as ERC20Repository
 
-    const userPointsService = new UserPointsService(userPointsRepository, erc20Repository)
+    const activeBorrowerRepository = {} as any as ActiveBorrowersRepository
+
+    const userPointsService = new UserPointsService(userPointsRepository, erc20Repository, activeBorrowerRepository)
 
     const transfer0 = buildLog(id(TRANSFER), user0, user1, 100, encodeTransfer(user0, user1, parseEther("1000000000000000000")))
     const transfer1 = buildLog(id(TRANSFER), user1, user0, 100, encodeTransfer(user1, user0, parseEther("1000000000000000000")))
@@ -65,7 +68,7 @@ describe("UserPointsService.updateUserTasks", () => {
     updateProcessedTasks: vi.fn(),
     getOpenedTasks: vi.fn(),
     getAddressesExcludedFromLpPoints: vi.fn(),
-  } as any as UserPointsRepository
+  } as any as UserPointsLPRepository
 
   // TODO Replace this
   const erc20Repository = {
@@ -79,7 +82,8 @@ describe("UserPointsService.updateUserTasks", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    userPointsService = new UserPointsService(userPointsRepository, erc20Repository)
+    const activeBorrowerRepository = {} as any as ActiveBorrowersRepository
+    userPointsService = new UserPointsService(userPointsRepository, erc20Repository, activeBorrowerRepository)
     fetchTasksEventsAndAddressesSpy = vi.spyOn(userPointsRepository as any, "fetchTasksEventsAndAddresses").mockResolvedValue(undefined as any)
     getOpenedTasksSpy = vi.spyOn(userPointsRepository as any, "getOpenedTasks")
   })
@@ -148,12 +152,14 @@ describe("UserPointsService.updateTasks", () => {
     updateProcessedTasks: vi.fn(),
     fetchTasksEventsAndAddresses: vi.fn(),
     getAddressesExcludedFromLpPoints: vi.fn(),
-  } as any as UserPointsRepository
+  } as any as UserPointsLPRepository
 
   const erc20Repository = {
     getOpenedTasks: vi.fn(),
     updateProcessedTasks: vi.fn(),
   } as any as ERC20Repository
+
+  const activeBorrowerRepository = {} as any as ActiveBorrowersRepository
 
   let userPointsService: UserPointsService
   let getOpenedTasksSpy: ReturnType<typeof vi.spyOn>
@@ -163,7 +169,7 @@ describe("UserPointsService.updateTasks", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    userPointsService = new UserPointsService(userPointsRepository, erc20Repository)
+    userPointsService = new UserPointsService(userPointsRepository, erc20Repository, activeBorrowerRepository)
     getOpenedTasksSpy = vi.spyOn(userPointsRepository as any, "getOpenedTasks").mockResolvedValue(undefined as any)
     updateProcessedTasksSpy = vi.spyOn(userPointsRepository as any, "updateProcessedTasks")
     fetchTasksEventsAndAddressesSpy = vi.spyOn(userPointsRepository as any, "fetchTasksEventsAndAddresses")

@@ -13,6 +13,27 @@ export class ActiveBorrowersRepository extends AbstractRepository {
     })
   }
 
+  async getActiveBorrowersMatchingUserMarkets(params: { user: string; marketId: number | bigint }[]) {
+    return await this.prismaClient.active_borrowers.findMany({
+      where: {
+        OR: params.map((p) => ({
+          borrower_address: p.user,
+          market_id: p.marketId,
+        })),
+      },
+      select: {
+        market: {
+          select: {
+            contract_address: true,
+          },
+        },
+        market_id: true,
+        borrower_address: true,
+        debt_shares: true,
+      },
+    })
+  }
+
   async insertActiveBorrowers(userActions: UserAction[]) {
     const activeBorrowers: Prisma.active_borrowersCreateManyInput[] = userActions.map((userAction) => {
       return {

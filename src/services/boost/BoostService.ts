@@ -6,7 +6,7 @@ import TokenBalancesForMultipleUsers from "../../abis/TokenBalancesForMultipleUs
 import { Prisma } from "@prisma/client"
 import { NumMap, TokenBalancesForBoostOut } from "./types.js"
 import { OFFCHAIN_BOOST_INFOS, ONCHAIN_BOOST_INFOS, SNAPSHOT_BOOST_TOKENS } from "./config.js"
-import { BoostRepository } from "../../db/BoostRepository.js"
+import { BoostRepository } from "../../db/Points/BoostRepository.js"
 
 // TODO
 // - Pull users dynamically from the database

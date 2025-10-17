@@ -1,8 +1,8 @@
 // import { beforeEach, describe, expect, it, vi } from "vitest"
 // import { JsonRpcProvider, parseEther } from "ethers"
 // import { BoostService } from "services/boost/BoostService"
-// import { BoostRepository } from "db/BoostRepository"
-// import { UserVoteRepository } from "db/UserVoteRepository"
+// import { BoostRepository } from "db/Points/BoostRepository"
+// import { UserPointsVoteRepository } from "db/UserPointsVoteRepository"
 // import { votesFromDbPerTask } from "./mock"
 // import { OnChainVoteService } from "services/OnChainVoteService"
 
@@ -26,7 +26,7 @@
 
 //   const userVoteRepository = {
 //     getGaugeVoters: vi.fn(),
-//   } as any as UserVoteRepository
+//   } as any as UserPointsVoteRepository
 
 //   beforeEach(() => {
 //     vi.clearAllMocks()

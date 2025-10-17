@@ -12,7 +12,7 @@ import { CheckLiquidationService } from "../services/CheckLiquidationService.js"
 import { indexerConfig } from "../config/indexer_config.js"
 import { LiquidationExecutionContext } from "../services/LiquidationExecutionContext.js"
 import { setUpIndexer } from "../config/indexer_setup.js"
-import { PointsBotLogRepository } from "../db/PointsBotLogRepository.js"
+import { PointsBotLogRepository } from "../db/Points/PointsBotLogRepository.js"
 import { TelegramNotifierService } from "../services/TelegramNotificationServices.js"
 
 dotenv.config()

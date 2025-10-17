@@ -1,12 +1,14 @@
 import { Prisma } from "@prisma/client"
-import { Log } from "ethers"
+import { Log, ZeroAddress } from "ethers"
 
-import { UserPointsRepository } from "../../db/UserPointsRepository.js"
+import { UserPointsLPRepository } from "../../db/Points/UserPointsLPRepository.js"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
 
 import { parseStakeConvexEvent, parseTransferEvent, parseWithdrawConvexEvent } from "../../eventFectcher/marketUserEvents.parsers.js"
 import { BlockService } from "../BlockService.js"
 import { TRANSFER_TOPICS } from "../../eventFectcher/erc20TransferEventFetcher.js"
+import { DebtSharesCheckpointStruct } from "./UserMarketService.js"
+import { ActiveBorrowersRepository } from "src/db/ActiveBorrowersRepository.js"
 
 export type SortedEvents = {
   Transfer: Prisma.transfer_eventsCreateManyInput[]
@@ -22,12 +24,14 @@ type LpUserTaskPoolItem = {
 }
 
 export class UserPointsService {
-  userPointsRepository: UserPointsRepository
+  userPointsRepository: UserPointsLPRepository
   erc20Repository: ERC20Repository
+  activeBorrowersRepository: ActiveBorrowersRepository
 
-  constructor(userPointsRepository: UserPointsRepository, erc20Repository: ERC20Repository) {
+  constructor(userPointsRepository: UserPointsLPRepository, erc20Repository: ERC20Repository, activeBorrowersRepository: ActiveBorrowersRepository) {
     this.userPointsRepository = userPointsRepository
     this.erc20Repository = erc20Repository
+    this.activeBorrowersRepository = activeBorrowersRepository
   }
 
   retrieveUserAddressesFromTransfers = async (startBlock: number, endBlock: number) => {
@@ -224,5 +228,49 @@ export class UserPointsService {
     })
 
     return { sortedAndParsedPointsEvents, pointsEventsBlockIds: Array.from(uniqueBlockId) }
+  }
+
+  async recomposeDebtTransferEvents(
+    users: { user: string; marketId: number | bigint }[],
+    debtSharesCheckpoints: DebtSharesCheckpointStruct
+  ): Promise<Prisma.transfer_eventsCreateManyInput[]> {
+    const debtTransfers: Prisma.transfer_eventsCreateManyInput[] = []
+    const currentDebts = await this.activeBorrowersRepository.getActiveBorrowersMatchingUserMarkets(users)
+    const zeroAddress = ZeroAddress.toLowerCase()
+
+    Object.entries(debtSharesCheckpoints).forEach(([marketAddress, userData]) => {
+      Object.entries(userData).forEach(([userAddress, checkpoints]) => {
+        const currentDebt = currentDebts.find((debt) => debt.market.contract_address === marketAddress && debt.borrower_address === userAddress)
+        const currentAmount = currentDebt?.debt_shares ? BigInt(currentDebt.debt_shares) : 0n
+        checkpoints.forEach((checkpoint) => {
+          let diff = 0n
+          if (checkpoint.isRepay) {
+            diff = currentAmount - checkpoint.amount
+            debtTransfers.push({
+              from: userAddress,
+              to: zeroAddress,
+              amount: diff.toString(),
+              block_date: new Date(),
+              block_id: checkpoint.blockId,
+              token_address: marketAddress,
+              tx_hash: checkpoint.txHash,
+            })
+          } else {
+            diff = checkpoint.amount - currentAmount
+            debtTransfers.push({
+              from: zeroAddress,
+              to: userAddress,
+              amount: diff.toString(),
+              block_date: new Date(),
+              block_id: checkpoint.blockId,
+              token_address: marketAddress,
+              tx_hash: checkpoint.txHash,
+            })
+          }
+        })
+      })
+    })
+
+    return debtTransfers
   }
 }
