@@ -52,10 +52,10 @@ describe("UserPointsService", () => {
     const transfer0 = buildLog(id(TRANSFER), user0, user1, 100, encodeTransfer(user0, user1, parseEther("1000000000000000000")))
     const transfer1 = buildLog(id(TRANSFER), user1, user0, 100, encodeTransfer(user1, user0, parseEther("1000000000000000000")))
 
-    const { sortedAndParsedPointsEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs([transfer0, transfer1])
+    const { transferEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs([transfer0, transfer1])
 
     expect(pointsEventsBlockIds.length).toBe(1)
-    expect(sortedAndParsedPointsEvents.Transfer.length).toBe(2)
+    expect(transferEvents.length).toBe(2)
   })
 })
 

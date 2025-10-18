@@ -100,6 +100,8 @@ export class UserPointsService {
       tasks.map((task) => task.id)
     )
 
+    console.log(openUserTasks)
+
     const taskPool: LpUserTaskPoolItem[] = []
 
     // Add all open tasks from DB to taskPool
@@ -185,18 +187,18 @@ export class UserPointsService {
     await this.userPointsRepository.computeUserPoints(blockDates.get(startBlock)!, blockDates.get(endBlock)!)
   }
 
-  insertEvents = async (sortedParsedEvents: SortedEvents) => {
-    await this.userPointsRepository.insertTransfers(sortedParsedEvents.Transfer)
+  insertEvents = async (sortedParsedEvents: Prisma.transfer_eventsCreateManyInput[]) => {
+    await this.userPointsRepository.insertTransfers(sortedParsedEvents)
   }
 
-  replaceDates = (sortedParsedEvents: SortedEvents, blockInfos: Map<number, number>) => {
-    Object.values(sortedParsedEvents).forEach((v) => {
-      v.forEach((event) => {
-        event.block_date = new Date(blockInfos.get(event.block_id)! * 1_000)
-      })
+  replaceDates = (transferEvents: Prisma.transfer_eventsCreateManyInput[], blockInfos: Map<number, number>) => {
+
+    transferEvents.forEach((event) => {
+      event.block_date = new Date(blockInfos.get(event.block_id)! * 1_000)
+
     })
 
-    return { sortedParsedEvents }
+    return transferEvents
   }
 
   getERC20ToTrack = async () => {
@@ -204,10 +206,7 @@ export class UserPointsService {
   }
 
   sortPointsActionsLogs = (logs: Log[]) => {
-    const sortedAndParsedPointsEvents: SortedEvents = {
-      Transfer: [],
-    }
-
+    const transferEvents: Prisma.transfer_eventsCreateManyInput[] = []
     const uniqueBlockId: Set<number> = new Set()
 
     logs.forEach((log) => {
@@ -223,11 +222,11 @@ export class UserPointsService {
           transferEvent = parseTransferEvent(log)
           break
       }
-      sortedAndParsedPointsEvents.Transfer.push(transferEvent)
+      transferEvents.push(transferEvent)
       uniqueBlockId.add(log.blockNumber)
     })
 
-    return { sortedAndParsedPointsEvents, pointsEventsBlockIds: Array.from(uniqueBlockId) }
+    return { transferEvents, pointsEventsBlockIds: Array.from(uniqueBlockId) }
   }
 
   async recomposeDebtTransferEvents(

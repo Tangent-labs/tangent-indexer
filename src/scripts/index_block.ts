@@ -83,7 +83,7 @@ async function main() {
           // Recomposer transfer events for debt tasks
           const debtTransferEvents = await userPointsService.recomposeDebtTransferEvents(users, debtSharesCheckpoints)
 
-          const { sortedAndParsedPointsEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs(transferLogs)
+          const { transferEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs(transferLogs)
 
           const uniqueBlockIds = [...new Set([...blockIds, ...pointsEventsBlockIds, "0x" + endBlock.toString(16)])]
           // Find block timestamps of the unique blockIDs
@@ -91,11 +91,11 @@ async function main() {
 
           const hydratedWithCorrectDates = userMarketService.replaceRightDates(sortedAndParsedEvents, activeBorrowActions, blocks)
 
-          sortedAndParsedPointsEvents.Transfer = sortedAndParsedPointsEvents.Transfer.concat(debtTransferEvents)
-          const pointsActionEventsDates = userPointsService.replaceDates(sortedAndParsedPointsEvents, blocks)
+          const mergedTransferEvents = transferEvents.concat(debtTransferEvents)
+          const transferEventsRightDates = userPointsService.replaceDates(mergedTransferEvents, blocks)
 
           // Insert user points actions
-          await userPointsService.insertEvents(pointsActionEventsDates.sortedParsedEvents)
+          await userPointsService.insertEvents(transferEventsRightDates)
 
           // Insert user events
           await userMarketService.insertEvents(hydratedWithCorrectDates.sortedParsedEvents)

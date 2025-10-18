@@ -56,7 +56,6 @@ async function main() {
             level: "INFO",
           })
 
-          await userPointsService.updateLPUserTasks(startBlock, endBlock)
           // Process points calculation for user tasks
           currentAction = POINTS_BOT_ACTIONS.POINTS_CALCULATE_POINTS
           await userPointsService.processUserPoints(startBlock, endBlock, blockService, indexerConfig.provider.chainRpc[bestProviderIndex])
