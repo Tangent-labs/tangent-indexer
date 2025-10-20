@@ -82,8 +82,9 @@ async function main() {
           const {
             tokens: { sUSG, sTAN },
           } = await getAddressesJson()
-          const savingAccountsLogs = await getSavingAccountLogs(bestProvider, startBlock, endBlock, [sUSG, sTAN, "0xBe53A109B494E5c9f97b9Cd39Fe969BE68BF6204"])
+          const savingAccountsLogs = await getSavingAccountLogs(bestProvider, startBlock, endBlock, [sUSG, sTAN])
           const savingAccountsBlockIds = savingAccountsLogs.map((log) => log.block_id)
+          console.log("savingAccountsLogs", savingAccountsBlockIds, savingAccountsLogs.length)
 
           // Parse events with their proper topics and group all user events to update active borrowers
           const { activeBorrowActions, sortedAndParsedEvents, blockIds, users, debtSharesCheckpoints } = userMarketService.sortUserMarketLogs(

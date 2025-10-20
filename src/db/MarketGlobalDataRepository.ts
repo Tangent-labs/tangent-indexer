@@ -14,6 +14,17 @@ export class MarketGlobalDataRepository extends AbstractRepository {
     return lastUpdate?.timestamp
   }
 
+  async getLastValue(globalIndicatorId: bigint) {
+    return await this.prismaClient.global_indicators_values.findFirst({
+      where: {
+        global_indicator_id: globalIndicatorId,
+      },
+      orderBy: {
+        timestamp: "desc",
+      },
+    })
+  }
+
   async insertRows(data: Prisma.market_global_dataUncheckedCreateInput[]) {
     await this.prismaClient.market_global_data.createMany({
       data,
@@ -97,5 +108,39 @@ export class MarketGlobalDataRepository extends AbstractRepository {
     `,
       ...params
     )
+  }
+
+  async insertGlobalIndicatorValue(values: Prisma.global_indicators_valuesCreateManyInput[]) {
+    await this.prismaClient.global_indicators_values.createMany({
+      data: values,
+    })
+  }
+
+  async getOrInsertGlobalIndicatorIds(values: { key: string; args: string }[]): Promise<Map<string, bigint>> {
+    const existingIndicators = await this.prismaClient.global_indicators.findMany({
+      where: {
+        key: {
+          in: values.map((v) => v.key),
+        },
+      },
+    })
+    const map = new Map<string, bigint>()
+    for (const gi of existingIndicators) {
+      map.set(gi.key, gi.id)
+    }
+    if (existingIndicators?.length === values.length) {
+      return map
+    }
+    const newIndicators = []
+
+    for (const v of values.filter((v) => !existingIndicators?.some((gi) => gi.key === v.key))) {
+      const created = await this.prismaClient.global_indicators.create({ data: v })
+      newIndicators.push(created)
+    }
+
+    for (const gi of newIndicators) {
+      map.set(gi.key, gi.id)
+    }
+    return map
   }
 }

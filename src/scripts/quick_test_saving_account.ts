@@ -7,6 +7,8 @@ import { SavingAccountRepository } from "db/SavingAccountRepository.js"
 import { PrismaClient } from "@prisma/client"
 import { BlockService } from "services/BlockService.js"
 import { BlockRepository } from "db/BlockRepository.js"
+import { MarketGlobalDataRepository } from "db/MarketGlobalDataRepository.js"
+import { getAddressesJson } from "utils/jsonReader.js"
 
 dotenv.config()
 
@@ -14,6 +16,23 @@ dotenv.config()
 const VAULT_ADDRESS = "0xBe53A109B494E5c9f97b9Cd39Fe969BE68BF6204"
 
 async function quickTest() {
+  await quickTestEvents()
+  await quickTestApy()
+}
+
+async function quickTestApy() {
+  console.log("🚀 Test rapide de calcul d'APY SavingAccount")
+  console.log(`📍 Vault: ${VAULT_ADDRESS}`)
+  const prismaClient = new PrismaClient()
+  const savingAccountService = new SavingAccountServices(new SavingAccountRepository(prismaClient))
+  const globalDataRepository = new MarketGlobalDataRepository(prismaClient)
+  const {
+    tokens: { sTAN, sUSG },
+  } = await getAddressesJson()
+  await savingAccountService.processSavingAccountApy(globalDataRepository, sTAN, sUSG)
+}
+
+async function quickTestEvents() {
   console.log("🚀 Test rapide de récupération d'événements SavingAccount")
   console.log(`📍 Vault: ${VAULT_ADDRESS}`)
 
