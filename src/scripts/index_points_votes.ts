@@ -4,8 +4,8 @@ import { JsonRpcProvider } from "ethers"
 
 import { TransactionPrisma } from "../type/prisma.js"
 import { BlockRepository } from "../db/BlockRepository.js"
-import { UserVoteRepository } from "../db/UserVoteRepository.js"
-import { BoostRepository } from "../db/BoostRepository.js"
+import { UserPointsVoteRepository } from "../db/Points/UserPointsVoteRepository.js"
+import { BoostRepository } from "../db/Points/BoostRepository.js"
 
 import { setUpIndexer } from "../config/indexer_setup.js"
 import { indexerConfig } from "../config/indexer_config.js"
@@ -61,7 +61,7 @@ function setUpIndexerVoteServices() {
     // log: ["query"], // log all SQL queries
   })
   const blockRepository = new BlockRepository(prismaClient)
-  const userVoteRepository = new UserVoteRepository(prismaClient)
+  const userVoteRepository = new UserPointsVoteRepository(prismaClient)
   const boostRepository = new BoostRepository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {

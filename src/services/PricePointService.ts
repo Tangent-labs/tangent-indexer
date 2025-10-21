@@ -1,7 +1,7 @@
 import { AddressLike, JsonRpcProvider } from "ethers"
 
 import { v4 as uuidv4 } from "uuid"
-import { PriceRepository } from "../db/PriceRepository.js"
+import { PriceRepository } from "../db/Points/PriceRepository.js"
 import PointPricesAbi from "../abis/PointPrices.json" with { type: "json" }
 import {
   PriceApiInfo,
@@ -20,10 +20,11 @@ import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
 
 const SCALE = 10n ** 18n
 
-type GetPriceFeedsResult = {
+export type GetPriceFeedsResult = {
   prices: PriceApiInfo[]
   notifications: NotificationMessage[]
   date?: Date
+  priceSourcePerAddress: { [address: string]: bigint }
 }
 
 type PointServiceChainViewOut = {
@@ -61,6 +62,13 @@ export class PricePointService {
     const notifications: NotificationMessage[] = []
     // get the info from the database to process
     const priceSource = await this.priceRepository.getPriceSources()
+
+    const priceSourcePerAddress: { [address: string]: bigint } = priceSource.reduce((acc, current) => {
+      return {
+        ...acc,
+        [current.address]: current.id,
+      }
+    }, {})
 
     // get the markets from the database (=> checking debt indexes)
     const markets = (await this.marketContractsRepository.getContracts())?.map((m) => m.contract_address.toLowerCase()) || []
@@ -178,12 +186,13 @@ export class PricePointService {
       }),
       notifications,
       date,
+      priceSourcePerAddress,
     }
   }
 
   async procesChainViewResults(
     chainViewPrices: PointServiceChainViewOut,
-    priceSource: PriceSource[],
+    priceSources: PriceSource[],
     apiPrices: PriceApiInfo[],
     markets: string[],
     notifications: NotificationMessage[]
@@ -198,13 +207,13 @@ export class PricePointService {
       return undefined
     }
     // Check if there are ERC4626 sources
-    const erc4626Sources = priceSource.filter((p) => p.type === "ERC4626")
+    const erc4626Sources = priceSources.filter((p) => p.type === "ERC4626")
     const date = new Date(Number(chainViewPrices.timestamp) * 1000)
 
     // Only process USG/sUSG and debt indexes if there are ERC4626 sources
     if (erc4626Sources.length > 0) {
       // Handle ERC4626 chain view result
-      this.processErc4626Prices(priceSource, chainViewPrices, apiPrices, notifications)
+      this.processErc4626Prices(priceSources, chainViewPrices, apiPrices, notifications)
 
       const debtResult = this.processDebtIndexes(chainViewPrices, markets)
 
@@ -246,7 +255,16 @@ export class PricePointService {
     const result = await this.getPriceFeeds()
 
     if (result?.prices?.length > 0) {
-      await this.priceRepository.insertPriceFeed(result.prices, result.date)
+      const date = result.date || new Date()
+
+      const priceFeeds = result.prices.map((pf) => ({
+        price_source_id: result.priceSourcePerAddress[pf.address],
+        timestamp: date,
+        price_usd: pf.price,
+      }))
+
+      await this.priceRepository.insertPriceFeed(priceFeeds)
+      await this.priceRepository.deleteInsertLastPriceFeeds(priceFeeds.map((pF) => ({ price_source_id: pF.price_source_id, price_usd: pF.price_usd })))
     }
     return result
   }

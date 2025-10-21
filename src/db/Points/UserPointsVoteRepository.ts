@@ -1,10 +1,10 @@
 import { Prisma } from "@prisma/client"
 
-import { Proposal } from "../type/data.js"
-import { AbstractRepository } from "./AbstractRepository.js"
-import { VotesFromDb } from "../services/OnChainVoteService.js"
+import { Proposal } from "../../type/data.js"
+import { AbstractRepository } from "../AbstractRepository.js"
+import { VotesFromDb } from "../../services/OnChainVoteService.js"
 
-export class UserVoteRepository extends AbstractRepository {
+export class UserPointsVoteRepository extends AbstractRepository {
   async fetchTasks() {
     return await this.prismaClient.vote_task.findMany({
       select: { id: true, name: true, point_rate: true },

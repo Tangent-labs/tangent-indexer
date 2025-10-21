@@ -1,6 +1,6 @@
 import { ethers, id, JsonRpcProvider, Log } from "ethers"
 
-import { UserVoteRepository } from "../../db/UserVoteRepository.js"
+import { UserPointsVoteRepository } from "../../db/Points/UserPointsVoteRepository.js"
 import { getEthLogs } from "../../eventFectcher/_baseFectcher.js"
 import { VOTE_FOR_GAUGE } from "../../resources/eventSignatures.js"
 import { NumMap } from "../../services/boost/types.js"
@@ -37,11 +37,11 @@ export const CONTROLLER_MAPPING: {
   },
 }
 export class VotesEventService {
-  constructor(voteRepository: UserVoteRepository) {
+  constructor(voteRepository: UserPointsVoteRepository) {
     this.voteRepository = voteRepository
   }
 
-  voteRepository: UserVoteRepository
+  voteRepository: UserPointsVoteRepository
   gaugeControllers = [CONTROLLER_MAPPING.CRV.controller, CONTROLLER_MAPPING.FXN.controller]
 
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { JsonRpcProvider } from "ethers"
-import { PricePointService } from "../../services/PricePointService.js"
+import { GetPriceFeedsResult, PricePointService } from "../../services/PricePointService.js"
 import { AddressesJson, NotificationMessage, POINTS_BOT_ACTIONS, PriceApiInfo, PriceSource } from "../../type/data.js"
 import { PriceApiService } from "../../services/PriceApiService.js"
 import { chainView } from "../../utils/chainView.js"
@@ -85,6 +85,7 @@ describe("PricePointService", () => {
     mockPriceRepository = {
       getPriceSources: vi.fn().mockResolvedValue(mockPriceSources),
       insertPriceFeed: vi.fn().mockResolvedValue([]),
+      deleteInsertLastPriceFeeds: vi.fn().mockResolvedValue([]),
     }
 
     mockMarketContractsRepository = {
@@ -451,53 +452,57 @@ describe("PricePointService", () => {
 
     // ... (keep other getPriceFeeds tests from previous version, adjusted for no USG/sUSG without ERC4626)
   })
+  const address = "0x1000000000000000000000000000000000000001"
 
   describe("fetchPriceFeed", () => {
     it("should fetch prices and insert them", async () => {
-      const mockPrices = [{ address: "0x1000000000000000000000000000000000000001", price: 1.0 }]
-      const mockResult = { prices: mockPrices, notifications: [] }
+      const mockPrices = [{ address, price: 1.0 }]
+      const mockResult: GetPriceFeedsResult = { prices: mockPrices, notifications: [], priceSourcePerAddress: { [address]: 1n } }
       vi.spyOn(pricePointService, "getPriceFeeds").mockResolvedValue(mockResult)
 
       await pricePointService.fetchPriceFeed()
       expect(pricePointService.getPriceFeeds).toHaveBeenCalled()
-      expect(mockPriceRepository.insertPriceFeed).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            address: "0x1000000000000000000000000000000000000001",
-            price: 1.0,
-          }),
-        ]),
-        undefined
-      )
+      expect(mockPriceRepository.insertPriceFeed).toHaveBeenCalledWith([{ price_source_id: 1n, price_usd: 1, timestamp: new Date() }])
     })
 
     it("should handle empty prices", async () => {
-      const mockResult = { prices: [], notifications: [] }
+      const mockResult = { prices: [], notifications: [], priceSourcePerAddress: { [address]: 1n } }
       vi.spyOn(pricePointService, "getPriceFeeds").mockResolvedValue(mockResult)
       await pricePointService.fetchPriceFeed()
       expect(mockPriceRepository.insertPriceFeed).not.toHaveBeenCalled()
     })
 
     it("should pass timestamp from chainView to insertPriceFeed when ERC4626 sources exist", async () => {
-      const mockPrices = [{ address: "0x1000000000000000000000000000000000000001", price: 1.0 }]
-      const expectedDate = new Date(Number(mockChainViewPrices.timestamp) * 1000)
-      const mockResult = { prices: mockPrices, notifications: [], date: expectedDate }
+      const mockPrices = [{ address, price: 1.0 }]
+      const mockResult = { prices: mockPrices, notifications: [], priceSourcePerAddress: { [address]: 1n } }
       vi.spyOn(pricePointService, "getPriceFeeds").mockResolvedValue(mockResult)
 
       await pricePointService.fetchPriceFeed()
 
-      expect(mockPriceRepository.insertPriceFeed).toHaveBeenCalledWith(mockPrices, expectedDate)
+      expect(mockPriceRepository.insertPriceFeed).toHaveBeenCalledWith([
+        {
+          price_source_id: 1n,
+          price_usd: 1,
+          timestamp: new Date(),
+        },
+      ])
     })
 
     it("should pass undefined date to insertPriceFeed when no ERC4626 sources exist", async () => {
       mockPriceRepository.getPriceSources.mockResolvedValue(mockPriceSources.slice(0, 3)) // No ERC4626
-      const mockPrices = [{ address: "0x1000000000000000000000000000000000000001", price: 1.0 }]
-      const mockResult = { prices: mockPrices, notifications: [], date: undefined }
+      const mockPrices = [{ address, price: 1.0 }]
+      const mockResult = { prices: mockPrices, notifications: [], priceSourcePerAddress: { [address]: 1n } }
       vi.spyOn(pricePointService, "getPriceFeeds").mockResolvedValue(mockResult)
 
       await pricePointService.fetchPriceFeed()
 
-      expect(mockPriceRepository.insertPriceFeed).toHaveBeenCalledWith(mockPrices, undefined)
+      expect(mockPriceRepository.insertPriceFeed).toHaveBeenCalledWith([
+        {
+          price_source_id: 1n,
+          price_usd: 1,
+          timestamp: new Date(),
+        },
+      ])
     })
   })
 

@@ -1,4 +1,4 @@
-import { AddressesJson } from "type/data.js"
+import { AddressesJson } from "../type/data.js"
 
 import addresses from "../../addresses.json" with { type: "json" }
 

@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client"
-import { AbstractRepository } from "./AbstractRepository.js"
+import { AbstractRepository } from "../AbstractRepository.js"
 
 export class BoostRepository extends AbstractRepository {
   async getActiveBoosts() {

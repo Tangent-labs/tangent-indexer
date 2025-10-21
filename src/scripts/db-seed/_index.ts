@@ -16,9 +16,9 @@ async function main() {
     // Deploy the SQL functions
     await deploySQLFunctions(tx)
     // Insert the pricing sources of the tokens for the point programs
-    await seedPriceSources(tx)
+    const priceSources = await seedPriceSources(tx, addresses)
     // Insert the points LP tasks
-    await seedLPTasksAndTrackedERC20(tx, addresses)
+    await seedLPTasksAndTrackedERC20(tx, addresses, priceSources)
     // Insert the points Votes tasks
     await seedVoteTasks(tx)
   })

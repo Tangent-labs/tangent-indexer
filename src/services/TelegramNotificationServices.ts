@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from "axios"
-import { TelegramNotificationConfig } from "type/service.js"
-import { escapeMarkdown } from "utils/text.js"
+import { TelegramNotificationConfig } from "../type/service.js"
+import { escapeMarkdown } from "../utils/text.js"
 
 export interface SendMessageOptions {
   text: string

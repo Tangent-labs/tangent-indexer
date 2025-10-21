@@ -1,9 +1,9 @@
 import { Prisma } from "@prisma/client"
 import { JsonRpcProvider } from "ethers"
-import { AbstractRepository } from "./AbstractRepository.js"
+import { AbstractRepository } from "../AbstractRepository.js"
 export type DebtModifyingEvent = { account: string; market_id: string; debt_shares: string; block_id: number; block_date: Date }
 
-export class UserPointsRepository extends AbstractRepository {
+export class UserPointsLPRepository extends AbstractRepository {
   // Helper: block time at or before startBlock
   getBlockTimeAtOrBefore = async (blockId: number, provider: JsonRpcProvider) => {
     const latestIndexedBlock = await this.prismaClient.votes_points_blocks.findFirst({
@@ -94,6 +94,14 @@ export class UserPointsRepository extends AbstractRepository {
     const relevantEvents = result.flatMap((task) => task.token.transfer_events)
 
     return { tasks, transferEvents: relevantEvents }
+  }
+
+  async getAddressesExcludedFromLpPoints() {
+    return await this.prismaClient.lp_points_users_excluded.findMany({
+      select: {
+        user: true,
+      },
+    })
   }
 
   getUniqueAddressesFromTransfers = async (startBlock: number, endBlock: number) => {

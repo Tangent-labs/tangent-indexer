@@ -1,4 +1,4 @@
-import { Log, AbiCoder } from "ethers"
+import { Log, AbiCoder, ZeroAddress } from "ethers"
 import { Prisma } from "@prisma/client"
 
 function userAddress(topic: string): string {
@@ -10,6 +10,40 @@ export function parseTransferEvent(log: Log): Prisma.transfer_eventsUncheckedCre
 
   const from = userAddress(log.topics[1])
   const to = userAddress(log.topics[2])
+
+  return {
+    token_address: log.address.toLowerCase(),
+    from,
+    to,
+    amount: amount.toString(),
+    block_date: new Date(), // placeholder
+    block_id: Number(log.blockNumber),
+    tx_hash: log.transactionHash,
+  }
+}
+
+export function parseStakeConvexEvent(log: Log): Prisma.transfer_eventsUncheckedCreateInput {
+  const [amount] = AbiCoder.defaultAbiCoder().decode(["uint256"], log.data)
+
+  const from = ZeroAddress.toLowerCase()
+  const to = userAddress(log.topics[1])
+
+  return {
+    token_address: log.address.toLowerCase(),
+    from,
+    to,
+    amount: amount.toString(),
+    block_date: new Date(), // placeholder
+    block_id: Number(log.blockNumber),
+    tx_hash: log.transactionHash,
+  }
+}
+
+export function parseWithdrawConvexEvent(log: Log): Prisma.transfer_eventsUncheckedCreateInput {
+  const [amount] = AbiCoder.defaultAbiCoder().decode(["uint256"], log.data)
+
+  const from = userAddress(log.topics[1])
+  const to = ZeroAddress.toLowerCase()
 
   return {
     token_address: log.address.toLowerCase(),

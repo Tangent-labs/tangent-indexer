@@ -3,8 +3,8 @@ import { JsonRpcProvider } from "ethers"
 import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
 import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher.js"
 import { MarketCreationService } from "../../services/events/MarketCreationService.js"
-import { UserPointsRepository } from "../../db/UserPointsRepository.js"
-import { ERC20Repository } from "db/ERC20Repository.js"
+import { UserPointsLPRepository } from "../../db/Points/UserPointsLPRepository.js"
+import { ERC20Repository } from "../../db/ERC20Repository.js"
 
 vi.mock("../../eventFectcher/marketCreationEventFectcher", () => ({
   fetchMarketCreationLogs: vi.fn(),
@@ -17,11 +17,14 @@ describe("MarketCreationService", () => {
     }
     const userPointsRepository = {
       insertLpTasks: vi.fn(),
-    } as any as UserPointsRepository
+    } as any as UserPointsLPRepository
 
     const erc20Repository = {
       insertManyERC20ToTrack: vi.fn(),
+      insertAndReturnManyPriceSource: vi.fn(),
     } as any as ERC20Repository
+
+    const insertAndReturnManyPriceSourceSpy = vi.spyOn(erc20Repository as any, "insertAndReturnManyPriceSource")
 
     const marketCreationService = new MarketCreationService(
       mockMarketContractsRepository as any as MarketContractsRepository,
@@ -29,6 +32,11 @@ describe("MarketCreationService", () => {
       userPointsRepository,
       erc20Repository
     )
+
+    insertAndReturnManyPriceSourceSpy.mockResolvedValue([
+      { name: "Debt 0xMarket1", id: 12n, address: "market", type: "chainview", reference: null },
+      { name: "Debt 0xMarket2", id: 13n, address: "market", type: "chainview", reference: null },
+    ])
 
     const mockProvider = {} as JsonRpcProvider
     const startingBlock = 1000
@@ -58,7 +66,7 @@ describe("MarketCreationService", () => {
 
     const userPointsRepository = {
       insertLpTasks: vi.fn(),
-    } as any as UserPointsRepository
+    } as any as UserPointsLPRepository
 
     const erc20Repository = {
       insertManyERC20ToTrack: vi.fn(),

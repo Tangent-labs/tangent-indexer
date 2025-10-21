@@ -1,4 +1,4 @@
-import { AddressLike, Log, ZeroAddress } from "ethers"
+import { AddressLike, Log } from "ethers"
 import { Prisma } from "@prisma/client"
 
 import { EVENT_TOPICS } from "../../resources/eventSignatures.js"
@@ -51,6 +51,13 @@ export type SortedEvents = {
   MigrateTo: Prisma.migrate_toCreateManyInput[]
 }
 
+export type DebtSharesCheckpoint = { market: string; user: string; amount: bigint; isRepay: boolean; blockId: number; txHash: string }
+
+export type DebtSharesCheckpointStruct = {
+  [marketAddress: string]: {
+    [user: string]: DebtSharesCheckpoint[]
+  }
+}
 export class UserMarketService {
   userEventsRepository: UserEventsRepository
   constructor(userEventsRepository: UserEventsRepository) {
@@ -93,6 +100,21 @@ export class UserMarketService {
     return { sortedParsedEvents, userActions }
   }
 
+  pushOrCreate(debtCheckpoint: DebtSharesCheckpoint, debtSharesCheckpoints: DebtSharesCheckpointStruct) {
+    const market = debtCheckpoint.market
+    const user = debtCheckpoint.user
+    if (debtSharesCheckpoints[market]) {
+      if (debtSharesCheckpoints[market][user]) {
+        debtSharesCheckpoints[market][user].push(debtCheckpoint)
+      } else {
+        debtSharesCheckpoints[market][user] = [debtCheckpoint]
+      }
+    } else {
+      debtSharesCheckpoints[market] = {}
+      debtSharesCheckpoints[market][user] = [debtCheckpoint]
+    }
+  }
+
   sortUserMarketLogs(logs: Log[], mapMarketIdPerAddresses: Map<string, number>) {
     const activeBorrowActions: UserAction[] = []
     const sortedAndParsedEvents: SortedEvents = {
@@ -115,41 +137,48 @@ export class UserMarketService {
       MigrateTo: [],
     }
 
+    // Retrieve state of all active debts in lp_user_tasks
+
     const uniqueBlockId: Set<number> = new Set()
-    const debtTransferEvents: Prisma.transfer_eventsCreateManyInput[] = []
+    const users: { user: string; marketId: number | bigint }[] = []
+    const debtSharesCheckpoints: DebtSharesCheckpointStruct = {}
 
     logs.forEach((log) => {
       const eventTopic = log.topics[0]
-
       const eventType = EVENT_TOPICS[eventTopic]
-
       uniqueBlockId.add(log.blockNumber)
+      const contractAddress = log.address.toLowerCase()
 
       switch (eventType) {
         case "Repay":
           {
             const repayEvent = parseRepayEvent(log, mapMarketIdPerAddresses)
+            const debtShares = BigInt(repayEvent.debt_shares)
             activeBorrowActions.push({
               user: repayEvent.account,
               marketId: Number(repayEvent.market_id),
-              debt_shares: BigInt(repayEvent.debt_shares),
+              debt_shares: BigInt(debtShares),
               blockId: repayEvent.block_id,
             })
             sortedAndParsedEvents.Repay.push(repayEvent)
-            debtTransferEvents.push({
-              from: repayEvent.account,
-              to: ZeroAddress,
-              amount: repayEvent.debt_shares,
-              tx_hash: repayEvent.tx_hash,
-              block_id: repayEvent.block_id,
-              token_address: log.address.toLowerCase(),
-              block_date: new Date(),
-            })
+            users.push({ user: repayEvent.account, marketId: repayEvent.market_id })
+            this.pushOrCreate(
+              {
+                market: contractAddress,
+                user: repayEvent.account,
+                isRepay: true,
+                amount: debtShares,
+                blockId: repayEvent.block_id,
+                txHash: repayEvent.tx_hash,
+              },
+              debtSharesCheckpoints
+            )
           }
           break
         case "RepayAndWithdraw":
           {
             const repayAndWithdrawEvent = parseRepayAndWithdrawEvent(log, mapMarketIdPerAddresses)
+            const debtShares = BigInt(repayAndWithdrawEvent.debt_shares)
             activeBorrowActions.push({
               user: repayAndWithdrawEvent.account,
               marketId: Number(repayAndWithdrawEvent.market_id),
@@ -157,20 +186,24 @@ export class UserMarketService {
               blockId: repayAndWithdrawEvent.block_id,
             })
             sortedAndParsedEvents.RepayAndWithdraw.push(repayAndWithdrawEvent)
-            debtTransferEvents.push({
-              from: repayAndWithdrawEvent.account,
-              to: ZeroAddress,
-              amount: repayAndWithdrawEvent.debt_shares,
-              tx_hash: repayAndWithdrawEvent.tx_hash,
-              block_id: repayAndWithdrawEvent.block_id,
-              token_address: log.address.toLowerCase(),
-              block_date: new Date(),
-            })
+            users.push({ user: repayAndWithdrawEvent.account, marketId: repayAndWithdrawEvent.market_id })
+            this.pushOrCreate(
+              {
+                market: contractAddress,
+                user: repayAndWithdrawEvent.account,
+                isRepay: true,
+                amount: debtShares,
+                blockId: repayAndWithdrawEvent.block_id,
+                txHash: repayAndWithdrawEvent.tx_hash,
+              },
+              debtSharesCheckpoints
+            )
           }
           break
         case "ZapRepay":
           {
             const zapRepayEvent = parseZapRepayEvent(log, mapMarketIdPerAddresses)
+            const debtShares = BigInt(zapRepayEvent.debt_shares)
             activeBorrowActions.push({
               user: zapRepayEvent.account,
               marketId: Number(zapRepayEvent.market_id),
@@ -178,21 +211,24 @@ export class UserMarketService {
               blockId: zapRepayEvent.block_id,
             })
             sortedAndParsedEvents.ZapRepay.push(zapRepayEvent)
-
-            debtTransferEvents.push({
-              from: zapRepayEvent.account,
-              to: ZeroAddress,
-              amount: zapRepayEvent.debt_shares,
-              tx_hash: zapRepayEvent.tx_hash,
-              block_id: zapRepayEvent.block_id,
-              token_address: log.address.toLowerCase(),
-              block_date: new Date(),
-            })
+            users.push({ user: zapRepayEvent.account, marketId: zapRepayEvent.market_id })
+            this.pushOrCreate(
+              {
+                market: contractAddress,
+                user: zapRepayEvent.account,
+                isRepay: true,
+                amount: debtShares,
+                blockId: zapRepayEvent.block_id,
+                txHash: zapRepayEvent.tx_hash,
+              },
+              debtSharesCheckpoints
+            )
           }
           break
         case "ZapRepayAndWithdraw":
           {
             const zapRepayAndWithdrawEvent = parseZapRepayAndWithdrawEvent(log, mapMarketIdPerAddresses)
+            const debtShares = BigInt(zapRepayAndWithdrawEvent.debt_shares)
             activeBorrowActions.push({
               user: zapRepayAndWithdrawEvent.account,
               marketId: Number(zapRepayAndWithdrawEvent.market_id),
@@ -200,15 +236,18 @@ export class UserMarketService {
               blockId: zapRepayAndWithdrawEvent.block_id,
             })
             sortedAndParsedEvents.ZapRepayAndWithdraw.push(zapRepayAndWithdrawEvent)
-            debtTransferEvents.push({
-              from: zapRepayAndWithdrawEvent.account,
-              to: ZeroAddress,
-              amount: zapRepayAndWithdrawEvent.debt_shares,
-              tx_hash: zapRepayAndWithdrawEvent.tx_hash,
-              block_id: zapRepayAndWithdrawEvent.block_id,
-              token_address: log.address.toLowerCase(),
-              block_date: new Date(),
-            })
+            users.push({ user: zapRepayAndWithdrawEvent.account, marketId: zapRepayAndWithdrawEvent.market_id })
+            this.pushOrCreate(
+              {
+                market: contractAddress,
+                user: zapRepayAndWithdrawEvent.account,
+                isRepay: true,
+                amount: debtShares,
+                blockId: zapRepayAndWithdrawEvent.block_id,
+                txHash: zapRepayAndWithdrawEvent.tx_hash,
+              },
+              debtSharesCheckpoints
+            )
           }
           break
         case "Withdraw":
@@ -228,6 +267,7 @@ export class UserMarketService {
         case "Borrow":
           {
             const borrowEvent = parseBorrowEvent(log, mapMarketIdPerAddresses)
+            const debtShares = BigInt(borrowEvent.debt_shares)
             activeBorrowActions.push({
               user: borrowEvent.account,
               marketId: Number(borrowEvent.market_id),
@@ -235,15 +275,18 @@ export class UserMarketService {
               blockId: borrowEvent.block_id,
             })
             sortedAndParsedEvents.Borrow.push(borrowEvent)
-            debtTransferEvents.push({
-              from: ZeroAddress,
-              to: borrowEvent.account,
-              amount: borrowEvent.debt_shares,
-              tx_hash: borrowEvent.tx_hash,
-              block_id: borrowEvent.block_id,
-              token_address: log.address.toLowerCase(),
-              block_date: new Date(),
-            })
+            users.push({ user: borrowEvent.account, marketId: borrowEvent.market_id })
+            this.pushOrCreate(
+              {
+                market: contractAddress,
+                user: borrowEvent.account,
+                isRepay: false,
+                amount: debtShares,
+                blockId: borrowEvent.block_id,
+                txHash: borrowEvent.tx_hash,
+              },
+              debtSharesCheckpoints
+            )
           }
           break
         case "ZapDeposit":
@@ -255,6 +298,7 @@ export class UserMarketService {
         case "DepositAndBorrow":
           {
             const depositAndBorrowEvent = parseDepositAndBorrowEvent(log, mapMarketIdPerAddresses)
+            const debtShares = BigInt(depositAndBorrowEvent.debt_shares)
             activeBorrowActions.push({
               user: depositAndBorrowEvent.account,
               marketId: Number(depositAndBorrowEvent.market_id),
@@ -262,20 +306,24 @@ export class UserMarketService {
               blockId: depositAndBorrowEvent.block_id,
             })
             sortedAndParsedEvents.DepositAndBorrow.push(depositAndBorrowEvent)
-            debtTransferEvents.push({
-              from: ZeroAddress,
-              to: depositAndBorrowEvent.account,
-              amount: depositAndBorrowEvent.debt_shares,
-              tx_hash: depositAndBorrowEvent.tx_hash,
-              block_id: depositAndBorrowEvent.block_id,
-              token_address: log.address.toLowerCase(),
-              block_date: new Date(),
-            })
+            users.push({ user: depositAndBorrowEvent.account, marketId: depositAndBorrowEvent.market_id })
+            this.pushOrCreate(
+              {
+                market: contractAddress,
+                user: depositAndBorrowEvent.account,
+                isRepay: false,
+                amount: debtShares,
+                blockId: depositAndBorrowEvent.block_id,
+                txHash: depositAndBorrowEvent.tx_hash,
+              },
+              debtSharesCheckpoints
+            )
           }
           break
         case "ZapDepositAndBorrow":
           {
             const zapDepositAndBorrowEvent = parseZapDepositAndBorrowEvent(log, mapMarketIdPerAddresses)
+            const debtShares = BigInt(zapDepositAndBorrowEvent.debt_shares)
             activeBorrowActions.push({
               user: zapDepositAndBorrowEvent.account,
               marketId: Number(zapDepositAndBorrowEvent.market_id),
@@ -283,20 +331,24 @@ export class UserMarketService {
               blockId: zapDepositAndBorrowEvent.block_id,
             })
             sortedAndParsedEvents.ZapDepositAndBorrow.push(zapDepositAndBorrowEvent)
-            debtTransferEvents.push({
-              from: ZeroAddress,
-              to: zapDepositAndBorrowEvent.account,
-              amount: zapDepositAndBorrowEvent.debt_shares,
-              tx_hash: zapDepositAndBorrowEvent.tx_hash,
-              block_id: zapDepositAndBorrowEvent.block_id,
-              token_address: log.address.toLowerCase(),
-              block_date: new Date(),
-            })
+            users.push({ user: zapDepositAndBorrowEvent.account, marketId: zapDepositAndBorrowEvent.market_id })
+            this.pushOrCreate(
+              {
+                market: contractAddress,
+                user: zapDepositAndBorrowEvent.account,
+                isRepay: false,
+                amount: debtShares,
+                blockId: zapDepositAndBorrowEvent.block_id,
+                txHash: zapDepositAndBorrowEvent.tx_hash,
+              },
+              debtSharesCheckpoints
+            )
           }
           break
         case "Leverage":
           {
             const leverageEvent = parseLeverageEvent(log, mapMarketIdPerAddresses)
+            const debtShares = BigInt(leverageEvent.debt_shares)
             activeBorrowActions.push({
               user: leverageEvent.account,
               marketId: Number(leverageEvent.market_id),
@@ -304,20 +356,24 @@ export class UserMarketService {
               blockId: leverageEvent.block_id,
             })
             sortedAndParsedEvents.Leverage.push(leverageEvent)
-            debtTransferEvents.push({
-              from: ZeroAddress,
-              to: leverageEvent.account,
-              amount: leverageEvent.debt_shares,
-              tx_hash: leverageEvent.tx_hash,
-              block_id: leverageEvent.block_id,
-              token_address: log.address.toLowerCase(),
-              block_date: new Date(),
-            })
+            users.push({ user: leverageEvent.account, marketId: leverageEvent.market_id })
+            this.pushOrCreate(
+              {
+                market: contractAddress,
+                user: leverageEvent.account,
+                isRepay: false,
+                amount: debtShares,
+                blockId: leverageEvent.block_id,
+                txHash: leverageEvent.tx_hash,
+              },
+              debtSharesCheckpoints
+            )
           }
           break
         case "ZapLeverage":
           {
             const zapLeverageEvent = parseZapLeverageEvent(log, mapMarketIdPerAddresses)
+            const debtShares = BigInt(zapLeverageEvent.debt_shares)
             activeBorrowActions.push({
               user: zapLeverageEvent.account,
               marketId: Number(zapLeverageEvent.market_id),
@@ -325,20 +381,24 @@ export class UserMarketService {
               blockId: zapLeverageEvent.block_id,
             })
             sortedAndParsedEvents.ZapLeverage.push(zapLeverageEvent)
-            debtTransferEvents.push({
-              from: ZeroAddress,
-              to: zapLeverageEvent.account,
-              amount: zapLeverageEvent.debt_shares,
-              tx_hash: zapLeverageEvent.tx_hash,
-              block_id: zapLeverageEvent.block_id,
-              token_address: log.address.toLowerCase(),
-              block_date: new Date(),
-            })
+            users.push({ user: zapLeverageEvent.account, marketId: zapLeverageEvent.market_id })
+            this.pushOrCreate(
+              {
+                market: contractAddress,
+                user: zapLeverageEvent.account,
+                isRepay: false,
+                amount: debtShares,
+                blockId: zapLeverageEvent.block_id,
+                txHash: zapLeverageEvent.tx_hash,
+              },
+              debtSharesCheckpoints
+            )
           }
           break
         case "Liquidate":
           {
             const liquidateEvent = parseLiquidateEvent(log, mapMarketIdPerAddresses)
+            const debtShares = BigInt(liquidateEvent.debt_shares)
             activeBorrowActions.push({
               user: liquidateEvent.account,
               marketId: Number(liquidateEvent.market_id),
@@ -346,20 +406,25 @@ export class UserMarketService {
               blockId: liquidateEvent.block_id,
             })
             sortedAndParsedEvents.Liquidate.push(liquidateEvent)
-            debtTransferEvents.push({
-              from: liquidateEvent.account,
-              to: ZeroAddress,
-              amount: liquidateEvent.debt_shares,
-              tx_hash: liquidateEvent.tx_hash,
-              block_id: liquidateEvent.block_id,
-              token_address: log.address.toLowerCase(),
-              block_date: new Date(),
-            })
+            users.push({ user: liquidateEvent.account, marketId: liquidateEvent.market_id })
+            this.pushOrCreate(
+              {
+                market: contractAddress,
+                user: liquidateEvent.account,
+                isRepay: true,
+                amount: debtShares,
+                blockId: liquidateEvent.block_id,
+                txHash: liquidateEvent.tx_hash,
+              },
+              debtSharesCheckpoints
+            )
           }
           break
         case "SelfLiquidate":
           {
             const selfLiquidateEvent = parseSelfLiquidateEvent(log, mapMarketIdPerAddresses)
+            const debtShares = BigInt(selfLiquidateEvent.debt_shares)
+
             activeBorrowActions.push({
               user: selfLiquidateEvent.account,
               marketId: Number(selfLiquidateEvent.market_id),
@@ -367,41 +432,51 @@ export class UserMarketService {
               blockId: selfLiquidateEvent.block_id,
             })
             sortedAndParsedEvents.SelfLiquidate.push(selfLiquidateEvent)
-            debtTransferEvents.push({
-              from: selfLiquidateEvent.account,
-              to: ZeroAddress,
-              amount: selfLiquidateEvent.debt_shares,
-              tx_hash: selfLiquidateEvent.tx_hash,
-              block_id: selfLiquidateEvent.block_id,
-              token_address: log.address.toLowerCase(),
-              block_date: new Date(),
-            })
+            users.push({ user: selfLiquidateEvent.account, marketId: selfLiquidateEvent.market_id })
+            this.pushOrCreate(
+              {
+                market: contractAddress,
+                user: selfLiquidateEvent.account,
+                isRepay: true,
+                amount: debtShares,
+                blockId: selfLiquidateEvent.block_id,
+                txHash: selfLiquidateEvent.tx_hash,
+              },
+              debtSharesCheckpoints
+            )
           }
           break
         case "SeizeCollateral":
           {
             const seizeCollateralEvent = parseSeizeCollateralEvent(log, mapMarketIdPerAddresses)
+            const debtShares = 0n
+
             activeBorrowActions.push({
               user: seizeCollateralEvent.account,
               marketId: Number(seizeCollateralEvent.market_id),
-              debt_shares: 0n,
+              debt_shares: debtShares,
               blockId: seizeCollateralEvent.block_id,
             })
             sortedAndParsedEvents.SeizeCollateral.push(seizeCollateralEvent)
-            debtTransferEvents.push({
-              from: seizeCollateralEvent.account,
-              to: ZeroAddress,
-              amount: "0",
-              tx_hash: seizeCollateralEvent.tx_hash,
-              block_id: seizeCollateralEvent.block_id,
-              token_address: log.address.toLowerCase(),
-              block_date: new Date(),
-            })
+            users.push({ user: seizeCollateralEvent.account, marketId: seizeCollateralEvent.market_id })
+            this.pushOrCreate(
+              {
+                market: contractAddress,
+                user: seizeCollateralEvent.account,
+                isRepay: true,
+                amount: debtShares,
+                blockId: seizeCollateralEvent.block_id,
+                txHash: seizeCollateralEvent.tx_hash,
+              },
+              debtSharesCheckpoints
+            )
           }
           break
         case "MigrateFrom":
           {
             const migrateFromEvent = parseMigrateFromEvent(log, mapMarketIdPerAddresses)
+            const debtShares = BigInt(migrateFromEvent.debt_shares)
+
             activeBorrowActions.push({
               user: migrateFromEvent.account,
               marketId: Number(migrateFromEvent.market_id),
@@ -409,20 +484,25 @@ export class UserMarketService {
               blockId: migrateFromEvent.block_id,
             })
             sortedAndParsedEvents.MigrateFrom.push(migrateFromEvent)
-            debtTransferEvents.push({
-              from: migrateFromEvent.account,
-              to: ZeroAddress,
-              amount: "0",
-              tx_hash: migrateFromEvent.tx_hash,
-              block_id: migrateFromEvent.block_id,
-              token_address: log.address.toLowerCase(),
-              block_date: new Date(),
-            })
+            users.push({ user: migrateFromEvent.account, marketId: migrateFromEvent.market_id })
+            this.pushOrCreate(
+              {
+                market: contractAddress,
+                user: migrateFromEvent.account,
+                isRepay: true,
+                amount: debtShares,
+                blockId: migrateFromEvent.block_id,
+                txHash: migrateFromEvent.tx_hash,
+              },
+              debtSharesCheckpoints
+            )
           }
           break
         case "MigrateTo":
           {
             const migrateToEvent = parseMigrateToEvent(log, mapMarketIdPerAddresses)
+            const debtShares = BigInt(migrateToEvent.debt_shares)
+
             activeBorrowActions.push({
               user: migrateToEvent.account,
               marketId: Number(migrateToEvent.market_id),
@@ -430,21 +510,26 @@ export class UserMarketService {
               blockId: migrateToEvent.block_id,
             })
             sortedAndParsedEvents.MigrateTo.push(migrateToEvent)
-            debtTransferEvents.push({
-              from: ZeroAddress,
-              to: migrateToEvent.account,
-              amount: "0",
-              tx_hash: migrateToEvent.tx_hash,
-              block_id: migrateToEvent.block_id,
-              token_address: log.address.toLowerCase(),
-              block_date: new Date(),
-            })
+            users.push({ user: migrateToEvent.account, marketId: migrateToEvent.market_id })
+            this.pushOrCreate(
+              {
+                market: contractAddress,
+                user: migrateToEvent.account,
+                isRepay: false,
+                amount: debtShares,
+                blockId: migrateToEvent.block_id,
+                txHash: migrateToEvent.tx_hash,
+              },
+              debtSharesCheckpoints
+            )
           }
           break
         default:
           break
       }
     })
-    return { sortedAndParsedEvents, activeBorrowActions, blockIds: Array.from(uniqueBlockId), debtTransferEvents }
+
+    // Look for
+    return { sortedAndParsedEvents, activeBorrowActions, blockIds: Array.from(uniqueBlockId), users, debtSharesCheckpoints }
   }
 }

@@ -3,8 +3,8 @@ import fs from "fs"
 import path from "path"
 import { Prisma } from "@prisma/client"
 
-import { Proposal, ValidatedTask, Reward, RewardedChoice, OrganizationConfig } from "type/data.js"
-import { UserVoteRepository } from "../db/UserVoteRepository.js"
+import { Proposal, ValidatedTask, Reward, RewardedChoice, OrganizationConfig } from "../type/data.js"
+import { UserPointsVoteRepository } from "../db/Points/UserPointsVoteRepository.js"
 import { BlockService } from "./BlockService.js"
 
 // https://snapshot.box/#/s:sdcrv.eth/proposal/0x10c44649c31c9716592c5ad92752e449d8b024d50adbd75cecea00864920941e
@@ -12,9 +12,9 @@ import { BlockService } from "./BlockService.js"
 // /?ref=littlemight.com#/proposal/0x662c82169a3e7c0ff0baeb3ceb20f9d76115b2cd2d9b138cee48d8f8f80812b0
 
 export class SnapShotVoteService {
-  userVoteRepository: UserVoteRepository
+  userVoteRepository: UserPointsVoteRepository
 
-  constructor(userVoteRepository: UserVoteRepository) {
+  constructor(userVoteRepository: UserPointsVoteRepository) {
     this.userVoteRepository = userVoteRepository
   }
 

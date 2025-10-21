@@ -1,18 +1,22 @@
 import { Prisma } from "@prisma/client"
-import { PriceApiInfo, PriceSource } from "../type/data.js"
-import { AbstractRepository } from "./AbstractRepository.js"
+import { PriceSource } from "../../type/data.js"
+import { AbstractRepository } from "../AbstractRepository.js"
 
 export class PriceRepository extends AbstractRepository {
-  async insertPriceFeed(prices: PriceApiInfo[], _date?: Date) {
-    if (prices?.length > 0) {
-      const date = _date || new Date()
-
+  async insertPriceFeed(data: Prisma.price_feedsCreateManyInput[]) {
+    if (data?.length > 0) {
       await this.prismaClient.price_feeds.createMany({
-        data: prices.map((p) => ({
-          timestamp: date,
-          price_usd: p.price,
-          address: p.address,
-        })),
+        data,
+      })
+    }
+  }
+
+  async deleteInsertLastPriceFeeds(data: Prisma.last_price_feedsCreateManyInput[]) {
+    if (data?.length > 0) {
+      const truncateQuery = Prisma.sql`TRUNCATE TABLE points.last_price_feeds`
+      await this.prismaClient.$executeRaw(truncateQuery)
+      await this.prismaClient.last_price_feeds.createMany({
+        data,
       })
     }
   }
@@ -32,7 +36,6 @@ export class PriceRepository extends AbstractRepository {
       WHERE ps.address = v.address
         AND ps.type = 'curveApi'
     `
-    console.log(sql)
     await this.prismaClient.$executeRaw(sql)
   }
 }

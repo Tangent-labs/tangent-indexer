@@ -1,11 +1,14 @@
 import { Prisma } from "@prisma/client"
-import { Log } from "ethers"
+import { Log, ZeroAddress } from "ethers"
 
-import { UserPointsRepository } from "../../db/UserPointsRepository.js"
+import { UserPointsLPRepository } from "../../db/Points/UserPointsLPRepository.js"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
 
-import { parseTransferEvent } from "../../eventFectcher/marketUserEvents.parsers.js"
+import { parseStakeConvexEvent, parseTransferEvent, parseWithdrawConvexEvent } from "../../eventFectcher/marketUserEvents.parsers.js"
 import { BlockService } from "../BlockService.js"
+import { TRANSFER_TOPICS } from "../../eventFectcher/erc20TransferEventFetcher.js"
+import { DebtSharesCheckpointStruct } from "./UserMarketService.js"
+import { ActiveBorrowersRepository } from "src/db/ActiveBorrowersRepository.js"
 
 export type SortedEvents = {
   Transfer: Prisma.transfer_eventsCreateManyInput[]
@@ -21,12 +24,14 @@ type LpUserTaskPoolItem = {
 }
 
 export class UserPointsService {
-  userPointsRepository: UserPointsRepository
+  userPointsRepository: UserPointsLPRepository
   erc20Repository: ERC20Repository
+  activeBorrowersRepository: ActiveBorrowersRepository
 
-  constructor(userPointsRepository: UserPointsRepository, erc20Repository: ERC20Repository) {
+  constructor(userPointsRepository: UserPointsLPRepository, erc20Repository: ERC20Repository, activeBorrowersRepository: ActiveBorrowersRepository) {
     this.userPointsRepository = userPointsRepository
     this.erc20Repository = erc20Repository
+    this.activeBorrowersRepository = activeBorrowersRepository
   }
 
   retrieveUserAddressesFromTransfers = async (startBlock: number, endBlock: number) => {
@@ -72,7 +77,7 @@ export class UserPointsService {
   async updateLPUserTasks(startBlock: number, endBlock: number) {
     // Retrieve transfer events
     const { tasks, transferEvents } = await this.userPointsRepository.fetchTasksEventsAndAddresses(startBlock, endBlock)
-
+    const toExclude = (await this.userPointsRepository.getAddressesExcludedFromLpPoints()).map((u) => u.user)
     transferEvents.sort((a, b) => {
       if (a.block_id !== b.block_id) return a.block_id - b.block_id
       return a.block_date.getTime() - b.block_date.getTime()
@@ -85,8 +90,11 @@ export class UserPointsService {
       allUserAddresses.add(event.to.toLowerCase())
     })
 
-    // TODO Delete zeroAddress
-
+    toExclude.forEach((u) => {
+      if (allUserAddresses.has(u)) {
+        allUserAddresses.delete(u)
+      }
+    })
     const openUserTasks = await this.userPointsRepository.getOpenedTasks(
       Array.from(allUserAddresses),
       tasks.map((task) => task.id)
@@ -109,42 +117,44 @@ export class UserPointsService {
 
       for (const userAddressRaw of [event.from, event.to]) {
         const userAddress = userAddressRaw.toLowerCase()
-        const isSender = userAddress === event.from?.toLowerCase()
+        if (!toExclude.includes(userAddress)) {
+          const isSender = userAddress === event.from?.toLowerCase()
 
-        // Find open task in taskPool
-        const openTask = taskPool.find((t) => t.user_address.toLowerCase() === userAddress && t.task_id === task.id && t.closed === null)
+          // Find open task in taskPool
+          const openTask = taskPool.find((t) => t.user_address.toLowerCase() === userAddress && t.task_id === task.id && t.closed === null)
 
-        if (!openTask) {
-          taskPool.push({
-            id: 0n, // synthetic
-            task_id: task.id,
-            user_address: userAddress,
-            start: new Date(event.block_date),
-            amount: event.amount,
-            closed: null,
-          })
-        }
-
-        if (openTask) {
-          const closedAt = new Date(event.block_date)
-          // Close the existing task
-          openTask.closed = closedAt
-
-          // Calculate new amount and create a new task if needed
-          const currentAmount = Number(openTask.amount)
-          const delta = Number(event.amount)
-          const newAmount = isSender ? currentAmount - delta : currentAmount + delta
-
-          if (newAmount !== 0) {
-            // Create new open task
+          if (!openTask) {
             taskPool.push({
               id: 0n, // synthetic
               task_id: task.id,
               user_address: userAddress,
-              start: new Date(event.block_date),
-              amount: newAmount.toString(),
+              start: event.block_date,
+              amount: event.amount,
               closed: null,
             })
+          }
+
+          if (openTask) {
+            const closedAt = new Date(event.block_date)
+            // Close the existing task
+            openTask.closed = closedAt
+
+            // Calculate new amount and create a new task if needed
+            const currentAmount = BigInt(openTask.amount)
+            const delta = BigInt(event.amount)
+            const newAmount = isSender ? currentAmount - delta : currentAmount + delta
+
+            if (newAmount !== 0n) {
+              // Create new open task
+              taskPool.push({
+                id: 0n, // synthetic
+                task_id: task.id,
+                user_address: userAddress,
+                start: event.block_date,
+                amount: newAmount.toString(),
+                closed: null,
+              })
+            }
           }
         }
       }
@@ -163,7 +173,7 @@ export class UserPointsService {
           user_address: el.user_address,
           start: el.start,
           closed: el.closed,
-          amount: el.amount,
+          amount: el.amount.toString(),
         }
       })
 
@@ -175,18 +185,16 @@ export class UserPointsService {
     await this.userPointsRepository.computeUserPoints(blockDates.get(startBlock)!, blockDates.get(endBlock)!)
   }
 
-  insertEvents = async (sortedParsedEvents: SortedEvents) => {
-    await this.userPointsRepository.insertTransfers(sortedParsedEvents.Transfer)
+  insertEvents = async (sortedParsedEvents: Prisma.transfer_eventsCreateManyInput[]) => {
+    await this.userPointsRepository.insertTransfers(sortedParsedEvents)
   }
 
-  replaceDates = (sortedParsedEvents: SortedEvents, blockInfos: Map<number, number>) => {
-    Object.values(sortedParsedEvents).forEach((v) => {
-      v.forEach((event) => {
-        event.block_date = new Date(blockInfos.get(event.block_id)! * 1_000)
-      })
+  replaceDates = (transferEvents: Prisma.transfer_eventsCreateManyInput[], blockInfos: Map<number, number>) => {
+    transferEvents.forEach((event) => {
+      event.block_date = new Date(blockInfos.get(event.block_id)! * 1_000)
     })
 
-    return { sortedParsedEvents }
+    return transferEvents
   }
 
   getERC20ToTrack = async () => {
@@ -194,18 +202,70 @@ export class UserPointsService {
   }
 
   sortPointsActionsLogs = (logs: Log[]) => {
-    const sortedAndParsedPointsEvents: SortedEvents = {
-      Transfer: [],
-    }
-
+    const transferEvents: Prisma.transfer_eventsCreateManyInput[] = []
     const uniqueBlockId: Set<number> = new Set()
 
     logs.forEach((log) => {
-      const transferEvent = parseTransferEvent(log)
+      let transferEvent: Prisma.transfer_eventsUncheckedCreateInput
+      switch (log.topics[0]) {
+        case TRANSFER_TOPICS.Staked:
+          transferEvent = parseStakeConvexEvent(log)
+          break
+        case TRANSFER_TOPICS.Withdrawn:
+          transferEvent = parseWithdrawConvexEvent(log)
+          break
+        default:
+          transferEvent = parseTransferEvent(log)
+          break
+      }
+      transferEvents.push(transferEvent)
       uniqueBlockId.add(log.blockNumber)
-      sortedAndParsedPointsEvents.Transfer.push(transferEvent)
     })
 
-    return { sortedAndParsedPointsEvents, pointsEventsBlockIds: Array.from(uniqueBlockId) }
+    return { transferEvents, pointsEventsBlockIds: Array.from(uniqueBlockId) }
+  }
+
+  async recomposeDebtTransferEvents(
+    users: { user: string; marketId: number | bigint }[],
+    debtSharesCheckpoints: DebtSharesCheckpointStruct
+  ): Promise<Prisma.transfer_eventsCreateManyInput[]> {
+    const debtTransfers: Prisma.transfer_eventsCreateManyInput[] = []
+    const currentDebts = await this.activeBorrowersRepository.getActiveBorrowersMatchingUserMarkets(users)
+    const zeroAddress = ZeroAddress.toLowerCase()
+
+    Object.entries(debtSharesCheckpoints).forEach(([marketAddress, userData]) => {
+      Object.entries(userData).forEach(([userAddress, checkpoints]) => {
+        const currentDebt = currentDebts.find((debt) => debt.market.contract_address === marketAddress && debt.borrower_address === userAddress)
+        const currentAmount = currentDebt?.debt_shares ? BigInt(currentDebt.debt_shares) : 0n
+        checkpoints.forEach((checkpoint) => {
+          let diff = 0n
+          if (checkpoint.isRepay) {
+            diff = currentAmount - checkpoint.amount
+            debtTransfers.push({
+              from: userAddress,
+              to: zeroAddress,
+              amount: diff.toString(),
+              block_date: new Date(),
+              block_id: checkpoint.blockId,
+              token_address: marketAddress,
+              tx_hash: checkpoint.txHash,
+            })
+          } else {
+            diff = checkpoint.amount - currentAmount
+            debtTransfers.push({
+              from: zeroAddress,
+              to: userAddress,
+              amount: diff.toString(),
+              block_date: new Date(),
+              block_id: checkpoint.blockId,
+              token_address: marketAddress,
+              tx_hash: checkpoint.txHash,
+            })
+          }
+        })
+      })
+    })
+
+    return debtTransfers
   }
 }

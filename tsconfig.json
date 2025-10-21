@@ -13,7 +13,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "rootDirs": ["./"],
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "inlineSources": true,
     "sourceRoot": "/",
     "types": ["node"]

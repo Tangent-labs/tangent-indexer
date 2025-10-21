@@ -1,16 +1,16 @@
 import { PrismaClient } from "@prisma/client"
 
-import { PriceRepository } from "../db/PriceRepository.js"
+import { PriceRepository } from "../db/Points/PriceRepository.js"
 import { PricePointService } from "../services/PricePointService.js"
 import { setUpIndexer } from "../config/indexer_setup.js"
 import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
 import { getAddressesJson } from "../utils/jsonReader.js"
 
 import { v4 as uuidv4 } from "uuid"
-import { PointsBotLogRepository } from "db/PointsBotLogRepository.js"
-import { TelegramNotifierService } from "services/TelegramNotificationServices.js"
-import { NotificationService } from "services/NotificationService.js"
-import { POINTS_BOT_ACTIONS } from "type/data.js"
+import { PointsBotLogRepository } from "../db/Points/PointsBotLogRepository.js"
+import { TelegramNotifierService } from "../services/TelegramNotificationServices.js"
+import { NotificationService } from "../services/NotificationService.js"
+import { POINTS_BOT_ACTIONS } from "../type/data.js"
 
 const snapshotPrices = async () => {
   const executionKey = uuidv4()

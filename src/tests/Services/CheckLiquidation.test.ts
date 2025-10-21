@@ -10,9 +10,9 @@ import { LiquidationExecutionContext } from "../../services/LiquidationExecution
 
 import { LiquidationUserFullInfo } from "../../type/data.js"
 import { NotificationService } from "../../services/NotificationService.js"
-import { CheckLiquidationService } from "services/CheckLiquidationService.js"
-import { PointsBotLogRepository } from "db/PointsBotLogRepository.js"
-import { TelegramNotifierService } from "services/TelegramNotificationServices.js"
+import { CheckLiquidationService } from "../../services/CheckLiquidationService.js"
+import { PointsBotLogRepository } from "../../db/Points/PointsBotLogRepository.js"
+import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 
 const DECIMALS = BigInt(10 ** 18)
 

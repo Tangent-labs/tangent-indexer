@@ -2,7 +2,7 @@ import { AddressLike, ethers, JsonRpcProvider } from "ethers"
 import { getEthLogs } from "./_baseFectcher.js"
 
 // Define Event Signatures
-const TRANSFER_TOPICS = {
+export const TRANSFER_TOPICS = {
   Transfer: ethers.id("Transfer(address,address,uint256)"),
   Staked: ethers.id("Staked(address,uint256)"),
   Withdrawn: ethers.id("Withdrawn(address,uint256)"),

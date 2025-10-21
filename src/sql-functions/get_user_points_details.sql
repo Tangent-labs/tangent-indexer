@@ -57,6 +57,7 @@ AS $$
       ut.user_address,
       t.token_address,
       t.point_rate,                                -- points per second per USD
+      t.price_source_id,
       GREATEST(ut.start, p.start_at)               AS seg_start,
       LEAST(COALESCE(ut.closed, p.end_at), p.end_at) AS seg_end,
       NULLIF(ut.amount, '')::numeric / POWER(10, 18) AS amount
@@ -88,10 +89,10 @@ AS $$
       FROM (
         SELECT
           pf.timestamp AS ts,
-          LEAD(pf.timestamp) OVER (PARTITION BY pf.address ORDER BY pf.timestamp) AS next_ts,
+          LEAD(pf.timestamp) OVER (PARTITION BY pf.price_source_id ORDER BY pf.timestamp) AS next_ts,
           pf.price_usd
         FROM points.price_feeds pf
-        WHERE pf.address = c.token_address
+        WHERE pf.price_source_id = c.price_source_id
           AND pf.timestamp < c.seg_end              -- pre-filter for efficiency
       ) ps
       WHERE ps.next_ts IS NOT NULL
@@ -102,7 +103,7 @@ AS $$
     LEFT JOIN LATERAL (
       SELECT NULLIF(pf2.price_usd, 0)::double precision AS price_usd
       FROM points.price_feeds pf2
-      WHERE pf2.address = c.token_address
+      WHERE pf2.price_source_id = c.price_source_id
         AND pf2.timestamp <= c.seg_start
       ORDER BY pf2.timestamp DESC
       LIMIT 1

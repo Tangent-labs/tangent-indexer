@@ -1,4 +1,4 @@
-import { NumMap } from "services/boost/types.js"
+import { NumMap } from "../../services/boost/types.js"
 import { CurverRegistry } from "../../type/data.js"
 
 export type APR = {

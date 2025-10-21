@@ -1,10 +1,10 @@
-import { UserVoteRepository } from "../db/UserVoteRepository.js"
+import { UserPointsVoteRepository } from "../db/Points/UserPointsVoteRepository.js"
 import { formatEther, JsonRpcProvider } from "ethers"
 import { chainView } from "../utils/chainView.js"
 import GetGaugeVotes from "../abis/GetGaugeVotes.json" with { type: "json" }
 import { NumMap } from "./boost/types.js"
 import { Prisma } from "@prisma/client"
-import { BoostRepository } from "../db/BoostRepository.js"
+import { BoostRepository } from "../db/Points/BoostRepository.js"
 // IN
 export type AccountGauge = {
   account: string
@@ -51,11 +51,11 @@ export type VotesFromDb = {
 }
 
 export class OnChainVoteService {
-  userVoteRepository: UserVoteRepository
+  userVoteRepository: UserPointsVoteRepository
   boostRepository: BoostRepository
   provider: JsonRpcProvider
 
-  constructor(userVoteRepository: UserVoteRepository, boostRepository: BoostRepository, provider: JsonRpcProvider) {
+  constructor(userVoteRepository: UserPointsVoteRepository, boostRepository: BoostRepository, provider: JsonRpcProvider) {
     this.userVoteRepository = userVoteRepository
     this.boostRepository = boostRepository
     this.provider = provider

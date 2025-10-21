@@ -21,10 +21,14 @@ export class ERC20Repository extends AbstractRepository {
   }
 
   async insertManyERC20ToTrack(data: Prisma.tracked_erc20CreateManyInput[]) {
-    if (data.length >= 0) {
-      await this.prismaClient.tracked_erc20.createMany({
-        data,
-      })
-    }
+    await this.prismaClient.tracked_erc20.createMany({
+      data,
+    })
+  }
+
+  async insertAndReturnManyPriceSource(data: Prisma.price_sourceCreateManyInput[]) {
+    return await this.prismaClient.price_source.createManyAndReturn({
+      data,
+    })
   }
 }

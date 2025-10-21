@@ -144,7 +144,7 @@ export type PriceApiResult = {
 }
 
 export type PriceSource = Prisma.price_sourceGetPayload<{}>
-export type PriceSourceCreate = Prisma.price_sourceCreateInput
+export type PriceSourceCreate = Prisma.price_sourceCreateManyInput
 
 export type AddressesJson = {
   utilities: {

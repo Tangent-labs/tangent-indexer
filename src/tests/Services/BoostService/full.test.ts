@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { JsonRpcProvider, parseEther } from "ethers"
 import { BoostService } from "../../../services/boost/BoostService.js"
-import { BoostRepository } from "../../../db/BoostRepository.js"
+import { BoostRepository } from "../../../db/Points/BoostRepository.js"
 
 describe("UserPointsService.updateBoosts", () => {
   let boostService: BoostService
