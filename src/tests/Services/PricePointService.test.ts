@@ -85,6 +85,7 @@ describe("PricePointService", () => {
     mockPriceRepository = {
       getPriceSources: vi.fn().mockResolvedValue(mockPriceSources),
       insertPriceFeed: vi.fn().mockResolvedValue([]),
+      deleteInsertLastPriceFeeds: vi.fn().mockResolvedValue([]),
     }
 
     mockMarketContractsRepository = {

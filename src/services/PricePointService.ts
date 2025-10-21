@@ -264,8 +264,7 @@ export class PricePointService {
       }))
 
       await this.priceRepository.insertPriceFeed(priceFeeds)
-      await this.priceRepository.deleteInsertLastPriceFeeds(priceFeeds.map(pF => ({ price_source_id: pF.price_source_id, price_usd: pF.price_usd })))
-
+      await this.priceRepository.deleteInsertLastPriceFeeds(priceFeeds.map((pF) => ({ price_source_id: pF.price_source_id, price_usd: pF.price_usd })))
     }
     return result
   }

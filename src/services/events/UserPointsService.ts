@@ -100,8 +100,6 @@ export class UserPointsService {
       tasks.map((task) => task.id)
     )
 
-    console.log(openUserTasks)
-
     const taskPool: LpUserTaskPoolItem[] = []
 
     // Add all open tasks from DB to taskPool
@@ -192,10 +190,8 @@ export class UserPointsService {
   }
 
   replaceDates = (transferEvents: Prisma.transfer_eventsCreateManyInput[], blockInfos: Map<number, number>) => {
-
     transferEvents.forEach((event) => {
       event.block_date = new Date(blockInfos.get(event.block_id)! * 1_000)
-
     })
 
     return transferEvents
