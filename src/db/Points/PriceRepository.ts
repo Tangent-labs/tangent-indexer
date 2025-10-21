@@ -11,6 +11,16 @@ export class PriceRepository extends AbstractRepository {
     }
   }
 
+  async deleteInsertLastPriceFeeds(data: Prisma.last_price_feedsCreateManyInput[]) {
+    if (data?.length > 0) {
+      const truncateQuery = Prisma.sql`TRUNCATE TABLE points.last_price_feeds`
+      await this.prismaClient.$executeRaw(truncateQuery)
+      await this.prismaClient.last_price_feeds.createMany({
+        data,
+      })
+    }
+  }
+
   async getPriceSources() {
     return (await this.prismaClient.price_source.findMany()) as PriceSource[]
   }
@@ -26,7 +36,6 @@ export class PriceRepository extends AbstractRepository {
       WHERE ps.address = v.address
         AND ps.type = 'curveApi'
     `
-    console.log(sql)
     await this.prismaClient.$executeRaw(sql)
   }
 }
