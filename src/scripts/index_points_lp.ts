@@ -1,5 +1,7 @@
 import * as dotenv from "dotenv"
 import { PrismaClient } from "@prisma/client"
+import { v4 as uuidv4 } from "uuid"
+
 import { TransactionPrisma } from "../type/prisma.js"
 
 import { BlockService } from "../services/BlockService.js"
@@ -13,11 +15,11 @@ import { BlockRepository } from "../db/BlockRepository.js"
 import { setUpIndexer } from "../config/indexer_setup.js"
 import { indexerConfig } from "../config/indexer_config.js"
 import { POINTS_BOT_ACTIONS } from "../type/data.js"
-import { v4 as uuidv4 } from "uuid"
+
 import { TelegramNotifierService } from "../services/TelegramNotificationServices.js"
 import { NotificationService } from "../services/NotificationService.js"
 import { PointsBotLogRepository } from "../db/Points/PointsBotLogRepository.js"
-import { ActiveBorrowersRepository } from "src/db/ActiveBorrowersRepository.js"
+import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository.js"
 
 dotenv.config()
 

@@ -22,7 +22,7 @@ function PRICE_SOURCES(addresses: AddressesJson): PriceSourceCreate[] {
     {
       name: "DOLA_sUSDS",
       type: "curveApi",
-      reference: "factory-crvUSD",
+      reference: "factory-stable-ng",
       address: CURVE_CONTEXT.DOLA_sUSDS.curveLp,
     },
     {
