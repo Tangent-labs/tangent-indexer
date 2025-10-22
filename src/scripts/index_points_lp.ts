@@ -15,7 +15,6 @@ import { BlockRepository } from "../db/BlockRepository.js"
 import { setUpIndexer } from "../config/indexer_setup.js"
 import { indexerConfig } from "../config/indexer_config.js"
 import { POINTS_BOT_ACTIONS } from "../type/data.js"
-
 import { TelegramNotifierService } from "../services/TelegramNotificationServices.js"
 import { NotificationService } from "../services/NotificationService.js"
 import { PointsBotLogRepository } from "../db/Points/PointsBotLogRepository.js"
