@@ -19,11 +19,14 @@ import { VotesEventService } from "../services/events/VotesEventService.js"
 import { UserPointsService } from "../services/events/UserPointsService.js"
 import { ActiveBorrowersService } from "../services/ActiveBorrowersService.js"
 
-import { getEthLogs } from "../eventFectcher/_baseFectcher.js"
+import { getEthLogs } from "../eventFectcher/_baseFetcher.js"
 import { fetchTransferLogs } from "../eventFectcher/erc20TransferEventFetcher.js"
+import { getSavingAccountLogs } from "../eventFectcher/savingAccountEventFetcher.js"
 
 import { indexerConfig } from "../config/indexer_config.js"
 import { getAddressesJson } from "../utils/jsonReader.js"
+import { SavingAccountRepository } from "../db/SavingAccountRepository.js"
+import { SavingAccountServices } from "../services/events/SavingAccountServices.js"
 
 dotenv.config()
 
@@ -38,7 +41,9 @@ async function main() {
     activeBorrowersService,
     voteEnventService,
     blockRepository,
+    savingAccountService,
     setTransaction,
+    addresses,
   } = await setUpIndexerBlockServices()
 
   try {
@@ -75,6 +80,8 @@ async function main() {
           }
           const transferLogs = transferToWatch?.length ? await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch) : []
 
+          const savingAccountsLogs = await getSavingAccountLogs(bestProvider, startBlock, endBlock, [addresses.tokens.sUSG, addresses.tokens.sTAN])
+          const savingAccountsBlockIds = savingAccountsLogs.map((log) => log.block_id)
           // Parse events with their proper topics and group all user events to update active borrowers
           const { activeBorrowActions, sortedAndParsedEvents, blockIds, users, debtSharesCheckpoints } = userMarketService.sortUserMarketLogs(
             logs,
@@ -85,7 +92,7 @@ async function main() {
 
           const { transferEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs(transferLogs)
 
-          const uniqueBlockIds = [...new Set([...blockIds, ...pointsEventsBlockIds, "0x" + endBlock.toString(16)])]
+          const uniqueBlockIds = [...new Set([...blockIds, ...pointsEventsBlockIds, "0x" + endBlock.toString(16), ...savingAccountsBlockIds])]
           // Find block timestamps of the unique blockIDs
           const blocks = await blockService.fetchBlockTimestamps(uniqueBlockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
 
@@ -102,6 +109,9 @@ async function main() {
 
           // Update active borrowers
           await activeBorrowersService.updateActiveBorrowers(hydratedWithCorrectDates.userActions)
+
+          // Save saving account events
+          await savingAccountService.saveSavingAccountEvents(savingAccountsLogs, blocks)
 
           // Update the last indexed block
           await blockRepository.storeEventBlock(endBlock, new Date(blocks.get(endBlock)! * 1000))
@@ -131,6 +141,7 @@ async function setUpIndexerBlockServices() {
   const activeBorrowersRepository = new ActiveBorrowersRepository(prismaClient)
   const userPointsVoteRepository = new UserPointsVoteRepository(prismaClient)
   const erc20Repository = new ERC20Repository(prismaClient)
+  const savingAccountRepository = new SavingAccountRepository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
     blockRepository.setClient(dbTransaction)
@@ -151,6 +162,7 @@ async function setUpIndexerBlockServices() {
   const userPointsService = new UserPointsService(userPointsLPRepository, erc20Repository, activeBorrowersRepository)
   const activeBorrowersService = new ActiveBorrowersService(activeBorrowersRepository)
   const voteEnventService = new VotesEventService(userPointsVoteRepository)
+  const savingAccountService = new SavingAccountServices(savingAccountRepository)
 
   return {
     prismaClient,
@@ -164,5 +176,7 @@ async function setUpIndexerBlockServices() {
     setTransaction,
     marketContractsRepository,
     blockRepository,
+    savingAccountService,
+    addresses,
   }
 }

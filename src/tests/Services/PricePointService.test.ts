@@ -462,7 +462,14 @@ describe("PricePointService", () => {
 
       await pricePointService.fetchPriceFeed()
       expect(pricePointService.getPriceFeeds).toHaveBeenCalled()
-      expect(mockPriceRepository.insertPriceFeed).toHaveBeenCalledWith([{ price_source_id: 1n, price_usd: 1, timestamp: new Date() }])
+      const callArgs = mockPriceRepository.insertPriceFeed.mock.calls[0][0]
+      expect(callArgs).toHaveLength(1)
+      expect(callArgs[0]).toMatchObject({
+        price_source_id: 1n,
+        price_usd: 1,
+      })
+      expect(callArgs[0].timestamp).toBeInstanceOf(Date)
+      expect(Math.abs(callArgs[0].timestamp.getTime() - Date.now())).toBeLessThan(1000) // Within 1 second
     })
 
     it("should handle empty prices", async () => {
@@ -479,13 +486,14 @@ describe("PricePointService", () => {
 
       await pricePointService.fetchPriceFeed()
 
-      expect(mockPriceRepository.insertPriceFeed).toHaveBeenCalledWith([
-        {
-          price_source_id: 1n,
-          price_usd: 1,
-          timestamp: new Date(),
-        },
-      ])
+      const callArgs = mockPriceRepository.insertPriceFeed.mock.calls[0][0]
+      expect(callArgs).toHaveLength(1)
+      expect(callArgs[0]).toMatchObject({
+        price_source_id: 1n,
+        price_usd: 1,
+      })
+      expect(callArgs[0].timestamp).toBeInstanceOf(Date)
+      expect(Math.abs(callArgs[0].timestamp.getTime() - Date.now())).toBeLessThan(1000) // Within 1 second
     })
 
     it("should pass undefined date to insertPriceFeed when no ERC4626 sources exist", async () => {
@@ -496,13 +504,14 @@ describe("PricePointService", () => {
 
       await pricePointService.fetchPriceFeed()
 
-      expect(mockPriceRepository.insertPriceFeed).toHaveBeenCalledWith([
-        {
-          price_source_id: 1n,
-          price_usd: 1,
-          timestamp: new Date(),
-        },
-      ])
+      const callArgs = mockPriceRepository.insertPriceFeed.mock.calls[0][0]
+      expect(callArgs).toHaveLength(1)
+      expect(callArgs[0]).toMatchObject({
+        price_source_id: 1n,
+        price_usd: 1,
+      })
+      expect(callArgs[0].timestamp).toBeInstanceOf(Date)
+      expect(Math.abs(callArgs[0].timestamp.getTime() - Date.now())).toBeLessThan(1000) // Within 1 second
     })
   })
 

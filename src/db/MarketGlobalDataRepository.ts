@@ -98,4 +98,38 @@ export class MarketGlobalDataRepository extends AbstractRepository {
       ...params
     )
   }
+
+  async insertGlobalIndicatorValue(values: Prisma.global_indicators_valuesCreateManyInput[]) {
+    await this.prismaClient.global_indicators_values.createMany({
+      data: values,
+    })
+  }
+
+  async getGlobalIndicatorIds(values: { key: string; args: string }[]): Promise<Map<string, bigint>> {
+    const existingIndicators = await this.prismaClient.global_indicators.findMany({
+      where: {
+        key: {
+          in: values.map((v) => v.key),
+        },
+      },
+    })
+    const map = new Map<string, bigint>()
+    for (const gi of existingIndicators) {
+      map.set(gi.key, gi.id)
+    }
+    return map
+  }
+
+  async insertGlobalIndicator(values: { key: string; args: string }[]): Promise<Map<string, bigint>> {
+    const newIndicators = []
+    for (const v of values) {
+      const created = await this.prismaClient.global_indicators.create({ data: v })
+      newIndicators.push(created)
+    }
+    const map = new Map<string, bigint>()
+    for (const gi of newIndicators) {
+      map.set(gi.key, gi.id)
+    }
+    return map
+  }
 }

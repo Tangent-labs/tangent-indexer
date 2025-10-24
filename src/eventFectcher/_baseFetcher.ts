@@ -12,9 +12,8 @@ export const getEthLogs = async (
       fromBlock: toBeHex(startingBlock),
       toBlock: toBeHex(endingBlock),
       address: contracts,
-      topics: !topics?.length ? [] : [topics],
+      topics: topics?.length ? topics : [],
     }
-
     const logs = await provider.send("eth_getLogs", [params])
 
     return logs
