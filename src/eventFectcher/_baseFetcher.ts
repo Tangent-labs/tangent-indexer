@@ -14,8 +14,6 @@ export const getEthLogs = async (
       address: contracts,
       topics: topics?.length ? topics : [],
     }
-    console.log(params)
-
     const logs = await provider.send("eth_getLogs", [params])
 
     return logs

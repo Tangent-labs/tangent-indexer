@@ -2,13 +2,13 @@ import * as dotenv from "dotenv"
 
 import { setUpIndexer } from "../config/indexer_setup.js"
 import { getSavingAccountLogs } from "../eventFectcher/savingAccountEventFetcher.js"
-import { SavingAccountServices } from "services/events/SavingAccountServices.js"
-import { SavingAccountRepository } from "db/SavingAccountRepository.js"
+import { SavingAccountServices } from "../services/events/SavingAccountServices.js"
+import { SavingAccountRepository } from "../db/SavingAccountRepository.js"
 import { PrismaClient } from "@prisma/client"
-import { BlockService } from "services/BlockService.js"
-import { BlockRepository } from "db/BlockRepository.js"
-import { MarketGlobalDataRepository } from "db/MarketGlobalDataRepository.js"
-import { getAddressesJson } from "utils/jsonReader.js"
+import { BlockService } from "../services/BlockService.js"
+import { BlockRepository } from "../db/BlockRepository.js"
+import { MarketGlobalDataRepository } from "../db/MarketGlobalDataRepository.js"
+import { getAddressesJson } from "../utils/jsonReader.js"
 
 dotenv.config()
 

@@ -18,7 +18,7 @@ describe("SavingAccountServices", () => {
     savingAccountService = new SavingAccountServices(mockSavingAccountRepository)
   })
 
-  describe("processSavingAccountEvents", () => {
+  describe("formatSavingAccountEvents", () => {
     it("should process events correctly with available fields only", () => {
       // Arrange
       const mockEvents: ProcessReportEvent[] = [
@@ -38,7 +38,7 @@ describe("SavingAccountServices", () => {
       const mockBlockTimestamps = new Map<number, number>([[12345678, Math.floor(Date.now() / 1000) - 3600]])
 
       // Act
-      const result = savingAccountService.processSavingAccountEvents(mockEvents, mockBlockTimestamps)
+      const result = savingAccountService.formatSavingAccountEvents(mockEvents, mockBlockTimestamps)
 
       // Assert
       expect(result).toHaveLength(1)
@@ -96,7 +96,7 @@ describe("SavingAccountServices", () => {
       ])
 
       // Act
-      const result = savingAccountService.processSavingAccountEvents(mockEvents, mockBlockTimestamps)
+      const result = savingAccountService.formatSavingAccountEvents(mockEvents, mockBlockTimestamps)
 
       // Assert
       expect(result).toHaveLength(2)

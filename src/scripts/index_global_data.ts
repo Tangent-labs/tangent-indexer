@@ -9,9 +9,9 @@ import { PriceApiService } from "../services/PriceApiService.js"
 import { TransactionPrisma } from "../type/prisma.js"
 import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
 import { ERC20Repository } from "../db/ERC20Repository.js"
-import { SavingAccountRepository } from "db/SavingAccountRepository.js"
-import { SavingAccountServices } from "services/events/SavingAccountServices.js"
-import { getAddressesJson } from "utils/jsonReader.js"
+import { SavingAccountRepository } from "../db/SavingAccountRepository.js"
+import { SavingAccountServices } from "../services/events/SavingAccountServices.js"
+import { getAddressesJson } from "../utils/jsonReader.js"
 
 dotenv.config()
 

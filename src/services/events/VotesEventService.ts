@@ -1,9 +1,10 @@
 import { ethers, id, JsonRpcProvider, Log } from "ethers"
 
 import { UserPointsVoteRepository } from "../../db/Points/UserPointsVoteRepository.js"
-import { getEthLogs } from "../../eventFectcher/_baseFectcher.js"
+
 import { VOTE_FOR_GAUGE } from "../../resources/eventSignatures.js"
 import { NumMap } from "../../services/boost/types.js"
+import { getEthLogs } from "src/eventFectcher/_baseFetcher.js"
 
 type ParsedVote = {
   gauge_controller: string

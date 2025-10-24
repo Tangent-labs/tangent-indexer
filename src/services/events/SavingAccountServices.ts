@@ -1,9 +1,9 @@
 import { Prisma } from "@prisma/client"
 
-import { MarketGlobalDataRepository } from "db/MarketGlobalDataRepository.js"
-import { SavingAccountRepository } from "db/SavingAccountRepository.js"
+import { MarketGlobalDataRepository } from "../../db/MarketGlobalDataRepository.js"
+import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
 import { formatEther } from "ethers"
-import { ProcessReportEvent } from "eventFectcher/savingAccountEventFetcher.js"
+import { ProcessReportEvent } from "../../eventFectcher/savingAccountEventFetcher.js"
 
 export class SavingAccountServices {
   savingAccountRepository: SavingAccountRepository
@@ -12,7 +12,7 @@ export class SavingAccountServices {
     this.savingAccountRepository = savingAccountRepository
   }
 
-  processSavingAccountEvents(events: ProcessReportEvent[], blockInfos: Map<number, number>): Prisma.process_reportCreateInput[] {
+  formatSavingAccountEvents(events: ProcessReportEvent[], blockInfos: Map<number, number>): Prisma.process_reportCreateInput[] {
     return events.map((event) => {
       return {
         token: event.token.toString(),
@@ -26,7 +26,7 @@ export class SavingAccountServices {
   }
 
   async saveSavingAccountEvents(events: ProcessReportEvent[], blockInfos: Map<number, number>): Promise<void> {
-    const processReportEvents = this.processSavingAccountEvents(events, blockInfos)
+    const processReportEvents = this.formatSavingAccountEvents(events, blockInfos)
     await this.savingAccountRepository.saveEvents(processReportEvents)
   }
 
