@@ -162,7 +162,8 @@ describe("SavingAccountServices", () => {
       ;(mockSavingAccountRepository.findEventsAfterDate as any).mockResolvedValue([])
 
       // Act
-      await savingAccountService.processSavingAccountApy(mockGlobalRepo, "0xTAN", "0xUSG")
+      const nowBC = new Date()
+      await savingAccountService.processSavingAccountApy(mockGlobalRepo, nowBC, "0xTAN", "0xUSG")
 
       // Assert
       expect(mockSavingAccountRepository.findEventsAfterDate).toHaveBeenCalledTimes(1)
@@ -171,8 +172,8 @@ describe("SavingAccountServices", () => {
 
     it("should insert APY rows per token with correct values and indicator IDs", async () => {
       // Arrange
-      const now = new Date()
-      const within7Days = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)
+      const nowBC = new Date()
+      const within7Days = new Date(nowBC.getTime() - 2 * 24 * 60 * 60 * 1000)
 
       const tanAddress = "0xTAN"
       const usgAddress = "0xUSG"
@@ -199,7 +200,7 @@ describe("SavingAccountServices", () => {
       } as any
 
       // Act
-      await savingAccountService.processSavingAccountApy(mockGlobalRepo, tanAddress, usgAddress)
+      await savingAccountService.processSavingAccountApy(mockGlobalRepo, nowBC, tanAddress, usgAddress)
 
       // Assert
       expect(mockSavingAccountRepository.findEventsAfterDate).toHaveBeenCalledTimes(1)
@@ -214,6 +215,7 @@ describe("SavingAccountServices", () => {
       for (const row of callArg) {
         byIndicator.set(row.global_indicator_id, { value: row.value, timestamp: row.timestamp })
         expect(row.timestamp instanceof Date).toBe(true)
+        expect(row.timestamp).toEqual(nowBC)
       }
 
       // TAN: 3 / 52
@@ -224,8 +226,8 @@ describe("SavingAccountServices", () => {
 
     it("should insert missing indicators when they don't exist", async () => {
       // Arrange
-      const now = new Date()
-      const within7Days = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)
+      const nowBC = new Date()
+      const within7Days = new Date(nowBC.getTime() - 2 * 24 * 60 * 60 * 1000)
 
       const tanAddress = "0xTAN"
       const usgAddress = "0xUSG"
@@ -249,7 +251,7 @@ describe("SavingAccountServices", () => {
       } as any
 
       // Act
-      await savingAccountService.processSavingAccountApy(mockGlobalRepo, tanAddress, usgAddress)
+      await savingAccountService.processSavingAccountApy(mockGlobalRepo, nowBC, tanAddress, usgAddress)
 
       // Assert
       expect(mockGlobalRepo.getGlobalIndicatorIds).toHaveBeenCalledTimes(1)
@@ -260,8 +262,8 @@ describe("SavingAccountServices", () => {
 
     it("should handle case-insensitive token matching", async () => {
       // Arrange
-      const now = new Date()
-      const within7Days = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)
+      const nowBC = new Date()
+      const within7Days = new Date(nowBC.getTime() - 2 * 24 * 60 * 60 * 1000)
 
       const tanAddress = "0xTAN"
       const usgAddress = "0xUSG"
@@ -286,7 +288,7 @@ describe("SavingAccountServices", () => {
       } as any
 
       // Act
-      await savingAccountService.processSavingAccountApy(mockGlobalRepo, tanAddress, usgAddress)
+      await savingAccountService.processSavingAccountApy(mockGlobalRepo, nowBC, tanAddress, usgAddress)
 
       // Assert
       expect(mockGlobalRepo.insertGlobalIndicatorValue).toHaveBeenCalledTimes(1)

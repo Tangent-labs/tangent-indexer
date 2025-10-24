@@ -30,7 +30,7 @@ export class SavingAccountServices {
     await this.savingAccountRepository.saveEvents(processReportEvents)
   }
 
-  async processSavingAccountApy(globalDataRepository: MarketGlobalDataRepository, sTanAddress: string, sUSGAddress: string): Promise<void> {
+  async processSavingAccountApy(globalDataRepository: MarketGlobalDataRepository, nowBC: Date, sTanAddress: string, sUSGAddress: string): Promise<void> {
     if (!globalDataRepository) {
       throw new Error("SavingAccount: Missing globalDataRepository")
     }
@@ -58,8 +58,7 @@ export class SavingAccountServices {
     }
     // get the last APY date  or an old date if no data .
 
-    const now = new Date()
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    const sevenDaysAgo = new Date(nowBC.getTime() - 7 * 24 * 60 * 60 * 1000)
 
     // find process_report events that occur after trhe last check date
     const processReportEvents = await this.savingAccountRepository.findEventsAfterDate(sevenDaysAgo)
@@ -83,7 +82,7 @@ export class SavingAccountServices {
       return
     }
     // insert the DATA
-    const date = new Date()
+
     const addressToIndicatorId = new Map<string, bigint>([
       [sTanAddress.toLowerCase(), sTanId as bigint],
       [sUSGAddress.toLowerCase(), sUsgId as bigint],
@@ -97,7 +96,7 @@ export class SavingAccountServices {
         }
         return {
           global_indicator_id: indicatorId,
-          timestamp: date,
+          timestamp: nowBC,
           value: apy,
         }
       })

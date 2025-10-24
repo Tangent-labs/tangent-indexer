@@ -20,11 +20,15 @@ const NEW_ROWS_FREQUENCY = 900_000
 async function main() {
   const { prismaClient, setTransaction, globalDataService, marketGlobalDataRepo, totalSupplyRepo, savingAccountService } = setUpIndexerGlobalData()
 
+  let nowBC = new Date()
+
   await prismaClient
     .$transaction(
       async (dbTransaction: TransactionPrisma) => {
         setTransaction(dbTransaction)
+
         const { marketsData, totalSupplies, now } = await globalDataService.computeAprTvlsAndTotalSupplies()
+        nowBC = now
         const lastUpdateTimeMarkets = await marketGlobalDataRepo.fetchLastExecutionTime()
         const lastUpdateTimeTotalSupplies = await totalSupplyRepo.fetchLastExecutionTime()
 
@@ -57,7 +61,7 @@ async function main() {
         const {
           tokens: { sTAN, sUSG },
         } = await getAddressesJson()
-        await savingAccountService.processSavingAccountApy(marketGlobalDataRepo, sTAN, sUSG)
+        await savingAccountService.processSavingAccountApy(marketGlobalDataRepo, nowBC, sTAN, sUSG)
       },
       {
         timeout: 10_000_000,
