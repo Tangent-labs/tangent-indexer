@@ -43,6 +43,7 @@ async function main() {
     blockRepository,
     savingAccountService,
     setTransaction,
+    addresses,
   } = await setUpIndexerBlockServices()
 
   try {
@@ -79,13 +80,8 @@ async function main() {
           }
           const transferLogs = transferToWatch?.length ? await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch) : []
 
-          const {
-            tokens: { sUSG, sTAN },
-          } = await getAddressesJson()
-          const savingAccountsLogs = await getSavingAccountLogs(bestProvider, startBlock, endBlock, [sUSG, sTAN])
+          const savingAccountsLogs = await getSavingAccountLogs(bestProvider, startBlock, endBlock, [addresses.tokens.sUSG, addresses.tokens.sTAN])
           const savingAccountsBlockIds = savingAccountsLogs.map((log) => log.block_id)
-          console.log("savingAccountsLogs", savingAccountsBlockIds, savingAccountsLogs.length)
-
           // Parse events with their proper topics and group all user events to update active borrowers
           const { activeBorrowActions, sortedAndParsedEvents, blockIds, users, debtSharesCheckpoints } = userMarketService.sortUserMarketLogs(
             logs,
@@ -181,5 +177,6 @@ async function setUpIndexerBlockServices() {
     marketContractsRepository,
     blockRepository,
     savingAccountService,
+    addresses,
   }
 }

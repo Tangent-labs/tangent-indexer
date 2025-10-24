@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
 import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
 import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
-import { MarketGlobalDataRepository } from "../../db/MarketGlobalDataRepository.js"
 import { ProcessReportEvent } from "../../eventFectcher/savingAccountEventFetcher.js"
 
 // Mock du repository
@@ -150,14 +149,15 @@ describe("SavingAccountServices", () => {
     it("should not insert when no events found", async () => {
       // Arrange
       const mockGlobalRepo = {
-        getOrInsertGlobalIndicatorIds: vi.fn().mockResolvedValue(
+        getGlobalIndicatorIds: vi.fn().mockResolvedValue(
           new Map<string, bigint>([
             ["SAVING_APY_TAN", 1n],
             ["SAVING_APY_USG", 2n],
           ])
         ),
+        insertGlobalIndicator: vi.fn(),
         insertGlobalIndicatorValue: vi.fn(),
-      } as unknown as MarketGlobalDataRepository
+      } as any
 
       ;(mockSavingAccountRepository.findEventsAfterDate as any).mockResolvedValue([])
 
@@ -188,14 +188,15 @@ describe("SavingAccountServices", () => {
       ;(mockSavingAccountRepository.findEventsAfterDate as any).mockResolvedValue(events)
 
       const mockGlobalRepo = {
-        getOrInsertGlobalIndicatorIds: vi.fn().mockResolvedValue(
+        getGlobalIndicatorIds: vi.fn().mockResolvedValue(
           new Map<string, bigint>([
             ["SAVING_APY_TAN", 11n],
             ["SAVING_APY_USG", 22n],
           ])
         ),
+        insertGlobalIndicator: vi.fn(),
         insertGlobalIndicatorValue: vi.fn(),
-      } as unknown as MarketGlobalDataRepository
+      } as any
 
       // Act
       await savingAccountService.processSavingAccountApy(mockGlobalRepo, tanAddress, usgAddress)
@@ -219,6 +220,88 @@ describe("SavingAccountServices", () => {
       expect(byIndicator.get(11n)!.value).toBeCloseTo(3 / 52, 10)
       // USG: 0.5 / 52
       expect(byIndicator.get(22n)!.value).toBeCloseTo(0.5 / 52, 10)
+    })
+
+    it("should insert missing indicators when they don't exist", async () => {
+      // Arrange
+      const now = new Date()
+      const within7Days = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)
+
+      const tanAddress = "0xTAN"
+      const usgAddress = "0xUSG"
+
+      const events = [
+        { token: tanAddress, gain: "1000000000000000000", block_date: within7Days },
+        { token: usgAddress, gain: "500000000000000000", block_date: within7Days },
+      ]
+
+      ;(mockSavingAccountRepository.findEventsAfterDate as any).mockResolvedValue(events)
+
+      const mockGlobalRepo = {
+        getGlobalIndicatorIds: vi.fn().mockResolvedValue(
+          new Map<string, bigint>([
+            ["SAVING_APY_TAN", 11n],
+            // SAVING_APY_USG is missing
+          ])
+        ),
+        insertGlobalIndicator: vi.fn().mockResolvedValue(new Map<string, bigint>([["SAVING_APY_USG", 22n]])),
+        insertGlobalIndicatorValue: vi.fn(),
+      } as any
+
+      // Act
+      await savingAccountService.processSavingAccountApy(mockGlobalRepo, tanAddress, usgAddress)
+
+      // Assert
+      expect(mockGlobalRepo.getGlobalIndicatorIds).toHaveBeenCalledTimes(1)
+      expect(mockGlobalRepo.insertGlobalIndicator).toHaveBeenCalledTimes(1)
+      expect(mockGlobalRepo.insertGlobalIndicator).toHaveBeenCalledWith([{ key: "SAVING_APY_USG", args: usgAddress }])
+      expect(mockGlobalRepo.insertGlobalIndicatorValue).toHaveBeenCalledTimes(1)
+    })
+
+    it("should handle case-insensitive token matching", async () => {
+      // Arrange
+      const now = new Date()
+      const within7Days = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)
+
+      const tanAddress = "0xTAN"
+      const usgAddress = "0xUSG"
+
+      const events = [
+        // Test with mixed case tokens
+        { token: "0xtan", gain: "1000000000000000000", block_date: within7Days },
+        { token: "0xusg", gain: "500000000000000000", block_date: within7Days },
+      ]
+
+      ;(mockSavingAccountRepository.findEventsAfterDate as any).mockResolvedValue(events)
+
+      const mockGlobalRepo = {
+        getGlobalIndicatorIds: vi.fn().mockResolvedValue(
+          new Map<string, bigint>([
+            ["SAVING_APY_TAN", 11n],
+            ["SAVING_APY_USG", 22n],
+          ])
+        ),
+        insertGlobalIndicator: vi.fn(),
+        insertGlobalIndicatorValue: vi.fn(),
+      } as any
+
+      // Act
+      await savingAccountService.processSavingAccountApy(mockGlobalRepo, tanAddress, usgAddress)
+
+      // Assert
+      expect(mockGlobalRepo.insertGlobalIndicatorValue).toHaveBeenCalledTimes(1)
+
+      const callArg = (mockGlobalRepo.insertGlobalIndicatorValue as any).mock.calls[0][0]
+      expect(callArg).toHaveLength(2)
+
+      // Both tokens should be processed despite case differences
+      const byIndicator = new Map<bigint, { value: number }>()
+      for (const row of callArg) {
+        byIndicator.set(row.global_indicator_id, { value: row.value })
+      }
+
+      expect(byIndicator.get(11n)!.value).toBeCloseTo(1 / 52, 10) // TAN
+      expect(byIndicator.get(22n)!.value).toBeCloseTo(0.5 / 52, 10) // USG
     })
   })
 })

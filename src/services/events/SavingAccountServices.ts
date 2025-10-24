@@ -43,9 +43,15 @@ export class SavingAccountServices {
       },
       { key: "SAVING_APY_TAN", args: sTanAddress },
     ]
-    const indicatorIdMap = await globalDataRepository.getOrInsertGlobalIndicatorIds(globalIndicatorData)
-    const sTanId = indicatorIdMap.get("SAVING_APY_TAN")
-    const sUsgId = indicatorIdMap.get("SAVING_APY_USG")
+
+    let indicators = await globalDataRepository.getGlobalIndicatorIds(globalIndicatorData)
+    const notInsertedIndicators = globalIndicatorData.filter((v) => !indicators.has(v.key)).map((v) => ({ key: v.key, args: v.args }))
+    if (notInsertedIndicators.length > 0) {
+      const newIndicators = await globalDataRepository.insertGlobalIndicator(notInsertedIndicators)
+      indicators = new Map([...indicators, ...newIndicators])
+    }
+    const sTanId = indicators.get("SAVING_APY_TAN")
+    const sUsgId = indicators.get("SAVING_APY_USG")
     // Check if all is ok
     if (!sTanId || !sUsgId) {
       throw new Error("SavingAccount: Missing indicator in  global_indicators")
