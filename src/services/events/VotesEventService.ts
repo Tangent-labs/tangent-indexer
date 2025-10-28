@@ -4,7 +4,7 @@ import { UserPointsVoteRepository } from "../../db/Points/UserPointsVoteReposito
 
 import { VOTE_FOR_GAUGE } from "../../resources/eventSignatures.js"
 import { NumMap } from "../../services/boost/types.js"
-import { getEthLogs } from "src/eventFectcher/_baseFetcher.js"
+import { getEthLogs } from "../../eventFectcher/_baseFetcher.js"
 
 type ParsedVote = {
   gauge_controller: string
