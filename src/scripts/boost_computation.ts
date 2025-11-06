@@ -10,10 +10,10 @@ const rpcs = _initNetwork()
 const boostRepository = new BoostRepository(prisma)
 const boostService = new BoostService(rpcs.providers[0], boostRepository)
 
-async function seedTokens() {
+async function updateBoosts() {
   await boostService.updateBoosts()
 }
 
-seedTokens()
+updateBoosts()
   .catch((e) => console.error(e))
   .finally(async () => await prisma.$disconnect())

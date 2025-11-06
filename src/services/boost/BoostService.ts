@@ -132,10 +132,15 @@ export class BoostService {
     const toInsert: Prisma.user_boostCreateManyInput[] = []
     const toDelete: bigint[] = []
 
+    console.log("toInsert : ", toInsert)
+    console.log("toDelete : ", toDelete)
+
     // Opens and update boosts already existing boost
     Object.entries(newBoosts).forEach(([user, boost]) => {
       //
       const lastActiveBoost = lastActiveBoosts.find((lastActiveBoost) => lastActiveBoost.user_address === user)
+
+      console.log("lastActiveBoost : ", lastActiveBoost)
 
       if (lastActiveBoost) {
         // We update and close only the boost of user if it changed compare to last time otherwise, nothing has to be done
@@ -153,6 +158,8 @@ export class BoostService {
       // OR
       // An user had some boost, then no boost, then a boost again
       else {
+        console.log("ELSE = ", { user_address: user, start_at: currentDate, multiplier: boost })
+
         toInsert.push({ user_address: user, start_at: currentDate, multiplier: boost })
       }
     })
