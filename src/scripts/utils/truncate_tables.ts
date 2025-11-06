@@ -63,12 +63,9 @@ async function truncateAllTables(): Promise<void> {
     // Truncate each table
     for (const table of tables) {
       const tableToTruncate = `"${table.schema_name}".${table.table_name}`
-
-      if (tableToTruncate !== '"points".price_source' && tableToTruncate !== '"points".price_feeds') {
-        const truncateQuery = `TRUNCATE TABLE ${tableToTruncate} CASCADE`
-        await prisma.$executeRawUnsafe(truncateQuery)
-        console.log(`✅ Truncated: ${tableToTruncate}`)
-      }
+      const truncateQuery = `TRUNCATE TABLE ${tableToTruncate} CASCADE`
+      await prisma.$executeRawUnsafe(truncateQuery)
+      console.log(`✅ Truncated: ${tableToTruncate}`)
     }
 
     // Re-enable foreign key constraints
