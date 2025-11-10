@@ -181,8 +181,8 @@ export class UserPointsService {
   }
 
   processUserPoints = async (startBlock: number, endBlock: number, blockService: BlockService, providerURL: string) => {
-    const blockDates = await blockService.fetchBlockTimestamps([startBlock - 1, endBlock], providerURL)
-    await this.userPointsRepository.computeUserPoints(blockDates.get(startBlock - 1)!, blockDates.get(endBlock)!)
+    const blockDates = await blockService.fetchBlockTimestamps([startBlock, endBlock], providerURL)
+    await this.userPointsRepository.computeUserPoints(blockDates.get(startBlock)!, blockDates.get(endBlock)!)
   }
 
   insertEvents = async (sortedParsedEvents: Prisma.transfer_eventsCreateManyInput[]) => {

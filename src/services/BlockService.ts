@@ -50,7 +50,7 @@ export class BlockService {
 
   async getLPPointsBlockInfo(providers: JsonRpcProvider[]) {
     const { startingBlock, blockRange } = indexerConfig
-    const startBlock = Number(await this.getLastLPBlockIndexed()) + 1 || startingBlock
+    const startBlock = Number(await this.getLastLPBlockIndexed()) || startingBlock
     let endBlock = Number(await this.getLastEventBlockIndexed())
 
     const actualBlocks = await Promise.all(providers.map((provider) => provider.getBlockNumber()))
@@ -60,14 +60,12 @@ export class BlockService {
     const bestProvider = providers[bestProviderIndex]
 
     // no block to index
-    if (startBlock === endBlock + 1) {
+    if (startBlock === endBlock) {
       return false
     }
 
-    if (startBlock + blockRange < actualBlock!) {
-      // Else we get a step toward it
-      endBlock = startBlock + blockRange
-    }
+    endBlock = Math.min(startBlock + blockRange, actualBlock)
+
     return { startBlock, endBlock, bestProvider, bestProviderIndex }
   }
 
