@@ -5,6 +5,15 @@ import { AbstractRepository } from "../AbstractRepository.js"
 import { VotesFromDb } from "../../services/OnChainVoteService.js"
 
 export class UserPointsVoteRepository extends AbstractRepository {
+  insertAddresses = async (addresses: Prisma.userCreateInput[]) => {
+    if (addresses.length > 0) {
+      await this.prismaClient.user.createMany({
+        data: addresses,
+        skipDuplicates: true,
+      })
+    }
+  }
+
   async fetchTasks() {
     return await this.prismaClient.vote_task.findMany({
       select: { id: true, name: true, point_rate: true },
