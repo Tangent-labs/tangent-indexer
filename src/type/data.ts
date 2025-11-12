@@ -47,6 +47,7 @@ export type LiquidationBotLogAction =
   | "clean_debtors"
   | "liquidation_execution"
   | "end_execution"
+  | "error"
 
 export type CurveQuote = {
   _route: string[] // address[11]
