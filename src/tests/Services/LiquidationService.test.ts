@@ -414,7 +414,7 @@ describe("LiquidationService - prioritizeActions", () => {
     liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext)
   })
 
-  it("should prioritize actions based on position value and wallet count", () => {
+  it("should prioritize actions based on position value and return all actions", () => {
     // Setup context with 2 PK wallets
     liquidationService.context.walletsPks = ["pk1", "pk2"]
 
@@ -451,12 +451,14 @@ describe("LiquidationService - prioritizeActions", () => {
 
     const result = liquidationService.prioritizeActions([hardLiquidation1, hardLiquidation2], [softLiquidation1])
 
-    // Verify the result
-    expect(result).toHaveLength(2) // Limited by wallet count
+    // Verify the result - should return all actions, not limited by wallet count
+    expect(result).toHaveLength(3) // All actions returned
     expect(result[0].type).toBe("seizing")
     expect(result[0].account).toBe("0xUser1") // Highest position value
     expect(result[1].type).toBe("seizing")
     expect(result[1].account).toBe("0xUser2") // Second highest position value
+    expect(result[2].type).toBe("liquidation")
+    expect(result[2].account).toBe("0xUser3") // Third highest position value
   })
 
   it("should mix hard and soft liquidations based on position value", () => {
@@ -511,7 +513,7 @@ describe("LiquidationService - prioritizeActions", () => {
     expect(result).toHaveLength(0)
   })
 
-  it("should handle more input liquidations than available wallets", () => {
+  it("should return all actions even when there are more actions than wallets", () => {
     // Setup context with only 2 PK wallets
     liquidationService.context.walletsPks = ["pk1", "pk2"]
 
@@ -568,16 +570,17 @@ describe("LiquidationService - prioritizeActions", () => {
 
     const result = liquidationService.prioritizeActions([seizing1, seizing2, seizing3], [liquidation1, liquidation2])
 
-    // Verify the result
-    expect(result).toHaveLength(2) // Limited by wallet count
+    // Verify the result - should return all actions, not limited by wallet count
+    expect(result).toHaveLength(5) // All actions returned
     expect(result[0].type).toBe("seizing")
     expect(result[0].account).toBe("0xUser1") // Highest position value
     expect(result[1].type).toBe("liquidation")
     expect(result[1].account).toBe("0xUser2") // Second highest position value
-
-    // Verify that lower value positions were not included
-    expect(result.some((r: any) => r.account === "0xUser3")).toBe(false)
-    expect(result.some((r: any) => r.account === "0xUser4")).toBe(false)
-    expect(result.some((r: any) => r.account === "0xUser5")).toBe(false)
+    expect(result[2].type).toBe("seizing")
+    expect(result[2].account).toBe("0xUser3") // Third highest position value
+    expect(result[3].type).toBe("liquidation")
+    expect(result[3].account).toBe("0xUser4") // Fourth highest position value
+    expect(result[4].type).toBe("seizing")
+    expect(result[4].account).toBe("0xUser5") // Fifth highest position value
   })
 })

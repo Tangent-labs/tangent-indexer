@@ -1,14 +1,17 @@
 import { LiquidationBotLogRepository } from "../db/LiquidationBotLogRepository.js"
-import { AddressLike } from "ethers"
-import { LiquidationBotLogAction, LiquidationMarketAccountOutInfo, LiquidationUserInfo, LiquidationUserInInfo } from "../type/data.js"
+import { LiquidationAnalyseInfo, LiquidationBotLogAction, LiquidationMarketAccountOutInfo, LiquidationUserInfo, LiquidationUserInInfo } from "../type/data.js"
 import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
 import { prepareSerialize } from "../utils/jsonSerializer.js"
+import { TelegramNotifierService } from "./TelegramNotificationServices.js"
+import { AddressLike } from "ethers"
 
-export class LiquidationBotService {
+export class LiquidationBotLogService {
   liquidationBotLogRepository: LiquidationBotLogRepository
+  private readonly telegramNotifierService: TelegramNotifierService
 
-  constructor(LiquidationBotLogRepository: LiquidationBotLogRepository) {
+  constructor(LiquidationBotLogRepository: LiquidationBotLogRepository, telegramNotifierService: TelegramNotifierService) {
     this.liquidationBotLogRepository = LiquidationBotLogRepository
+    this.telegramNotifierService = telegramNotifierService
   }
 
   private _cleanContext(context: LiquidationExecutionContext) {
@@ -30,11 +33,29 @@ export class LiquidationBotService {
     })
   }
 
-  async logError(action: LiquidationBotLogAction, error: Error, context: LiquidationExecutionContext, additionalData?: any) {
-    await this._logAction(action, context, { ...error, ...additionalData }, true)
+  async logError(
+    action: LiquidationBotLogAction,
+    error: Error,
+    context: LiquidationExecutionContext,
+    additionalData?: any,
+    sendTelegramNotification?: boolean
+  ) {
+    if (sendTelegramNotification) {
+      await this.telegramNotifierService.sendError(`Liquidataion Error in  action ${action} : ${error.message.slice(0, 100)}`)
+    }
+    // Ensure account data is always accessible at the top level
+    const errorData = {
+      error: {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+      },
+      ...additionalData,
+    }
+    await this._logAction(action, context, errorData, true)
   }
 
-  async logLiquidationParams(data: { markets: AddressLike[] | null; borrowers: LiquidationUserInInfo[] | null }, context: LiquidationExecutionContext) {
+  async logLiquidationParams(data: { markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }, context: LiquidationExecutionContext) {
     const action: LiquidationBotLogAction = "liquidation_params"
     await this._logAction(action, context, data)
   }
@@ -44,7 +65,7 @@ export class LiquidationBotService {
     await this._logAction(action, context, data)
   }
 
-  async logLiquidationAnalysis(data: LiquidationMarketAccountOutInfo | null, context: LiquidationExecutionContext) {
+  async logLiquidationAnalysis(data: LiquidationAnalyseInfo | null, context: LiquidationExecutionContext) {
     const action: LiquidationBotLogAction = "liquidation_analysis"
     await this._logAction(action, context, data)
   }
