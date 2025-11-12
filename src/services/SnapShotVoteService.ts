@@ -232,13 +232,13 @@ export class SnapShotVoteService {
         allVotes = allVotes.filter((vote: any) => !proposal.excludedVoters?.includes(vote.voter))
       }
 
-      // if (proposal.rewarded && proposal.rewarded.length > 0) {
-      //   const rewardedIndices = proposal.rewarded.map((reward: any) => reward.index)
+      if (proposal.rewarded && proposal.rewarded.length > 0) {
+        const rewardedIndices = proposal.rewarded.map((reward: any) => reward.index)
 
-      //   allVotes = allVotes.filter((vote: any) =>
-      //     Object.entries(vote.choice).some(([option, weight]: [string, any]) => weight > 0 && rewardedIndices.includes(parseInt(option)))
-      //   )
-      // }
+        allVotes = allVotes.filter((vote: any) =>
+          Object.entries(vote.choice).some(([option, weight]: [string, any]) => weight > 0 && rewardedIndices.includes(parseInt(option)))
+        )
+      }
 
       const validatedVotes: ValidatedTask[] = []
       if (proposal.organizationRewards && allVotes.length > 0) {
@@ -270,7 +270,6 @@ export class SnapShotVoteService {
     return choice.split(" ").some((part) => part === rewardValue)
   }
 
-  // LE PROBLEME EST LA
   private validateVoteAgainstTask(voteChoice: any, reward: Reward, rewardedChoices: RewardedChoice[]): boolean {
     const matchingRewardedChoice = rewardedChoices.find((rc) => this.matchesReward(rc.choice, reward.value))
 
@@ -278,6 +277,7 @@ export class SnapShotVoteService {
       return false
     }
 
+    // Check if the vote includes the matching choice index
     if (typeof voteChoice === "object") {
       return Object.entries(voteChoice).some(([option, weight]: [string, any]) => parseInt(option) === matchingRewardedChoice.index && weight > 0)
     } else if (typeof voteChoice === "number") {
