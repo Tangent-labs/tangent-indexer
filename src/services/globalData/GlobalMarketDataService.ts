@@ -10,7 +10,7 @@ import { chainView } from "../../utils/chainView.js"
 import GlobalDataChainview from "../../abis/GlobalDataChainview.json" with { type: "json" }
 import { APR_TYPE, TVLAprs, Prices, CurveApiReturn, PendleApiReturn, ConvexFxnApiReturn, USGIndexingGlobalDataOut, USGInfoOut } from "./types.js"
 import { defiLLamaFetchPrices, getPriceInfos } from "./DefiLLamaPriceFetcher.js"
-import { bigIntToNumber } from "../../scripts/utils/formatting.js"
+import { bigIntToNumber } from "../../utils/formatting.js"
 import { NumMap } from "../../services/boost/types.js"
 
 import { PriceApiService } from "../../services/PriceApiService.js"

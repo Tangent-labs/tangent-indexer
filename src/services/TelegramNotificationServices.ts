@@ -1,6 +1,5 @@
 import axios, { AxiosResponse } from "axios"
 import { TelegramNotificationConfig } from "../type/service.js"
-import { escapeMarkdown } from "../utils/text.js"
 
 export interface SendMessageOptions {
   text: string
@@ -22,7 +21,6 @@ export class TelegramNotifierService {
 
   /**
    * Send a message to the configured Telegram chat
-   * @param options - Message options including text and formatting
    * @returns Promise<boolean> - Returns true if message was sent successfully
    */
   async sendMessage(text: string): Promise<boolean> {
@@ -30,7 +28,7 @@ export class TelegramNotifierService {
       console.error("Telegram bot token or chat id is not set")
       return false
     }
-    const cleanedText = escapeMarkdown(text)
+    const cleanedText = text
     if (!cleanedText) {
       return false
     }
