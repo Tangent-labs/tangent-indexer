@@ -18,7 +18,6 @@ async function main() {
   //  - Profits of the pegKeepers
   //  - Current and Next,  Interest Rate and Reward cut for all the markets
   const onchainData = await onchainTxBotService.getOnChainData(marketAddresses, keeperAddresses)
-  console.log(onchainData)
   // Verify profits of pegkeepers and trigger the rebalancing if needed
   await onchainTxBotService.updatePegKeepers(onchainData.profits, keeperAddresses, keeperNames)
   // Computes a relative variation computation between the current and next IR and Reward cut.
@@ -27,24 +26,32 @@ async function main() {
 }
 
 async function setup() {
-  const botToken = process.env.TELEGRAM_BOT_TOKEN
-  const chatId = process.env.TELEGRAM_CHAT_ID
-  if (!botToken || !chatId) {
-    throw new Error("TG_ENV_NOT_SET")
+  const setupErrors = []
+
+  const botToken = process.env.TELEGRAM_BOT_TOKEN!
+  if (!botToken) {
+    setupErrors.push("TELEGRAM_BOT_TOKEN")
   }
+  const chatId = process.env.TELEGRAM_CHAT_ID!
+  if (!chatId) {
+    setupErrors.push("TELEGRAM_CHAT_ID")
+  }
+  const pk = process.env.PK_UPDATE_TX_BOT!
+  if (!pk) {
+    setupErrors.push("PK_UPDATE_TX_BOT")
+  }
+  const chainRpcs = process.env.CHAIN_RPCS?.split(",")[0]!
+  if (!chainRpcs) {
+    setupErrors.push("CHAIN_RPCS_NOT_SET")
+  }
+  if (setupErrors.length !== 0) {
+    throw Error(`Following env variables are not set : ${setupErrors.join(",")}`)
+  }
+
   const telegramNotifierService = new TelegramNotifierService({
     botToken,
     chatId,
   })
-
-  const pk = process.env.PKS_PEGKEEPER
-  if (!pk) {
-    throw new Error("PK_FOR_PEG_KEEPER_NOT_SET")
-  }
-  const chainRpcs = process.env.CHAIN_RPCS
-  if (!chainRpcs) {
-    throw new Error("CHAIN_RPCS_NOT_SET")
-  }
   const rpc = chainRpcs.split(",")[0]
   const provider = new JsonRpcProvider(rpc)
   const signer = new Wallet(pk, provider)

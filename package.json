@@ -35,7 +35,7 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "lint": "eslint . --ignore-pattern dist/",
-    "lint:fix": "eslint .  --fix --ignore-pattern dist/",
+    "lint:fix": "eslint .  --fix --ignore-pattern dist/ && prettier --check . --write",
     "lint:tsc": "npx tsc --noEmit",
     "lint:prettier": "prettier --check .",
     "prepare": "husky",

@@ -13,6 +13,9 @@ const pegKeepersKnowErrors = ["Regulator ban", "peg unprofitable"]
 const relativeVariationIR = 25
 const relativeVariationRC = 25
 
+const addLiquidityTopic = "0x189c623b666b1b45b83d7178f39b8c087cb09774317ca2f53c2d3c3726f222a2"
+const removeLiquidityTopic = "0x3631c28b1f9dd213e0319fb167b554d76b6c283a41143eb400a0d1adb1af1755"
+
 export type IRAndRC = {
   lastIR: string
   newIR: string
@@ -78,12 +81,12 @@ export class OnchainTxBotService {
 
             logs.forEach((log: any) => {
               // AddLiquidty case - USG < 1$
-              if (log?.topics[0] === "0x189c623b666b1b45b83d7178f39b8c087cb09774317ca2f53c2d3c3726f222a2") {
+              if (log?.topics[0] === addLiquidityTopic) {
                 usecase = "deposit"
                 liquidityLog = log
               }
               // RemoveLiquidity case - USG > 1$
-              else if (log.topics[0] === "0x3631c28b1f9dd213e0319fb167b554d76b6c283a41143eb400a0d1adb1af1755") {
+              else if (log.topics[0] === removeLiquidityTopic) {
                 usecase = "withdraw"
                 liquidityLog = log
               }
@@ -122,20 +125,33 @@ export class OnchainTxBotService {
       const market = markets[i]
       const irAndRc = irsAndRcs[i]
 
+      let relativeChangeIR = 0
       /// Format in number IRs and RCs ///
       const lastIR = Number(formatEther(irAndRc.lastIR))
       let newIR = Number(formatEther(irAndRc.newIR))
-      // To prevent the division by 0 we put a very small value on the denominator
-      newIR = newIR === 0 ? 0.000001 : newIR
 
+      // Case both current and new IR are equals to 0
+      if (lastIR === 0 && newIR === 0) {
+        relativeChangeIR = 0
+      } else {
+        // To prevent the division by 0 we put a very small value on the denominator
+        newIR = newIR === 0 ? 0.000001 : newIR
+        // Compute relative variations
+        relativeChangeIR = Math.abs(((lastIR - newIR) * 100) / newIR)
+      }
+
+      let relativeChangeRC = 0
       const lastRC = Number(formatUnits(irAndRc.lastRC, 5))
       let newRC = Number(formatUnits(irAndRc.newRC, 5))
-      // To prevent the division by 0 we put a very small value on the denominator
-      newRC = newRC === 0 ? 0.000001 : newRC
 
-      // Compute relative variations
-      const relativeChangeIR = Math.abs(((lastIR - newIR) * 100) / newIR)
-      const relativeChangeRC = Math.abs(((lastRC - newRC) * 100) / newRC)
+      // Case both current and new IR are equals to 0
+      if (lastIR === 0 && newIR === 0) {
+        relativeChangeRC = 0
+      } else {
+        // To prevent the division by 0 we put a very small value on the denominator
+        newRC = newRC === 0 ? 0.000001 : newRC
+        relativeChangeRC = Math.abs(((lastRC - newRC) * 100) / newRC)
+      }
 
       // If the relative change is bigger than the threshold, we add them in their respective array
       // to be ready for multicheckpoints
