@@ -40,7 +40,7 @@ SELECT tablename AS table_name, schemaname AS schema_name FROM pg_tables WHERE s
 /**
  * Truncates all tables in the PostgreSQL database schema.
  */
-async function truncateAllTables(): Promise<void> {
+export async function truncateAllTables(): Promise<void> {
   try {
     const confirmed = await promptConfirmation()
     if (!confirmed) {

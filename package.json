@@ -2,7 +2,7 @@
   "name": "tangent-indexer",
   "version": "1.0.0",
   "type": "module",
-  "description": "Will index data in a DB when some event &amp; transactions are detected",
+  "description": "Will index data in a DB when some event",
   "main": "index.ts",
   "scripts": {
     "build": "node src/utils/build.js",

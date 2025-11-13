@@ -1,1065 +1,1065 @@
 {
-    "_format": "hh-sol-artifact-1",
-    "contractName": "RewardAccumulator",
-    "sourceName": "src/USG/Utilities/RewardAccumulator.sol",
-    "abi": [
+  "_format": "hh-sol-artifact-1",
+  "contractName": "RewardAccumulator",
+  "sourceName": "src/USG/Utilities/RewardAccumulator.sol",
+  "abi": [
+    {
+      "inputs": [
         {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "_owner",
-                    "type": "address"
-                },
-                {
-                    "internalType": "contract IControlTower",
-                    "name": "_controlTower",
-                    "type": "address"
-                },
-                {
-                    "internalType": "contract IAggregatorStablePriceV3",
-                    "name": "_USGOracle",
-                    "type": "address"
-                }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "constructor"
+          "internalType": "address",
+          "name": "_owner",
+          "type": "address"
         },
         {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "caller",
-                    "type": "address"
-                }
-            ],
-            "name": "CallerNotMarketCreator",
-            "type": "error"
+          "internalType": "contract IControlTower",
+          "name": "_controlTower",
+          "type": "address"
         },
         {
-            "inputs": [],
-            "name": "CantAddCollatTokenAsReward",
-            "type": "error"
-        },
-        {
-            "inputs": [],
-            "name": "EndCutPercentageBiggerThan100",
-            "type": "error"
-        },
-        {
-            "inputs": [],
-            "name": "HarvesterFeeTooHigh",
-            "type": "error"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "rewardLengthInParam",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "realRewardLength",
-                    "type": "uint256"
-                }
-            ],
-            "name": "IncorrectRewardLength",
-            "type": "error"
-        },
-        {
-            "inputs": [],
-            "name": "NoRewardToMultiClaim",
-            "type": "error"
-        },
-        {
-            "inputs": [],
-            "name": "NoRewardToSimpleClaim",
-            "type": "error"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "contractAddr",
-                    "type": "address"
-                }
-            ],
-            "name": "NoRewardsToClaimFromContract",
-            "type": "error"
-        },
-        {
-            "inputs": [],
-            "name": "NotAMarketRewards",
-            "type": "error"
-        },
-        {
-            "inputs": [],
-            "name": "NothingToProcess",
-            "type": "error"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "owner",
-                    "type": "address"
-                }
-            ],
-            "name": "OwnableInvalidOwner",
-            "type": "error"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "account",
-                    "type": "address"
-                }
-            ],
-            "name": "OwnableUnauthorizedAccount",
-            "type": "error"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "contract IERC20",
-                    "name": "erc20",
-                    "type": "address"
-                }
-            ],
-            "name": "RewardAlreadyAdded",
-            "type": "error"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "token",
-                    "type": "address"
-                }
-            ],
-            "name": "SafeERC20FailedOperation",
-            "type": "error"
-        },
-        {
-            "inputs": [],
-            "name": "StartCutPercentageBiggerThan100",
-            "type": "error"
-        },
-        {
-            "inputs": [],
-            "name": "StartCutPercentageBiggerThanEnd",
-            "type": "error"
-        },
-        {
-            "inputs": [],
-            "name": "StartCutPriceSmallerThanEnd",
-            "type": "error"
-        },
-        {
-            "inputs": [],
-            "name": "StartCutPriceTooHigh",
-            "type": "error"
-        },
-        {
-            "inputs": [],
-            "name": "StepAmountZero",
-            "type": "error"
-        },
-        {
-            "anonymous": false,
-            "inputs": [
-                {
-                    "indexed": true,
-                    "internalType": "address",
-                    "name": "previousOwner",
-                    "type": "address"
-                },
-                {
-                    "indexed": true,
-                    "internalType": "address",
-                    "name": "newOwner",
-                    "type": "address"
-                }
-            ],
-            "name": "OwnershipTransferred",
-            "type": "event"
-        },
-        {
-            "anonymous": false,
-            "inputs": [
-                {
-                    "indexed": false,
-                    "internalType": "address",
-                    "name": "market",
-                    "type": "address"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "contract IERC20",
-                    "name": "_token",
-                    "type": "address"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "streamed",
-                    "type": "uint256"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "harvesterFee",
-                    "type": "uint256"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "rewardCut",
-                    "type": "uint256"
-                }
-            ],
-            "name": "RewardNotified",
-            "type": "event"
-        },
-        {
-            "anonymous": false,
-            "inputs": [
-                {
-                    "indexed": false,
-                    "internalType": "address",
-                    "name": "market",
-                    "type": "address"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "address",
-                    "name": "_user",
-                    "type": "address"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "contract IERC20",
-                    "name": "_rewardToken",
-                    "type": "address"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "_reward",
-                    "type": "uint256"
-                }
-            ],
-            "name": "RewardPaid",
-            "type": "event"
-        },
-        {
-            "inputs": [],
-            "name": "DENOMINATOR",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "REWARDS_DURATION",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "USGOracle",
-            "outputs": [
-                {
-                    "internalType": "contract IAggregatorStablePriceV3",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "market",
-                    "type": "address"
-                },
-                {
-                    "internalType": "contract IERC20[]",
-                    "name": "newRewardTokens",
-                    "type": "address[]"
-                }
-            ],
-            "name": "addNewRewards",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "contract IERC20[]",
-                    "name": "tokens",
-                    "type": "address[]"
-                }
-            ],
-            "name": "claimCutFees",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address[]",
-                    "name": "markets",
-                    "type": "address[]"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "rewardLength",
-                    "type": "uint256"
-                }
-            ],
-            "name": "claimMultiple",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "market",
-                    "type": "address"
-                }
-            ],
-            "name": "claimSimple",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "market",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "_account",
-                    "type": "address"
-                }
-            ],
-            "name": "claimableRewards",
-            "outputs": [
-                {
-                    "components": [
-                        {
-                            "internalType": "contract IERC20",
-                            "name": "token",
-                            "type": "address"
-                        },
-                        {
-                            "internalType": "uint256",
-                            "name": "amount",
-                            "type": "uint256"
-                        }
-                    ],
-                    "internalType": "struct TokenAmount[]",
-                    "name": "userRewards",
-                    "type": "tuple[]"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "market",
-                    "type": "address"
-                }
-            ],
-            "name": "computeRCForMarket",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "controlTower",
-            "outputs": [
-                {
-                    "internalType": "contract IControlTower",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "contract IERC20",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "name": "cutFeeForToken",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "market",
-                    "type": "address"
-                }
-            ],
-            "name": "getRCParams",
-            "outputs": [
-                {
-                    "components": [
-                        {
-                            "internalType": "uint16",
-                            "name": "harvestFeePercentage",
-                            "type": "uint16"
-                        },
-                        {
-                            "internalType": "uint16",
-                            "name": "stepAmount",
-                            "type": "uint16"
-                        },
-                        {
-                            "internalType": "uint32",
-                            "name": "startCutPercentage",
-                            "type": "uint32"
-                        },
-                        {
-                            "internalType": "uint32",
-                            "name": "endCutPercentage",
-                            "type": "uint32"
-                        },
-                        {
-                            "internalType": "uint80",
-                            "name": "startCutPrice",
-                            "type": "uint80"
-                        },
-                        {
-                            "internalType": "uint80",
-                            "name": "endCutPrice",
-                            "type": "uint80"
-                        }
-                    ],
-                    "internalType": "struct RCParams",
-                    "name": "",
-                    "type": "tuple"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "market",
-                    "type": "address"
-                },
-                {
-                    "internalType": "contract IERC20",
-                    "name": "token",
-                    "type": "address"
-                }
-            ],
-            "name": "getRewardData",
-            "outputs": [
-                {
-                    "components": [
-                        {
-                            "internalType": "uint128",
-                            "name": "lastUpdateTime",
-                            "type": "uint128"
-                        },
-                        {
-                            "internalType": "uint128",
-                            "name": "periodFinish",
-                            "type": "uint128"
-                        },
-                        {
-                            "internalType": "uint256",
-                            "name": "rewardRate",
-                            "type": "uint256"
-                        },
-                        {
-                            "internalType": "uint256",
-                            "name": "rewardPerTokenStored",
-                            "type": "uint256"
-                        }
-                    ],
-                    "internalType": "struct Reward",
-                    "name": "",
-                    "type": "tuple"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "market",
-                    "type": "address"
-                },
-                {
-                    "internalType": "contract IERC20",
-                    "name": "_rewardToken",
-                    "type": "address"
-                }
-            ],
-            "name": "getRewardForDuration",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "market",
-                    "type": "address"
-                }
-            ],
-            "name": "getRewardTokens",
-            "outputs": [
-                {
-                    "internalType": "contract IERC20[]",
-                    "name": "",
-                    "type": "address[]"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "market",
-                    "type": "address"
-                },
-                {
-                    "components": [
-                        {
-                            "internalType": "uint16",
-                            "name": "harvestFeePercentage",
-                            "type": "uint16"
-                        },
-                        {
-                            "internalType": "uint16",
-                            "name": "stepAmount",
-                            "type": "uint16"
-                        },
-                        {
-                            "internalType": "uint32",
-                            "name": "startCutPercentage",
-                            "type": "uint32"
-                        },
-                        {
-                            "internalType": "uint32",
-                            "name": "endCutPercentage",
-                            "type": "uint32"
-                        },
-                        {
-                            "internalType": "uint80",
-                            "name": "startCutPrice",
-                            "type": "uint80"
-                        },
-                        {
-                            "internalType": "uint80",
-                            "name": "endCutPrice",
-                            "type": "uint80"
-                        }
-                    ],
-                    "internalType": "struct RCParams",
-                    "name": "_rcParam",
-                    "type": "tuple"
-                }
-            ],
-            "name": "initializeMarket",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "name": "lastRewardCuts",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "market",
-                    "type": "address"
-                },
-                {
-                    "internalType": "contract IERC20",
-                    "name": "_rewardToken",
-                    "type": "address"
-                }
-            ],
-            "name": "lastTimeRewardApplicable",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "owner",
-            "outputs": [
-                {
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address[]",
-                    "name": "markets",
-                    "type": "address[]"
-                },
-                {
-                    "internalType": "address",
-                    "name": "harvestFeeReceiver",
-                    "type": "address"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "rewardLength",
-                    "type": "uint256"
-                }
-            ],
-            "name": "processMultiRewards",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "market",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "harvestFeeReceiver",
-                    "type": "address"
-                }
-            ],
-            "name": "processRewards",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "name": "rcParams",
-            "outputs": [
-                {
-                    "internalType": "uint16",
-                    "name": "harvestFeePercentage",
-                    "type": "uint16"
-                },
-                {
-                    "internalType": "uint16",
-                    "name": "stepAmount",
-                    "type": "uint16"
-                },
-                {
-                    "internalType": "uint32",
-                    "name": "startCutPercentage",
-                    "type": "uint32"
-                },
-                {
-                    "internalType": "uint32",
-                    "name": "endCutPercentage",
-                    "type": "uint32"
-                },
-                {
-                    "internalType": "uint80",
-                    "name": "startCutPrice",
-                    "type": "uint80"
-                },
-                {
-                    "internalType": "uint80",
-                    "name": "endCutPrice",
-                    "type": "uint80"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
-                },
-                {
-                    "internalType": "contract IERC20",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "name": "rewardData",
-            "outputs": [
-                {
-                    "internalType": "uint128",
-                    "name": "lastUpdateTime",
-                    "type": "uint128"
-                },
-                {
-                    "internalType": "uint128",
-                    "name": "periodFinish",
-                    "type": "uint128"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "rewardRate",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "rewardPerTokenStored",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "market",
-                    "type": "address"
-                },
-                {
-                    "internalType": "contract IERC20",
-                    "name": "_rewardToken",
-                    "type": "address"
-                }
-            ],
-            "name": "rewardPerToken",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "name": "rewardTokens",
-            "outputs": [
-                {
-                    "internalType": "contract IERC20",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
-                },
-                {
-                    "internalType": "contract IERC20",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "name": "rewards",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "USGPrice",
-                    "type": "uint256"
-                },
-                {
-                    "components": [
-                        {
-                            "internalType": "uint16",
-                            "name": "harvestFeePercentage",
-                            "type": "uint16"
-                        },
-                        {
-                            "internalType": "uint16",
-                            "name": "stepAmount",
-                            "type": "uint16"
-                        },
-                        {
-                            "internalType": "uint32",
-                            "name": "startCutPercentage",
-                            "type": "uint32"
-                        },
-                        {
-                            "internalType": "uint32",
-                            "name": "endCutPercentage",
-                            "type": "uint32"
-                        },
-                        {
-                            "internalType": "uint80",
-                            "name": "startCutPrice",
-                            "type": "uint80"
-                        },
-                        {
-                            "internalType": "uint80",
-                            "name": "endCutPrice",
-                            "type": "uint80"
-                        }
-                    ],
-                    "internalType": "struct RCParams",
-                    "name": "_rcParams",
-                    "type": "tuple"
-                }
-            ],
-            "name": "simulateRC",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "pure",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "newOwner",
-                    "type": "address"
-                }
-            ],
-            "name": "transferOwnership",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "market",
-                    "type": "address"
-                },
-                {
-                    "components": [
-                        {
-                            "internalType": "uint16",
-                            "name": "harvestFeePercentage",
-                            "type": "uint16"
-                        },
-                        {
-                            "internalType": "uint16",
-                            "name": "stepAmount",
-                            "type": "uint16"
-                        },
-                        {
-                            "internalType": "uint32",
-                            "name": "startCutPercentage",
-                            "type": "uint32"
-                        },
-                        {
-                            "internalType": "uint32",
-                            "name": "endCutPercentage",
-                            "type": "uint32"
-                        },
-                        {
-                            "internalType": "uint80",
-                            "name": "startCutPrice",
-                            "type": "uint80"
-                        },
-                        {
-                            "internalType": "uint80",
-                            "name": "endCutPrice",
-                            "type": "uint80"
-                        }
-                    ],
-                    "internalType": "struct RCParams",
-                    "name": "_rcParam",
-                    "type": "tuple"
-                }
-            ],
-            "name": "updateRCParams",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "account",
-                    "type": "address"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "collateralBalance",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "totalCollateral",
-                    "type": "uint256"
-                }
-            ],
-            "name": "updateRewards",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
-                },
-                {
-                    "internalType": "contract IERC20",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "name": "userRewardPerTokenPaid",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
+          "internalType": "contract IAggregatorStablePriceV3",
+          "name": "_USGOracle",
+          "type": "address"
         }
-    ],
-    "linkReferences": {},
-    "deployedLinkReferences": {}
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        }
+      ],
+      "name": "CallerNotMarketCreator",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "CantAddCollatTokenAsReward",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EndCutPercentageBiggerThan100",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "HarvesterFeeTooHigh",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "rewardLengthInParam",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "realRewardLength",
+          "type": "uint256"
+        }
+      ],
+      "name": "IncorrectRewardLength",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NoRewardToMultiClaim",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NoRewardToSimpleClaim",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "contractAddr",
+          "type": "address"
+        }
+      ],
+      "name": "NoRewardsToClaimFromContract",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotAMarketRewards",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NothingToProcess",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableInvalidOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableUnauthorizedAccount",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "erc20",
+          "type": "address"
+        }
+      ],
+      "name": "RewardAlreadyAdded",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        }
+      ],
+      "name": "SafeERC20FailedOperation",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "StartCutPercentageBiggerThan100",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "StartCutPercentageBiggerThanEnd",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "StartCutPriceSmallerThanEnd",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "StartCutPriceTooHigh",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "StepAmountZero",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "contract IERC20",
+          "name": "_token",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "streamed",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "harvesterFee",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "rewardCut",
+          "type": "uint256"
+        }
+      ],
+      "name": "RewardNotified",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "contract IERC20",
+          "name": "_rewardToken",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_reward",
+          "type": "uint256"
+        }
+      ],
+      "name": "RewardPaid",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "DENOMINATOR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "REWARDS_DURATION",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "USGOracle",
+      "outputs": [
+        {
+          "internalType": "contract IAggregatorStablePriceV3",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20[]",
+          "name": "newRewardTokens",
+          "type": "address[]"
+        }
+      ],
+      "name": "addNewRewards",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IERC20[]",
+          "name": "tokens",
+          "type": "address[]"
+        }
+      ],
+      "name": "claimCutFees",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "markets",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "rewardLength",
+          "type": "uint256"
+        }
+      ],
+      "name": "claimMultiple",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        }
+      ],
+      "name": "claimSimple",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_account",
+          "type": "address"
+        }
+      ],
+      "name": "claimableRewards",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TokenAmount[]",
+          "name": "userRewards",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        }
+      ],
+      "name": "computeRCForMarket",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "controlTower",
+      "outputs": [
+        {
+          "internalType": "contract IControlTower",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "cutFeeForToken",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        }
+      ],
+      "name": "getRCParams",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint16",
+              "name": "harvestFeePercentage",
+              "type": "uint16"
+            },
+            {
+              "internalType": "uint16",
+              "name": "stepAmount",
+              "type": "uint16"
+            },
+            {
+              "internalType": "uint32",
+              "name": "startCutPercentage",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "endCutPercentage",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint80",
+              "name": "startCutPrice",
+              "type": "uint80"
+            },
+            {
+              "internalType": "uint80",
+              "name": "endCutPrice",
+              "type": "uint80"
+            }
+          ],
+          "internalType": "struct RCParams",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20",
+          "name": "token",
+          "type": "address"
+        }
+      ],
+      "name": "getRewardData",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint128",
+              "name": "lastUpdateTime",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "periodFinish",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint256",
+              "name": "rewardRate",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "rewardPerTokenStored",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Reward",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20",
+          "name": "_rewardToken",
+          "type": "address"
+        }
+      ],
+      "name": "getRewardForDuration",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        }
+      ],
+      "name": "getRewardTokens",
+      "outputs": [
+        {
+          "internalType": "contract IERC20[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint16",
+              "name": "harvestFeePercentage",
+              "type": "uint16"
+            },
+            {
+              "internalType": "uint16",
+              "name": "stepAmount",
+              "type": "uint16"
+            },
+            {
+              "internalType": "uint32",
+              "name": "startCutPercentage",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "endCutPercentage",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint80",
+              "name": "startCutPrice",
+              "type": "uint80"
+            },
+            {
+              "internalType": "uint80",
+              "name": "endCutPrice",
+              "type": "uint80"
+            }
+          ],
+          "internalType": "struct RCParams",
+          "name": "_rcParam",
+          "type": "tuple"
+        }
+      ],
+      "name": "initializeMarket",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "lastRewardCuts",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20",
+          "name": "_rewardToken",
+          "type": "address"
+        }
+      ],
+      "name": "lastTimeRewardApplicable",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "markets",
+          "type": "address[]"
+        },
+        {
+          "internalType": "address",
+          "name": "harvestFeeReceiver",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "rewardLength",
+          "type": "uint256"
+        }
+      ],
+      "name": "processMultiRewards",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "harvestFeeReceiver",
+          "type": "address"
+        }
+      ],
+      "name": "processRewards",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "rcParams",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "harvestFeePercentage",
+          "type": "uint16"
+        },
+        {
+          "internalType": "uint16",
+          "name": "stepAmount",
+          "type": "uint16"
+        },
+        {
+          "internalType": "uint32",
+          "name": "startCutPercentage",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "endCutPercentage",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint80",
+          "name": "startCutPrice",
+          "type": "uint80"
+        },
+        {
+          "internalType": "uint80",
+          "name": "endCutPrice",
+          "type": "uint80"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "rewardData",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "lastUpdateTime",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint128",
+          "name": "periodFinish",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint256",
+          "name": "rewardRate",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "rewardPerTokenStored",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20",
+          "name": "_rewardToken",
+          "type": "address"
+        }
+      ],
+      "name": "rewardPerToken",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "rewardTokens",
+      "outputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "rewards",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "USGPrice",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint16",
+              "name": "harvestFeePercentage",
+              "type": "uint16"
+            },
+            {
+              "internalType": "uint16",
+              "name": "stepAmount",
+              "type": "uint16"
+            },
+            {
+              "internalType": "uint32",
+              "name": "startCutPercentage",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "endCutPercentage",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint80",
+              "name": "startCutPrice",
+              "type": "uint80"
+            },
+            {
+              "internalType": "uint80",
+              "name": "endCutPrice",
+              "type": "uint80"
+            }
+          ],
+          "internalType": "struct RCParams",
+          "name": "_rcParams",
+          "type": "tuple"
+        }
+      ],
+      "name": "simulateRC",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint16",
+              "name": "harvestFeePercentage",
+              "type": "uint16"
+            },
+            {
+              "internalType": "uint16",
+              "name": "stepAmount",
+              "type": "uint16"
+            },
+            {
+              "internalType": "uint32",
+              "name": "startCutPercentage",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "endCutPercentage",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint80",
+              "name": "startCutPrice",
+              "type": "uint80"
+            },
+            {
+              "internalType": "uint80",
+              "name": "endCutPrice",
+              "type": "uint80"
+            }
+          ],
+          "internalType": "struct RCParams",
+          "name": "_rcParam",
+          "type": "tuple"
+        }
+      ],
+      "name": "updateRCParams",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "collateralBalance",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "totalCollateral",
+          "type": "uint256"
+        }
+      ],
+      "name": "updateRewards",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "userRewardPerTokenPaid",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "linkReferences": {},
+  "deployedLinkReferences": {}
 }
