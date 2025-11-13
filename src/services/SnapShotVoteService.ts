@@ -89,6 +89,14 @@ export class SnapShotVoteService {
     }
 
     await this.userVoteRepository.createUserVoteTasks(rows)
+
+    // create users from addresses which voted
+    const uniqueAddressesSet = new Set<string>()
+    rows.forEach((v) => {
+      uniqueAddressesSet.add(v.user_address.toLowerCase())
+    })
+    const votersAddresses = Array.from(uniqueAddressesSet).map((address) => ({ address }))
+    await this.userVoteRepository.insertAddresses(votersAddresses)
   }
 
   getOrganizations(): OrganizationConfig[] {

@@ -76,6 +76,7 @@ describe("SnapShotVoteService", () => {
     getProcessedProposals: vi.fn(),
     createUserVoteTasks: vi.fn(),
     fetchUsersBoosts: vi.fn(),
+    insertAddresses: vi.fn(),
   } as any as UserPointsVoteRepository
 
   const blockService = {
