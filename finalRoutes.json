@@ -1,0 +1,1784 @@
+{
+  "success": {
+    "0x5018be882dcce5e3f2f3b0913ae2096b9b3fb61f": {
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
+              "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDC/fxUSD >> USDC/fxUSD >> USDC >> USG-USDC* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
+              "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 9, 1, 0],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDC/fxUSD >> USDC/fxUSD >> USDC >> USDC/crvUSD >> crvUSD >> wcrvUSD* >> wcrvUSD* >> USG-wcrvUSD* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
+              "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
+              "0x085780639cc2cacd35e474e71f4d000e2405d8f6",
+              "0x74345504Eaea3D9408fC69Ae7EB2d14095643c5b",
+              "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+              "0x635EF0056A597D13863B73825CcA297236578595",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 9, 1, 0],
+              [0, 1, 1, 1, 2]
+            ]
+          },
+          "display": "USDC/fxUSD >> USDC/fxUSD >> fxUSD >> GHO/fxUSD >> GHO >> GHO/crvUSD >> crvUSD >> wcrvUSD* >> wcrvUSD* >> USG-wcrvUSD* >> USG*"
+        }
+      ]
+    },
+    "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": {
+      "0x5018be882dcce5e3f2f3b0913ae2096b9b3fb61f": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
+              "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> USDC/fxUSD >> USDC/fxUSD"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
+              "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 9, 1, 0],
+              [1, 0, 1, 1, 2],
+              [0, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-wcrvUSD* >> wcrvUSD* >> wcrvUSD* >> crvUSD >> USDC/crvUSD >> USDC >> USDC/fxUSD >> USDC/fxUSD"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x635EF0056A597D13863B73825CcA297236578595",
+              "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+              "0x74345504Eaea3D9408fC69Ae7EB2d14095643c5b",
+              "0x085780639cc2cacd35e474e71f4d000e2405d8f6",
+              "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
+              "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 9, 1, 0],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 4, 10, 2]
+            ]
+          },
+          "display": "USG* >> USG-wcrvUSD* >> wcrvUSD* >> wcrvUSD* >> crvUSD >> GHO/crvUSD >> GHO >> GHO/fxUSD >> fxUSD >> USDC/fxUSD >> USDC/fxUSD"
+        }
+      ],
+      "0x4dece678ceceb27446b35c672dc7d61f30bad69e": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 0, 4, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> USDC/crvUSD >> USDC/crvUSD"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 9, 1, 0],
+              [1, 0, 4, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-wcrvUSD* >> wcrvUSD* >> wcrvUSD* >> crvUSD >> USDC/crvUSD >> USDC/crvUSD"
+        }
+      ],
+      "0x390f3595bca2df7d23783dfd126427cceb997bf4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7",
+              "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+              "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 4, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> USDC/USDT >> USDT >> USDT/crvUSD >> USDT/crvUSD"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+              "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 9, 1, 0],
+              [1, 0, 4, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-wcrvUSD* >> wcrvUSD* >> wcrvUSD* >> crvUSD >> USDT/crvUSD >> USDT/crvUSD"
+        }
+      ],
+      "0x167478921b907422f8e88b43c4af2b8bea278d3a": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x0655977feb2f289a4ab78af67bab0d17aab84367",
+              "0x0655977feb2f289a4ab78af67bab0d17aab84367",
+              "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
+              "0x9d39a5de30e57443bff2a8307a4256c8797a3497",
+              "0x167478921b907422f8e88b43c4af2b8bea278d3a",
+              "0x167478921b907422f8e88b43c4af2b8bea278d3a"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 9, 1, 0],
+              [0, 0, 9, 1, 0],
+              [0, 1, 1, 1, 2],
+              [1, 0, 4, 10, 2]
+            ]
+          },
+          "display": "USG* >> USG-wcrvUSD* >> wcrvUSD* >> wcrvUSD* >> crvUSD >> scrvUSD >> scrvUSD >> scrvUSD/sUSDe >> sUSDe >> sDAI/sUSDe >> sDAI/sUSDe"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0xDcEF968d416a41Cdac0ED8702fAC8128A64241A2",
+              "0x853d955aCEf822Db058eb8505911ED77F175b99e",
+              "0xce6431d21e3fb1036ce9973a3312368ed96f5ce7",
+              "0x83f20f44975d03b1b09e64809b757c47f942beea",
+              "0x167478921b907422f8e88b43c4af2b8bea278d3a",
+              "0x167478921b907422f8e88b43c4af2b8bea278d3a",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> FRAX/USDC >> FRAX >> sDAI/FRAX >> sDAI >> sDAI/sUSDe >> sDAI/sUSDe"
+        }
+      ],
+      "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> USDC/USDT >> USDC/USDT"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 9, 1, 0],
+              [1, 0, 1, 1, 2],
+              [1, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-wcrvUSD* >> wcrvUSD* >> wcrvUSD* >> crvUSD >> crvUSD/USDT >> USDT >> USDC/USDT >> USDC/USDT"
+        }
+      ],
+      "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x3ee841f47947fefbe510366e4bbb49e145484195",
+              "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
+              "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
+              "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 0, 4, 3, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> USR/USDC >> USR >> USR/RLP >> USR/RLP"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x3ee841f47947fefbe510366e4bbb49e145484195",
+              "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
+              "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
+              "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 9, 1, 0],
+              [1, 0, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 0, 4, 3, 2]
+            ]
+          },
+          "display": "USG* >> USG-wcrvUSD* >> wcrvUSD* >> wcrvUSD* >> crvUSD >> crvUSD/USDC >> USDC >> USR/USDC >> USR >> USR/RLP >> USR/RLP"
+        }
+      ],
+      "0xdbb1d219d84eacefb850ee04cacf2f1830934580": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x02950460e2b9529d0e00284a5fa2d7bdf3fa4d72",
+              "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
+              "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
+              "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [1, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> USDC/USDe >> USDe >> frxUSD/USDe >> frxUSD/USDe"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0xF55B0f6F2Da5ffDDb104b58a60F2862745960442",
+              "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
+              "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
+              "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 9, 1, 0],
+              [1, 0, 1, 1, 2],
+              [1, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-wcrvUSD* >> wcrvUSD* >> wcrvUSD* >> crvUSD >> crvUSD/USDe >> USDe >> frxUSD/USDe >> frxUSD/USDe"
+        }
+      ],
+      "0x38de22a3175708d45e7c7c64cd78479c8b56f76e": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x3ee841f47947fefbe510366e4bbb49e145484195",
+              "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
+              "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
+              "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [1, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> USR/USDC >> USR >> DOLA/USR >> DOLA/USR"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x0655977feb2f289a4ab78af67bab0d17aab84367",
+              "0x0655977feb2f289a4ab78af67bab0d17aab84367",
+              "0xff17dAb22F1E61078aBa2623c89cE6110E878B3c",
+              "0x865377367054516e17014CcdED1e7d814EDC9ce4",
+              "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
+              "0x38de22a3175708d45e7c7c64cd78479c8b56f76e"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 9, 1, 0],
+              [0, 0, 9, 1, 0],
+              [1, 0, 1, 1, 2],
+              [0, 0, 4, 10, 2]
+            ]
+          },
+          "display": "USG* >> USG-wcrvUSD* >> wcrvUSD* >> wcrvUSD* >> crvUSD >> scrvUSD >> scrvUSD >> DOLA/scrvUSD >> DOLA >> DOLA/USR >> DOLA/USR"
+        }
+      ],
+      "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x0655977feb2f289a4ab78af67bab0d17aab84367",
+              "0x0655977feb2f289a4ab78af67bab0d17aab84367",
+              "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
+              "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 9, 1, 0],
+              [0, 0, 9, 1, 0],
+              [0, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-wcrvUSD* >> wcrvUSD* >> wcrvUSD* >> crvUSD >> scrvUSD >> scrvUSD >> scrvUSD/sUSDe >> scrvUSD/sUSDe"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x3ee841f47947fefbe510366e4bbb49e145484195",
+              "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
+              "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
+              "0x865377367054516e17014CcdED1e7d814EDC9ce4",
+              "0x744793B5110f6ca9cC7CDfe1CE16677c3Eb192ef",
+              "0x9d39a5de30e57443bff2a8307a4256c8797a3497",
+              "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
+              "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 4, 10, 2]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> USR/USDC >> USR >> DOLA/USR >> DOLA >> DOLA/sUSDe >> sUSDe >> scrvUSD/sUSDe >> scrvUSD/sUSDe"
+        }
+      ],
+      "0x6951bdc4734b9f7f3e1b74afebc670c736a0edb6": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+              "0xDC24316b9AE028F1497c275EB9192a3Ea0f67022",
+              "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+              "0x6951bDC4734b9f7F3E1B74afeBC670c736A0EDB6",
+              "0x6951bDC4734b9f7F3E1B74afeBC670c736A0EDB6",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 2, 1, 2, 3],
+              [0, 1, 1, 1, 2],
+              [1, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> WBTC/ETH/USDC >> ETH >> stETH/ETH >> stETH >> pxETH/stETH >> pxETH/stETH"
+        }
+      ],
+      "0x839d6bdedff886404a6d7a788ef241e4e28f4802": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 2, 3],
+              [1, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> WBTC/ETH/USDC >> WBTC >> WBTC/cbBTC >> WBTC/cbBTC"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 9, 1, 0],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 2, 3],
+              [1, 0, 4, 10, 2]
+            ]
+          },
+          "display": "USG* >> USG-wcrvUSD* >> wcrvUSD* >> wcrvUSD* >> crvUSD >> crvUSD/USDC >> USDC >> WBTC/ETH/USDC >> WBTC >> WBTC/cbBTC >> WBTC/cbBTC"
+        }
+      ],
+      "0x9c3b46c0ceb5b9e304fcd6d88fc50f7dd24b31bc": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+              "0x9c3b46c0ceb5b9e304fcd6d88fc50f7dd24b31bc",
+              "0x9c3b46c0ceb5b9e304fcd6d88fc50f7dd24b31bc",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 2, 1, 2, 3],
+              [0, 0, 4, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> WBTC/ETH/USDC >> WETH >> frxETH/WETH >> frxETH/WETH"
+        }
+      ],
+      "0xc8eb2cf2f792f77af0cd9e203305a585e588179d": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+              "0xC8Eb2Cf2f792F77AF0Cd9e203305a585E588179D",
+              "0xC8Eb2Cf2f792F77AF0Cd9e203305a585E588179D",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 2, 1, 2, 3],
+              [0, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> WBTC/ETH/USDC >> WETH >> pxETH/WETH >> pxETH/WETH"
+        }
+      ],
+      "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC"
+        }
+      ],
+      "0xdac17f958d2ee523a2206206994597c13d831ec7": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 9, 1, 0],
+              [1, 0, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-wcrvUSD* >> wcrvUSD* >> wcrvUSD* >> crvUSD >> crvUSD/USDT >> USDT"
+        }
+      ],
+      "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 2, 3],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> WBTC/ETH/USDC >> WBTC"
+        }
+      ],
+      "0x4c9edd5852cd905f086c759e8383e09bff1e68b3": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x02950460e2b9529d0e00284a5fa2d7bdf3fa4d72",
+              "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> USDC/USDe >> USDe"
+        }
+      ]
+    },
+    "0x4dece678ceceb27446b35c672dc7d61f30bad69e": {
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDC/crvUSD >> USDC/crvUSD >> USDC >> USG-USDC* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [0, 0, 9, 1, 0],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDC/crvUSD >> USDC/crvUSD >> crvUSD >> wcrvUSD* >> wcrvUSD* >> USG-wcrvUSD* >> USG*"
+        }
+      ]
+    },
+    "0x390f3595bca2df7d23783dfd126427cceb997bf4": {
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+              "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDT/crvUSD >> USDT/crvUSD >> USDT >> USDC/USDT >> USDC >> USG-USDC* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+              "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [0, 0, 9, 1, 0],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDT/crvUSD >> USDT/crvUSD >> crvUSD >> wcrvUSD* >> wcrvUSD* >> USG-wcrvUSD* >> USG*"
+        }
+      ]
+    },
+    "0x167478921b907422f8e88b43c4af2b8bea278d3a": {
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x167478921b907422f8e88b43c4af2b8bea278d3a",
+              "0x167478921b907422f8e88b43c4af2b8bea278d3a",
+              "0x9d39a5de30e57443bff2a8307a4256c8797a3497",
+              "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
+              "0x0655977feb2f289a4ab78af67bab0d17aab84367",
+              "0x0655977feb2f289a4ab78af67bab0d17aab84367",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [1, 0, 1, 1, 2],
+              [1, 0, 9, 1, 0],
+              [0, 0, 9, 1, 0],
+              [0, 1, 1, 1, 2]
+            ]
+          },
+          "display": "sDAI/sUSDe >> sDAI/sUSDe >> sUSDe >> scrvUSD/sUSDe >> scrvUSD >> scrvUSD >> crvUSD >> wcrvUSD* >> wcrvUSD* >> USG-wcrvUSD* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x167478921b907422f8e88b43c4af2b8bea278d3a",
+              "0x167478921b907422f8e88b43c4af2b8bea278d3a",
+              "0x83f20f44975d03b1b09e64809b757c47f942beea",
+              "0xce6431d21e3fb1036ce9973a3312368ed96f5ce7",
+              "0x853d955aCEf822Db058eb8505911ED77F175b99e",
+              "0xDcEF968d416a41Cdac0ED8702fAC8128A64241A2",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "sDAI/sUSDe >> sDAI/sUSDe >> sDAI >> sDAI/FRAX >> FRAX >> FRAX/USDC >> USDC >> USG-USDC* >> USG*"
+        }
+      ]
+    },
+    "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85": {
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDC/USDT >> USDC/USDT >> USDC >> USG-USDC* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7",
+              "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 9, 1, 0],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDC/USDT >> USDC/USDT >> USDT >> crvUSD/USDT >> crvUSD >> wcrvUSD* >> wcrvUSD* >> USG-wcrvUSD* >> USG*"
+        }
+      ]
+    },
+    "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656": {
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
+              "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
+              "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
+              "0x3ee841f47947fefbe510366e4bbb49e145484195",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 2, 2],
+              [0, 1, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USR/RLP >> USR/RLP >> USR >> USR/USDC >> USDC >> USG-USDC* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
+              "0xc907ba505c2e1cbc4658c395d4a2c7e6d2c32656",
+              "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
+              "0x3ee841f47947fefbe510366e4bbb49e145484195",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 2, 2],
+              [0, 1, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 9, 1, 0],
+              [0, 1, 1, 1, 2]
+            ]
+          },
+          "display": "USR/RLP >> USR/RLP >> USR >> USR/USDC >> USDC >> crvUSD/USDC >> crvUSD >> wcrvUSD* >> wcrvUSD* >> USG-wcrvUSD* >> USG*"
+        }
+      ]
+    },
+    "0xdbb1d219d84eacefb850ee04cacf2f1830934580": {
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
+              "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
+              "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
+              "0x02950460e2b9529d0e00284a5fa2d7bdf3fa4d72",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "frxUSD/USDe >> frxUSD/USDe >> USDe >> USDC/USDe >> USDC >> USG-USDC* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
+              "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
+              "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
+              "0xF55B0f6F2Da5ffDDb104b58a60F2862745960442",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 9, 1, 0],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "frxUSD/USDe >> frxUSD/USDe >> USDe >> crvUSD/USDe >> crvUSD >> wcrvUSD* >> wcrvUSD* >> USG-wcrvUSD* >> USG*"
+        }
+      ]
+    },
+    "0x38de22a3175708d45e7c7c64cd78479c8b56f76e": {
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
+              "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
+              "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
+              "0x3ee841f47947fefbe510366e4bbb49e145484195",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "DOLA/USR >> DOLA/USR >> USR >> USR/USDC >> USDC >> USG-USDC* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
+              "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
+              "0x865377367054516e17014CcdED1e7d814EDC9ce4",
+              "0xff17dAb22F1E61078aBa2623c89cE6110E878B3c",
+              "0x0655977feb2f289a4ab78af67bab0d17aab84367",
+              "0x0655977feb2f289a4ab78af67bab0d17aab84367",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 9, 1, 0],
+              [0, 0, 9, 1, 0],
+              [0, 1, 1, 1, 2]
+            ]
+          },
+          "display": "DOLA/USR >> DOLA/USR >> DOLA >> DOLA/scrvUSD >> scrvUSD >> scrvUSD >> crvUSD >> wcrvUSD* >> wcrvUSD* >> USG-wcrvUSD* >> USG*"
+        }
+      ]
+    },
+    "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1": {
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
+              "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
+              "0x0655977feb2f289a4ab78af67bab0d17aab84367",
+              "0x0655977feb2f289a4ab78af67bab0d17aab84367",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
+              [1, 0, 9, 1, 0],
+              [0, 0, 9, 1, 0],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "scrvUSD/sUSDe >> scrvUSD/sUSDe >> scrvUSD >> scrvUSD >> crvUSD >> wcrvUSD* >> wcrvUSD* >> USG-wcrvUSD* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
+              "0xd29f8980852c2c76fc3f6e96a7aa06e0bedcc1b1",
+              "0x9d39a5de30e57443bff2a8307a4256c8797a3497",
+              "0x744793B5110f6ca9cC7CDfe1CE16677c3Eb192ef",
+              "0x865377367054516e17014CcdED1e7d814EDC9ce4",
+              "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
+              "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
+              "0x3ee841f47947fefbe510366e4bbb49e145484195",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 1, 1, 1, 2]
+            ]
+          },
+          "display": "scrvUSD/sUSDe >> scrvUSD/sUSDe >> sUSDe >> DOLA/sUSDe >> DOLA >> DOLA/USR >> USR >> USR/USDC >> USDC >> USG-USDC* >> USG*"
+        }
+      ]
+    },
+    "0x6951bdc4734b9f7f3e1b74afebc670c736a0edb6": {
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x6951bDC4734b9f7F3E1B74afeBC670c736A0EDB6",
+              "0x6951bDC4734b9f7F3E1B74afeBC670c736A0EDB6",
+              "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+              "0xDC24316b9AE028F1497c275EB9192a3Ea0f67022",
+              "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [1, 0, 1, 1, 2],
+              [2, 0, 1, 2, 3],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "pxETH/stETH >> pxETH/stETH >> stETH >> stETH/ETH >> ETH >> WBTC/ETH/USDC >> USDC >> USG-USDC* >> USG*"
+        }
+      ]
+    },
+    "0x839d6bdedff886404a6d7a788ef241e4e28f4802": {
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [1, 0, 1, 2, 3],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "WBTC/cbBTC >> WBTC/cbBTC >> WBTC >> WBTC/ETH/USDC >> USDC >> USG-USDC* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [1, 0, 1, 2, 3],
+              [0, 1, 1, 1, 2],
+              [0, 0, 9, 1, 0],
+              [0, 1, 1, 1, 2]
+            ]
+          },
+          "display": "WBTC/cbBTC >> WBTC/cbBTC >> WBTC >> WBTC/ETH/USDC >> USDC >> crvUSD/USDC >> crvUSD >> wcrvUSD* >> wcrvUSD* >> USG-wcrvUSD* >> USG*"
+        }
+      ]
+    },
+    "0x9c3b46c0ceb5b9e304fcd6d88fc50f7dd24b31bc": {
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x9c3b46c0ceb5b9e304fcd6d88fc50f7dd24b31bc",
+              "0x9c3b46c0ceb5b9e304fcd6d88fc50f7dd24b31bc",
+              "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
+              [2, 0, 1, 2, 3],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "frxETH/WETH >> frxETH/WETH >> WETH >> WBTC/ETH/USDC >> USDC >> USG-USDC* >> USG*"
+        }
+      ]
+    },
+    "0xc8eb2cf2f792f77af0cd9e203305a585e588179d": {
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xC8Eb2Cf2f792F77AF0Cd9e203305a585E588179D",
+              "0xC8Eb2Cf2f792F77AF0Cd9e203305a585E588179D",
+              "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
+              [2, 0, 1, 2, 3],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "pxETH/WETH >> pxETH/WETH >> WETH >> WBTC/ETH/USDC >> USDC >> USG-USDC* >> USG*"
+        }
+      ]
+    },
+    "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": {
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDC >> USG-USDC* >> USG*"
+        }
+      ],
+      "0x29c5eafe3ed1f169b3cd594ce0506a3c0ffbfb85": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+              "0xB8F31c4d60EA12088c59d6dadbB47840aB10d594",
+              "0x29C5eAfE3Ed1F169b3CD594CE0506A3c0FFBfb85",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 2, 1, 2, 3],
+              [0, 1, 1, 2, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDC >> WBTC/ETH/USDC >> WETH >> TAN-WETH* >> TAN*"
+        }
+      ],
+      "0x4c9edd5852cd905f086c759e8383e09bff1e68b3": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x02950460e2b9529d0e00284a5fa2d7bdf3fa4d72",
+              "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDC >> USDC/USDe >> USDe"
+        }
+      ]
+    },
+    "0xdac17f958d2ee523a2206206994597c13d831ec7": {
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xdac17f958d2ee523a2206206994597c13d831ec7",
+              "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x37a86eD3ee87109ff8cF96B3fe45c70a2ebB69f3",
+              "0x6C5Ff8DCe52BE77b4eCE6B51996018f0C1713bA9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 1, 1, 2],
+              [0, 0, 9, 1, 0],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDT >> crvUSD/USDT >> crvUSD >> wcrvUSD* >> wcrvUSD* >> USG-wcrvUSD* >> USG*"
+        }
+      ]
+    },
+    "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599": {
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 2, 3],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "WBTC >> WBTC/ETH/USDC >> USDC >> USG-USDC* >> USG*"
+        }
+      ],
+      "0x29c5eafe3ed1f169b3cd594ce0506a3c0ffbfb85": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+              "0xB8F31c4d60EA12088c59d6dadbB47840aB10d594",
+              "0x29C5eAfE3Ed1F169b3CD594CE0506A3c0FFBfb85",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 2, 1, 2, 3],
+              [0, 1, 1, 2, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "WBTC >> WBTC/ETH/USDC >> WETH >> TAN-WETH* >> TAN*"
+        }
+      ]
+    },
+    "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": {
+      "0x29c5eafe3ed1f169b3cd594ce0506a3c0ffbfb85": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+              "0xB8F31c4d60EA12088c59d6dadbB47840aB10d594",
+              "0x29C5eAfE3Ed1F169b3CD594CE0506A3c0FFBfb85",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 1, 2, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "WETH >> TAN-WETH* >> TAN*"
+        }
+      ]
+    },
+    "0x29c5eafe3ed1f169b3cd594ce0506a3c0ffbfb85": {
+      "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x29C5eAfE3Ed1F169b3CD594CE0506A3c0FFBfb85",
+              "0xB8F31c4d60EA12088c59d6dadbB47840aB10d594",
+              "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 2, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "TAN* >> TAN-WETH* >> WETH"
+        }
+      ],
+      "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x29C5eAfE3Ed1F169b3CD594CE0506A3c0FFBfb85",
+              "0xB8F31c4d60EA12088c59d6dadbB47840aB10d594",
+              "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 2, 2],
+              [2, 1, 1, 2, 3],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "TAN* >> TAN-WETH* >> WETH >> WBTC/ETH/USDC >> WBTC"
+        }
+      ],
+      "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x29C5eAfE3Ed1F169b3CD594CE0506A3c0FFBfb85",
+              "0xB8F31c4d60EA12088c59d6dadbB47840aB10d594",
+              "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 2, 2],
+              [2, 0, 1, 2, 3],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "TAN* >> TAN-WETH* >> WETH >> WBTC/ETH/USDC >> USDC"
+        }
+      ]
+    },
+    "0x4c9edd5852cd905f086c759e8383e09bff1e68b3": {
+      "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
+              "0x02950460e2b9529d0e00284a5fa2d7bdf3fa4d72",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDe >> USDC/USDe >> USDC"
+        }
+      ],
+      "0x8169cc845e1df4f0381096b1668b1aa4a0c924b4": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
+              "0x02950460e2b9529d0e00284a5fa2d7bdf3fa4d72",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x5da1D3F5B16Baeb93a63cd5C9AB3346164A385D9",
+              "0x8169cC845E1dF4F0381096b1668b1Aa4a0C924b4",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDe >> USDC/USDe >> USDC >> USG-USDC* >> USG*"
+        }
+      ]
+    }
+  },
+  "errors": [
+    "USDC/fxUSD >> USDC/fxUSD >> USDC >> deUSD/USDC >> deUSD >> deUSD/DOLA >> DOLA >> wDOLA* >> wDOLA* >> USG-wDOLA* >> USG*",
+    "USG* >> USG-wDOLA* >> wDOLA* >> wDOLA* >> DOLA >> deUSD/DOLA >> deUSD >> deUSD/USDC >> USDC >> USDC/fxUSD >> USDC/fxUSD",
+    "USDC/fxUSD >> USDC/fxUSD >> USDC >> USR/USDC >> USR >> wUSR* >> wUSR* >> USG-wUSR* >> USG*",
+    "USG* >> USG-wUSR* >> wUSR* >> wUSR* >> USR >> USR/USDC >> USDC >> USDC/fxUSD >> USDC/fxUSD",
+    "USDC/fxUSD >> USDC/fxUSD >> USDC >> USDC/USDe >> USDe >> wUSDe* >> wUSDe* >> USG-wUSDe* >> USG*",
+    "USG* >> USG-wUSDe* >> wUSDe* >> wUSDe* >> USDe >> USDC/USDe >> USDC >> USDC/fxUSD >> USDC/fxUSD",
+    "USDC/fxUSD >> USDC/fxUSD >> fxUSD >> GHO/fxUSD >> GHO >> GHO/USR >> USR >> wUSR* >> wUSR* >> USG-wUSR* >> USG*",
+    "USG* >> USG-wUSR* >> wUSR* >> wUSR* >> USR >> GHO/USR >> GHO >> GHO/fxUSD >> fxUSD >> USDC/fxUSD >> USDC/fxUSD",
+    "USDC/fxUSD >> USDC/fxUSD >> fxUSD >> GHO/fxUSD >> GHO >> GHO/USDe >> USDe >> wUSDe* >> wUSDe* >> USG-wUSDe* >> USG*",
+    "USG* >> USG-wUSDe* >> wUSDe* >> wUSDe* >> USDe >> GHO/USDe >> GHO >> GHO/fxUSD >> fxUSD >> USDC/fxUSD >> USDC/fxUSD",
+    "USDC/crvUSD >> USDC/crvUSD >> crvUSD >> crvUSD/DOLA >> DOLA >> wDOLA* >> wDOLA* >> USG-wDOLA* >> USG*",
+    "USG* >> USG-wDOLA* >> wDOLA* >> wDOLA* >> DOLA >> crvUSD/DOLA >> crvUSD >> USDC/crvUSD >> USDC/crvUSD",
+    "USDC/crvUSD >> USDC/crvUSD >> USDC >> USR/USDC >> USR >> wUSR* >> wUSR* >> USG-wUSR* >> USG*",
+    "USG* >> USG-wUSR* >> wUSR* >> wUSR* >> USR >> USR/USDC >> USDC >> USDC/crvUSD >> USDC/crvUSD",
+    "USDC/crvUSD >> USDC/crvUSD >> USDC >> USDC/USDe >> USDe >> wUSDe* >> wUSDe* >> USG-wUSDe* >> USG*",
+    "USG* >> USG-wUSDe* >> wUSDe* >> wUSDe* >> USDe >> USDC/USDe >> USDC >> USDC/crvUSD >> USDC/crvUSD",
+    "USDT/crvUSD >> USDT/crvUSD >> crvUSD >> crvUSD/DOLA >> DOLA >> wDOLA* >> wDOLA* >> USG-wDOLA* >> USG*",
+    "USG* >> USG-wDOLA* >> wDOLA* >> wDOLA* >> DOLA >> crvUSD/DOLA >> crvUSD >> USDT/crvUSD >> USDT/crvUSD",
+    "USDT/crvUSD >> USDT/crvUSD >> USDT >> USDC/USDT >> USDC >> USR/USDC >> USR >> wUSR* >> wUSR* >> USG-wUSR* >> USG*",
+    "USG* >> USG-wUSR* >> wUSR* >> wUSR* >> USR >> USR/USDC >> USDC >> USDC/USDT >> USDT >> USDT/crvUSD >> USDT/crvUSD",
+    "sDAI/sUSDe >> sDAI/sUSDe >> sUSDe >> DOLA/sUSDe >> DOLA >> wDOLA* >> wDOLA* >> USG-wDOLA* >> USG*",
+    "USG* >> USG-wDOLA* >> wDOLA* >> wDOLA* >> DOLA >> DOLA/sUSDe >> sUSDe >> sDAI/sUSDe >> sDAI/sUSDe",
+    "sDAI/sUSDe >> sDAI/sUSDe >> sUSDe >> DOLA/sUSDe >> DOLA >> DOLA/USR >> USR >> wUSR* >> wUSR* >> USG-wUSR* >> USG*",
+    "USG* >> USG-wUSR* >> wUSR* >> wUSR* >> USR >> DOLA/USR >> DOLA >> DOLA/sUSDe >> sUSDe >> sDAI/sUSDe >> sDAI/sUSDe",
+    "USDC/USDT >> USDC/USDT >> USDT >> deUSD/USDT >> deUSD >> deUSD/DOLA >> DOLA >> wDOLA* >> wDOLA* >> USG-wDOLA* >> USG*",
+    "USG* >> USG-wDOLA* >> wDOLA* >> wDOLA* >> DOLA >> deUSD/DOLA >> deUSD >> deUSD/USDT >> USDT >> USDC/USDT >> USDC/USDT",
+    "USDC/USDT >> USDC/USDT >> USDC >> USR/USDC >> USR >> wUSR* >> wUSR* >> USG-wUSR* >> USG*",
+    "USG* >> USG-wUSR* >> wUSR* >> wUSR* >> USR >> USR/USDC >> USDC >> USDC/USDT >> USDC/USDT",
+    "USDC/USDT >> USDC/USDT >> USDC >> USDC/USDe >> USDe >> wUSDe* >> wUSDe* >> USG-wUSDe* >> USG*",
+    "USG* >> USG-wUSDe* >> wUSDe* >> wUSDe* >> USDe >> USDC/USDe >> USDC >> USDC/USDT >> USDC/USDT",
+    "USR/RLP >> USR/RLP >> USR >> DOLA/USR >> DOLA >> wDOLA* >> wDOLA* >> USG-wDOLA* >> USG*",
+    "USG* >> USG-wDOLA* >> wDOLA* >> wDOLA* >> DOLA >> DOLA/USR >> USR >> USR/RLP >> USR/RLP",
+    "USR/RLP >> USR/RLP >> USR >> wUSR* >> wUSR* >> USG-wUSR* >> USG*",
+    "USG* >> USG-wUSR* >> wUSR* >> wUSR* >> USR >> USR/RLP >> USR/RLP",
+    "USR/RLP >> USR/RLP >> USR >> USR/USDC >> USDC >> USDC/USDe >> USDe >> wUSDe* >> wUSDe* >> USG-wUSDe* >> USG*",
+    "USG* >> USG-wUSDe* >> wUSDe* >> wUSDe* >> USDe >> USDC/USDe >> USDC >> USR/USDC >> USR >> USR/RLP >> USR/RLP",
+    "frxUSD/USDe >> frxUSD/USDe >> frxUSD >> sUSDS/frxUSD >> sUSDS >> DOLA/sUSDS >> DOLA >> wDOLA* >> wDOLA* >> USG-wDOLA* >> USG*",
+    "USG* >> USG-wDOLA* >> wDOLA* >> wDOLA* >> DOLA >> DOLA/sUSDS >> sUSDS >> sUSDS/frxUSD >> frxUSD >> frxUSD/USDe >> frxUSD/USDe",
+    "frxUSD/USDe >> frxUSD/USDe >> USDe >> USDC/USDe >> USDC >> USR/USDC >> USR >> wUSR* >> wUSR* >> USG-wUSR* >> USG*",
+    "USG* >> USG-wUSR* >> wUSR* >> wUSR* >> USR >> USR/USDC >> USDC >> USDC/USDe >> USDe >> frxUSD/USDe >> frxUSD/USDe",
+    "frxUSD/USDe >> frxUSD/USDe >> USDe >> wUSDe* >> wUSDe* >> USG-wUSDe* >> USG*",
+    "USG* >> USG-wUSDe* >> wUSDe* >> wUSDe* >> USDe >> frxUSD/USDe >> frxUSD/USDe",
+    "DOLA/USR >> DOLA/USR >> DOLA >> wDOLA* >> wDOLA* >> USG-wDOLA* >> USG*",
+    "USG* >> USG-wDOLA* >> wDOLA* >> wDOLA* >> DOLA >> DOLA/USR >> DOLA/USR",
+    "DOLA/USR >> DOLA/USR >> USR >> wUSR* >> wUSR* >> USG-wUSR* >> USG*",
+    "USG* >> USG-wUSR* >> wUSR* >> wUSR* >> USR >> DOLA/USR >> DOLA/USR",
+    "scrvUSD/sUSDe >> scrvUSD/sUSDe >> sUSDe >> DOLA/sUSDe >> DOLA >> wDOLA* >> wDOLA* >> USG-wDOLA* >> USG*",
+    "USG* >> USG-wDOLA* >> wDOLA* >> wDOLA* >> DOLA >> DOLA/sUSDe >> sUSDe >> scrvUSD/sUSDe >> scrvUSD/sUSDe",
+    "scrvUSD/sUSDe >> scrvUSD/sUSDe >> sUSDe >> DOLA/sUSDe >> DOLA >> DOLA/USR >> USR >> wUSR* >> wUSR* >> USG-wUSR* >> USG*",
+    "USG* >> USG-wUSR* >> wUSR* >> wUSR* >> USR >> DOLA/USR >> DOLA >> DOLA/sUSDe >> sUSDe >> scrvUSD/sUSDe >> scrvUSD/sUSDe",
+    "WBTC/cbBTC >> WBTC/cbBTC >> WBTC >> WBTC/ETH/USDC >> USDC >> USR/USDC >> USR >> wUSR* >> wUSR* >> USG-wUSR* >> USG*",
+    "USG* >> USG-wUSR* >> wUSR* >> wUSR* >> USR >> USR/USDC >> USDC >> WBTC/ETH/USDC >> WBTC >> WBTC/cbBTC >> WBTC/cbBTC",
+    "WBTC/cbBTC >> WBTC/cbBTC >> WBTC >> WBTC/ETH/USDC >> USDC >> USDC/USDe >> USDe >> wUSDe* >> wUSDe* >> USG-wUSDe* >> USG*",
+    "USG* >> USG-wUSDe* >> wUSDe* >> wUSDe* >> USDe >> USDC/USDe >> USDC >> WBTC/ETH/USDC >> WBTC >> WBTC/cbBTC >> WBTC/cbBTC"
+  ]
+}

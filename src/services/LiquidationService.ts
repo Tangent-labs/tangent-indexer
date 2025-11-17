@@ -4,7 +4,7 @@ import MarketExternalActionsAbi from "../abis/MarketExternalActions.json" with {
 import MarketAccountLiquidationBotInfoAbi from "../abis/MarketAccountLiquidationBotInfo.json" with { type: "json" }
 import ICurveRouterAbi from "../abis/ICurveRouter.json" with { type: "json" }
 import QuoteLiquidationRouterAbi from "../abis/QuoteLiquidationRouter.json" with { type: "json" }
-import successRoutes from "../hydratedRoute.json" with { type: "json" }
+import successRoutesJson from "../../finalRoutes.json" with { type: "json" }
 
 import { Addressable, AddressLike, Contract, Interface, JsonRpcProvider, MaxUint256, Wallet, ZeroAddress } from "ethers"
 import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository.js"
@@ -15,13 +15,17 @@ import {
   LiquidationAnalyseInfo,
   LiquidationMarketAccountOutInfo,
   LiquidationMarketOutInfo,
+  LiquidationRoute,
   LiquidationUserFullInfo,
   LiquidationUserInInfo,
+  SuccessRoutes,
 } from "../type/data.js"
 import { chainView } from "../utils/chainView.js"
 import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
 import { BlockRepository } from "../db/BlockRepository.js"
 import { LiquidationBotLogService } from "./LiquidationBotLogService.js"
+
+const successRoutes = successRoutesJson as unknown as SuccessRoutes
 
 const DENOMINATOR = 100_000n
 
@@ -422,15 +426,33 @@ export class LiquidationService {
   }
 
   async _getBestRoute(providers: JsonRpcProvider[], account: LiquidationUserFullInfo) {
-    const matchingRoutes = successRoutes.success.filter((route) => route.in.toLowerCase() === (account.collatToken as string).toLowerCase())
-    if (!matchingRoutes.length) {
+    // Flatten the nested structure: success[inputTokenAddress][outputTokenAddress] = LiquidationRoute[]
+    // The input token address is the key, so we need to find routes where the key matches the collateral token
+    const collatTokenLower = (account.collatToken as string).toLowerCase()
+    const inputTokenRoutes = successRoutes.success[collatTokenLower]
+
+    if (!inputTokenRoutes) {
       console.error("No route found for collateral:", account.collatToken)
       return { route: null, amount: 0n }
     }
-    // find duplicates in the routes by display
-    const uniqueRoutes = matchingRoutes.filter((route, index, self) => self.findIndex((t: any) => t.display === route.display) === index)
+
+    // Flatten all routes for this input token across all output tokens
+    const allRoutes: (LiquidationRoute & { in: string })[] = []
+    for (const routes of Object.values(inputTokenRoutes)) {
+      for (const route of routes) {
+        allRoutes.push({ ...route, in: collatTokenLower })
+      }
+    }
+
+    if (!allRoutes.length) {
+      console.error("No route found for collateral:", account.collatToken)
+      return { route: null, amount: 0n }
+    }
+
+    // Find duplicates in the routes by display property safely
+    const uniqueRoutes = allRoutes.filter((route, index, self) => self.findIndex((t) => t && route && t.display === route.display) === index)
     const routeParams = uniqueRoutes.map(
-      (route: any) =>
+      (route) =>
         ({
           display: route.display,
           _route: route.params.routeAddresses,

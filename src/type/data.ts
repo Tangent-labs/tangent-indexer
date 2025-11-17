@@ -60,6 +60,36 @@ export type QuoteLiquidationRouterIn = {
   quotes: CurveQuote[]
 }
 
+/**
+ * Route parameters for liquidation swaps
+ */
+export type LiquidationRouteParams = {
+  routeAddresses: string[]
+  swapParamsFull: number[][]
+}
+
+/**
+ * A single liquidation route with display name and swap parameters
+ * Note: The input token address is the key in the parent object, not a property of the route
+ */
+export type LiquidationRoute = {
+  display: string // Human-readable route description
+  params: LiquidationRouteParams
+}
+
+/**
+ * Structure of the successRoutes JSON file
+ * Nested object structure: success[inputTokenAddress][outputTokenAddress] = LiquidationRoute[]
+ * The input token address (in) is the key, not a property of the route
+ */
+export type SuccessRoutes = {
+  success: {
+    [inputTokenAddress: string]: {
+      [outputTokenAddress: string]: LiquidationRoute[]
+    }
+  }
+}
+
 // Snapshot Proposal Types
 export type RewardedChoice = {
   choice: string
