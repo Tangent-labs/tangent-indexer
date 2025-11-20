@@ -11,6 +11,8 @@ describe("UserPointsService.updateBoosts", () => {
   let getOffChainBoostUsersSpy: ReturnType<typeof vi.spyOn>
   let deleteUserBoostsSpy: ReturnType<typeof vi.spyOn>
   let insertUserBoostsSpy: ReturnType<typeof vi.spyOn>
+  let truncateOnchainBoostUserSpy: ReturnType<typeof vi.spyOn>
+  let insertOnchainBoostUserSpy: ReturnType<typeof vi.spyOn>
 
   const onChainSnapshot = {
     timestamp: 100n,
@@ -41,6 +43,8 @@ describe("UserPointsService.updateBoosts", () => {
     getOffChainBoostUsers: vi.fn(),
     deleteUserBoosts: vi.fn(),
     insertUserBoosts: vi.fn(),
+    truncateOnchainBoostUser: vi.fn(),
+    insertOnchainBoostUser: vi.fn(),
   } as any as BoostRepository
 
   beforeEach(() => {
@@ -53,6 +57,8 @@ describe("UserPointsService.updateBoosts", () => {
     getOffChainBoostUsersSpy = vi.spyOn(boostRepository as any, "getOffChainBoostUsers")
     deleteUserBoostsSpy = vi.spyOn(boostRepository as any, "deleteUserBoosts")
     insertUserBoostsSpy = vi.spyOn(boostRepository as any, "insertUserBoosts")
+    truncateOnchainBoostUserSpy = vi.spyOn(boostRepository as any, "truncateOnchainBoostUser")
+    insertOnchainBoostUserSpy = vi.spyOn(boostRepository as any, "insertOnchainBoostUser")
   })
 
   it("Should compute and insert properly new boosts", async () => {
@@ -66,6 +72,8 @@ describe("UserPointsService.updateBoosts", () => {
     vi.spyOn(boostService, "getOnchainBalancesSnapshot").mockResolvedValue(onChainSnapshot)
 
     getActiveBoostsSpy.mockResolvedValue([])
+    truncateOnchainBoostUserSpy.mockResolvedValue({})
+    insertOnchainBoostUserSpy.mockResolvedValue([])
 
     // Retrieve last existing boosts
     getOffChainBoostUsersSpy.mockResolvedValue([
