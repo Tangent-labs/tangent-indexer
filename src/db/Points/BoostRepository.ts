@@ -38,6 +38,18 @@ export class BoostRepository extends AbstractRepository {
     })
   }
 
+  async insertOnchainBoostUser(userBoosts: Prisma.onchain_boost_userCreateInput[]) {
+    await this.prismaClient.onchain_boost_user.createMany({
+      data: userBoosts,
+      skipDuplicates: true,
+    })
+  }
+
+  async truncateOnchainBoostUser() {
+    const truncateQuery = Prisma.sql`TRUNCATE TABLE points.onchain_boost_user`
+    await this.prismaClient.$executeRaw(truncateQuery)
+  }
+
   async getOffChainBoostUsers() {
     return await this.prismaClient.offchain_boost_user.findMany({ select: { type: true, user_address: true } })
   }

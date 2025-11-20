@@ -30,8 +30,9 @@ export class BoostService {
     const users = (await this.boostRepository.getBoostSubscribers()).map((res) => res.user_address)
     // Query the bc to get the balances we want to check
     const { timestamp, snapshot } = await this.getOnchainBalancesSnapshot(users)
+
     // Filter and format raw data from bc with
-    const { onchainBoosts, currentDate } = this.computeOnchainBoosts(timestamp, snapshot)
+    const { onchainBoosts, currentDate, activesOnchainBoosts } = this.computeOnchainBoosts(timestamp, snapshot)
 
     const offChainBoosts = this.computeOffChainBoost(await this.boostRepository.getOffChainBoostUsers())
 
@@ -53,6 +54,9 @@ export class BoostService {
     if (toInsert.length !== 0) {
       await this.boostRepository.insertUserBoosts(toInsert)
     }
+
+    await this.boostRepository.truncateOnchainBoostUser()
+    await this.boostRepository.insertOnchainBoostUser(activesOnchainBoosts)
   }
 
   // ONCHAIN
@@ -82,6 +86,7 @@ export class BoostService {
    * @returns A NumMap with the user as key and the sum of all offchain boosts per user
    */
   computeOnchainBoosts(timestamp: bigint, snapshot: TokenBalancesForBoostOut[]) {
+    const activesOnchainBoosts: Prisma.onchain_boost_userCreateInput[] = []
     const currentDate = new Date(Number(timestamp) * 1000)
     // Iterate through onchain data and compute the actual boost per user
     // regarding the threshold conditions for each token
@@ -92,6 +97,7 @@ export class BoostService {
           const boost = ONCHAIN_BOOST_INFOS[currentValue.token]
           // Verify if the minimum threshold is reached to give the boost
           if (BigInt(currentValue.balance) >= boost.min) {
+            activesOnchainBoosts.push({ user_address: current.user, type: boost.key })
             return acc + boost.boost
           }
           return acc
@@ -99,7 +105,7 @@ export class BoostService {
       }
     }, {})
 
-    return { onchainBoosts, currentDate }
+    return { onchainBoosts, currentDate, activesOnchainBoosts }
   }
 
   // OFFCHAIN
