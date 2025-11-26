@@ -11,6 +11,7 @@ vi.mock("../../db/MarketContractsRepository")
 vi.mock("../../services/PriceApiService")
 vi.mock("../../utils/chainView")
 const addresses: AddressesJson = {
+  lps: {},
   utilities: {
     controlTower: "0xA",
     irCalculator: "0xB",

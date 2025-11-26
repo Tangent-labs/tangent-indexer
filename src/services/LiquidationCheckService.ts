@@ -1,9 +1,12 @@
 import { AddressLike, JsonRpcProvider } from "ethers"
+import { Queue, type Queue as BullQueue } from "bullmq"
 import { LiquidationService } from "./LiquidationService.js"
 import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
 import { LiquidationBotLogService } from "./LiquidationBotLogService.js"
-import { LiquidationBotLogAction, LiquidationUserFullInfo, LiquidationUserInInfo } from "../type/data.js"
+import { LiquidationBotLogAction, LiquidationUserInInfo, SerializedLiquidationUserFullInfo } from "../type/data.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"
+import { prepareSerialize } from "../utils/jsonSerializer.js"
+import { indexerConfig } from "../config/indexer_config.js"
 
 export class CheckLiquidationService {
   private liquidationService: LiquidationService
@@ -11,6 +14,7 @@ export class CheckLiquidationService {
   private liquidationBotService: LiquidationBotLogService
   private telegramNotifierService: TelegramNotifierService
   private providers: JsonRpcProvider[]
+  private liquidatorQueue: BullQueue<SerializedLiquidationUserFullInfo>
 
   constructor(
     liquidationService: LiquidationService,
@@ -24,6 +28,25 @@ export class CheckLiquidationService {
     this.liquidationBotService = liquidationBotService
     this.telegramNotifierService = telegramNotifierService
     this.providers = providers
+
+    // Validate liquidation queue Redis configuration before creating the queue
+    if (!indexerConfig?.liquidationQueueRedis?.trim()) {
+      throw new Error("LIQUIDATION_QUEUE_REDIS is not configured. Please set the LIQUIDATION_QUEUE_REDIS environment variable.")
+    }
+
+    this.liquidatorQueue = new Queue<SerializedLiquidationUserFullInfo>("liquidatorQueue", {
+      connection: indexerConfig.liquidationQueueRedis as any, // BullMQ accepts connection string
+      defaultJobOptions: {
+        attempts: indexerConfig.liquidationQueue.attempts,
+        backoff: {
+          type: indexerConfig.liquidationQueue.backoff.type,
+          delay: indexerConfig.liquidationQueue.backoff.delay,
+        },
+        removeOnComplete: true, // Remove completed jobs
+        removeOnFail: false, // Keep failed jobs for inspection
+      },
+    })
+    console.log("DEBUG: liquidatorQueue", this.liquidatorQueue)
   }
 
   async run() {
@@ -32,7 +55,6 @@ export class CheckLiquidationService {
 
     try {
       // check the context
-
       await this.liquidationService.checkContext()
 
       currentAction = "liquidation_params"
@@ -67,21 +89,27 @@ export class CheckLiquidationService {
       currentAction = "liquidation_prioritization"
       const prioritizedLiquidationList = this.liquidationService.prioritizeActions(seizingList || [], liquidationList || [])
 
-      // Distribute actions across wallets in round-robin fashion
-      const walletQueues: Array<Array<LiquidationUserFullInfo & { type: "seizing" | "liquidation" }>> = []
-      const walletCount = this.context.walletsPks.length
+      currentAction = "liquidation_execution"
 
-      // Initialize queues for each wallet
-      for (let i = 0; i < walletCount; i++) {
-        walletQueues.push([])
-      }
-
-      // Distribute actions to wallets in round-robin
       if (prioritizedLiquidationList && prioritizedLiquidationList.length > 0) {
-        prioritizedLiquidationList.forEach((action, actionIndex) => {
-          const walletIndex = actionIndex % walletCount
-          walletQueues[walletIndex].push(action)
-        })
+        for (const action of prioritizedLiquidationList) {
+          const jobId = `${action.market}-${action.account}-${action.type}`
+          // Serialize BigInt values to strings for queue storage
+          const serializedAction = prepareSerialize(action) as SerializedLiquidationUserFullInfo
+          const priority = action.type === "liquidation" ? 2 : 3 // less priority means processed first , so liquidation are processed first
+          // 1 will be used for pegKeepers
+          // Add job with retry strategy
+          await this.liquidatorQueue.add(jobId, serializedAction, {
+            priority,
+            attempts: indexerConfig.liquidationQueue.attempts,
+            backoff: {
+              type: indexerConfig.liquidationQueue.backoff.type,
+              delay: indexerConfig.liquidationQueue.backoff.delay,
+            },
+            removeOnComplete: true, // Remove completed jobs
+            removeOnFail: false, // Keep failed jobs for inspection
+          })
+        }
       }
 
       if (notDebtorAnymoreList && notDebtorAnymoreList.length > 0) {
@@ -92,27 +120,7 @@ export class CheckLiquidationService {
         }
       }
 
-      currentAction = "liquidation_execution"
-
-      // Process each wallet's queue sequentially (to avoid nonce issues)
-      // But process wallets in parallel
-      // Note: map with async callbacks creates promises that start executing immediately
-      // This is the desired behavior - all wallets process in parallel
-      const walletPromises = walletQueues.map(async (queue, walletIndex) => {
-        // Process actions in this wallet's queue sequentially
-        for (const action of queue) {
-          if (action.type === "seizing") {
-            await this.liquidationService.executeSeizing(walletIndex, action as unknown as LiquidationUserFullInfo)
-          } else {
-            await this.liquidationService.executeLiquidation(walletIndex, action as unknown as LiquidationUserFullInfo)
-          }
-        }
-      })
-
-      // Wait for all wallet queues to complete (they're already running in parallel)
-      if (walletPromises.length > 0) {
-        await Promise.all(walletPromises)
-      }
+      console.log("Liquidation errors:", this.liquidationService.errors)
       console.log("Liquidation errors:", this.liquidationService.errors)
 
       // The end
@@ -122,6 +130,17 @@ export class CheckLiquidationService {
       await this.telegramNotifierService.sendError(`Liquidation Error on ${currentAction}: ${(e as Error).message}`)
 
       throw e
+    } finally {
+      // Close the queue connection to allow the process to exit
+      await this.liquidatorQueue.close()
     }
+  }
+
+  /**
+   * Closes the queue connection
+   * Should be called when done with the service
+   */
+  async close(): Promise<void> {
+    await this.liquidatorQueue.close()
   }
 }

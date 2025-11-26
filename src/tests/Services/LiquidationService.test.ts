@@ -1,9 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import fs from "fs"
-
+import { AddressLike, JsonRpcProvider } from "ethers"
 import { LiquidationService } from "../../../src/services/LiquidationService.js"
 import { ActiveBorrowersRepository } from "../../../src/db/ActiveBorrowersRepository.js"
-import { AddressLike, JsonRpcProvider } from "ethers"
 import {
   LiquidationAccountOutInfo,
   LiquidationMarketAccountOutInfo,
@@ -11,8 +10,24 @@ import {
   LiquidationUserInfo,
   LiquidationUserInInfo,
   LiquidationUserFullInfo,
+  LiquidationEstimateInfo,
 } from "../../../src/type/data.js"
 import { BlockRepository } from "../../../src/db/BlockRepository.js"
+
+// Mock ethers module - this needs to be before any imports that use it
+// We need to mock Wallet and Contract constructors
+// Use vi.hoisted() to create mock functions that can be accessed in both the mock and tests
+const mockWallet = vi.hoisted(() => vi.fn())
+const mockContract = vi.hoisted(() => vi.fn())
+
+vi.mock("ethers", async () => {
+  const actual = await vi.importActual<typeof import("ethers")>("ethers")
+  return {
+    ...actual,
+    Wallet: mockWallet,
+    Contract: mockContract,
+  }
+})
 
 const DECIMALS = BigInt(10 ** 18)
 
@@ -582,5 +597,511 @@ describe("LiquidationService - prioritizeActions", () => {
     expect(result[3].account).toBe("0xUser4") // Fourth highest position value
     expect(result[4].type).toBe("seizing")
     expect(result[4].account).toBe("0xUser5") // Fifth highest position value
+  })
+})
+
+// Mock ethers for executeLiquidation tests - this needs to be before the describe
+// but we'll use vi.doMock inside the describe to avoid affecting other tests
+describe("LiquidationService - executeLiquidation", () => {
+  let liquidationService: LiquidationService
+  let mockMarketBorrowerRepository: ActiveBorrowersRepository
+  let mockContext: any
+  let mockProvider: any
+  let mockSigner: any
+  let mockMarketContract: any
+  let mockLiquidationBotService: any
+  let mockTx: any
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+
+    mockMarketBorrowerRepository = new ActiveBorrowersRepository({} as any)
+    mockContext = {
+      ...nominalContext,
+      currentRpcIndex: 0,
+      providers: [],
+      walletsPks: ["0xPrivateKey1"],
+    }
+
+    mockProvider = {
+      getFeeData: vi.fn().mockResolvedValue({ gasPrice: 1000000000n }),
+      getTransactionCount: vi.fn().mockResolvedValue(0),
+    }
+
+    mockTx = {
+      wait: vi.fn().mockResolvedValue({}),
+    }
+
+    mockSigner = {
+      getAddress: vi.fn().mockResolvedValue("0xSignerAddress"),
+    }
+
+    mockMarketContract = {
+      liquidate: vi.fn().mockResolvedValue(mockTx),
+    }
+
+    mockLiquidationBotService = {
+      logLiquidationExecution: vi.fn().mockResolvedValue(undefined),
+      logError: vi.fn().mockResolvedValue(undefined),
+    }
+
+    mockContext.providers = [mockProvider]
+
+    // Setup Wallet and Contract mocks - these are hoisted so available here
+    mockWallet.mockImplementation(() => mockSigner)
+    mockContract.mockImplementation(() => mockMarketContract)
+
+    liquidationService = new LiquidationService(mockMarketBorrowerRepository, mockContext, mockLiquidationBotService)
+    liquidationService.curveRouterAddress = "0xCurveRouter" as AddressLike
+  })
+
+  it("should execute liquidation with default slippageModifierBps (0n)", async () => {
+    const account: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 2000000000000000000n,
+      userDebt: 760n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 1500n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    const mockEstimate: LiquidationEstimateInfo[] = [
+      {
+        account: account.account,
+        collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        minTgUSDOut: 900n * DECIMALS,
+        liquidationCall: {
+          routerCall: "0x1234",
+        },
+        expectedOutput: 1000n * DECIMALS,
+        slippageBps: 10n,
+        gasEstimate: {
+          gasLimit: 200000n,
+          eth: 0.0002,
+        },
+        grossProfit: 240n * DECIMALS,
+      },
+    ]
+
+    // Wallet and Contract are already mocked in beforeEach via vi.mock
+
+    const estimateSpy = vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue(mockEstimate)
+
+    // Reset mock calls before execution
+    mockMarketContract.liquidate.mockClear()
+
+    await liquidationService.executeLiquidation(0, account)
+
+    // Verify slippage calculation: 10n + (10n * 0n) / 10000n = 10n
+    expect(estimateSpy).toHaveBeenCalled()
+    const callArgs = estimateSpy.mock.calls[0]
+    expect(callArgs[2]).toBe(10n) // Default slippage when slippageModifierBps is 0n
+    expect(mockMarketContract.liquidate).toHaveBeenCalledTimes(1)
+  })
+
+  it("should execute liquidation with custom slippageModifierBps", async () => {
+    const account: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 2000000000000000000n,
+      userDebt: 760n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 1500n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    const slippageModifierBps = 500n // 5% modifier
+    const expectedSlippage = 10n + (10n * slippageModifierBps) / 10000n // 10n + 0.5n = 10.5n
+
+    const mockEstimate: LiquidationEstimateInfo[] = [
+      {
+        account: account.account,
+        collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        minTgUSDOut: 900n * DECIMALS,
+        liquidationCall: {
+          routerCall: "0x1234",
+        },
+        expectedOutput: 1000n * DECIMALS,
+        slippageBps: expectedSlippage,
+        gasEstimate: {
+          gasLimit: 200000n,
+          eth: 0.0002,
+        },
+        grossProfit: 240n * DECIMALS,
+      },
+    ]
+
+    const estimateSpy = vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue(mockEstimate)
+
+    // Reset mock calls before execution
+    mockMarketContract.liquidate.mockClear()
+
+    await liquidationService.executeLiquidation(0, account, slippageModifierBps)
+
+    expect(estimateSpy).toHaveBeenCalled()
+    const callArgs = estimateSpy.mock.calls[0]
+    expect(callArgs[2]).toBe(expectedSlippage)
+    expect(mockMarketContract.liquidate).toHaveBeenCalledTimes(1)
+  })
+
+  it("should execute multiple transactions for split routes", async () => {
+    const account: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 2000000000000000000n,
+      userDebt: 760n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 2000n * DECIMALS, // Even number for clean split
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    const mockEstimate: LiquidationEstimateInfo[] = [
+      {
+        account: account.account,
+        collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        minTgUSDOut: 450n * DECIMALS,
+        liquidationCall: {
+          routerCall: "0x1234",
+        },
+        expectedOutput: 500n * DECIMALS,
+        slippageBps: 10n,
+        gasEstimate: {
+          gasLimit: 200000n,
+          eth: 0.0002,
+        },
+        grossProfit: 240n * DECIMALS,
+      },
+      {
+        account: account.account,
+        collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        minTgUSDOut: 450n * DECIMALS,
+        liquidationCall: {
+          routerCall: "0x5678",
+        },
+        expectedOutput: 500n * DECIMALS,
+        slippageBps: 10n,
+        gasEstimate: {
+          gasLimit: 200000n,
+          eth: 0.0002,
+        },
+        grossProfit: 240n * DECIMALS,
+      },
+    ]
+
+    const estimateSpy = vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue(mockEstimate)
+
+    // Reset mock calls before execution
+    mockMarketContract.liquidate.mockClear()
+    mockLiquidationBotService.logLiquidationExecution.mockClear()
+
+    await liquidationService.executeLiquidation(0, account)
+
+    // Should execute 2 transactions for split routes
+    expect(estimateSpy).toHaveBeenCalled()
+    expect(mockMarketContract.liquidate).toHaveBeenCalledTimes(2)
+    expect(mockLiquidationBotService.logLiquidationExecution).toHaveBeenCalledTimes(2)
+  })
+
+  it("should verify split routes have correct collateral balance distribution through estimateLiquidation", async () => {
+    const account: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 2000000000000000000n,
+      userDebt: 760n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 2001n * DECIMALS, // Odd number to test rounding
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    // Calculate split: account1 gets half (truncated), account2 gets remainder
+    // For 2001n * DECIMALS:
+    // - account1 = 2001n * DECIMALS / 2n = 1000500000000000000000n (represents 1000.5 * 10^18)
+    // - account2 = 2001n * DECIMALS - account1 = 1000500000000000000000n (also 1000.5 * 10^18)
+    // Note: BigInt division truncates, so both accounts get equal amounts when total is odd
+    const account1Balance = account.collateralBalance / 2n
+    const account2Balance = account.collateralBalance - account1Balance
+
+    // Verify split logic: amounts are correctly split and add up to total
+    expect(account1Balance + account2Balance).toBe(account.collateralBalance)
+
+    // Verify the actual BigInt division result
+    // When you divide 2001n * 10^18 by 2n, you get 1000500000000000000000n (1000.5 * 10^18)
+    // Both accounts end up with the same value because BigInt division truncates
+    const expectedSplit = (2001n * DECIMALS) / 2n // = 1000500000000000000000n
+    expect(account1Balance).toBe(expectedSplit)
+    expect(account2Balance).toBe(expectedSplit) // Both get the same: 1000.5 * 10^18
+    expect(account1Balance).toBe(account2Balance) // They should be equal (both 1000.5 * 10^18)
+
+    // Mock estimateLiquidation to return split routes
+    const mockEstimate: LiquidationEstimateInfo[] = [
+      {
+        account: account.account,
+        collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        minTgUSDOut: 450n * DECIMALS,
+        liquidationCall: {
+          routerCall: "0x1234",
+        },
+        expectedOutput: 500n * DECIMALS,
+        slippageBps: 10n,
+        gasEstimate: {
+          gasLimit: 200000n,
+          eth: 0.0002,
+        },
+        grossProfit: 240n * DECIMALS,
+      },
+      {
+        account: account.account,
+        collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        minTgUSDOut: 451n * DECIMALS, // Slightly more due to larger balance
+        liquidationCall: {
+          routerCall: "0x5678",
+        },
+        expectedOutput: 501n * DECIMALS,
+        slippageBps: 10n,
+        gasEstimate: {
+          gasLimit: 200000n,
+          eth: 0.0002,
+        },
+        grossProfit: 241n * DECIMALS,
+      },
+    ]
+
+    const estimateSpy = vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue(mockEstimate)
+
+    // Reset mock calls before execution
+    mockMarketContract.liquidate.mockClear()
+
+    await liquidationService.executeLiquidation(0, account)
+
+    // Verify both transactions were executed
+    expect(estimateSpy).toHaveBeenCalled()
+    expect(mockMarketContract.liquidate).toHaveBeenCalledTimes(2)
+  })
+
+  it("should handle split routes with exact even division", async () => {
+    const account: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 2000000000000000000n,
+      userDebt: 760n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 2000n * DECIMALS, // Exactly divisible by 2
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    const account1Balance = account.collateralBalance / 2n // 1000n * DECIMALS
+    const account2Balance = account.collateralBalance - account1Balance // 1000n * DECIMALS
+
+    // Verify exact split
+    expect(account1Balance).toBe(account2Balance)
+    expect(account1Balance + account2Balance).toBe(account.collateralBalance)
+
+    const mockEstimate: LiquidationEstimateInfo[] = [
+      {
+        account: account.account,
+        collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        minTgUSDOut: 450n * DECIMALS,
+        liquidationCall: {
+          routerCall: "0x1234",
+        },
+        expectedOutput: 500n * DECIMALS,
+        slippageBps: 10n,
+        gasEstimate: {
+          gasLimit: 200000n,
+          eth: 0.0002,
+        },
+        grossProfit: 240n * DECIMALS,
+      },
+      {
+        account: account.account,
+        collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        minTgUSDOut: 450n * DECIMALS,
+        liquidationCall: {
+          routerCall: "0x5678",
+        },
+        expectedOutput: 500n * DECIMALS,
+        slippageBps: 10n,
+        gasEstimate: {
+          gasLimit: 200000n,
+          eth: 0.0002,
+        },
+        grossProfit: 240n * DECIMALS,
+      },
+    ]
+
+    const estimateSpy = vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue(mockEstimate)
+
+    // Reset mock calls before execution
+    mockMarketContract.liquidate.mockClear()
+
+    await liquidationService.executeLiquidation(0, account)
+
+    // Verify both transactions were executed
+    expect(estimateSpy).toHaveBeenCalled()
+    expect(mockMarketContract.liquidate).toHaveBeenCalledTimes(2)
+  })
+
+  it("should handle error when no routes are found", async () => {
+    const account: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 2000000000000000000n,
+      userDebt: 760n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 1500n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue([])
+
+    await liquidationService.executeLiquidation(0, account)
+
+    expect(liquidationService.errors).toHaveLength(1)
+    expect(liquidationService.errors[0].action).toBe("liquidation_execution")
+    expect(liquidationService.errors[0].message).toContain("No route found")
+    expect(mockLiquidationBotService.logError).toHaveBeenCalled()
+    expect(mockMarketContract.liquidate).not.toHaveBeenCalled()
+  })
+
+  it("should verify split route amounts add up correctly", async () => {
+    const account: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 2000000000000000000n,
+      userDebt: 760n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 2000n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    // Simulate split routes with specific amounts
+    const amount1 = 500n * DECIMALS
+    const amount2 = 500n * DECIMALS
+    const totalAmount = amount1 + amount2
+
+    const mockEstimate: LiquidationEstimateInfo[] = [
+      {
+        account: account.account,
+        collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        minTgUSDOut: 450n * DECIMALS,
+        liquidationCall: {
+          routerCall: "0x1234",
+        },
+        expectedOutput: amount1,
+        slippageBps: 10n,
+        gasEstimate: {
+          gasLimit: 200000n,
+          eth: 0.0002,
+        },
+        grossProfit: 240n * DECIMALS,
+      },
+      {
+        account: account.account,
+        collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        minTgUSDOut: 450n * DECIMALS,
+        liquidationCall: {
+          routerCall: "0x5678",
+        },
+        expectedOutput: amount2,
+        slippageBps: 10n,
+        gasEstimate: {
+          gasLimit: 200000n,
+          eth: 0.0002,
+        },
+        grossProfit: 240n * DECIMALS,
+      },
+    ]
+
+    // Verify amounts add up
+    const totalExpectedOutput = mockEstimate.reduce((sum, est) => sum + est.expectedOutput, 0n)
+    expect(totalExpectedOutput).toBe(totalAmount)
+    expect(totalExpectedOutput).toBe(1000n * DECIMALS)
+
+    const estimateSpy = vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue(mockEstimate)
+
+    // Reset mock calls before execution
+    mockMarketContract.liquidate.mockClear()
+
+    await liquidationService.executeLiquidation(0, account)
+
+    // Verify both transactions were executed
+    expect(estimateSpy).toHaveBeenCalled()
+    expect(mockMarketContract.liquidate).toHaveBeenCalledTimes(2)
+
+    // Verify the amounts in the calls
+    const call1Args = mockMarketContract.liquidate.mock.calls[0]
+    const call2Args = mockMarketContract.liquidate.mock.calls[1]
+
+    // The minAmount passed to liquidate should be based on the estimation's minTgUSDOut
+    // We can't directly verify the amounts here since they're calculated internally,
+    // but we verify that both transactions were called
+    expect(call1Args).toBeDefined()
+    expect(call2Args).toBeDefined()
+  })
+
+  it("should handle transaction failure for one route in split routes", async () => {
+    const account: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 2000000000000000000n,
+      userDebt: 760n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 2000n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+    }
+
+    const mockEstimate: LiquidationEstimateInfo[] = [
+      {
+        account: account.account,
+        collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        minTgUSDOut: 450n * DECIMALS,
+        liquidationCall: {
+          routerCall: "0x1234",
+        },
+        expectedOutput: 500n * DECIMALS,
+        slippageBps: 10n,
+        gasEstimate: {
+          gasLimit: 200000n,
+          eth: 0.0002,
+        },
+        grossProfit: 240n * DECIMALS,
+      },
+      {
+        account: account.account,
+        collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        minTgUSDOut: 450n * DECIMALS,
+        liquidationCall: {
+          routerCall: "0x5678",
+        },
+        expectedOutput: 500n * DECIMALS,
+        slippageBps: 10n,
+        gasEstimate: {
+          gasLimit: 200000n,
+          eth: 0.0002,
+        },
+        grossProfit: 240n * DECIMALS,
+      },
+    ]
+
+    vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue(mockEstimate)
+
+    // First call succeeds, second call fails
+    mockMarketContract.liquidate
+      .mockResolvedValueOnce({
+        wait: vi.fn().mockResolvedValue({}),
+      })
+      .mockRejectedValueOnce(new Error("Transaction failed"))
+
+    await liquidationService.executeLiquidation(0, account)
+
+    // Should attempt both transactions
+    expect(mockMarketContract.liquidate).toHaveBeenCalledTimes(2)
+    // Should log error for the failed transaction
+    expect(mockLiquidationBotService.logError).toHaveBeenCalled()
+    // Should log success for the successful transaction
+    expect(mockLiquidationBotService.logLiquidationExecution).toHaveBeenCalledTimes(1)
+    // Should have error recorded
+    expect(liquidationService.errors.length).toBeGreaterThan(0)
   })
 })

@@ -17,6 +17,8 @@ jobs:
       INDEXING_BLOCK_RANGE: 10
       STARTING_BLOCK: 21822210
       CHAIN_ID: 31337
+      CHAIN_RPCS: http://127.0.0.1:8545
+      WALLET_PKS: 0x0000
 
     steps:
       - uses: actions/checkout@v3

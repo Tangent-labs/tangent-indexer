@@ -31,10 +31,38 @@ export type LiquidationMarketAccountOutInfo = {
 export type LiquidationUserInfo = LiquidationAccountOutInfo & LiquidationUserInInfo
 export type LiquidationUserFullInfo = LiquidationUserInfo & { collatToken: AddressLike }
 
+/**
+ * Serialized version of LiquidationUserFullInfo for queue storage (BigInt as strings)
+ */
+export type SerializedLiquidationUserFullInfo = Omit<LiquidationUserFullInfo, "healthRatio" | "userDebt" | "positionValue" | "collateralBalance"> & {
+  healthRatio: string
+  userDebt: string
+  positionValue: string
+  collateralBalance: string
+} & { type: "seizing" | "liquidation" }
+
 export type LiquidationAnalyseInfo = {
   seizingList?: LiquidationUserFullInfo[]
   liquidationList?: LiquidationUserFullInfo[]
   notDebtorAnymoreList?: LiquidationUserInInfo[]
+}
+
+export type LiquidationEstimateInfo = {
+  // Swap info needed to call liquidate on the contract
+  account: AddressLike
+  collatToLiquidate: bigint
+  minTgUSDOut: bigint
+  liquidationCall: {
+    routerCall: string // bytes encoded as hex string
+  }
+  // Additional estimate information
+  expectedOutput: bigint
+  slippageBps: bigint
+  gasEstimate: {
+    gasLimit: bigint
+    eth: number
+  }
+  grossProfit: bigint
 }
 
 export type LiquidationBotLogAction =
@@ -178,6 +206,7 @@ export type PriceSource = Prisma.price_sourceGetPayload<{}>
 export type PriceSourceCreate = Prisma.price_sourceCreateManyInput
 
 export type AddressesJson = {
+  lps: { [lpName: string]: string }
   utilities: {
     controlTower: string
     rewardAccumulator: string
