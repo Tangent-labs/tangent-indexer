@@ -160,7 +160,9 @@ describe("CheckLiquidationService", () => {
     await checkLiquidationService.run()
 
     // The action is passed through prepareSerialize (which is mocked to return data as-is in tests)
+    // BullMQ add signature: add(name, data, options)
     expect(mocks.add).toHaveBeenCalledWith(
+      "0xMarket1-0xUser1-seizing", // jobId (first parameter)
       expect.objectContaining({
         account: "0xUser1",
         market: "0xMarket1",
@@ -172,7 +174,6 @@ describe("CheckLiquidationService", () => {
         type: "seizing",
       }),
       expect.objectContaining({
-        jobId: "0xMarket1-0xUser1-seizing",
         priority: 3, // seizing has priority 3
         attempts: expect.any(Number),
         backoff: expect.any(Object),
@@ -200,7 +201,9 @@ describe("CheckLiquidationService", () => {
     await checkLiquidationService.run()
 
     // The action is passed through prepareSerialize (which is mocked to return data as-is in tests)
+    // BullMQ add signature: add(name, data, options)
     expect(mocks.add).toHaveBeenCalledWith(
+      "0xMarket1-0xUser1-liquidation", // jobId (first parameter)
       expect.objectContaining({
         account: "0xUser1",
         market: "0xMarket1",
@@ -212,7 +215,6 @@ describe("CheckLiquidationService", () => {
         type: "liquidation",
       }),
       expect.objectContaining({
-        jobId: "0xMarket1-0xUser1-liquidation",
         priority: 2, // liquidation has priority 2 (processed before seizing)
         attempts: expect.any(Number),
         backoff: expect.any(Object),
@@ -245,7 +247,10 @@ describe("CheckLiquidationService", () => {
     expect(mocks.add).toHaveBeenCalledTimes(5)
     actions.forEach((action) => {
       const expectedPriority = action.type === "liquidation" ? 2 : 3
+      const jobId = `${action.market}-${action.account}-${action.type}`
+      // BullMQ add signature: add(name, data, options)
       expect(mocks.add).toHaveBeenCalledWith(
+        jobId, // jobId (first parameter)
         expect.objectContaining({
           account: action.account,
           market: action.market,
@@ -258,7 +263,6 @@ describe("CheckLiquidationService", () => {
           collatToken: action.collatToken,
         }),
         expect.objectContaining({
-          jobId: `${action.market}-${action.account}-${action.type}`,
           priority: expectedPriority,
           attempts: expect.any(Number),
           backoff: expect.any(Object),
