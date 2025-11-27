@@ -1,0 +1,797 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IRCalculator",
+  "sourceName": "src/USG/Utilities/IRCalculator.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_owner",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IControlTower",
+          "name": "_controlTower",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IAggregatorStablePriceV3",
+          "name": "_USGOracle",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IUSG",
+          "name": "_USG",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "A1TooBig",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "A2TooBig",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "CallerNotMarketCreator",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "IRStartPriceLtOne",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "KTooBig",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotAMarket",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableInvalidOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableUnauthorizedAccount",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "PInfBiggerThanPMax",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "PMaxBiggerThanOneDollar",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "PMinBiggerThanPInf",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "RMaxTooBig",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "RMinBiggerThanRMax",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ReentrancyGuardReentrantCall",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "irAmount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "CheckpointIR",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "DENOMINATOR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "USG",
+      "outputs": [
+        {
+          "internalType": "contract IUSG",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "USGOracle",
+      "outputs": [
+        {
+          "internalType": "contract IAggregatorStablePriceV3",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        }
+      ],
+      "name": "checkpointIR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "markets",
+          "type": "address[]"
+        }
+      ],
+      "name": "checkpointIRMulti",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        }
+      ],
+      "name": "computeIRForMarket",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "controlTower",
+      "outputs": [
+        {
+          "internalType": "contract IControlTower",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "debtIndexes",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        }
+      ],
+      "name": "getIRCheckpoint",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint216",
+              "name": "ir",
+              "type": "uint216"
+            },
+            {
+              "internalType": "uint40",
+              "name": "timestamp",
+              "type": "uint40"
+            }
+          ],
+          "internalType": "struct IRCheckpoint",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        }
+      ],
+      "name": "getIRParams",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bool",
+              "name": "isHEC",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint24",
+              "name": "rMin",
+              "type": "uint24"
+            },
+            {
+              "internalType": "uint32",
+              "name": "rMax",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "pMin",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "pInf",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "pMax",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "a1",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "a2",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "k",
+              "type": "uint32"
+            }
+          ],
+          "internalType": "struct IRParams",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        }
+      ],
+      "name": "indexDelta",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "internalType": "bool",
+              "name": "isHEC",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint24",
+              "name": "rMin",
+              "type": "uint24"
+            },
+            {
+              "internalType": "uint32",
+              "name": "rMax",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "pMin",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "pInf",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "pMax",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "a1",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "a2",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "k",
+              "type": "uint32"
+            }
+          ],
+          "internalType": "struct IRParams",
+          "name": "_irParam",
+          "type": "tuple"
+        }
+      ],
+      "name": "initializeMarket",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "irCheckpoints",
+      "outputs": [
+        {
+          "internalType": "uint216",
+          "name": "ir",
+          "type": "uint216"
+        },
+        {
+          "internalType": "uint40",
+          "name": "timestamp",
+          "type": "uint40"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "irParams",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "isHEC",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint24",
+          "name": "rMin",
+          "type": "uint24"
+        },
+        {
+          "internalType": "uint32",
+          "name": "rMax",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "pMin",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "pInf",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "pMax",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "a1",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "a2",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "k",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "mintIR",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "mintableInterests",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        }
+      ],
+      "name": "newDebtIndex",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IAggregatorStablePriceV3",
+          "name": "_USGOracle",
+          "type": "address"
+        }
+      ],
+      "name": "setUSGOracle",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "USGPrice",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "bool",
+              "name": "isHEC",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint24",
+              "name": "rMin",
+              "type": "uint24"
+            },
+            {
+              "internalType": "uint32",
+              "name": "rMax",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "pMin",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "pInf",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "pMax",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "a1",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "a2",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "k",
+              "type": "uint32"
+            }
+          ],
+          "internalType": "struct IRParams",
+          "name": "irParam",
+          "type": "tuple"
+        }
+      ],
+      "name": "simulateIR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "oldIndex",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint216",
+              "name": "ir",
+              "type": "uint216"
+            },
+            {
+              "internalType": "uint40",
+              "name": "timestamp",
+              "type": "uint40"
+            }
+          ],
+          "internalType": "struct IRCheckpoint",
+          "name": "_checkpoint",
+          "type": "tuple"
+        }
+      ],
+      "name": "simulateNewDebtIndex",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "market",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "internalType": "bool",
+              "name": "isHEC",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint24",
+              "name": "rMin",
+              "type": "uint24"
+            },
+            {
+              "internalType": "uint32",
+              "name": "rMax",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "pMin",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "pInf",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "pMax",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "a1",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "a2",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "k",
+              "type": "uint32"
+            }
+          ],
+          "internalType": "struct IRParams",
+          "name": "_irParam",
+          "type": "tuple"
+        }
+      ],
+      "name": "updateIRParams",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
