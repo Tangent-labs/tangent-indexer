@@ -33,6 +33,7 @@
     "db:truncate": "tsx src/scripts/utils/truncate_tables.ts",
     "db:refresh-schema": "tsx src/scripts/update_tangent_shared_schema.ts",
     "db:empty-queue": "tsx src/scripts/utils/empty_liquidation_queue.ts",
+    "db:read-queue": "tsx src/scripts/utils/read_queue.ts",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",

@@ -302,8 +302,6 @@ describe("LiquidationService - analyzeLiquidation", () => {
 
     expect(result.seizingList).toHaveLength(0)
     expect(result.liquidationList).toHaveLength(0)
-    expect(result.notDebtorAnymoreList).toHaveLength(1)
-    expect(result.notDebtorAnymoreList?.[0].account).toBe("0xUser1")
   })
 
   it("should return empty lists when no accounts qualify for liquidation", async () => {
@@ -332,7 +330,6 @@ describe("LiquidationService - analyzeLiquidation", () => {
 
     expect(result.seizingList).toHaveLength(0)
     expect(result.liquidationList).toHaveLength(0)
-    expect(result.notDebtorAnymoreList).toHaveLength(0)
   })
 
   it("should correctly classify and sort  a mix of hard liquidations, soft liquidations, and non-debtors", async () => {
@@ -411,12 +408,8 @@ describe("LiquidationService - analyzeLiquidation", () => {
     expect(result.liquidationList?.[0].account).toBe("0xUser5")
     expect(result.liquidationList?.[1].account).toBe("0xUser2")
 
-    expect(result.notDebtorAnymoreList).toHaveLength(1)
-    expect(result.notDebtorAnymoreList?.[0].account).toBe("0xUser3")
-
     expect(result.seizingList?.some((acc: LiquidationUserInfo) => acc.account === "0xUser2")).toBe(false)
     expect(result.liquidationList?.some((acc: LiquidationUserInfo) => acc.account === "0xUser1")).toBe(false)
-    expect(result.notDebtorAnymoreList?.some((acc: LiquidationUserInInfo) => acc.account === "0xUser4")).toBe(false)
   })
 })
 

@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client"
 import * as dotenv from "dotenv"
-import { Queue, Worker, type Job, type Queue as BullQueue } from "bullmq"
-import { Wallet, parseEther } from "ethers"
+import { Queue, Worker, type Job } from "bullmq"
+import { Wallet, formatEther, parseEther } from "ethers"
 
 import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository.js"
 import { LiquidationBotLogRepository } from "../db/LiquidationBotLogRepository.js"
@@ -23,9 +23,6 @@ const { liquidationService, context, telegramNotifierService } = setUpLiquidatio
 
 // Export for testing
 export { providers, context, telegramNotifierService }
-
-// Queue will be created in main() after validation
-let liquidatorQueue: BullQueue<SerializedLiquidationUserFullInfo>
 
 // Map to store wallet states (wallet address -> state)
 type WalletState = {
@@ -50,17 +47,9 @@ const MIN_GAS_WEI = parseEther(MIN_GAS.toString())
 /**
  * Check wallet balance and return true if balance is sufficient
  */
-async function checkWalletBalance(walletPk: string): Promise<{ sufficient: boolean; balance: bigint; address: string }> {
-  const provider = providers[context.currentRpcIndex]
-  const signer = new Wallet(walletPk, provider)
-  const address = await signer.getAddress()
-  const balance = await provider.getBalance(address)
-  const minBalanceWei = BigInt(MIN_GAS * 10 ** 18)
-  return {
-    sufficient: balance >= minBalanceWei,
-    balance,
-    address,
-  }
+async function checkWalletBalance(walletPk: string): Promise<{ sufficient: boolean; balance: number; address: string }> {
+  const { balance, address } = await getWalletBalance(walletPk)
+  return { sufficient: balance >= MIN_GAS_WEI, balance: Number(formatEther(balance)), address }
 }
 
 /**
@@ -74,17 +63,15 @@ async function filterWalletsWithSufficientBalance(walletPks: string[]): Promise<
   for (let i = 0; i < walletPks.length; i++) {
     const walletPk = walletPks[i]
     const { sufficient, balance, address } = await checkWalletBalance(walletPk)
-    const balanceEth = Number(balance) / 10 ** 18
 
     if (sufficient) {
       validWallets.push({ walletPk, index: i, address })
-      console.log(`✓ Wallet ${i} (${address}): ${balanceEth.toFixed(6)} ETH - SUFFICIENT`)
+      console.log(`✓ Wallet ${i} (${address}): ${balance.toFixed(6)} ETH - SUFFICIENT`)
     } else {
-      console.log(`✗ Wallet ${i} (${address}): ${balanceEth.toFixed(6)} ETH - INSUFFICIENT (skipping)`)
+      console.log(`✗ Wallet ${i} (${address}): ${balance.toFixed(6)} ETH - INSUFFICIENT (skipping)`)
     }
   }
 
-  console.log(`Found ${validWallets.length} wallet(s) with sufficient balance`)
   return validWallets
 }
 
@@ -153,8 +140,7 @@ async function main() {
     throw error
   }
 
-  // Create queue connection after validation with retry strategy
-  liquidatorQueue = new Queue<SerializedLiquidationUserFullInfo>("liquidatorQueue", {
+  const liquidatorQueue = new Queue<SerializedLiquidationUserFullInfo>("liquidatorQueue", {
     connection: indexerConfig.liquidationQueueRedis as any, // BullMQ accepts connection string
     defaultJobOptions: {
       attempts: indexerConfig.liquidationQueue.attempts,
@@ -370,8 +356,7 @@ export function setUpLiquidationProcessServices() {
   const liquidationBotLogRepository = new LiquidationBotLogRepository(prismaClient)
   const liquidationBotService = new LiquidationBotLogService(liquidationBotLogRepository, telegramNotifierService)
 
-  const activeBorrowersRepository = new ActiveBorrowersRepository(prismaClient)
-  const liquidationService = new LiquidationService(activeBorrowersRepository, context, liquidationBotService)
+  const liquidationService = new LiquidationService(new ActiveBorrowersRepository(prismaClient), context, liquidationBotService)
   liquidationService.minEthBalance = indexerConfig.minEthBalance
   liquidationService.curveRouterAddress = routers.CURVE_V1_2_ROUTER
 

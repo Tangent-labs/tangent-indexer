@@ -240,14 +240,12 @@ export class LiquidationService {
       }
     })
 
-    const notDebtorAnymoreList: LiquidationUserInInfo[] = [] // borrower with 0 debt
     let seizingList: LiquidationUserFullInfo[] = [] // borrower with positionvalue < debt
     let liquidationList: LiquidationUserFullInfo[] = [] // borrower with ltv > liquidationThreshold
 
     // We detect the potential actions we have to do
     hydratedAccounts.forEach((account) => {
       if (account.userDebt === 0n) {
-        notDebtorAnymoreList.push({ account: account.account, market: account.market })
         return
       }
 
@@ -265,7 +263,7 @@ export class LiquidationService {
     seizingList = seizingList.sort(sortFn)
     liquidationList = liquidationList.sort(sortFn)
 
-    return { seizingList, liquidationList, notDebtorAnymoreList }
+    return { seizingList, liquidationList }
   }
 
   /**
@@ -318,7 +316,7 @@ export class LiquidationService {
       return tx
     } catch (error) {
       this.errors.push({ action: "liquidation_bad_debt_execution", message: (error as Error)?.message.slice(0, 100), market: account.market as string })
-      await this.liquidationBotService?.logError("liquidation_bad_debt_execution", error as Error, loggedContext, { account })
+      await this.liquidationBotService?.logError("liquidation_bad_debt_execution", error as Error, loggedContext, { account }, true)
     }
   }
 
@@ -343,7 +341,7 @@ export class LiquidationService {
           market: account.market as string,
         })
         const error = new Error(`No route found for collat :  ${account.collatToken} `)
-        await this.liquidationBotService?.logError("liquidation_execution", error as Error, loggedContext, { account })
+        await this.liquidationBotService?.logError("liquidation_execution", error as Error, loggedContext, { account }, true)
       }
 
       for (const estimation of estimations) {
@@ -371,7 +369,7 @@ export class LiquidationService {
     } catch (error) {
       // console.error("Liquidation execution error:", error)
       this.errors.push({ action: "liquidation_execution", message: (error as Error)?.message.slice(0, 100), market: account.market as string })
-      await this.liquidationBotService?.logError("liquidation_execution", error as Error, loggedContext, { account })
+      await this.liquidationBotService?.logError("liquidation_execution", error as Error, loggedContext, { account }, true)
     }
   }
 
@@ -460,8 +458,6 @@ export class LiquidationService {
       }
     | undefined
   > {
-    // TODO routes that  havenot the same USG pool
-
     const addresses = await getAddressesJson()
     // on cherches les pools contentant de l'USG
     const lps = Object.entries(addresses.lps).filter(([key, value]) => key.startsWith("USG-"))
@@ -485,31 +481,25 @@ export class LiquidationService {
     }
 
     // handle trhe account to divide the collateral balance between the 2 LPs
-    const account1 = { ...account, collateralBalance: account.collateralBalance / 2n }
-    const account2 = { ...account, collateralBalance: account.collateralBalance - account1.collateralBalance }
+    const dataLp1 = { ...account, collateralBalance: account.collateralBalance / 2n }
+    const dataLp2 = { ...account, collateralBalance: account.collateralBalance - dataLp1.collateralBalance }
 
     // evaluate the best routes for each LP
-    const { route: route1, amount: amount1, priceImpact: priceImpact1 } = await this._evaluatesRoutes(providers, lp1Routes, account1)
-    const { route: route2, amount: amount2, priceImpact: priceImpact2 } = await this._evaluatesRoutes(providers, lp2Routes, account2)
-
+    const promises = [this._evaluatesRoutes(providers, lp1Routes, dataLp1), this._evaluatesRoutes(providers, lp2Routes, dataLp2)]
+    const [{ route: route1, amount: amount1, priceImpact: priceImpact1 }, { route: route2, amount: amount2, priceImpact: priceImpact2 }] =
+      await Promise.all(promises)
     // return the combaison of the best routes for each LP
     return {
-      route1: { route: route1, account: account1, amount: amount1 },
-      route2: { route: route2, account: account2, amount: amount2 },
+      route1: { route: route1, account: dataLp1, amount: amount1 },
+      route2: { route: route2, account: dataLp2, amount: amount2 },
       amountTotal: amount1 + amount2,
       priceImpactTotal: (priceImpact1 + priceImpact2) / 2,
     }
   }
 
-  /**
-   * Estimates the cost and profit of a liquidation before execution
-   * @param pkIndex The index of the wallet in the context (used for gas estimation)
-   * @param account The account to be liquidated
-   * @returns An object containing expectedOutput, gasEstimate (in ETH and USD), profit, and profitRatio
-   */
   private async estimateTransaction(
     route: LiquidationRoute,
-    amount: bigint,
+    quote: bigint,
     account: LiquidationUserFullInfo,
     signer: Wallet,
     provider: JsonRpcProvider,
@@ -520,7 +510,7 @@ export class LiquidationService {
     }
 
     const signerAddress = await signer.getAddress()
-    const minAmount = amount - (amount * slippageBps) / 10000n
+    const minAmount = quote - (quote * slippageBps) / 10000n
     const iface = new Interface(ICurveRouterAbi.abi)
     const data = iface.encodeFunctionData("exchange", [
       route.params.routeAddresses,
@@ -541,7 +531,7 @@ export class LiquidationService {
     const gasCostWei = gasLimit * gasPrice
     const gasCostEth = Number(formatEther(gasCostWei))
 
-    const grossProfit = amount - account.userDebt
+    const grossProfit = quote - account.userDebt
 
     return {
       // Swap info needed to call liquidate on the contract
@@ -552,7 +542,7 @@ export class LiquidationService {
         routerCall: data,
       },
       // Additional estimate information
-      expectedOutput: amount,
+      expectedOutput: quote,
       slippageBps,
       gasEstimate: {
         gasLimit,
@@ -562,12 +552,6 @@ export class LiquidationService {
     }
   }
 
-  /**
-   * Estimates the cost and profit of a liquidation before execution
-   * @param pkIndex The index of the wallet in the context (used for gas estimation)
-   * @param account The account to be liquidated
-   * @returns An object containing expectedOutput, gasEstimate (in ETH and USD), profit, and profitRatio
-   */
   public async estimateLiquidation(signer: Wallet, account: LiquidationUserFullInfo, slippageBps: bigint): Promise<LiquidationEstimateInfo[]> {
     if (!this.curveRouterAddress) {
       throw new Error("curveRouterAddress is not set in LiquidationService")

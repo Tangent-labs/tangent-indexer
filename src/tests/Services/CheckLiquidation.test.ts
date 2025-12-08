@@ -98,7 +98,6 @@ describe("CheckLiquidationService", () => {
     vi.spyOn(mockLiquidationService, "analyzeLiquidation").mockResolvedValue({
       seizingList: [],
       liquidationList: [],
-      notDebtorAnymoreList: [],
     })
     vi.spyOn(mockLiquidationService, "prioritizeActions").mockReturnValue([])
     vi.spyOn(mockLiquidationService, "executeSeizing").mockResolvedValue(undefined)
@@ -109,7 +108,6 @@ describe("CheckLiquidationService", () => {
     vi.spyOn(mockLiquidationBotLogService, "logLiquidationParams").mockResolvedValue(undefined)
     vi.spyOn(mockLiquidationBotLogService, "logOnchainData").mockResolvedValue(undefined)
     vi.spyOn(mockLiquidationBotLogService, "logLiquidationAnalysis").mockResolvedValue(undefined)
-    vi.spyOn(mockLiquidationBotLogService, "logCleanDebtors").mockResolvedValue(undefined)
     vi.spyOn(mockLiquidationBotLogService, "logError").mockResolvedValue(undefined)
     vi.spyOn(mockTelegramNotifierService, "sendMessage").mockResolvedValue(true)
 
@@ -139,7 +137,7 @@ describe("CheckLiquidationService", () => {
     vi.spyOn(mockLiquidationService, "checkContext").mockRejectedValue(error)
 
     await expect(checkLiquidationService.run()).rejects.toThrow("Test error")
-    expect(mockLiquidationBotLogService.logError).toHaveBeenCalledWith("check_context", error, mockContext)
+    expect(mockLiquidationBotLogService.logError).toHaveBeenCalledWith("check_context", error, mockContext, undefined, true)
     expect(mockTelegramNotifierService.sendMessage).toHaveBeenCalledWith("❌ Liquidation Error on check_context: Test error")
   })
 

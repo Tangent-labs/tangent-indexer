@@ -5,6 +5,15 @@ import { prepareSerialize } from "../utils/jsonSerializer.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 import { AddressLike } from "ethers"
 
+/**
+ * Escape special characters for MarkdownV2 format
+ * Characters that need escaping: _ * [ ] ( ) ~ ` > # + - = | { } . !
+ */
+function escapeMarkdownV2(text: string): string {
+  // Escape all special MarkdownV2 characters
+  return text.replace(/([_*[\]()~`>#+\-=|{}.!\\])/g, "\\$1")
+}
+
 export class LiquidationBotLogService {
   liquidationBotLogRepository: LiquidationBotLogRepository
   private readonly telegramNotifierService: TelegramNotifierService
@@ -40,8 +49,10 @@ export class LiquidationBotLogService {
     additionalData?: any,
     sendTelegramNotification?: boolean
   ) {
+    // Send Telegram notification by default (unless explicitly disabled)
     if (sendTelegramNotification) {
-      await this.telegramNotifierService.sendError(`Liquidataion Error in  action ${action} : ${error.message.slice(0, 100)}`)
+      const fullMessage = `Liquidation Error in action ${action}: ${error.message.slice(0, 100)}`
+      await this.telegramNotifierService.sendError(escapeMarkdownV2(fullMessage))
     }
     // Ensure account data is always accessible at the top level
     const errorData = {
@@ -67,11 +78,6 @@ export class LiquidationBotLogService {
 
   async logLiquidationAnalysis(data: LiquidationAnalyseInfo | null, context: LiquidationExecutionContext) {
     const action: LiquidationBotLogAction = "liquidation_analysis"
-    await this._logAction(action, context, data)
-  }
-
-  async logCleanDebtors(data: LiquidationUserInInfo[] | null, context: LiquidationExecutionContext) {
-    const action: LiquidationBotLogAction = "clean_debtors"
     await this._logAction(action, context, data)
   }
 

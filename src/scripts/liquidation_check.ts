@@ -57,8 +57,7 @@ export function setUpCheckLiquidationServices() {
   const liquidationBotLogRepository = new LiquidationBotLogRepository(prismaClient)
   const liquidationBotService = new LiquidationBotLogService(liquidationBotLogRepository, telegramNotifierService)
 
-  const activeBorrowersRepository = new ActiveBorrowersRepository(prismaClient)
-  const liquidationService = new LiquidationService(activeBorrowersRepository, context, liquidationBotService)
+  const liquidationService = new LiquidationService(new ActiveBorrowersRepository(prismaClient), context, liquidationBotService)
   liquidationService.minEthBalance = indexerConfig.minEthBalance
   liquidationService.curveRouterAddress = routers.CURVE_V1_2_ROUTER
 

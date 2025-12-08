@@ -72,6 +72,6 @@ export class TelegramNotifierService {
    * @returns Promise<boolean> - Returns true if message was sent successfully
    */
   async sendError(message: string): Promise<boolean> {
-    return this.sendMessage(`❌ ${message}`)
+    return this.sendMessage(`${message}`)
   }
 }

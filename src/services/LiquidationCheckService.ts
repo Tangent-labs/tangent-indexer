@@ -46,7 +46,6 @@ export class CheckLiquidationService {
         removeOnFail: false, // Keep failed jobs for inspection
       },
     })
-    console.log("DEBUG: liquidatorQueue", this.liquidatorQueue)
   }
 
   async run() {
@@ -83,8 +82,8 @@ export class CheckLiquidationService {
       }
 
       currentAction = "liquidation_analysis"
-      const { seizingList, liquidationList, notDebtorAnymoreList } = await this.liquidationService.analyzeLiquidation(onChainData, borrowers)
-      await this.liquidationBotService.logLiquidationAnalysis({ seizingList, liquidationList, notDebtorAnymoreList }, this.context)
+      const { seizingList, liquidationList } = await this.liquidationService.analyzeLiquidation(onChainData, borrowers)
+      await this.liquidationBotService.logLiquidationAnalysis({ seizingList, liquidationList }, this.context)
 
       currentAction = "liquidation_prioritization"
       const prioritizedLiquidationList = this.liquidationService.prioritizeActions(seizingList || [], liquidationList || [])
@@ -112,21 +111,13 @@ export class CheckLiquidationService {
         }
       }
 
-      if (notDebtorAnymoreList && notDebtorAnymoreList.length > 0) {
-        try {
-          await this.liquidationBotService.logCleanDebtors(notDebtorAnymoreList || null, this.context)
-        } catch (e) {
-          await this.liquidationBotService.logError("error", e as Error, this.context, { notDebtorAnymoreList }, false)
-        }
-      }
-
       console.log("Liquidation errors:", this.liquidationService.errors)
       console.log("Liquidation errors:", this.liquidationService.errors)
 
       // The end
       this.liquidationBotService.logEndExecution(this.context)
     } catch (e) {
-      await this.liquidationBotService.logError(currentAction, e as Error, this.context)
+      await this.liquidationBotService.logError(currentAction, e as Error, this.context, undefined, true)
       await this.telegramNotifierService.sendError(`Liquidation Error on ${currentAction}: ${(e as Error).message}`)
 
       throw e

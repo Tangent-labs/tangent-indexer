@@ -44,7 +44,6 @@ export type SerializedLiquidationUserFullInfo = Omit<LiquidationUserFullInfo, "h
 export type LiquidationAnalyseInfo = {
   seizingList?: LiquidationUserFullInfo[]
   liquidationList?: LiquidationUserFullInfo[]
-  notDebtorAnymoreList?: LiquidationUserInInfo[]
 }
 
 export type LiquidationEstimateInfo = {

@@ -74,7 +74,7 @@ export const indexerConfig = {
     },
   },
   liquidationLimits: {
-    maxPriceImpact: Number(process.env.MAX_PRICE_IMPACT) || 100,
+    maxPriceImpact: Number(process.env.MAX_PRICE_IMPACT) || 1,
   },
 } as IndexerConfig
 
