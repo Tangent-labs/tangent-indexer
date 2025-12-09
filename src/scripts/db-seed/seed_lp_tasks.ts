@@ -276,6 +276,7 @@ export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addr
     data: lpTasks,
   })
 
+  // TODO This needs to be update when we know the list
   const addressesToExclude = [
     ZeroAddress.toLowerCase(),
     CONVEX_LOCKER.toLowerCase(),

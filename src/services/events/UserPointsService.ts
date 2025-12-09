@@ -4,7 +4,7 @@ import { Log, ZeroAddress } from "ethers"
 import { UserPointsLPRepository } from "../../db/Points/UserPointsLPRepository.js"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
 
-import { parseStakeConvexEvent, parseTransferEvent, parseWithdrawConvexEvent } from "../../eventFectcher/marketUserEvents.parsers.js"
+import { parseAddLiquidity, parseStakeConvexEvent, parseTransferEvent, parseWithdrawConvexEvent } from "../../eventFectcher/marketUserEvents.parsers.js"
 import { BlockService } from "../BlockService.js"
 import { TRANSFER_TOPICS } from "../../eventFectcher/erc20TransferEventFetcher.js"
 import { DebtSharesCheckpointStruct } from "./UserMarketService.js"
@@ -185,16 +185,20 @@ export class UserPointsService {
     await this.userPointsRepository.computeUserPoints(blockDates.get(startBlock)!, blockDates.get(endBlock)!)
   }
 
-  insertEvents = async (sortedParsedEvents: Prisma.transfer_eventsCreateManyInput[]) => {
-    await this.userPointsRepository.insertTransfers(sortedParsedEvents)
+  async getUsgLpKeys(): Promise<Prisma.usg_lp_keysCreateManyInput[]> {
+    return await this.userPointsRepository.getUsgLps()
   }
 
-  replaceDates = (transferEvents: Prisma.transfer_eventsCreateManyInput[], blockInfos: Map<number, number>) => {
-    transferEvents.forEach((event) => {
-      event.block_date = new Date(blockInfos.get(event.block_id)! * 1_000)
-    })
+  insertEvents = async (transferEvents: Prisma.transfer_eventsCreateManyInput[], addLiquidityEvents: Prisma.add_liquidity_eventsCreateManyInput[]) => {
+    await this.userPointsRepository.insertTransfers(transferEvents)
+    await this.userPointsRepository.insertAddLiquidity(addLiquidityEvents)
+  }
 
-    return transferEvents
+  replaceDates<T extends { block_date: string | Date; block_id: number }>(events: T[], blockInfos: Map<number, number>): T[] {
+    events.forEach((event) => {
+      ;(event as any).block_date = new Date(blockInfos.get(event.block_id)! * 1_000)
+    })
+    return events as Array<T>
   }
 
   getERC20ToTrack = async () => {
@@ -223,6 +227,25 @@ export class UserPointsService {
     })
 
     return { transferEvents, pointsEventsBlockIds: Array.from(uniqueBlockId) }
+  }
+
+  parseAddLiquidity(logs: Log[], usgLpKeys: Prisma.usg_lp_keysCreateManyInput[]) {
+    const uniqueBlockId: Set<number> = new Set()
+    const addLiquidityEvents: Prisma.add_liquidity_eventsCreateManyInput[] = []
+
+    logs.forEach((log, i) => {
+      if (log.topics[0] === TRANSFER_TOPICS.AddLiquidity) {
+        // The transfer event containing the minted amount of LP is always just before the AddLiquidity event
+        // We can so retrieve it this way
+        const mintEvent = parseTransferEvent(logs[i - 1])
+        // We find the ID of the USG lp to link
+        const lpId = BigInt(usgLpKeys.find((usgLp) => usgLp.token_address === log.address.toLowerCase())!.id!)
+        addLiquidityEvents.push(parseAddLiquidity(log, lpId, mintEvent.amount))
+        uniqueBlockId.add(log.blockNumber)
+      }
+    })
+
+    return { addLiquidityEvents, addLiquEventsBlockIds: Array.from(uniqueBlockId) }
   }
 
   async recomposeDebtTransferEvents(

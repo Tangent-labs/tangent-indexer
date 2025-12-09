@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv"
 import { TransactionPrisma } from "../type/prisma.js"
-import { PrismaClient } from "@prisma/client"
+import { Prisma, PrismaClient } from "@prisma/client"
 
 import { setUpIndexer } from "../config/indexer_setup.js"
 
@@ -78,7 +78,7 @@ async function main() {
           if (!transferToWatch?.length) {
             throw Error("ERC20 to track is not filled")
           }
-          const transferLogs = transferToWatch?.length ? await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch) : []
+          const transferLogs = await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch)
 
           const savingAccountsLogs = await getSavingAccountLogs(bestProvider, startBlock, endBlock, [addresses.tokens.sUSG, addresses.tokens.sTAN])
           const savingAccountsBlockIds = savingAccountsLogs.map((log) => log.block_id)
@@ -92,17 +92,26 @@ async function main() {
 
           const { transferEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs(transferLogs)
 
-          const uniqueBlockIds = [...new Set([...blockIds, ...pointsEventsBlockIds, "0x" + endBlock.toString(16), ...savingAccountsBlockIds])]
-          // Find block timestamps of the unique blockIDs
+          const usgLps = await userPointsService.getUsgLpKeys()
+          const { addLiquidityEvents, addLiquEventsBlockIds } = userPointsService.parseAddLiquidity(transferLogs, usgLps)
+
+          // Create a set with all block ID that we need to get the timestamp of
+          const uniqueBlockIds = [
+            ...new Set([...blockIds, ...pointsEventsBlockIds, ...savingAccountsBlockIds, ...addLiquEventsBlockIds, "0x" + endBlock.toString(16)]),
+          ]
+
+          // Find block timestamps of the unique blockIDs in ONE RPC call
           const blocks = await blockService.fetchBlockTimestamps(uniqueBlockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
 
           const hydratedWithCorrectDates = userMarketService.replaceRightDates(sortedAndParsedEvents, activeBorrowActions, blocks)
 
           const mergedTransferEvents = transferEvents.concat(debtTransferEvents)
-          const transferEventsRightDates = userPointsService.replaceDates(mergedTransferEvents, blocks)
+          const transferEventsRightDates = userPointsService.replaceDates<Prisma.transfer_eventsCreateManyInput>(mergedTransferEvents, blocks)
+
+          const addLiquidityEventsRightDates = userPointsService.replaceDates<Prisma.add_liquidity_eventsCreateManyInput>(addLiquidityEvents, blocks)
 
           // Insert user points actions
-          await userPointsService.insertEvents(transferEventsRightDates)
+          await userPointsService.insertEvents(transferEventsRightDates, addLiquidityEventsRightDates)
 
           // Insert user events
           await userMarketService.insertEvents(hydratedWithCorrectDates.sortedParsedEvents)
