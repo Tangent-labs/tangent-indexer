@@ -182,6 +182,10 @@ async function main() {
     await telegramNotifierService.sendError(`Liquidation Process Error: ${error.message}`)
     throw error
   }
+  const invalidWallets = walletsPks.length - validWallets.length
+  if (invalidWallets > 2) {
+    await telegramNotifierService.sendError(`Liquidation Process Error:${invalidWallets} wallets with insufficient balance (> ${MIN_GAS} ETH) found`)
+  }
 
   console.log(`\n=== Starting ${validWallets.length} worker(s) - one per wallet with sufficient balance ===`)
 
@@ -209,16 +213,14 @@ async function main() {
           throw new Error("Wallet not available") // Will retry with another worker
         }
 
-        // Double-check balance
         const { balance: currentBalance } = await getWalletBalance(walletPk)
-
         if (currentBalance < MIN_GAS_WEI) {
           state.available = false
           state.balance = currentBalance
 
           await worker.pause()
 
-          const balanceEth = Number(currentBalance) / 10 ** 18
+          const balanceEth = Number(formatEther(currentBalance))
           const errorMsg = `Wallet ${address} paused - needs gas (balance: ${balanceEth.toFixed(6)} ETH, required: ${MIN_GAS} ETH)`
           console.error(errorMsg)
           await telegramNotifierService.sendError(errorMsg)

@@ -35,25 +35,6 @@ const successRoutes = successRoutesJson as unknown as SuccessRoutes
 
 const DENOMINATOR = 100_000n
 
-/**
- * Calculates backoff delay based on attempt count
- * Uses exponential backoff: delay = baseDelay * (multiplier ^ (attemptCount - 1))
- * @param attemptCount The current attempt number (1-indexed)
- * @param baseDelayMs Base delay in milliseconds (default: 5000ms)
- * @param multiplier Exponential multiplier (default: 2)
- * @param maxDelayMs Maximum delay cap in milliseconds (default: 300000ms = 5 minutes)
- * @returns Delay in milliseconds
- */
-function calculateBackoffDelay(attemptCount: number, baseDelayMs: number = 5000, multiplier: number = 2, maxDelayMs: number = 300000): number {
-  if (attemptCount <= 1) {
-    return 0 // No delay for first attempt
-  }
-  // Exponential backoff: baseDelay * (multiplier ^ (attemptCount - 1))
-  const delay = baseDelayMs * Math.pow(multiplier, attemptCount - 1)
-  // Cap at maximum delay
-  return Math.min(delay, maxDelayMs)
-}
-
 type WithToObject<T> = T & {
   toObject: () => T
 }
@@ -564,9 +545,10 @@ export class LiquidationService {
     if (!route) {
       throw new Error(`No route found for collateral: ${account.collatToken}`)
     }
-
+    console.error("Price impact:", priceImpact, indexerConfig.liquidationLimits.maxPriceImpact)
     // price impact is too high, we try to split the liquidation into 2 parts
     if (priceImpact > indexerConfig.liquidationLimits.maxPriceImpact) {
+      console.error("Price impact is too high, trying to split the liquidation")
       const splittedRoutes = await this._getBestSplittedRoutes(this.context.providers, account)
       if (splittedRoutes) {
         const {
@@ -580,6 +562,7 @@ export class LiquidationService {
           amountTotal: bigint
           priceImpactTotal: number
         }
+        console.error("Splitted routes:", amount1, amount2, priceImpactTotal, amountTotal)
         // is splitted profitable
         if (priceImpactTotal < indexerConfig.liquidationLimits.maxPriceImpact && amountTotal > amount) {
           return [
@@ -635,16 +618,6 @@ export class LiquidationService {
   public async processJob(job: Job<SerializedLiquidationUserFullInfo>, telegramNotifierService: TelegramNotifierService, walletsPk: string): Promise<void> {
     // Deserialize the job data (convert string BigInt values back to BigInt)
     const action = this.deserializeLiquidationAction(job.data)
-
-    // Apply backoff delay based on attempt count
-    const attemptCount = job.attemptsMade || 0
-    if (attemptCount > 0) {
-      const backoffDelay = calculateBackoffDelay(attemptCount)
-      if (backoffDelay > 0) {
-        console.log(`Applying backoff delay of ${backoffDelay}ms for attempt ${attemptCount} on job ${job.id}`)
-        await new Promise((resolve) => setTimeout(resolve, backoffDelay))
-      }
-    }
 
     const signer = new Wallet(walletsPk, this.context.providers[this.context.currentRpcIndex])
 

@@ -112,10 +112,9 @@ export class CheckLiquidationService {
       }
 
       console.log("Liquidation errors:", this.liquidationService.errors)
-      console.log("Liquidation errors:", this.liquidationService.errors)
 
       // The end
-      this.liquidationBotService.logEndExecution(this.context)
+      await this.liquidationBotService.logEndExecution(this.context)
     } catch (e) {
       await this.liquidationBotService.logError(currentAction, e as Error, this.context, undefined, true)
       await this.telegramNotifierService.sendError(`Liquidation Error on ${currentAction}: ${(e as Error).message}`)

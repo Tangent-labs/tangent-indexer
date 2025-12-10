@@ -138,7 +138,7 @@ describe("CheckLiquidationService", () => {
 
     await expect(checkLiquidationService.run()).rejects.toThrow("Test error")
     expect(mockLiquidationBotLogService.logError).toHaveBeenCalledWith("check_context", error, mockContext, undefined, true)
-    expect(mockTelegramNotifierService.sendMessage).toHaveBeenCalledWith("❌ Liquidation Error on check_context: Test error")
+    expect(mockTelegramNotifierService.sendMessage).toHaveBeenCalledWith("Liquidation Error on check_context: Test error")
   })
 
   it("should add seizing actions to the queue", async () => {
