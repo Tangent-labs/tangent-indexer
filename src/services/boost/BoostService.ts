@@ -27,7 +27,7 @@ export class BoostService {
    */
   async updateBoosts() {
     // Fetch users that subscribed to boost computation
-    const users = (await this.boostRepository.getBoostSubscribers()).map((res) => res.user_address)
+    const users = (await this.boostRepository.getBoostSubscribers()).map((res) => res.address)
     // Query the bc to get the balances we want to check
     const { timestamp, snapshot } = await this.getOnchainBalancesSnapshot(users)
 
@@ -138,9 +138,6 @@ export class BoostService {
     const toInsert: Prisma.user_boostCreateManyInput[] = []
     const toDelete: bigint[] = []
 
-    console.log("toInsert : ", toInsert)
-    console.log("toDelete : ", toDelete)
-
     // Opens and update boosts already existing boost
     Object.entries(newBoosts).forEach(([user, boost]) => {
       //
@@ -154,7 +151,7 @@ export class BoostService {
           // Previous boost with the end_at filled because we close it
           toInsert.push({ ...lastActiveBoost, end_at: currentDate })
           // Creates the new boost
-          toInsert.push({ user_address: user, start_at: currentDate, multiplier: boost })
+          toInsert.push({ user_address: user.toLowerCase(), start_at: currentDate, multiplier: boost })
           // Delete the old boost before replacing it
           toDelete.push(lastActiveBoost.id as bigint)
         }
@@ -164,15 +161,13 @@ export class BoostService {
       // OR
       // An user had some boost, then no boost, then a boost again
       else {
-        console.log("ELSE = ", { user_address: user, start_at: currentDate, multiplier: boost })
-
-        toInsert.push({ user_address: user, start_at: currentDate, multiplier: boost })
+        toInsert.push({ user_address: user.toLowerCase(), start_at: currentDate, multiplier: boost })
       }
     })
 
     // Closes boost line that was open and that get closed
     lastActiveBoosts.forEach((lastActiveBoost) => {
-      const newBoost = newBoosts[lastActiveBoost.user_address] ? newBoosts[lastActiveBoost.user_address] : 0
+      const newBoost = newBoosts[lastActiveBoost.user_address.toLowerCase()] ? newBoosts[lastActiveBoost.user_address.toLowerCase()] : 0
 
       if (!newBoost) {
         toDelete.push(lastActiveBoost.id as bigint)
@@ -191,7 +186,7 @@ export class BoostService {
         delete onchainBoosts[user]
         return {
           ...acc,
-          [user]: offChainBoost + onChainBoost,
+          [user.toLowerCase()]: offChainBoost + onChainBoost,
         }
       }, onchainBoosts)
 
@@ -199,7 +194,7 @@ export class BoostService {
     ).reduce((acc, [user, boost]) => {
       return {
         ...acc,
-        [user]: Math.min(boost + 1, 4),
+        [user.toLowerCase()]: Math.min(boost + 1, 4),
       }
     }, {})
   }
