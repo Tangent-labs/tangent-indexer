@@ -1,7 +1,7 @@
 import { JsonRpcProvider } from "ethers"
 import { chainView } from "../../utils/chainView.js"
 
-import TokenBalancesForMultipleUsers from "../../abis/TokenBalancesForMultipleUsers.json" with { type: "json" }
+import BoostBalancesSnapshots from "../../abis/BoostBalancesSnapshots.json" with { type: "json" }
 
 import { Prisma } from "@prisma/client"
 import { NumMap, TokenBalancesForBoostOut } from "./types.js"
@@ -70,8 +70,8 @@ export class BoostService {
     // Take the onchain snapshot containing all balances for tracked token giving boost
     const results = await chainView<[string[], string[]], [bigint, TokenBalancesForBoostOut[]]>(
       this.provider,
-      TokenBalancesForMultipleUsers.abi,
-      TokenBalancesForMultipleUsers.bytecode,
+      BoostBalancesSnapshots.abi,
+      BoostBalancesSnapshots.bytecode,
       [SNAPSHOT_BOOST_TOKENS, users]
     )
 
@@ -138,15 +138,10 @@ export class BoostService {
     const toInsert: Prisma.user_boostCreateManyInput[] = []
     const toDelete: bigint[] = []
 
-    console.log("toInsert : ", toInsert)
-    console.log("toDelete : ", toDelete)
-
     // Opens and update boosts already existing boost
     Object.entries(newBoosts).forEach(([user, boost]) => {
       //
       const lastActiveBoost = lastActiveBoosts.find((lastActiveBoost) => lastActiveBoost.user_address === user)
-
-      console.log("lastActiveBoost : ", lastActiveBoost)
 
       if (lastActiveBoost) {
         // We update and close only the boost of user if it changed compare to last time otherwise, nothing has to be done
