@@ -77,42 +77,42 @@ describe("UserPointsService merging functions", () => {
       [
         {
           id: 1n,
-          user_address: "uA",
+          user_address: "ua",
           start_at: date1,
           multiplier: 1.75,
         },
         {
           id: 2n,
-          user_address: "uE",
+          user_address: "ue",
           start_at: date1,
           multiplier: 1.5,
         },
       ],
-      { uB: 2, uC: 3, uE: 1.25, uA: 1.75 },
+      { ub: 2, uc: 3, ue: 1.25, ua: 1.75 },
       date2
     )
 
     assert.deepEqual(toDelete, [2n])
     assert.deepEqual(toInsert, [
       {
-        user_address: "uB",
+        user_address: "ub",
         start_at: date2,
         multiplier: 2,
       },
       {
-        user_address: "uC",
+        user_address: "uc",
         start_at: date2,
         multiplier: 3,
       },
       {
         id: 2n,
-        user_address: "uE",
+        user_address: "ue",
         start_at: date1,
         end_at: date2,
         multiplier: 1.5,
       },
       {
-        user_address: "uE",
+        user_address: "ue",
         start_at: date2,
         multiplier: 1.25,
       },
@@ -122,6 +122,6 @@ describe("UserPointsService merging functions", () => {
   it("Verify the merging of onchain and offchain boost", async () => {
     const newBoosts = boostService.mergeOffChainAndOnChainBoosts({ uA: 4, uB: 2, uE: 1.5 }, { uA: 2.75, uB: 1.75, uC: 2, uD: 500 })
 
-    assert.deepEqual(newBoosts, { uA: 4, uB: 4, uC: 3, uD: 4, uE: 2.5 })
+    assert.deepEqual(newBoosts, { ua: 4, ub: 4, uc: 3, ud: 4, ue: 2.5 })
   })
 })
