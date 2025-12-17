@@ -14,16 +14,16 @@ export const SNAPSHOT_BOOST_TOKENS = [
 ]
 
 export const ONCHAIN_BOOST_INFOS: { [key: string]: { min: bigint; boost: number; key: string } } = {
-  "0xe127cE638293FA123Be79C25782a5652581Db234": { min: 1n, boost: 0.5, key: "LLAMA_NFT" }, // Llama NFT 
+  "0xe127cE638293FA123Be79C25782a5652581Db234": { min: 1n, boost: 0.5, key: "LLAMA_NFT" }, // Llama NFT
   "0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2": { min: parseEther("2500"), boost: 0.25, key: "veCRV" }, // veCRV
-  "0x72a19342e8F1838460eBFCCEf09F6585e32db86E": { min: parseEther("500"), boost: 0.25, key: "vlCVX" }, // vlCVX 
+  "0x72a19342e8F1838460eBFCCEf09F6585e32db86E": { min: parseEther("500"), boost: 0.25, key: "vlCVX" }, // vlCVX
   "0x0C30476f66034E11782938DF8e4384970B6c9e8a": { min: parseEther("2500"), boost: 0.25, key: "veSDT" }, // veSDT
   "0xEC6B8A3F3605B083F7044C0F31f2cac0caf1d469": { min: parseEther("25"), boost: 0.25, key: "veFXN" }, // veFXN
-  "0x4f30A9D41B80ecC5B94306AB4364951AE3170210": { min: parseEther("500"), boost: 0.25, key: "vePENDLE" }, // vePENDLE 
+  "0x4f30A9D41B80ecC5B94306AB4364951AE3170210": { min: parseEther("500"), boost: 0.25, key: "vePENDLE" }, // vePENDLE
   "0x90c1f9220d90d3966FbeE24045EDd73E1d588aD5": { min: parseEther("25"), boost: 0.25, key: "veYFI" }, // veYFI
-  "0x08d23468A467d2bb86FaE0e32F247A26C7E2e994": { min: parseEther("50"), boost: 0.25, key: "sINV" }, // sINV -
-  "0xfe4bce4b3949c35fb17691d8b03c3cadbe2e5e23": { min: parseEther("10000"), boost: 0.25, key: "stRESOLV" }, // stRESOLV - 
-  "0x22222222E9fE38F6f1FC8C61b25228adB4D8B953": { min: parseEther("2500"), boost: 0.25, key: "stRSUP" }, // stRSUP - 
+  "0x08d23468A467d2bb86FaE0e32F247A26C7E2e994": { min: parseEther("50"), boost: 0.25, key: "sINV" }, // sINV
+  "0xfe4bce4b3949c35fb17691d8b03c3cadbe2e5e23": { min: parseEther("10000"), boost: 0.25, key: "stRESOLV" }, // stRESOLV
+  "0x22222222E9fE38F6f1FC8C61b25228adB4D8B953": { min: parseEther("2500"), boost: 0.25, key: "stRSUP" }, // stRSUP
 }
 
 export const OFFCHAIN_BOOST_INFOS: NumMap = {
