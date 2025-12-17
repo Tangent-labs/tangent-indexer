@@ -3,8 +3,8 @@ import { AddressesJson } from "../../type/data.js"
 
 const prisma = new PrismaClient()
 
-const START_ISO = process.argv[3] ?? "2024-10-01"
-const DAYS = Number(process.argv[4] ?? "365")
+const START_ISO = process.argv[3] ?? "2024-06-01"
+const DAYS = Number(process.argv[4] ?? "720")
 
 const SEED = Number(process.argv[5] ?? "1337")
 const MAX_DAILY_CHANGE_TOKENS = BigInt(process.argv[6] ?? "20000")

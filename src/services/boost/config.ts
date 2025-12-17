@@ -9,7 +9,8 @@ export const SNAPSHOT_BOOST_TOKENS = [
   "0x4f30A9D41B80ecC5B94306AB4364951AE3170210",
   "0x90c1f9220d90d3966FbeE24045EDd73E1d588aD5",
   "0x08d23468A467d2bb86FaE0e32F247A26C7E2e994",
-  "0xfe4bce4b3949c35fb17691d8b03c3cadbe2e5e23",
+  "0x55769490c825CCb09b2A6Ae955203FaBF04857fd",
+  "0xFE4BCE4b3949c35fB17691D8b03c3caDBE2E5E23",
   "0x22222222E9fE38F6f1FC8C61b25228adB4D8B953",
 ]
 
@@ -22,7 +23,7 @@ export const ONCHAIN_BOOST_INFOS: { [key: string]: { min: bigint; boost: number;
   "0x4f30A9D41B80ecC5B94306AB4364951AE3170210": { min: parseEther("500"), boost: 0.25, key: "vePENDLE" }, // vePENDLE
   "0x90c1f9220d90d3966FbeE24045EDd73E1d588aD5": { min: parseEther("25"), boost: 0.25, key: "veYFI" }, // veYFI
   "0x08d23468A467d2bb86FaE0e32F247A26C7E2e994": { min: parseEther("50"), boost: 0.25, key: "sINV" }, // sINV
-  "0xfe4bce4b3949c35fb17691d8b03c3cadbe2e5e23": { min: parseEther("10000"), boost: 0.25, key: "stRESOLV" }, // stRESOLV
+  "0xFE4BCE4b3949c35fB17691D8b03c3caDBE2E5E23": { min: parseEther("10000"), boost: 0.25, key: "stRESOLV" }, // stRESOLV
   "0x22222222E9fE38F6f1FC8C61b25228adB4D8B953": { min: parseEther("2500"), boost: 0.25, key: "stRSUP" }, // stRSUP
 }
 
