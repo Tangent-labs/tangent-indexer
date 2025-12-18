@@ -70,19 +70,12 @@ export class BoostService {
   async getOnchainBalancesSnapshot(users: string[]) {
     // Take the onchain snapshot containing all balances for tracked token giving boost
 
-    console.log("this.provider : ", this.provider)
-
-    console.log("SNAPSHOT_BOOST_TOKENS : ", SNAPSHOT_BOOST_TOKENS)
-    console.log("users : ", users)
-
     const results = await chainView<[string[], string[]], [bigint, TokenBalancesForBoostOut[]]>(
       this.provider,
       BoostBalancesSnapshots.abi,
       BoostBalancesSnapshots.bytecode,
       [SNAPSHOT_BOOST_TOKENS, users]
     )
-
-    console.log("results : ", results)
 
     return { timestamp: results[0], snapshot: results[1] }
   }
