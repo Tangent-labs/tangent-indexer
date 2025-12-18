@@ -55,6 +55,6 @@ export class BoostRepository extends AbstractRepository {
   }
 
   async getBoostSubscribers() {
-    return await this.prismaClient.user.findMany({ select: { address: true } })
+    return await this.prismaClient.boost_subscribers.findMany({ select: { user_address: true } })
   }
 }
