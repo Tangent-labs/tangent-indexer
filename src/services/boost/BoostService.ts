@@ -93,11 +93,11 @@ export class BoostService {
     const onchainBoosts: { [user: string]: number } = snapshot.reduce((acc, current) => {
       return {
         ...acc,
-        [current.user]: current.tokenBalance.reduce((acc, currentValue) => {
+        [current.user.toLowerCase()]: current.tokenBalance.reduce((acc, currentValue) => {
           const boost = ONCHAIN_BOOST_INFOS[currentValue.token]
           // Verify if the minimum threshold is reached to give the boost
           if (BigInt(currentValue.balance) >= boost.min) {
-            activesOnchainBoosts.push({ user_address: current.user, type: boost.key })
+            activesOnchainBoosts.push({ user_address: current.user.toLowerCase(), type: boost.key })
             return acc + boost.boost
           }
           return acc
