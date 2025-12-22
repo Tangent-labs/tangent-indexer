@@ -72,7 +72,7 @@ export function parseBorrowEvent(log: Log, mapMarketIdPerAddress: Map<string, nu
 }
 
 export function parseAddLiquidity(log: Log, lpId: bigint, lpAmount: string): Prisma.add_liquidity_eventsCreateManyInput {
-  const [tokenAmounts, , ,] = AbiCoder.defaultAbiCoder().decode(["uint256[2],uint256[2],uint256,uint256"], log.data)
+  const [tokenAmounts, , ,] = AbiCoder.defaultAbiCoder().decode(["uint256[]", "uint256[]", "uint256", "uint256"], log.data)
 
   const provider = userAddress(log.topics[1])
 
