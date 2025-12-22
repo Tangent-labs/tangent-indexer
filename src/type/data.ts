@@ -154,6 +154,7 @@ export type AddressesJson = {
     marketCreator: string
     irCalculator: string
     pegKeeperRegulator: string
+    marketViewer: string
   }
   tokens: {
     USG: string

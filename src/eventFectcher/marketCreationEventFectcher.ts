@@ -1,7 +1,13 @@
 import { AddressLike, Contract, ethers, id, JsonRpcProvider, Log } from "ethers"
 import { Prisma } from "@prisma/client"
 
-import { MARKET_CONVEX_CRV_CREATED, MARKET_CONVEX_FXN_CREATED, MARKET_NO_SOCIABILIZATION_CREATED } from "../resources/eventSignatures.js"
+import {
+  MARKET_CONVEX_CRV_CREATED,
+  MARKET_CONVEX_FXN_CREATED,
+  MARKET_CURVE_GAUGE_CREATED,
+  MARKET_NO_SOCIABILIZATION_CREATED,
+  MARKET_STAKEDAO_VAULT_V2_CREATED,
+} from "../resources/eventSignatures.js"
 import { getEthLogs } from "./_baseFetcher.js"
 import { MarketType } from "../type/data.js"
 
@@ -26,7 +32,13 @@ export const fetchMarketCreationLogs = async (
     startingBlock,
     endingBlock,
     [marketCreator],
-    [id(MARKET_CONVEX_CRV_CREATED), id(MARKET_CONVEX_FXN_CREATED), id(MARKET_NO_SOCIABILIZATION_CREATED)]
+    [
+      id(MARKET_CONVEX_CRV_CREATED),
+      id(MARKET_CONVEX_FXN_CREATED),
+      id(MARKET_NO_SOCIABILIZATION_CREATED),
+      id(MARKET_STAKEDAO_VAULT_V2_CREATED),
+      id(MARKET_CURVE_GAUGE_CREATED),
+    ]
   )
 
   return await Promise.all(logs.map((log) => parseMarketEvent(log, provider)))
