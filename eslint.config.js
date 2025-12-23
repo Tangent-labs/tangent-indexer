@@ -48,6 +48,7 @@ export default [
     },
     rules: {
       ...standard.rules,
+      camelcase: "off",
       "no-multiple-empty-lines": ["error", { max: 1, maxBOF: 0, maxEOF: 0 }],
       "no-undef": "off", // Ensure no undefined variables
       "prettier/prettier": [

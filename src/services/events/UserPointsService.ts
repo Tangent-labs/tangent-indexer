@@ -238,21 +238,14 @@ export class UserPointsService {
     const addLiquidityEvents: Prisma.add_liquidity_eventsCreateManyInput[] = []
 
     logs.forEach((log, i) => {
-      console.log("yoooo")
       if (log.topics[0] === TRANSFER_TOPICS.AddLiquidity) {
         // The transfer event containing the minted amount of LP is always just before the AddLiquidity event
         // We can so retrieve it this way
         const mintEvent = parseTransferEvent(logs[i - 1])
-        console.log("mintEvent", mintEvent)
 
-        // We find the ID of the USG lp to link
+        // Find the ID of the USG lp to link
         const lpId = BigInt(usgLpKeys.find((usgLp) => usgLp.lp_address === log.address.toLowerCase())!.id!)
-
-        console.log("lpId", lpId)
-        console.log("event parsed", parseAddLiquidity(log, lpId, mintEvent.amount))
-
         addLiquidityEvents.push(parseAddLiquidity(log, lpId, mintEvent.amount))
-
         uniqueBlockId.add(log.blockNumber)
       }
     })

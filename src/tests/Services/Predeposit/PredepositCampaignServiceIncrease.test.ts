@@ -6,21 +6,6 @@ import { PredepositCampaignService } from "src/services/PredepositCampaignServic
 import { parseEther, JsonRpcProvider } from "ethers"
 
 describe("PredepositCampaignServiceIncrease - Increase amounts part", () => {
-  let getBlockRangeSpy: ReturnType<typeof vi.spyOn>
-  let getAccountedUsersSpy: ReturnType<typeof vi.spyOn>
-  let getAndSortAddLiquidityEventsSpy: ReturnType<typeof vi.spyOn>
-  let getComputeIncreaseAccountedBalancesSpy: ReturnType<typeof vi.spyOn>
-  let updateDbStateSpy: ReturnType<typeof vi.spyOn>
-
-  let getLastEventBlockSpy: ReturnType<typeof vi.spyOn>
-  let getLastPredepositCampaignBlockSpy: ReturnType<typeof vi.spyOn>
-  let getAccountedBalancesForUsersOnLPSpy
-
-  let getPrivateUsersSpy: ReturnType<typeof vi.spyOn>
-  let getAllUsersSpy: ReturnType<typeof vi.spyOn>
-  let getAddLiquidityEventsInBlockRangeSpy
-  let getAccountedTotalSpy: ReturnType<typeof vi.spyOn>
-
   const predepositCampaignRepository = {
     getLastPredepositCampaignBlock: vi.fn(),
     getPrivateUsers: vi.fn(),
@@ -44,11 +29,11 @@ describe("PredepositCampaignServiceIncrease - Increase amounts part", () => {
   const provider = {} as any as JsonRpcProvider
 
   const predepositService = new PredepositCampaignService(predepositCampaignRepository, blockRepository, provider)
-  getBlockRangeSpy = vi.spyOn(predepositService as any, "getBlockRange")
-  getAccountedUsersSpy = vi.spyOn(predepositService as any, "getAccountedUsers")
-  getAndSortAddLiquidityEventsSpy = vi.spyOn(predepositService as any, "getAndSortAddLiquidityEvents")
-  getComputeIncreaseAccountedBalancesSpy = vi.spyOn(predepositService as any, "getComputeIncreaseAccountedBalances")
-  updateDbStateSpy = vi.spyOn(predepositService as any, "updateDbState")
+  vi.spyOn(predepositService as any, "getBlockRange")
+  vi.spyOn(predepositService as any, "getAccountedUsers")
+  vi.spyOn(predepositService as any, "getAndSortAddLiquidityEvents")
+  vi.spyOn(predepositService as any, "getComputeIncreaseAccountedBalances")
+  vi.spyOn(predepositService as any, "updateDbState")
 
   vi.stubEnv("INDEXING_BLOCK_RANGE", "100")
   vi.stubEnv("STARTING_BLOCK", "100")
@@ -123,20 +108,16 @@ describe("PredepositCampaignServiceIncrease - Increase amounts part", () => {
   })
 
   it("Test when the getLastPredepositCampaignBlock is undefined", async () => {
-    getLastPredepositCampaignBlockSpy = vi.spyOn(predepositCampaignRepository, "getLastPredepositCampaignBlock").mockResolvedValue({ block_id: 100n })
-    getLastEventBlockSpy = vi.spyOn(blockRepository, "getLastEventBlock").mockResolvedValue({ block_id: 150n, created_at: aDate })
-    getPrivateUsersSpy = vi.spyOn(predepositCampaignRepository, "getPrivateUsers").mockResolvedValue(PRIVATE_USERS)
-    getAllUsersSpy = vi.spyOn(predepositCampaignRepository, "getAllUsers").mockResolvedValue(PUBLIC_USERS)
-
-    getAddLiquidityEventsInBlockRangeSpy = vi
-      .spyOn(predepositCampaignRepository, "getAddLiquidityEventsInBlockRange")
-      .mockResolvedValue([event1, event2, event3, event4, event5])
-    getAccountedBalancesForUsersOnLPSpy = vi
-      .spyOn(predepositCampaignRepository, "getAccountedBalancesForUsersOnLP")
+    vi.spyOn(predepositCampaignRepository, "getLastPredepositCampaignBlock").mockResolvedValue({ block_id: 100n })
+    vi.spyOn(blockRepository, "getLastEventBlock").mockResolvedValue({ block_id: 150n, created_at: aDate })
+    vi.spyOn(predepositCampaignRepository, "getPrivateUsers").mockResolvedValue(PRIVATE_USERS)
+    vi.spyOn(predepositCampaignRepository, "getAllUsers").mockResolvedValue(PUBLIC_USERS)
+    vi.spyOn(predepositCampaignRepository, "getAddLiquidityEventsInBlockRange").mockResolvedValue([event1, event2, event3, event4, event5])
+    vi.spyOn(predepositCampaignRepository, "getAccountedBalancesForUsersOnLP")
       .mockResolvedValueOnce([{ id: 1n, user_address: "USER0", balance_lp: parseEther("200000").toString(), usg_lp_id: 1n }])
       .mockResolvedValueOnce([])
 
-    getAccountedTotalSpy = vi.spyOn(predepositCampaignRepository, "getAccountedTotal").mockResolvedValue([totalUSG_USDC, totalUSG_frxUSD])
+    vi.spyOn(predepositCampaignRepository, "getAccountedTotal").mockResolvedValue([totalUSG_USDC, totalUSG_frxUSD])
 
     await predepositService.increaseAccountedAmounts(true, 100, aDate)
 
@@ -220,8 +201,8 @@ describe("PredepositCampaignServiceIncrease - Increase amounts part", () => {
   })
 
   it("Test when there are no starting block in indexer-block", async () => {
-    getLastPredepositCampaignBlockSpy = vi.spyOn(predepositCampaignRepository, "getLastPredepositCampaignBlock").mockResolvedValue(null)
-    getLastEventBlockSpy = vi.spyOn(blockRepository, "getLastEventBlock").mockResolvedValue(null)
+    vi.spyOn(predepositCampaignRepository, "getLastPredepositCampaignBlock").mockResolvedValue(null)
+    vi.spyOn(blockRepository, "getLastEventBlock").mockResolvedValue(null)
 
     await predepositService.increaseAccountedAmounts(false, 130, aDate)
 
@@ -233,8 +214,8 @@ describe("PredepositCampaignServiceIncrease - Increase amounts part", () => {
   })
 
   it("Test when there are no starting block in indexer block", async () => {
-    getLastPredepositCampaignBlockSpy = vi.spyOn(predepositCampaignRepository, "getLastPredepositCampaignBlock").mockResolvedValue({ block_id: 130n })
-    getLastEventBlockSpy = vi.spyOn(blockRepository, "getLastEventBlock").mockResolvedValue({ block_id: 130n, created_at: aDate })
+    vi.spyOn(predepositCampaignRepository, "getLastPredepositCampaignBlock").mockResolvedValue({ block_id: 130n })
+    vi.spyOn(blockRepository, "getLastEventBlock").mockResolvedValue({ block_id: 130n, created_at: aDate })
 
     await predepositService.increaseAccountedAmounts(false, 130, aDate)
 
