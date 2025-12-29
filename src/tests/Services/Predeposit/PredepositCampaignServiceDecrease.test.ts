@@ -65,8 +65,8 @@ describe("PredepositCampaignServiceDecrease - Decrease amounts part", () => {
     vi.clearAllMocks()
   })
 
-  it("Test when the getLastPredepositCampaignBlock is undefined", async () => {
-    ;(chainModule.chainView as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
+  it("Complete test where some accounted_balances should be replaced and some not", async () => {
+    (chainModule.chainView as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
       [
         [parseEther("5000000"), 0n, parseEther("1000000")],
         [parseEther("1000000"), parseEther("500000"), 0n],

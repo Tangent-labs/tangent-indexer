@@ -213,39 +213,25 @@ export class PredepositCampaignService {
             DECREASE / WITHDRAW MANAGEMENT
   =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-= */
 
+
+  /**
+ * @notice  During the deposit & retention phase, perform a snpashot at the current blockchain block for all user that have an accumulated balance.
+ *          Cross check snapshot and content of accumulated_balances per user, per LP.
+ *          When the balance is lower in the snapshot than in the database, we replace the database one by the snpashot one.
+ * @param   isPrivate       When true, the state of the predeposit campaign is private, otherwise it's public.
+ * @param   date            Date of the latest block on the blockchain
+ */
   async decreaseAccountedAmounts(isPrivate: boolean, now: Date) {
     const users = await this.getAccountedUsers(isPrivate)
     const addresses = await getAddressesJson()
 
-    // TODO We need to add the addresses of Curve Gauge, StakeVault, ConvexRewardToken
-    const usgUsdcPositions = [addresses.lps["USG-USDC"]]
-    const usgFrxusdPositions = [addresses.lps["USG-frxUSD"]]
-
-    // Query the blockchain to find the merged balances of all users accross both positions
-    const snapshots = (await this.getOnchainSnapshot(users, usgUsdcPositions, usgFrxusdPositions))[0]
-    // Retrieve in database all accountedBalances
-    const allAccountedBalances = await this.predepositRepository.getAllAccountedBalances()
-
-    // Retrieve in database all accountedTotals
-    const totalAccounteds: AccountedTotal[] = await this.predepositRepository.getAccountedTotal()
-
-    const database_USG_USDC: GetAccountedBalances[] = []
-    const database_USG_frxUSD: GetAccountedBalances[] = []
-
-    // Sort database value in two array by lp name
-    allAccountedBalances.forEach((accBal) => {
-      if (accBal.usg_lp.lp_name === "USG-USDC") {
-        database_USG_USDC.push(accBal)
-      } else {
-        database_USG_frxUSD.push(accBal)
-      }
-    })
 
     const { totalAccountedToDelete, totalAccountedToInsert, accountedBalancesToDelete, accountedBalancesToInsert } = await this.compareDbAndSnapshots(
       users,
-      snapshots,
-      [database_USG_USDC, database_USG_frxUSD],
-      totalAccounteds
+      // TODO We need to add the addresses of Curve Gauge, StakeVault, ConvexRewardToken
+      (await this.getOnchainSnapshot(users, [addresses.lps["USG-USDC"]], [addresses.lps["USG-frxUSD"]]))[0],
+      await this.predepositRepository.getAllAccountedBalances(),
+      await this.predepositRepository.getAccountedTotal()
     )
 
     await this.updateDbState(totalAccountedToDelete, totalAccountedToInsert, accountedBalancesToDelete, accountedBalancesToInsert, now)
@@ -254,7 +240,7 @@ export class PredepositCampaignService {
   private async compareDbAndSnapshots(
     users: string[],
     onchainSnapshots: bigint[][],
-    databaseData: GetAccountedBalances[][],
+    databaseData: GetAccountedBalances[],
     accountedTotals: AccountedTotal[]
   ) {
     const accountedBalancesToDelete: bigint[] = []
@@ -264,7 +250,8 @@ export class PredepositCampaignService {
 
     // Compare database values with snapshot
     onchainSnapshots.forEach((onChainSnapshot, j) => {
-      const dbData = databaseData[j]
+      const lpKey = j === 0 ? "USG-USDC" : "USG-frxUSD"
+      const dbData = databaseData.filter(d => d.usg_lp.lp_name === lpKey)
       const accountedTotal = accountedTotals[j]
       onChainSnapshot.forEach((onChainBal, i) => {
         // Retrieve user from the input of the chainview
