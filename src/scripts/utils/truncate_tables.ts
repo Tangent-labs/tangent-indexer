@@ -26,7 +26,7 @@ async function promptConfirmation(): Promise<boolean> {
 async function getAllTableNames(): Promise<{ table_name: string; schema_name: string }[]> {
   try {
     const tables: { table_name: string; schema_name: string }[] = await prisma.$queryRaw<{ table_name: string; schema_name: string }[]>`
-SELECT tablename AS table_name, schemaname AS schema_name FROM pg_tables WHERE schemaname = 'events' OR schemaname = 'global' OR schemaname = 'points'
+SELECT tablename AS table_name, schemaname AS schema_name FROM pg_tables WHERE schemaname = 'events' OR schemaname = 'global' OR schemaname = 'points' OR schemaname = 'predeposit'
     `
     return tables.map((table) => {
       return { table_name: table.table_name, schema_name: table.schema_name }

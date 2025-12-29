@@ -169,6 +169,8 @@ export type AddressesJson = {
     basicERC20Market: string
   }
   oracles: { [tokenName: string]: string }
+  lps: { [lpName: string]: string }
+
   pegKeepers: { [poolName: string]: string }
   markets: { marketAddress: string; collatName: string; collatAddress: string; marketType: string }[]
 }

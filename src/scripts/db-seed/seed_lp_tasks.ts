@@ -43,6 +43,28 @@ function TASKS(addresses: AddressesJson, priceSources: Prisma.price_sourceCreate
     },
     // Hold Curve LP unstaked
     {
+      name: "USG-USDC",
+      action_type: "LP",
+      protocol: "Curve",
+      token_address: addresses.lps["USG-USDC"].toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[40],
+      description: "Hold Curve USG/USDC LP tokens",
+      url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-0/deposit",
+      is_active: true,
+      price_source_id: priceSources.find((p) => p.name.includes("USDC_crvUSD"))!.id!,
+    },
+    {
+      name: "USG-frxUSD",
+      action_type: "LP",
+      protocol: "Curve",
+      token_address: addresses.lps["USG-frxUSD"].toLowerCase(),
+      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[40],
+      description: "Hold Curve USG/frxUSD LP tokens",
+      url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-0/deposit",
+      is_active: true,
+      price_source_id: priceSources.find((p) => p.name.includes("USDC_crvUSD"))!.id!,
+    },
+    {
       name: "crvUSD_USDC",
       action_type: "LP",
       protocol: "Curve",
@@ -276,6 +298,7 @@ export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addr
     data: lpTasks,
   })
 
+  // TODO This needs to be update when we know the list
   const addressesToExclude = [
     ZeroAddress.toLowerCase(),
     CONVEX_LOCKER.toLowerCase(),

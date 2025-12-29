@@ -124,9 +124,21 @@ export class UserPointsLPRepository extends AbstractRepository {
     return Array.from(uniqueAddressesSet).map((address) => ({ address }))
   }
 
-  insertTransfers = async (events: any) => {
+  async insertTransfers(events: Prisma.transfer_eventsCreateManyInput[]) {
     if (events.length > 0) {
       await this.prismaClient.transfer_events.createMany({
+        data: events,
+      })
+    }
+  }
+
+  async getUsgLps() {
+    return await this.prismaClient.usg_lp_keys.findMany()
+  }
+
+  async insertAddLiquidity(events: Prisma.add_liquidity_eventsCreateManyInput[]) {
+    if (events.length > 0) {
+      await this.prismaClient.add_liquidity_events.createMany({
         data: events,
       })
     }
