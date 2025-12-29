@@ -160,6 +160,7 @@ async function setUpIndexerBlockServices() {
     activeBorrowersRepository.setClient(dbTransaction)
     userPointsVoteRepository.setClient(dbTransaction)
     erc20Repository.setClient(dbTransaction)
+    savingAccountRepository.setClient(dbTransaction)
   }
 
   const addresses = await getAddressesJson()

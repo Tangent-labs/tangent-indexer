@@ -105,13 +105,17 @@ describe("PredepositCampaignServiceIncrease - Increase amounts part", () => {
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks()
+    vi.resetAllMocks()
+    vi.spyOn(predepositCampaignRepository, "getPrivateUsers").mockResolvedValue(PRIVATE_USERS)
+    vi.spyOn(predepositCampaignRepository, "getAllUsers").mockResolvedValue(PUBLIC_USERS)
+    vi.spyOn(predepositCampaignRepository, "getAddLiquidityEventsInBlockRange").mockResolvedValue([])
+
   })
 
   it("Test when the getLastPredepositCampaignBlock is undefined", async () => {
     vi.spyOn(predepositCampaignRepository, "getLastPredepositCampaignBlock").mockResolvedValue({ block_id: 100n })
     vi.spyOn(blockRepository, "getLastEventBlock").mockResolvedValue({ block_id: 150n, created_at: aDate })
-    vi.spyOn(predepositCampaignRepository, "getPrivateUsers").mockResolvedValue(PRIVATE_USERS)
-    vi.spyOn(predepositCampaignRepository, "getAllUsers").mockResolvedValue(PUBLIC_USERS)
+
     vi.spyOn(predepositCampaignRepository, "getAddLiquidityEventsInBlockRange").mockResolvedValue([event1, event2, event3, event4, event5])
     vi.spyOn(predepositCampaignRepository, "getAccountedBalancesForUsersOnLP")
       .mockResolvedValueOnce([{ id: 1n, user_address: "USER0", balance_lp: parseEther("200000").toString(), usg_lp_id: 1n }])
@@ -225,4 +229,18 @@ describe("PredepositCampaignServiceIncrease - Increase amounts part", () => {
 
     expect((predepositService as any).getAccountedUsers).not.toHaveBeenCalled()
   })
+
+  it("Test When the full range can be taken", async () => {
+    vi.spyOn(predepositCampaignRepository, "getLastPredepositCampaignBlock").mockResolvedValue({ block_id: 100n })
+    vi.spyOn(blockRepository, "getLastEventBlock").mockResolvedValue({ block_id: 500n, created_at: aDate })
+
+    await predepositService.increaseAccountedAmounts(false, 550, aDate)
+
+    // Assess that it passes by getBlockRange and returns good values
+    expect((predepositService as any).getBlockRange).toHaveBeenCalledWith(550)
+    expect((predepositService as any).getBlockRange).toHaveResolvedWith({ startBlock: 101, endBlock: 201 })
+
+
+  })
+
 })
