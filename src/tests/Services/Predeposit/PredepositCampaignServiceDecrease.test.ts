@@ -66,7 +66,7 @@ describe("PredepositCampaignServiceDecrease - Decrease amounts part", () => {
   })
 
   it("Complete test where some accounted_balances should be replaced and some not", async () => {
-    (chainModule.chainView as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
+    ;(chainModule.chainView as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
       [
         [parseEther("5000000"), 0n, parseEther("1000000")],
         [parseEther("1000000"), parseEther("500000"), 0n],

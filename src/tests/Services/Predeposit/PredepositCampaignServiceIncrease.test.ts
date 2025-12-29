@@ -109,7 +109,6 @@ describe("PredepositCampaignServiceIncrease - Increase amounts part", () => {
     vi.spyOn(predepositCampaignRepository, "getPrivateUsers").mockResolvedValue(PRIVATE_USERS)
     vi.spyOn(predepositCampaignRepository, "getAllUsers").mockResolvedValue(PUBLIC_USERS)
     vi.spyOn(predepositCampaignRepository, "getAddLiquidityEventsInBlockRange").mockResolvedValue([])
-
   })
 
   it("Test when the getLastPredepositCampaignBlock is undefined", async () => {
@@ -239,8 +238,5 @@ describe("PredepositCampaignServiceIncrease - Increase amounts part", () => {
     // Assess that it passes by getBlockRange and returns good values
     expect((predepositService as any).getBlockRange).toHaveBeenCalledWith(550)
     expect((predepositService as any).getBlockRange).toHaveResolvedWith({ startBlock: 101, endBlock: 201 })
-
-
   })
-
 })

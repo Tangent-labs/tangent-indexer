@@ -152,8 +152,8 @@ export class PredepositCampaignRepository extends AbstractRepository {
       where: {
         is_private: true,
         signature: {
-          not: undefined
-        }
+          not: undefined,
+        },
       },
     })
   }
@@ -169,9 +169,9 @@ export class PredepositCampaignRepository extends AbstractRepository {
       },
       where: {
         signature: {
-          not: undefined
-        }
-      }
+          not: undefined,
+        },
+      },
     })
   }
 
@@ -201,7 +201,6 @@ export class PredepositCampaignRepository extends AbstractRepository {
 
   async insertAccountedBalancesHistory(data: Prisma.accounted_balancesCreateManyInput[], now: Date) {
     if (data.length > 0) {
-
       await this.prismaClient.accounted_balances_history.createMany({
         data: data.map((accBal) => {
           // We want to regenerate an ID
