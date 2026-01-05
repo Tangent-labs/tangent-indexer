@@ -11,6 +11,7 @@ src/typechain
 .vscode
 /src/data/*.json
 prisma/migrations
-/local/*
+/.local/*
 /src/addresses.json
 /src/config/credentials-gDrive.json
+

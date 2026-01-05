@@ -28,8 +28,9 @@ import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
 import { BlockRepository } from "../db/BlockRepository.js"
 import { LiquidationBotLogService } from "./LiquidationBotLogService.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"
-import { indexerConfig } from "src/config/indexer_config.js"
 import { getAddressesJson } from "src/utils/jsonReader.js"
+import { parseEthersError } from "../utils/errorParser.js"
+import { indexerConfig } from "src/config/indexer_config.js"
 
 const successRoutes = successRoutesJson as unknown as SuccessRoutes
 
@@ -48,9 +49,55 @@ export class LiquidationService {
   transactionFilePath: string = "./src/data/transactions.json"
   minEthBalance: number = 0.1
   curveRouterAddress: AddressLike | undefined
+  errorLogFilePath: string = "./liquidation_errors.log"
   // Map to track pending transactions per wallet for sequential processing
   private walletQueues: Map<number, Array<() => Promise<any>>> = new Map()
   private walletQueueProcessing: Map<number, Promise<void>> = new Map()
+
+  /**
+   * Logs liquidation errors to a file with detailed information
+   * @param account The account being liquidated
+   * @param error The error that occurred
+   * @param isSplitTransaction Whether this is a split transaction (multiple estimations)
+   * @param estimationIndex The index of the estimation in the split (if applicable)
+   * @param totalEstimations Total number of estimations (for split transactions)
+   * @param nbAttempt Number of attempts made for this liquidation
+   * @param additionalInfo Additional information to log
+   */
+  private logErrorToFile(
+    account: LiquidationUserFullInfo,
+    error: Error,
+    isSplitTransaction: boolean,
+    estimationIndex: number | undefined,
+    totalEstimations: number | undefined,
+    nbAttempt: number | undefined,
+    additionalInfo?: any
+  ) {
+    try {
+      const timestamp = new Date().toISOString()
+      const errorEntry = {
+        timestamp,
+        isSplitTransaction,
+        estimationIndex: isSplitTransaction ? estimationIndex : undefined,
+        totalEstimations: isSplitTransaction ? totalEstimations : undefined,
+        nbAttempt,
+        account: account.account as string,
+        market: account.market as string,
+        collateralToken: account.collatToken as string,
+        errorMessage: error.message,
+        errorName: error.name,
+        errorCode: (error as any).code,
+        errorStack: error.stack,
+        ...(additionalInfo && { additionalInfo }),
+      }
+
+      const logLine = JSON.stringify(errorEntry) + "\n"
+      fs.appendFileSync(this.errorLogFilePath, logLine, "utf-8")
+    } catch (logError) {
+      // Silently fail if file logging fails to avoid breaking the liquidation process
+      console.error("Failed to write error to log file:", logError)
+    }
+  }
 
   constructor(activeBorrowersRepository: ActiveBorrowersRepository, context: LiquidationExecutionContext, LiquidationBotService?: LiquidationBotLogService) {
     this.activeBorrowersRepository = activeBorrowersRepository
@@ -71,8 +118,6 @@ export class LiquidationService {
     } catch (error) {
       this.context.isDbAlive = false
     }
-    // this.context.isDbAlive = false
-    // TODO : check the RPCs , and set the rpcIndex on context
 
     // get the current block from all rpcs, do not throw an error if one fails
     const currentBlocks = await Promise.all(
@@ -157,15 +202,16 @@ export class LiquidationService {
   async getOnchainData(
     providers: JsonRpcProvider[],
     markets: AddressLike[],
-    borrowers: LiquidationUserInInfo[]
+    borrowers: LiquidationUserInInfo[],
+    marketViewerAddress: string
   ): Promise<LiquidationMarketAccountOutInfo | undefined> {
     // get the data from the  all the providers
     const calls = providers.map((provider, index) =>
-      chainView<[AddressLike[], LiquidationUserInInfo[]], [LiquidationMarketAccountOutInfo]>(
+      chainView<[AddressLike[], LiquidationUserInInfo[], string], [LiquidationMarketAccountOutInfo]>(
         provider,
         MarketAccountLiquidationBotInfoAbi.abi,
         MarketAccountLiquidationBotInfoAbi.bytecode,
-        [markets, borrowers]
+        [markets, borrowers, marketViewerAddress]
       )
     )
 
@@ -191,14 +237,31 @@ export class LiquidationService {
     const finalAccounts = []
     const accountLength = datas?.at(0)?.accounts?.length || 0
     const accountsFlat = datas.map((d) => d?.accounts || []).flat()
+
+    if (accountLength !== borrowers.length) {
+      const errorMessage = `CRITICAL: Account length mismatch in getOnchainData! Expected ${borrowers.length} accounts (from borrowers), but got ${accountLength} from on-chain data. This indicates a data integrity issue.`
+      console.error(`❌ ${errorMessage}`)
+      return undefined
+    }
+
     for (let i = 0; i < accountLength; i++) {
       const results = accountsFlat.filter((a) => a.index === i)
       const minHealthRatio = results.reduce<bigint | undefined>((acc, curr) => (acc && acc < curr.healthRatio ? acc : curr.healthRatio), undefined)
 
       const row = results.find((a) => a.healthRatio === minHealthRatio)
-      finalAccounts.push(row)
+      if (row) {
+        finalAccounts.push(row)
+      }
     }
+
     const finalAccountsResult = finalAccounts.filter((a) => a !== undefined)
+
+    if (finalAccountsResult.length !== borrowers.length) {
+      const errorMessage = `CRITICAL: Final accounts count (${finalAccountsResult.length}) doesn't match borrowers count (${borrowers.length}) in getOnchainData. This indicates missing accounts from all provider responses.`
+      console.error(`❌ ${errorMessage}`)
+      return undefined
+    }
+
     return { markets: marketsResult, accounts: finalAccountsResult as LiquidationAccountOutInfo[] }
   }
 
@@ -210,6 +273,12 @@ export class LiquidationService {
    * @returns LiquidationAnalyseInfo.
    */
   async analyzeLiquidation(datas: LiquidationMarketAccountOutInfo, accounts: LiquidationUserInInfo[]): Promise<LiquidationAnalyseInfo> {
+    if (datas.accounts.length !== accounts.length) {
+      const errorMessage = `CRITICAL: accounts length mismatch in analyzeLiquidation! On-chain: ${datas.accounts.length}, Borrowers: ${accounts.length}. This indicates a data integrity issue.`
+      console.error(`❌ ${errorMessage}`)
+      throw new Error(errorMessage)
+    }
+
     const hydratedAccounts = datas.accounts.map((accountData, index) => {
       const account = accounts[index]
       const market = datas.markets.find((m) => (m.market as string).toLowerCase() === (accountData.market as string).toLowerCase())
@@ -226,10 +295,6 @@ export class LiquidationService {
 
     // We detect the potential actions we have to do
     hydratedAccounts.forEach((account) => {
-      if (account.userDebt === 0n) {
-        return
-      }
-
       if (account.userDebt >= account.positionValue) {
         seizingList.push(account as LiquidationUserFullInfo)
         return
@@ -266,7 +331,6 @@ export class LiquidationService {
     seizingList: LiquidationUserFullInfo[],
     liquidationList: LiquidationUserFullInfo[]
   ): (LiquidationUserFullInfo & { type: "seizing" | "liquidation" })[] {
-    console.log("Prioritizing actions:", seizingList.length, liquidationList.length)
     // Combine both action types with their type indicator
     const actionsList = [
       ...seizingList.map((a) => ({ ...a, type: "seizing" as const })),
@@ -298,6 +362,8 @@ export class LiquidationService {
     } catch (error) {
       this.errors.push({ action: "liquidation_bad_debt_execution", message: (error as Error)?.message.slice(0, 100), market: account.market as string })
       await this.liquidationBotService?.logError("liquidation_bad_debt_execution", error as Error, loggedContext, { account }, true)
+      // Re-throw the error so the job is retried by the queue
+      throw error
     }
   }
 
@@ -305,66 +371,224 @@ export class LiquidationService {
    * Processes a single liquidation for a given account
    * @param pkIndex  the index of the wallet in the context
    * @param account The account to be liquidated
+   * @param slippageModifierBps Slippage modifier in basis points
+   * @param nbAttempt Number of attempts made for this liquidation
    */
-  public async executeLiquidation(pkIndex: number, account: LiquidationUserFullInfo, slippageModifierBps: bigint = 0n) {
+  public async executeLiquidation(pkIndex: number, account: LiquidationUserFullInfo, slippageModifierBps: bigint = 0n, nbAttempt?: number) {
     const loggedContext = { ...this.context, currentWalletIndex: pkIndex }
-    try {
-      const provider = this.context.providers[this.context.currentRpcIndex]
-      const signer = new Wallet(this.context.walletsPks[pkIndex], provider)
-      const signerAddress = await signer.getAddress()
-      const slippage = 10n + (10n * slippageModifierBps) / 10000n
 
-      const estimations = await this.estimateLiquidation(signer, account, slippage)
-      if (!estimations?.length) {
-        this.errors.push({
-          action: "liquidation_execution",
-          message: `No route found for collateral: ${account.collatToken}`,
-          market: account.market as string,
-        })
-        const error = new Error(`No route found for collat :  ${account.collatToken} `)
-        await this.liquidationBotService?.logError("liquidation_execution", error as Error, loggedContext, { account }, true)
+    const provider = this.context.providers[this.context.currentRpcIndex]
+    const signer = new Wallet(this.context.walletsPks[pkIndex], provider)
+    const signerAddress = await signer.getAddress()
+    const slippage = 50n + (10n * slippageModifierBps) / 10000n
+
+    let estimations: LiquidationEstimateInfo[] = []
+    try {
+      estimations = await this.estimateLiquidation(signer, account, slippage)
+    } catch (error) {
+      // Parse the error to extract more specific information
+      const parsedError = parseEthersError(error as any)
+      const errorMessage = parsedError.message || (error as Error)?.message || "Unknown error during liquidation estimation"
+
+      this.errors.push({
+        action: "liquidation_execution",
+        message: errorMessage.slice(0, 200), // Increased limit for better context
+        market: account.market as string,
+      })
+
+      // Create an enhanced error object with parsed information
+      const enhancedError = new Error(errorMessage)
+      enhancedError.name = parsedError.errorName || (error as Error)?.name || "EstimateLiquidationError"
+      ;(enhancedError as any).code = parsedError.code
+
+      // Only include originalError if it has useful information
+      const errorData: any = {
+        ...parsedError,
       }
 
-      for (const estimation of estimations) {
-        try {
-          const minAmount = estimation.minTgUSDOut - (estimation.minTgUSDOut * slippage) / 100n
-          const currentNonce = await provider.getTransactionCount(signerAddress, "pending")
-          const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
-          //  console.log("Liquidation data:", account.market, data)
-          const tx = await marketContract.liquidate(
-            estimation.account,
-            MaxUint256,
-            minAmount,
-            [this.curveRouterAddress, estimation.liquidationCall.routerCall],
-            {
-              nonce: currentNonce,
-            }
-          )
-          await tx.wait() // Wait for the transaction to be mined
-          await this.liquidationBotService?.logLiquidationExecution(account, loggedContext)
-        } catch (error) {
-          this.errors.push({ action: "liquidation_execution", message: (error as Error)?.message.slice(0, 100), market: account.market as string })
-          await this.liquidationBotService?.logError("liquidation_execution", error as Error, loggedContext, { estimation })
+      // Check if original error has useful information before including it
+      if (error && typeof error === "object") {
+        const hasUsefulInfo =
+          (error as any).message ||
+          (error as any).name ||
+          (error as any).code ||
+          (error as any).stack ||
+          (Object.keys(error).length > 0 && Object.keys(error).some((k) => k !== "constructor"))
+
+        if (hasUsefulInfo) {
+          errorData.originalError = {
+            message: (error as any).message,
+            name: (error as any).name,
+            code: (error as any).code,
+            stack: (error as any).stack,
+          }
         }
       }
-    } catch (error) {
-      // console.error("Liquidation execution error:", error)
-      this.errors.push({ action: "liquidation_execution", message: (error as Error)?.message.slice(0, 100), market: account.market as string })
-      await this.liquidationBotService?.logError("liquidation_execution", error as Error, loggedContext, { account }, true)
+
+      // Log error to file (not a split transaction since estimation failed)
+      this.logErrorToFile(account, enhancedError, false, undefined, undefined, nbAttempt, {
+        step: "estimateLiquidation",
+        errorData,
+      })
+
+      await this.liquidationBotService?.logError(
+        "liquidation_execution",
+        enhancedError,
+        loggedContext,
+        {
+          account,
+          error: errorData,
+          step: "estimateLiquidation",
+        },
+        true
+      )
+      // Re-throw the error so the job is retried by the queue
+      throw enhancedError
+    }
+
+    if (!estimations?.length) {
+      const error = new Error(`No route found for collat :  ${account.collatToken} `)
+      ;(error as any).code = "NO_ROUTE"
+
+      this.errors.push({
+        action: "liquidation_execution",
+        message: `No route found for collateral: ${account.collatToken}`,
+        market: account.market as string,
+      })
+
+      // Log error to file (not a split transaction since no route found)
+      this.logErrorToFile(account, error, false, undefined, undefined, nbAttempt, {
+        step: "no_route",
+      })
+
+      await this.liquidationBotService?.logError("liquidation_execution", error as Error, loggedContext, { account, step: "no_route" }, true)
+      // Don't throw - route not found is a permanent failure that won't succeed on retry
+      return
+    }
+
+    let successCount = 0
+    const errors: Error[] = []
+    const isSplitTransaction = estimations.length > 1
+
+    for (let i = 0; i < estimations.length; i++) {
+      const estimation = estimations[i]
+      // Use minTgUSDOut directly from estimation
+      // The slippageModifierBps is already applied in the slippage calculation (line 406)
+      // and included in the estimation.minTgUSDOut via estimateLiquidation
+      const minAmount = estimation.minTgUSDOut
+
+      // Validate minAmount is positive and non-zero (required by contract)
+      if (minAmount <= 0n) {
+        const error = new Error(`Invalid minAmount: ${minAmount.toString()}. minTgUSDOut from estimation is invalid. This should not happen.`)
+        ;(error as any).code = "INVALID_MIN_AMOUNT"
+
+        this.errors.push({
+          action: "liquidation_preparation",
+          message: error.message.slice(0, 200),
+          market: account.market as string,
+        })
+
+        // Log error to file
+        this.logErrorToFile(account, error, isSplitTransaction, i, estimations.length, nbAttempt, {
+          step: "invalid_min_amount",
+          estimation: {
+            minTgUSDOut: estimation.minTgUSDOut.toString(),
+            expectedOutput: estimation.expectedOutput.toString(),
+            slippageBps: estimation.slippageBps.toString(),
+          },
+        })
+
+        await this.liquidationBotService?.logError("liquidation_preparation", error, loggedContext, {
+          account,
+          estimation,
+          step: "invalid_min_amount",
+        })
+        errors.push(error)
+        continue // Skip this estimation and try next one
+      }
+
+      try {
+        const currentNonce = await provider.getTransactionCount(signerAddress, "pending")
+        const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
+
+        const tx = await marketContract.liquidate(
+          {
+            account: estimation.account,
+            postLiquidate: {
+              collatAmountToLiquidate: estimation.collatToLiquidate,
+              minUsgOut: minAmount,
+              maxUsgToBurn: MaxUint256,
+              minCollatAmountToLiquidate: 0n,
+              isReceiptOut: false,
+            },
+            minCollatValueToLiquidate: 0n,
+          },
+          {
+            router: this.curveRouterAddress,
+            routerCall: estimation.liquidationCall.routerCall,
+          },
+          {
+            nonce: currentNonce,
+          }
+        )
+        await tx.wait() // Wait for the transaction to be mined
+        await this.liquidationBotService?.logLiquidationExecution(account, loggedContext)
+        successCount++
+      } catch (error) {
+        this.errors.push({ action: "liquidation_execution", message: (error as Error)?.message.slice(0, 100), market: account.market as string })
+
+        // Log error to file with split transaction information
+        this.logErrorToFile(account, error as Error, isSplitTransaction, i, estimations.length, nbAttempt, {
+          estimation: {
+            minTgUSDOut: estimation.minTgUSDOut.toString(),
+            expectedOutput: estimation.expectedOutput.toString(),
+            slippageBps: estimation.slippageBps.toString(),
+            routerCall: estimation.liquidationCall.routerCall,
+          },
+        })
+
+        await this.liquidationBotService?.logError("liquidation_execution", error as Error, loggedContext, {
+          account,
+          estimation,
+          error,
+          step: "liquidate",
+        })
+        // Store the error for later re-throwing if all transactions fail
+        errors.push(error as Error)
+      }
+    }
+
+    // If all transactions failed, throw an error so the job is retried
+    if (successCount === 0 && errors.length > 0) {
+      const lastError = errors[errors.length - 1]
+      const errorMessage = `All ${errors.length} liquidation transaction(s) failed. Last error: ${lastError.message}`
+      const aggregatedError = new Error(errorMessage)
+      aggregatedError.name = lastError.name || "LiquidationError"
+      ;(aggregatedError as any).code = (lastError as any).code
+
+      // Log aggregated error to file
+      this.logErrorToFile(account, aggregatedError, isSplitTransaction, undefined, estimations.length, nbAttempt, {
+        step: "all_transactions_failed",
+        failedCount: errors.length,
+        totalCount: estimations.length,
+      })
+
+      // Re-throw the error so the job is retried by the queue
+      throw aggregatedError
     }
   }
 
   private async _getBestRoute(
     providers: JsonRpcProvider[],
-    account: LiquidationUserFullInfo
+    info: LiquidationUserFullInfo
   ): Promise<{ route: LiquidationRoute | null; amount: bigint; priceImpact: number }> {
     // Flatten the nested structure: success[inputTokenAddress][outputTokenAddress] = LiquidationRoute[]
     // The input token address is the key, so we need to find routes where the key matches the collateral token
-    const collatTokenLower = (account.collatToken as string).toLowerCase()
+    const collatTokenLower = (info.collatToken as string).toLowerCase()
     const inputTokenRoutes = successRoutes.success[collatTokenLower]
 
     if (!inputTokenRoutes) {
-      console.error("No route found for collateral:", account.collatToken)
+      console.error("No route found for collateral:", info.collatToken)
       return { route: null, amount: 0n, priceImpact: 0 }
     }
 
@@ -382,31 +606,30 @@ export class LiquidationService {
     }
 
     if (!allRoutesMap.size) {
-      console.error("No route found for collateral:", account.collatToken)
+      console.error("No route found for collateral:", info.collatToken)
       return { route: null, amount: 0n, priceImpact: 0 }
     }
 
     // Remove none valid routes
-    return await this._evaluatesRoutes(providers, Array.from(allRoutesMap.values()), account)
+    return await this._evaluatesRoutes(providers, Array.from(allRoutesMap.values()), info)
   }
 
   private async _evaluatesRoutes(
     providers: JsonRpcProvider[],
     allRoutesMap: (LiquidationRoute & { in: string })[],
-    account: LiquidationUserFullInfo
+    info: LiquidationUserFullInfo
   ): Promise<{ route: LiquidationRoute | null; amount: bigint; priceImpact: number }> {
     const routeParams: CurveQuote[] = Array.from(allRoutesMap.values()).map(
       (route) =>
         ({
           _route: route.params.routeAddresses,
           _swap_params: route.params.swapParamsFull,
-          _amount: account.positionValue,
+          _amount: info.collateralBalance,
           _pools: [ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress],
         }) satisfies CurveQuote
     )
-
     const quotes = (
-      await chainView<[CurveQuote[]], { quote: bigint; priceImpact: number }[][]>(
+      await chainView<[CurveQuote[]], { quote: bigint; priceImpact: bigint }[][]>(
         providers[this.context.currentRpcIndex],
         QuotesCurveRouterImpactAbi.abi,
         QuotesCurveRouterImpactAbi.bytecode,
@@ -423,7 +646,7 @@ export class LiquidationService {
         params: { routeAddresses: param._route, swapParamsFull: param._swap_params },
       },
       amount: quotes[optimzedIndex].quote,
-      priceImpact: quotes[optimzedIndex].priceImpact,
+      priceImpact: Number(quotes[optimzedIndex].priceImpact / 10n ** 15n) / 1000, // priceImpact 1 based (15 + 3 == 18)
     }
   }
 
@@ -432,8 +655,8 @@ export class LiquidationService {
     account: LiquidationUserFullInfo
   ): Promise<
     | {
-        route1: { route: LiquidationRoute | null; account: LiquidationUserFullInfo; amount: bigint }
-        route2: { route: LiquidationRoute | null; account: LiquidationUserFullInfo; amount: bigint }
+        route1: { route: LiquidationRoute | null; info: LiquidationUserFullInfo; amount: bigint }
+        route2: { route: LiquidationRoute | null; info: LiquidationUserFullInfo; amount: bigint }
         amountTotal: bigint
         priceImpactTotal: number
       }
@@ -470,9 +693,10 @@ export class LiquidationService {
     const [{ route: route1, amount: amount1, priceImpact: priceImpact1 }, { route: route2, amount: amount2, priceImpact: priceImpact2 }] =
       await Promise.all(promises)
     // return the combaison of the best routes for each LP
+
     return {
-      route1: { route: route1, account: dataLp1, amount: amount1 },
-      route2: { route: route2, account: dataLp2, amount: amount2 },
+      route1: { route: route1, info: dataLp1, amount: amount1 },
+      route2: { route: route2, info: dataLp2, amount: amount2 },
       amountTotal: amount1 + amount2,
       priceImpactTotal: (priceImpact1 + priceImpact2) / 2,
     }
@@ -492,6 +716,20 @@ export class LiquidationService {
 
     const signerAddress = await signer.getAddress()
     const minAmount = quote - (quote * slippageBps) / 10000n
+
+    // Validate that minAmount is positive
+    if (minAmount <= 0n) {
+      throw new Error(`Invalid minAmount calculated: ${minAmount.toString()}. Quote: ${quote.toString()}, SlippageBps: ${slippageBps.toString()}`)
+    }
+
+    // Validate collateral balance and position value are positive
+    if (account.collateralBalance <= 0n) {
+      throw new Error(`Invalid collateralBalance: ${account.collateralBalance.toString()}`)
+    }
+    if (account.positionValue <= 0n) {
+      throw new Error(`Invalid positionValue: ${account.positionValue.toString()}`)
+    }
+
     const iface = new Interface(ICurveRouterAbi.abi)
     const data = iface.encodeFunctionData("exchange", [
       route.params.routeAddresses,
@@ -504,32 +742,58 @@ export class LiquidationService {
 
     // Estimate gas for the liquidation transaction
     const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
-    const gasLimit = await marketContract.liquidate.estimateGas(account.account, MaxUint256, minAmount, [this.curveRouterAddress, data])
+    try {
+      const gasLimit = await marketContract.liquidate.estimateGas(
+        {
+          account: account.account,
+          postLiquidate: {
+            collatAmountToLiquidate: MaxUint256,
+            minUsgOut: minAmount,
+            maxUsgToBurn: MaxUint256,
+            minCollatAmountToLiquidate: 0n, // Minimum acceptable collateral amount (0 means no minimum)
+            isReceiptOut: false,
+          },
+          minCollatValueToLiquidate: 0n, // USD value of minimum collateral amount (0 means no minimum)
+        },
+        {
+          router: this.curveRouterAddress,
+          routerCall: data,
+        }
+      )
 
-    // Get current gas price
-    const feeData = await provider.getFeeData()
-    const gasPrice = feeData.gasPrice || feeData.maxFeePerGas || 0n
-    const gasCostWei = gasLimit * gasPrice
-    const gasCostEth = Number(formatEther(gasCostWei))
+      // Get current gas price
+      const feeData = await provider.getFeeData()
+      const gasPrice = feeData.gasPrice || feeData.maxFeePerGas || 0n
+      const gasCostWei = gasLimit * gasPrice
+      const gasCostEth = Number(formatEther(gasCostWei))
 
-    const grossProfit = quote - account.userDebt
+      const grossProfit = quote - account.userDebt
 
-    return {
-      // Swap info needed to call liquidate on the contract
-      account: account.account,
-      collatToLiquidate: MaxUint256,
-      minTgUSDOut: minAmount,
-      liquidationCall: {
-        routerCall: data,
-      },
-      // Additional estimate information
-      expectedOutput: quote,
-      slippageBps,
-      gasEstimate: {
-        gasLimit,
-        eth: gasCostEth,
-      },
-      grossProfit,
+      return {
+        // Swap info needed to call liquidate on the contract
+        account: account.account,
+        collatToLiquidate: MaxUint256,
+        minTgUSDOut: minAmount,
+        liquidationCall: {
+          routerCall: data,
+        },
+        // Additional estimate information
+        expectedOutput: quote,
+        slippageBps,
+        gasEstimate: {
+          gasLimit,
+          eth: gasCostEth,
+        },
+        grossProfit,
+      }
+    } catch (error) {
+      // Parse and re-throw with better error message
+      const parsedError = parseEthersError(error as any)
+      const enhancedError = new Error(`Gas estimation failed: ${parsedError.message}${parsedError.decodedMessage ? ` (${parsedError.decodedMessage})` : ""}`)
+      enhancedError.name = parsedError.errorName || "GasEstimationError"
+      ;(enhancedError as any).code = parsedError.code
+      ;(enhancedError as any).data = parsedError.rawData
+      throw enhancedError
     }
   }
 
@@ -545,29 +809,27 @@ export class LiquidationService {
     if (!route) {
       throw new Error(`No route found for collateral: ${account.collatToken}`)
     }
-    console.error("Price impact:", priceImpact, indexerConfig.liquidationLimits.maxPriceImpact)
+
     // price impact is too high, we try to split the liquidation into 2 parts
+
     if (priceImpact > indexerConfig.liquidationLimits.maxPriceImpact) {
-      console.error("Price impact is too high, trying to split the liquidation")
       const splittedRoutes = await this._getBestSplittedRoutes(this.context.providers, account)
       if (splittedRoutes) {
         const {
-          route1: { route: route1, account: account1, amount: amount1 },
-          route2: { route: route2, account: account2, amount: amount2 },
-          amountTotal,
-          priceImpactTotal,
-        } = splittedRoutes as {
-          route1: { route: LiquidationRoute | null; account: LiquidationUserFullInfo; amount: bigint }
-          route2: { route: LiquidationRoute | null; account: LiquidationUserFullInfo; amount: bigint }
+          route1: { route: route1, info: info1, amount: amount1 },
+          route2: { route: route2, info: info2, amount: amount2 },
+          amountTotal: splittedAmountTotal,
+        } = splittedRoutes satisfies {
+          route1: { route: LiquidationRoute | null; info: LiquidationUserFullInfo; amount: bigint }
+          route2: { route: LiquidationRoute | null; info: LiquidationUserFullInfo; amount: bigint }
           amountTotal: bigint
           priceImpactTotal: number
         }
-        console.error("Splitted routes:", amount1, amount2, priceImpactTotal, amountTotal)
         // is splitted profitable
-        if (priceImpactTotal < indexerConfig.liquidationLimits.maxPriceImpact && amountTotal > amount) {
+        if (splittedAmountTotal > amount) {
           return [
-            await this.estimateTransaction(route1 as LiquidationRoute, amount1, account1, signer, provider, slippageBps),
-            await this.estimateTransaction(route2 as LiquidationRoute, amount2, account2, signer, provider, slippageBps),
+            await this.estimateTransaction(route1 as LiquidationRoute, amount1, info1, signer, provider, slippageBps),
+            await this.estimateTransaction(route2 as LiquidationRoute, amount2, info2, signer, provider, slippageBps),
           ]
         }
       }
@@ -599,15 +861,6 @@ export class LiquidationService {
   }
 
   /**
-   * Gets the next wallet index using round-robin distribution
-   */
-  private getNextWalletIndex(walletsPks: string[], counter: { value: number }): number {
-    const walletIndex = counter.value % walletsPks.length
-    counter.value++
-    return walletIndex
-  }
-
-  /**
    * Processes a single job from the liquidation queue
    * @param job The Bull queue job containing the serialized liquidation action
    * @param telegramNotifierService Service for sending error notifications
@@ -615,13 +868,23 @@ export class LiquidationService {
    * @param walletCounter Counter object for round-robin wallet distribution
    * @returns Promise that resolves when the job is processed
    */
-  public async processJob(job: Job<SerializedLiquidationUserFullInfo>, telegramNotifierService: TelegramNotifierService, walletsPk: string): Promise<void> {
+  public async processJob(
+    job: Job<SerializedLiquidationUserFullInfo>,
+    telegramNotifierService: TelegramNotifierService,
+    walletsPk: string,
+    signal?: AbortSignal
+  ): Promise<void> {
     // Deserialize the job data (convert string BigInt values back to BigInt)
     const action = this.deserializeLiquidationAction(job.data)
 
     const signer = new Wallet(walletsPk, this.context.providers[this.context.currentRpcIndex])
 
     try {
+      // Check if job was cancelled before processing
+      if (signal?.aborted) {
+        throw new Error(`Job cancelled before processing: ${signal.reason || "Unknown reason"}`)
+      }
+
       if (action.type === "seizing") {
         await this.executeSeizing(signer, action)
       } else if (action.type === "liquidation") {
@@ -630,14 +893,29 @@ export class LiquidationService {
         if (walletIndex === -1) {
           throw new Error(`Wallet not found in context for private key`)
         }
-        await this.executeLiquidation(walletIndex, action)
+        this.context = { ...this.context, currentWalletIndex: walletIndex }
+
+        // Calculate slippage modifier based on retry attempts
+        // Pattern: 1.0% => 2.0% (increases by 1% per retry)
+        const attemptsMade = job.attemptsMade || 0
+        const slippageStep = 100n
+        const targetSlippageBps = 100n + BigInt(attemptsMade) * slippageStep
+        // Calculate modifier needed to achieve target slippage
+        const slippageModifierBps = attemptsMade > 0 ? (targetSlippageBps - slippageStep) * 1000n : 0n
+
+        if (attemptsMade > 0) {
+          // Calculate the final slippage that will be used
+          const finalSlippageBps = 50n + (10n * slippageModifierBps) / 10000n
+          const finalSlippagePercent = (Number(finalSlippageBps) / 100).toFixed(2)
+          const logMessage = `Retry attempt ${attemptsMade + 1} for job ${job.id} (account: ${action.account}, market: ${action.market}): Increasing slippage to ${finalSlippagePercent}% (${finalSlippageBps} bps)`
+          await telegramNotifierService.sendError(logMessage)
+        }
+
+        await this.executeLiquidation(walletIndex, action, slippageModifierBps, attemptsMade)
       } else {
         throw new Error(`Unknown action type: ${(action as any).type}`)
       }
-
-      console.log(`Successfully processed ${action.type} for account ${action.account}`)
     } catch (error) {
-      console.error(`Error processing ${action.type} for account ${action.account}:`, error)
       await telegramNotifierService.sendError(
         `Liquidation Process Error: Failed to execute ${action.type} for account ${action.account} on market ${action.market}: ${(error as Error).message}`
       )

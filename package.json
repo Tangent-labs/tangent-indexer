@@ -5,6 +5,7 @@
   "description": "Will index data in a DB when some event",
   "main": "index.ts",
   "scripts": {
+    "fast": "npm run db:truncate & npm run db:empty-queue & npm run tangent:indexer-block  & npm run tangent:indexer-block & npm run tangent:indexer-block & npm run tangent:indexer-block",
     "tangent:reset-liquidation-test": "npm run db:truncate & npm run tangent:indexer-block & npm run tangent:check-liquidation",
     "tangent:indexer-block": "tsx src/scripts/index_block.ts",
     "tangent:indexer-points-lp": "tsx src/scripts/index_points_lp.ts",
@@ -30,6 +31,7 @@
     "db:mock-db-data": "tsx src/scripts/db-mock/_index.ts",
     "db:actualize-views": "tsx src/scripts/actualize-views.ts",
     "build": "node src/utils/build.js",
+    "extract:markets-from-log": "tsx src/scripts/utils/extract_markets_from_log.ts",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",

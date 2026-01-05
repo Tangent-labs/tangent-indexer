@@ -15,6 +15,7 @@ export class CheckLiquidationService {
   private telegramNotifierService: TelegramNotifierService
   private providers: JsonRpcProvider[]
   private liquidatorQueue: BullQueue<SerializedLiquidationUserFullInfo>
+  public marketViewerAddress?: string
 
   constructor(
     liquidationService: LiquidationService,
@@ -64,6 +65,7 @@ export class CheckLiquidationService {
       const params = await this.liquidationService.getLiquidationParams()
       markets = params.markets
       borrowers = params.borrowers
+
       await this.liquidationBotService.logLiquidationParams({ markets, borrowers }, this.context)
       if (!borrowers.length) {
         return
@@ -74,44 +76,84 @@ export class CheckLiquidationService {
       }
 
       currentAction = "on_chain_data"
-      const onChainData = await this.liquidationService.getOnchainData(this.providers, markets, borrowers)
+      const onChainData = await this.liquidationService.getOnchainData(this.providers, markets, borrowers, this.marketViewerAddress as string)
       await this.liquidationBotService.logOnchainData(onChainData || null, this.context)
       if (!onChainData) {
         await this.telegramNotifierService.sendError(`Liquidation Error on ${currentAction}: No on chain data `)
         return
       }
 
+      // Count accounts with debt
+
       currentAction = "liquidation_analysis"
       const { seizingList, liquidationList } = await this.liquidationService.analyzeLiquidation(onChainData, borrowers)
+
       await this.liquidationBotService.logLiquidationAnalysis({ seizingList, liquidationList }, this.context)
+
+      // Early return if no liquidations found
+      const hasSeizing = seizingList && seizingList.length > 0
+      const hasLiquidation = liquidationList && liquidationList.length > 0
+      if (!hasSeizing && !hasLiquidation) {
+        await this.liquidationBotService.logEndExecution(this.context)
+        return
+      }
 
       currentAction = "liquidation_prioritization"
       const prioritizedLiquidationList = this.liquidationService.prioritizeActions(seizingList || [], liquidationList || [])
 
       currentAction = "liquidation_execution"
 
-      if (prioritizedLiquidationList && prioritizedLiquidationList.length > 0) {
-        for (const action of prioritizedLiquidationList) {
-          const jobId = `${action.market}-${action.account}-${action.type}`
-          // Serialize BigInt values to strings for queue storage
-          const serializedAction = prepareSerialize(action) as SerializedLiquidationUserFullInfo
-          const priority = action.type === "liquidation" ? 2 : 3 // less priority means processed first , so liquidation are processed first
-          // 1 will be used for pegKeepers
-          // Add job with retry strategy
-          await this.liquidatorQueue.add(jobId, serializedAction, {
-            priority,
-            attempts: indexerConfig.liquidationQueue.attempts,
-            backoff: {
-              type: indexerConfig.liquidationQueue.backoff.type,
-              delay: indexerConfig.liquidationQueue.backoff.delay,
-            },
-            removeOnComplete: true, // Remove completed jobs
-            removeOnFail: false, // Keep failed jobs for inspection
-          })
-        }
+      // Double-check that we have items to process before adding to queue
+      if (!prioritizedLiquidationList || prioritizedLiquidationList.length === 0) {
+        await this.liquidationBotService.logEndExecution(this.context)
+        return
       }
 
-      console.log("Liquidation errors:", this.liquidationService.errors)
+      for (const action of prioritizedLiquidationList) {
+        const jobId = `${action.market}-${action.account}-${action.type}`
+        // Serialize BigInt values to strings for queue storage
+        const serializedAction = {
+          ...(prepareSerialize(action) as SerializedLiquidationUserFullInfo),
+          executionKey: this.context.executionKey,
+        } as SerializedLiquidationUserFullInfo
+        const priority = action.type === "liquidation" ? 2 : 3 // less priority means processed first , so liquidation are processed first
+        // 1 will be used for pegKeepers
+
+        // Check if job already exists
+        const existingJob = await this.liquidatorQueue.getJob(jobId)
+        if (existingJob) {
+          const state = await existingJob.getState()
+          const attemptsMade = existingJob.attemptsMade || 0
+
+          // If job is active (being processed), skip update
+          if (state === "active") {
+            continue
+          }
+
+          // If job has been attempted, preserve it (don't update) to keep attempts count
+          if (attemptsMade > 0) {
+            continue
+          }
+
+          // Job exists but hasn't been attempted yet - safe to update
+          await existingJob.remove()
+        }
+
+        // Add job with retry strategy
+        // Using jobId in options per BullMQ docs: https://docs.bullmq.io/guide/jobs/job-ids
+        // This ensures proper deduplication - if a job with the same id exists, it will be ignored
+        await this.liquidatorQueue.add("liquidation", serializedAction, {
+          jobId,
+          priority,
+          attempts: indexerConfig.liquidationQueue.attempts,
+          backoff: {
+            type: indexerConfig.liquidationQueue.backoff.type,
+            delay: indexerConfig.liquidationQueue.backoff.delay,
+          },
+          removeOnComplete: true, // Remove completed jobs
+          removeOnFail: false, // Keep failed jobs for inspection
+        })
+      }
 
       // The end
       await this.liquidationBotService.logEndExecution(this.context)

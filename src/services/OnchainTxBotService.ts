@@ -47,7 +47,8 @@ export class OnchainTxBotService {
         marketsAddresses,
       ])
     } catch (e) {
-      await this.telegramNotifierService.sendError(`OnchainTxBot chainview has failed ${e}`)
+      const errorMessage = e instanceof Error ? e.message : String(e)
+      await this.telegramNotifierService.sendError(`OnchainTxBot chainview has failed: ${errorMessage}`)
       throw e
     }
     return onChainData
@@ -68,7 +69,8 @@ export class OnchainTxBotService {
         } catch (e: any) {
           const isNormalError = this.isContainsNormalError(e)
           if (!isNormalError) {
-            await this.telegramNotifierService.sendError(`Estimation of 'update' on ${currentKeeper} pegkeeper has failed : \`\`\` ${e} \`\`\` `)
+            const errorMessage = e instanceof Error ? e.message : String(e)
+            await this.telegramNotifierService.sendError(`Estimation of 'update' on ${currentKeeper} pegkeeper has failed: ${errorMessage}`)
           }
         }
         if (gasfeeEstimation) {
@@ -107,7 +109,8 @@ export class OnchainTxBotService {
             const isNormalError = this.isContainsNormalError(e)
 
             if (!isNormalError) {
-              await this.telegramNotifierService.sendError(`Trigger of 'update' on ${currentKeeper} pegkeeper has failed : \`\`\` ${e} \`\`\` `)
+              const errorMessage = e instanceof Error ? e.message : String(e)
+              await this.telegramNotifierService.sendError(`Trigger of 'update' on ${currentKeeper} pegkeeper has failed: ${errorMessage}`)
             }
             throw e
           }
@@ -173,7 +176,8 @@ export class OnchainTxBotService {
           `IR of markets \`${irToCheckpoint.map((market) => market.collatName).join(",")}\` have been checkpointed`
         )
       } catch (e: any) {
-        await this.telegramNotifierService.sendError(`Checkpoint IR has failed : ${e}`)
+        const errorMessage = e instanceof Error ? e.message : String(e)
+        await this.telegramNotifierService.sendError(`Checkpoint IR has failed: ${errorMessage}`)
       }
     }
 
@@ -218,7 +222,8 @@ export class OnchainTxBotService {
     return gasCost
   }
 
-  isContainsNormalError(e: string) {
-    return pegKeepersKnowErrors.some((el) => e.toString().includes(el))
+  isContainsNormalError(e: any) {
+    const errorString = e instanceof Error ? e.message : String(e)
+    return pegKeepersKnowErrors.some((el) => errorString.includes(el))
   }
 }

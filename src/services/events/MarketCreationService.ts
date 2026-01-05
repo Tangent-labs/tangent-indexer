@@ -26,7 +26,6 @@ export class MarketCreationService {
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
     // Fetch logs from MarketCreator
     let marketsCreated = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, this.marketCreatorAddress)
-
     // If some logs are coming from MarketCreator, we insert them in db
     if (marketsCreated.length) {
       marketsCreated = marketsCreated.map((m) => {
@@ -84,7 +83,7 @@ export class MarketCreationService {
     const mapMarketIdAddresses = new Map<string, number>()
 
     marketContracts.forEach((market) => {
-      mapMarketIdAddresses.set(market.contract_address, Number(market.id))
+      mapMarketIdAddresses.set(market.contract_address.toLowerCase(), Number(market.id))
     })
 
     const marketAddresses = marketContracts.map((market) => market.contract_address as AddressLike)

@@ -58,17 +58,14 @@ async function checkWalletBalance(walletPk: string): Promise<{ sufficient: boole
 async function filterWalletsWithSufficientBalance(walletPks: string[]): Promise<{ walletPk: string; index: number; address: string }[]> {
   const validWallets: { walletPk: string; index: number; address: string }[] = []
 
-  console.log(`Checking ${walletPks.length} wallet(s) for sufficient balance (> ${MIN_GAS} ETH)...`)
-
   for (let i = 0; i < walletPks.length; i++) {
     const walletPk = walletPks[i]
     const { sufficient, balance, address } = await checkWalletBalance(walletPk)
 
     if (sufficient) {
       validWallets.push({ walletPk, index: i, address })
-      console.log(`✓ Wallet ${i} (${address}): ${balance.toFixed(6)} ETH - SUFFICIENT`)
     } else {
-      console.log(`✗ Wallet ${i} (${address}): ${balance.toFixed(6)} ETH - INSUFFICIENT (skipping)`)
+      console.error(`✗ Wallet ${i} (${address}): ${balance.toFixed(6)} ETH - INSUFFICIENT (skipping)`)
     }
   }
 
@@ -96,8 +93,6 @@ export async function checkAndResumePausedWallets() {
     return // No paused wallets to check
   }
 
-  console.log(`Checking ${unavailableWallets.length} paused wallet(s) for sufficient gas...`)
-
   for (const [address, state] of unavailableWallets) {
     try {
       const { balance } = await getWalletBalance(state.walletPk)
@@ -112,13 +107,11 @@ export async function checkAndResumePausedWallets() {
           state.balance = balance
 
           const resumeMsg = `Wallet ${address} resumed - gas replenished (balance: ${balanceEth.toFixed(6)} ETH, required: ${MIN_GAS} ETH)`
-          console.log(`✓ ${resumeMsg}`)
           await telegramNotifierService.sendError(resumeMsg) // Using sendError for notifications
         }
       } else {
         // Update balance but keep paused
         state.balance = balance
-        console.log(`  Wallet ${address} still paused - balance: ${balanceEth.toFixed(6)} ETH (required: ${MIN_GAS} ETH)`)
       }
     } catch (error) {
       console.error(`Error checking wallet ${address}:`, error)
@@ -143,6 +136,7 @@ async function main() {
   const liquidatorQueue = new Queue<SerializedLiquidationUserFullInfo>("liquidatorQueue", {
     connection: indexerConfig.liquidationQueueRedis as any, // BullMQ accepts connection string
     defaultJobOptions: {
+      // Removed invalid lockDuration and lockRenewTime properties
       attempts: indexerConfig.liquidationQueue.attempts,
       backoff: {
         type: indexerConfig.liquidationQueue.backoff.type,
@@ -152,11 +146,6 @@ async function main() {
       removeOnFail: false, // Keep failed jobs for inspection
     },
   })
-  console.log(`Connected to queue: liquidatorQueue`)
-  console.log(
-    `Retry strategy: ${indexerConfig.liquidationQueue.attempts} attempts with ${indexerConfig.liquidationQueue.backoff.type} backoff (${indexerConfig.liquidationQueue.backoff.delay}ms delay)`
-  )
-  console.log(`Available wallets: ${walletsPks.length}`)
 
   // Set up context
   context.providers = providers
@@ -165,8 +154,6 @@ async function main() {
   // Check context (validate RPCs and wallets)
   try {
     await liquidationService.checkContext()
-    console.log(`Context validated. Using RPC index: ${context.currentRpcIndex}, Block: ${context.currentBlock}`)
-    console.log(`Available wallets after balance check: ${context.walletsPks.length}`)
   } catch (error) {
     console.error("Failed to check context:", error)
     await telegramNotifierService.sendError(`Liquidation Process Error: Failed to check context: ${(error as Error).message}`)
@@ -187,8 +174,6 @@ async function main() {
     await telegramNotifierService.sendError(`Liquidation Process Error:${invalidWallets} wallets with insufficient balance (> ${MIN_GAS} ETH) found`)
   }
 
-  console.log(`\n=== Starting ${validWallets.length} worker(s) - one per wallet with sufficient balance ===`)
-
   // Create one worker per wallet
   for (const { walletPk, index, address } of validWallets) {
     console.log(`Creating worker ${index + 1}/${validWallets.length} for wallet ${index} (${address})...`)
@@ -206,82 +191,106 @@ async function main() {
     // Create a worker for this specific wallet
     const worker = new Worker<SerializedLiquidationUserFullInfo>(
       "liquidatorQueue",
-      async (job: Job<SerializedLiquidationUserFullInfo>) => {
-        // Pre-check before processing
-        const state = walletStates.get(address)
-        if (!state || !state.available) {
-          throw new Error("Wallet not available") // Will retry with another worker
-        }
+      async (job: Job<SerializedLiquidationUserFullInfo>, token, signal) => {
+        // Handle cancellation when lock is lost
+        return new Promise((resolve, reject) => {
+          // Set up abort listener for graceful cancellation
+          signal?.addEventListener("abort", () => {
+            const reason = signal.reason || "Lock renewal failed"
+            reject(new Error(`Job cancelled: ${reason}`))
+          })
 
-        const { balance: currentBalance } = await getWalletBalance(walletPk)
-        if (currentBalance < MIN_GAS_WEI) {
-          state.available = false
-          state.balance = currentBalance
+          // Execute async work
+          ;(async () => {
+            try {
+              // Pre-check before processing
+              const state = walletStates.get(address)
+              if (!state || !state.available) {
+                throw new Error("Wallet not available") // Will retry with another worker
+              }
 
-          await worker.pause()
+              // Check if cancelled before processing
+              if (signal?.aborted) {
+                throw new Error("Job cancelled before processing")
+              }
 
-          const balanceEth = Number(formatEther(currentBalance))
-          const errorMsg = `Wallet ${address} paused - needs gas (balance: ${balanceEth.toFixed(6)} ETH, required: ${MIN_GAS} ETH)`
-          console.error(errorMsg)
-          await telegramNotifierService.sendError(errorMsg)
+              const { balance: currentBalance } = await getWalletBalance(walletPk)
+              if (currentBalance < MIN_GAS_WEI) {
+                state.available = false
+                state.balance = currentBalance
 
-          throw new Error(`Wallet ${address} low gas`) // Job goes back to queue
-        }
+                await worker.pause()
 
-        // Process liquidation
-        await liquidationService.processJob(job, telegramNotifierService, walletPk)
+                const balanceEth = Number(formatEther(currentBalance))
+                const errorMsg = `Wallet ${address} paused - needs gas (balance: ${balanceEth.toFixed(6)} ETH, required: ${MIN_GAS} ETH)`
+                console.error(errorMsg)
+                await telegramNotifierService.sendError(errorMsg)
 
-        // Update state
-        const { balance: updatedBalance } = await getWalletBalance(walletPk)
-        state.balance = updatedBalance
+                throw new Error(`Wallet ${address} low gas`) // Job goes back to queue
+              }
+
+              // Check if cancelled before processing liquidation
+              if (signal?.aborted) {
+                throw new Error("Job cancelled before liquidation")
+              }
+
+              // Process liquidation (pass signal for cancellation support)
+              await liquidationService.processJob(job, telegramNotifierService, walletPk, signal)
+
+              // Check if cancelled after processing
+              if (signal?.aborted) {
+                throw new Error("Job cancelled after processing")
+              }
+
+              // Update state
+              const { balance: updatedBalance } = await getWalletBalance(walletPk)
+              state.balance = updatedBalance
+
+              // Wait 200ms before processing next job to avoid overwhelming the RPC
+              await new Promise((resolve) => setTimeout(resolve, 200))
+
+              resolve(undefined)
+            } catch (error) {
+              reject(error)
+            }
+          })()
+        })
       },
       {
         connection: indexerConfig.liquidationQueueRedis as any, // BullMQ accepts connection string
         concurrency: 1, // 1 job at a time per worker
+        lockDuration: 10 * 60 * 1000, // 10 minutes lock duration (liquidations can take time)
+        lockRenewTime: 30 * 1000, // Renew lock every 30 seconds to prevent expiration
       }
     )
 
     walletWorkers.set(address, worker)
-    console.log(`✓ Worker ${index + 1}/${validWallets.length} started successfully for wallet ${index} (${address})`)
   }
-
-  console.log(`\n=== All ${validWallets.length} worker(s) started successfully ===\n`)
 
   // Handle worker events (attach to all workers)
   for (const [address, worker] of walletWorkers.entries()) {
-    worker.on("completed", (job: Job<SerializedLiquidationUserFullInfo>) => {
-      console.log(`Job ${job.id} completed successfully`)
-    })
-
     worker.on("failed", async (job: Job<SerializedLiquidationUserFullInfo> | undefined, error: Error) => {
       if (!job) {
-        console.error("Job failed but job object is undefined:", error)
         return
       }
 
       const attemptsMade = job.attemptsMade || 0
       const maxAttempts = job.opts?.attempts || indexerConfig.liquidationQueue.attempts
 
-      console.error(`Job ${job.id} failed (attempt ${attemptsMade}/${maxAttempts}):`, error.message)
-
       // Check if job will be retried
       if (attemptsMade < maxAttempts) {
         const nextAttempt = attemptsMade + 1
-        console.log(`Job ${job.id} will be retried (attempt ${nextAttempt}/${maxAttempts})`)
+
         await telegramNotifierService.sendError(
           `Liquidation Process: Job ${job.id} failed and will be retried (attempt ${nextAttempt}/${maxAttempts}). Error: ${error.message}`
         )
       } else {
         // Job has exhausted all retry attempts
-        console.error(`Job ${job.id} has exhausted all ${maxAttempts} retry attempts. Marking as permanently failed.`)
+
         await telegramNotifierService.sendError(
           `Liquidation Process: Job ${job.id} has permanently failed after ${maxAttempts} attempts. Error: ${error.message}`
         )
       }
-    })
-
-    worker.on("stalled", (jobId: string) => {
-      console.warn(`Job ${jobId} has stalled and will be retried`)
     })
 
     worker.on("error", (error: Error) => {
@@ -289,8 +298,13 @@ async function main() {
       telegramNotifierService.sendError(`Liquidation Process Worker Error (${address}): ${error.message}`)
     })
 
-    worker.on("active", (job: Job<SerializedLiquidationUserFullInfo>) => {
-      console.log(`Job ${job.id} is now active`)
+    // Handle lock renewal failures - cancel jobs when lock is lost
+    // This allows graceful cleanup and lets BullMQ's stalled job checker retry the job
+    worker.on("lockRenewalFailed", (jobIds: string[]) => {
+      console.warn(`Lock renewal failed for ${jobIds.length} job(s) on wallet ${address}:`, jobIds)
+      jobIds.forEach((jobId) => {
+        worker.cancelJob(jobId, "Lock renewal failed - will be retried by stalled job checker")
+      })
     })
   }
 
@@ -308,16 +322,13 @@ async function main() {
     })
   }, AUTO_RESUME_INTERVAL_MS)
 
-  console.log(`Auto-resume enabled: checking paused wallets every ${AUTO_RESUME_INTERVAL_MS / 1000 / 60} minutes`)
-
   // Graceful shutdown handler
   const gracefulShutdown = async () => {
     console.log("Shutting down gracefully...")
     // Clear auto-resume interval
     clearInterval(autoResumeInterval)
     // Close all workers
-    for (const [address, worker] of walletWorkers.entries()) {
-      console.log(`Closing worker for wallet ${address}...`)
+    for (const [, worker] of walletWorkers.entries()) {
       await worker.close()
     }
     await liquidatorQueue.close()
@@ -329,7 +340,6 @@ async function main() {
 
   // Keep the process alive
   console.log("Queue worker is running. Waiting for jobs...")
-  console.log("Press Ctrl+C to stop the worker")
 }
 
 // Run main function if this file is being run directly

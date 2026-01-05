@@ -21,6 +21,7 @@ import {
 } from "../../scripts/liquidation_process.js"
 
 const DECIMALS = BigInt(10 ** 18)
+const TEST_EXECUTION_KEY = "test-execution-key-12345"
 
 // Mock Wallet and Contract constructors - hoisted so they can be accessed in both mocks and tests
 const mockWallet = vi.hoisted(() => vi.fn())
@@ -192,6 +193,7 @@ describe("liquidation_process", () => {
           collateralBalance: (1500n * DECIMALS).toString(),
           collatToken: "0xToken1" as AddressLike,
           type: "seizing",
+          executionKey: TEST_EXECUTION_KEY,
         },
         attemptsMade: 0,
       } as Job<SerializedLiquidationUserFullInfo>
@@ -232,6 +234,7 @@ describe("liquidation_process", () => {
           collateralBalance: (1500n * DECIMALS).toString(),
           collatToken: "0xToken2" as AddressLike,
           type: "liquidation",
+          executionKey: TEST_EXECUTION_KEY,
         },
         attemptsMade: 0,
       } as Job<SerializedLiquidationUserFullInfo>
@@ -242,6 +245,10 @@ describe("liquidation_process", () => {
       await mockLiquidationService.processJob(liquidationJob, mockTelegramNotifierService, walletPk)
 
       // Verify that executeLiquidation was called with deserialized data (BigInt values)
+      // executeLiquidation is called with: walletIndex, action, slippageModifierBps, nbAttempt
+      // slippageModifierBps is 0n when attemptsMade is 0
+      // nbAttempt is the attemptsMade value from the job (0 in this case)
+      // Note: executionKey is also included in the action object
       expect(mockLiquidationService.executeLiquidation).toHaveBeenCalledWith(
         0,
         expect.objectContaining({
@@ -252,10 +259,68 @@ describe("liquidation_process", () => {
           positionValue: 1000n * DECIMALS,
           collateralBalance: 1500n * DECIMALS,
           type: "liquidation",
-        })
+          executionKey: TEST_EXECUTION_KEY,
+        }),
+        0n, // slippageModifierBps when attemptsMade is 0
+        0 // nbAttempt (attemptsMade from job)
       )
       expect(mockLiquidationService.executeLiquidation).toHaveBeenCalledTimes(1)
       expect(mockLiquidationService.executeSeizing).not.toHaveBeenCalled()
+    })
+
+    it("should increase slippage modifier based on retry attempts", async () => {
+      // Test multiple retry attempts to verify slippage increases
+      const testCases = [
+        { attemptsMade: 0, expectedSlippageModifier: 0n },
+        { attemptsMade: 1, expectedSlippageModifier: 100000n }, // (200 - 100) * 1000 = 100000
+        { attemptsMade: 2, expectedSlippageModifier: 200000n }, // (300 - 100) * 1000 = 200000
+        { attemptsMade: 3, expectedSlippageModifier: 300000n }, // (400 - 100) * 1000 = 300000
+      ]
+
+      for (const testCase of testCases) {
+        // Reset mocks for each test case
+        vi.clearAllMocks()
+
+        const liquidationJob: Job<SerializedLiquidationUserFullInfo> = {
+          id: `retry-${testCase.attemptsMade}`,
+          data: {
+            account: "0xUserRetry" as AddressLike,
+            market: "0xMarketRetry" as AddressLike,
+            healthRatio: 2000000000000000000n.toString(),
+            userDebt: (760n * DECIMALS).toString(),
+            positionValue: (1000n * DECIMALS).toString(),
+            collateralBalance: (1500n * DECIMALS).toString(),
+            collatToken: "0xTokenRetry" as AddressLike,
+            type: "liquidation",
+            executionKey: TEST_EXECUTION_KEY,
+          },
+          attemptsMade: testCase.attemptsMade,
+        } as Job<SerializedLiquidationUserFullInfo>
+
+        const walletPk = "wallet1"
+
+        // Process the job
+        await mockLiquidationService.processJob(liquidationJob, mockTelegramNotifierService, walletPk)
+
+        // Verify executeLiquidation was called with correct slippageModifierBps
+        expect(mockLiquidationService.executeLiquidation).toHaveBeenCalledWith(
+          0,
+          expect.objectContaining({
+            account: "0xUserRetry",
+            market: "0xMarketRetry",
+            type: "liquidation",
+          }),
+          testCase.expectedSlippageModifier, // slippageModifierBps
+          testCase.attemptsMade // nbAttempt
+        )
+
+        // Verify telegram notification was sent for retries (attemptsMade > 0)
+        if (testCase.attemptsMade > 0) {
+          expect(mockTelegramNotifierService.sendError).toHaveBeenCalledWith(expect.stringContaining(`Retry attempt ${testCase.attemptsMade + 1}`))
+        } else {
+          expect(mockTelegramNotifierService.sendError).not.toHaveBeenCalled()
+        }
+      }
     })
 
     it("should process jobs one at a time with a single wallet", async () => {
@@ -272,6 +337,7 @@ describe("liquidation_process", () => {
             collateralBalance: (1500n * DECIMALS).toString(),
             collatToken: "0xToken1" as AddressLike,
             type: i % 2 === 0 ? "seizing" : "liquidation",
+            executionKey: TEST_EXECUTION_KEY,
           },
           attemptsMade: 0,
         } as Job<SerializedLiquidationUserFullInfo>)
@@ -302,6 +368,7 @@ describe("liquidation_process", () => {
           collateralBalance: (1500n * DECIMALS).toString(),
           collatToken: "0xToken3" as AddressLike,
           type: "seizing",
+          executionKey: TEST_EXECUTION_KEY,
         },
         attemptsMade: 0,
       } as Job<SerializedLiquidationUserFullInfo>
@@ -329,6 +396,7 @@ describe("liquidation_process", () => {
           collateralBalance: (1500n * DECIMALS).toString(),
           collatToken: "0xToken4" as AddressLike,
           type: "unknown" as any, // Force unknown type
+          executionKey: TEST_EXECUTION_KEY,
         },
         attemptsMade: 0,
       } as Job<SerializedLiquidationUserFullInfo>
@@ -385,6 +453,7 @@ describe("liquidation_process", () => {
             collateralBalance: (1500n * DECIMALS).toString(),
             collatToken: "0xToken1" as AddressLike,
             type: i % 2 === 0 ? "seizing" : "liquidation",
+            executionKey: TEST_EXECUTION_KEY,
           },
           attemptsMade: 0,
         } as Job<SerializedLiquidationUserFullInfo>)
@@ -413,6 +482,7 @@ describe("liquidation_process", () => {
           collateralBalance: (1500n * DECIMALS).toString(),
           collatToken: "0xToken1" as AddressLike,
           type: "seizing",
+          executionKey: TEST_EXECUTION_KEY,
         },
         attemptsMade: 0,
       } as Job<SerializedLiquidationUserFullInfo>
