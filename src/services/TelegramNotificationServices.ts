@@ -28,7 +28,8 @@ export class TelegramNotifierService {
       console.error("Telegram bot token or chat id is not set")
       return false
     }
-    const cleanedText = text
+    // Ensure we only send strings, not objects
+    const cleanedText = typeof text === "string" ? text : String(text)
     if (!cleanedText) {
       return false
     }

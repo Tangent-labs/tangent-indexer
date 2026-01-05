@@ -74,7 +74,7 @@ export const indexerConfig = {
     },
   },
   liquidationLimits: {
-    maxPriceImpact: Number(process.env.MAX_PRICE_IMPACT) || 1,
+    maxPriceImpact: Number(process.env.MAX_PRICE_IMPACT) || 0.01,
   },
 } as IndexerConfig
 
@@ -100,7 +100,7 @@ function _initEnv() {
   }
 
   const startingBlock = process.env.STARTING_BLOCK
-  if (!blockRangeEnv) {
+  if (!startingBlock) {
     throw new Error("STARTING_BLOCK_NOT_SET")
   }
 

@@ -5,15 +5,6 @@ import { prepareSerialize } from "../utils/jsonSerializer.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 import { AddressLike } from "ethers"
 
-/**
- * Escape special characters for MarkdownV2 format
- * Characters that need escaping: _ * [ ] ( ) ~ ` > # + - = | { } . !
- */
-function escapeMarkdownV2(text: string): string {
-  // Escape all special MarkdownV2 characters
-  return text.replace(/([_*[\]()~`>#+\-=|{}.!\\])/g, "\\$1")
-}
-
 export class LiquidationBotLogService {
   liquidationBotLogRepository: LiquidationBotLogRepository
   private readonly telegramNotifierService: TelegramNotifierService
@@ -51,18 +42,67 @@ export class LiquidationBotLogService {
   ) {
     // Send Telegram notification by default (unless explicitly disabled)
     if (sendTelegramNotification) {
-      const fullMessage = `Liquidation Error in action ${action}: ${error.message.slice(0, 100)}`
-      await this.telegramNotifierService.sendError(escapeMarkdownV2(fullMessage))
+      // const fullMessage = `Liquidation Error in action ${action}: ${error.message.slice(0, 100)}`
+      // await this.telegramNotifierService.sendError(escapeMarkdownV2(fullMessage))
     }
+
+    // Extract error information, including any custom properties
+    const errorInfo: any = {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+    }
+
+    // Include code if it exists (from ethers errors)
+    if ((error as any).code) {
+      errorInfo.code = (error as any).code
+    }
+
+    // Include data if it exists (from ethers errors)
+    if ((error as any).data) {
+      errorInfo.data = (error as any).data
+    }
+
+    // Merge with parsed error from additionalData if it exists
+    if (additionalData?.error) {
+      // Merge parsed error info (code, errorName, decodedMessage, rawData) into errorInfo
+      if (additionalData.error.code) errorInfo.code = additionalData.error.code
+      if (additionalData.error.errorName) errorInfo.errorName = additionalData.error.errorName
+      if (additionalData.error.decodedMessage) errorInfo.decodedMessage = additionalData.error.decodedMessage
+      if (additionalData.error.rawData) errorInfo.rawData = additionalData.error.rawData
+
+      // Only include originalError if it has useful information
+      if (additionalData.error.originalError) {
+        const origError = additionalData.error.originalError
+        // Only include if it's not an empty object and has useful properties
+        if (typeof origError === "object" && origError !== null) {
+          const hasUsefulInfo =
+            origError.message ||
+            origError.name ||
+            origError.code ||
+            origError.stack ||
+            (Object.keys(origError).length > 0 && Object.keys(origError).some((k) => k !== "constructor"))
+
+          if (hasUsefulInfo) {
+            errorInfo.originalError = {
+              message: origError.message,
+              name: origError.name,
+              code: origError.code,
+              stack: origError.stack,
+            }
+          }
+        }
+      }
+    }
+
     // Ensure account data is always accessible at the top level
+    // Remove the nested error from additionalData since we've merged it into errorInfo
+    const { error: _, ...restAdditionalData } = additionalData || {}
     const errorData = {
-      error: {
-        message: error.message,
-        name: error.name,
-        stack: error.stack,
-      },
-      ...additionalData,
+      error: errorInfo,
+      ...restAdditionalData,
     }
+
     await this._logAction(action, context, errorData, true)
   }
 

@@ -1,5 +1,5 @@
 import { PointsBotLogRepository } from "../db/Points/PointsBotLogRepository.js"
-import { LiquidationBotLogAction, NotificationBotAction, NotificationBotErrorLevel, NotificationMessage } from "../type/data.js"
+import { NotificationBotAction, NotificationBotErrorLevel, NotificationMessage } from "../type/data.js"
 import { prepareSerialize } from "../utils/jsonSerializer.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 
@@ -129,10 +129,5 @@ export class NotificationService {
 
   async sendErrorNotification(message: string) {
     await this.telegramNotifierService.sendError(message)
-  }
-
-  async sendImmediateNotification(message: string, action?: LiquidationBotLogAction) {
-    console.log(message, action)
-    // TODO: recable with sendNotification mechanism
   }
 }

@@ -39,7 +39,7 @@ export type SerializedLiquidationUserFullInfo = Omit<LiquidationUserFullInfo, "h
   userDebt: string
   positionValue: string
   collateralBalance: string
-} & { type: "seizing" | "liquidation" }
+} & { type: "seizing" | "liquidation"; executionKey: string }
 
 export type LiquidationAnalyseInfo = {
   seizingList?: LiquidationUserFullInfo[]
@@ -65,6 +65,7 @@ export type LiquidationEstimateInfo = {
 }
 
 export type LiquidationBotLogAction =
+  | "liquidation_preparation"
   | "check_context"
   | "liquidation_params"
   | "liquidation_bad_debt_execution"

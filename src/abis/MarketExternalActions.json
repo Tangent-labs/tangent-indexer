@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "MarketExternalActions",
-  "sourceName": "src/tgUSD/Market/abstract/MarketExternalActions.sol",
+  "sourceName": "src/USG/Market/abstract/MarketExternalActions.sol",
   "abi": [
     {
       "inputs": [],
@@ -11,6 +11,27 @@
     {
       "inputs": [],
       "name": "BorrowPaused",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "CallerNotPauser",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "collatValue",
+          "type": "uint256"
+        }
+      ],
+      "name": "CollatValueToLiquidateTooLow",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "DebtToRepayTooBig",
       "type": "error"
     },
     {
@@ -60,12 +81,54 @@
     },
     {
       "inputs": [],
+      "name": "MaxUSGToBurn",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "collatAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "MinCollatToLiquidate",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NoZapLiquidateWithReceipt",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotAMigratoor",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "collatBalance",
+          "type": "uint256"
+        }
+      ],
+      "name": "NotEnoughCollateralToLiquidate",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "NotLiquidablePosition",
       "type": "error"
     },
     {
       "inputs": [],
       "name": "NotRewardAccumulator",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OverMaxLTV",
       "type": "error"
     },
     {
@@ -123,11 +186,6 @@
     },
     {
       "inputs": [],
-      "name": "UserDebtTooHigh",
-      "type": "error"
-    },
-    {
-      "inputs": [],
       "name": "UserDebtTooLow",
       "type": "error"
     },
@@ -165,6 +223,12 @@
           "indexed": false,
           "internalType": "uint256",
           "name": "borrowedAmount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "debtShares",
           "type": "uint256"
         }
       ],
@@ -210,6 +274,12 @@
           "internalType": "uint256",
           "name": "borrowedAmount",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "debtShares",
+          "type": "uint256"
         }
       ],
       "name": "DepositAndBorrow",
@@ -241,6 +311,12 @@
           "internalType": "uint256",
           "name": "borrowedAmount",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "debtShares",
+          "type": "uint256"
         }
       ],
       "name": "Leverage",
@@ -259,6 +335,12 @@
           "indexed": false,
           "internalType": "uint256",
           "name": "repaidAmount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "debtShares",
           "type": "uint256"
         },
         {
@@ -289,6 +371,74 @@
         {
           "indexed": true,
           "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "collatRemoved",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "debtRemoved",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "debtRepaid",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newUserDebtShares",
+          "type": "uint256"
+        }
+      ],
+      "name": "MigrateFrom",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "collatAdded",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "debtAdded",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newUserDebtShares",
+          "type": "uint256"
+        }
+      ],
+      "name": "MigrateTo",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
           "name": "previousOwner",
           "type": "address"
         },
@@ -300,6 +450,25 @@
         }
       ],
       "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "enum PauseSettings.PauseEnum",
+          "name": "pauseType",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "isPaused",
+          "type": "uint64"
+        }
+      ],
+      "name": "PauseTrigger",
       "type": "event"
     },
     {
@@ -321,6 +490,12 @@
           "indexed": false,
           "internalType": "uint256",
           "name": "repaidAmount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "debtShares",
           "type": "uint256"
         }
       ],
@@ -347,9 +522,34 @@
           "internalType": "uint256",
           "name": "repaidAmount",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "debtShares",
+          "type": "uint256"
         }
       ],
       "name": "RepayAndWithdraw",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "badDebtRepaid",
+          "type": "uint256"
+        }
+      ],
+      "name": "RepayBadDebt",
       "type": "event"
     },
     {
@@ -395,6 +595,12 @@
         {
           "indexed": false,
           "internalType": "uint256",
+          "name": "debtShares",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
           "name": "collateralLiquidated",
           "type": "uint256"
         },
@@ -406,6 +612,84 @@
         }
       ],
       "name": "SelfLiquidate",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newLiquidationFee",
+          "type": "uint256"
+        }
+      ],
+      "name": "SetLiquidationFee",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newLiquidationThreshold",
+          "type": "uint256"
+        }
+      ],
+      "name": "SetLiquidationThreshold",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newMaxLTV",
+          "type": "uint256"
+        }
+      ],
+      "name": "SetMaxLTV",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newMaxMarketDebt",
+          "type": "uint256"
+        }
+      ],
+      "name": "SetMaxMarketDebt",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newMinimumLoan",
+          "type": "uint256"
+        }
+      ],
+      "name": "SetMinimumLoan",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "contract IPriceOracle",
+          "name": "newOracle",
+          "type": "address"
+        }
+      ],
+      "name": "SetOracle",
       "type": "event"
     },
     {
@@ -481,6 +765,12 @@
         },
         {
           "indexed": false,
+          "internalType": "uint256",
+          "name": "debtShares",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
           "internalType": "contract IERC20",
           "name": "tokenIn",
           "type": "address"
@@ -530,6 +820,12 @@
         },
         {
           "indexed": false,
+          "internalType": "uint256",
+          "name": "debtShares",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
           "internalType": "contract IERC20",
           "name": "tokenIn",
           "type": "address"
@@ -563,6 +859,12 @@
           "indexed": false,
           "internalType": "uint256",
           "name": "repaidAmount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "debtShares",
           "type": "uint256"
         },
         {
@@ -604,6 +906,12 @@
         },
         {
           "indexed": false,
+          "internalType": "uint256",
+          "name": "debtShares",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
           "internalType": "contract IERC20",
           "name": "tokenIn",
           "type": "address"
@@ -617,32 +925,6 @@
       ],
       "name": "ZapRepayAndWithdraw",
       "type": "event"
-    },
-    {
-      "inputs": [],
-      "name": "DENOMINATOR",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "RAY",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
     },
     {
       "inputs": [],
@@ -666,7 +948,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "tgUSDToBorrow",
+          "name": "USGToBorrow",
           "type": "uint256"
         }
       ],
@@ -704,6 +986,19 @@
         }
       ],
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "collatDecimals",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -752,19 +1047,6 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "controlTower",
-      "outputs": [
-        {
-          "internalType": "contract IControlTower",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [
         {
           "internalType": "address",
@@ -778,7 +1060,7 @@
         },
         {
           "internalType": "bool",
-          "name": "isStaked",
+          "name": "isReceiptIn",
           "type": "bool"
         }
       ],
@@ -801,7 +1083,7 @@
         },
         {
           "internalType": "bool",
-          "name": "isStaked",
+          "name": "isReceiptIn",
           "type": "bool"
         }
       ],
@@ -835,19 +1117,23 @@
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "healthRatio",
+      "inputs": [],
+      "name": "getPausedSettings",
       "outputs": [
         {
-          "internalType": "uint256",
+          "internalType": "uint64",
           "name": "",
-          "type": "uint256"
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
         }
       ],
       "stateMutability": "view",
@@ -867,78 +1153,33 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "isBorrowPaused",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "isDepositPaused",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "isInitialized",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "isLeveragePaused",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "collatToDeposit",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tgUSDToFlashMint",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "minCollatAmountOut",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "isStaked",
-          "type": "bool"
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "collatToDeposit",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "usgToFlashMint",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "minCollatAmountOut",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "isReceiptIn",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct LeverageIn",
+          "name": "leverageIn",
+          "type": "tuple"
         },
         {
           "components": [
@@ -966,19 +1207,53 @@
     {
       "inputs": [
         {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "collatToLiquidate",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "minTgUSDOut",
-          "type": "uint256"
+          "components": [
+            {
+              "internalType": "address",
+              "name": "account",
+              "type": "address"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "collatAmountToLiquidate",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "minUsgOut",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "maxUsgToBurn",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "minCollatAmountToLiquidate",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "isReceiptOut",
+                  "type": "bool"
+                }
+              ],
+              "internalType": "struct PostLiquidate",
+              "name": "postLiquidate",
+              "type": "tuple"
+            },
+            {
+              "internalType": "uint256",
+              "name": "minCollatValueToLiquidate",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LiquidateIn",
+          "name": "liquidateIn",
+          "type": "tuple"
         },
         {
           "components": [
@@ -1017,46 +1292,8 @@
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "liquidationPrice",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [],
       "name": "liquidationThreshold",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "maxBorrowable",
       "outputs": [
         {
           "internalType": "uint256",
@@ -1094,6 +1331,68 @@
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "collatToRemove",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "debtToRemove",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "debtToRepay",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "receiver",
+          "type": "address"
+        }
+      ],
+      "name": "migrateFrom",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "collatToAdd",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "debtToAdd",
+          "type": "uint256"
+        }
+      ],
+      "name": "migrateTo",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "name": "minimumLoan",
       "outputs": [
@@ -1121,34 +1420,22 @@
     },
     {
       "inputs": [],
-      "name": "pendingInterests",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
+      "name": "reeantrancyOff",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "inputs": [
+      "inputs": [],
+      "name": "reeantrancyOn",
+      "outputs": [
         {
-          "internalType": "address",
-          "name": "account",
+          "internalType": "contract IERC20",
+          "name": "",
           "type": "address"
         }
       ],
-      "name": "positionValue",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -1160,7 +1447,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "tgUSDToRepay",
+          "name": "USGToRepay",
           "type": "uint256"
         }
       ],
@@ -1178,8 +1465,13 @@
         },
         {
           "internalType": "uint256",
-          "name": "tgUSDToRepay",
+          "name": "usgToRepay",
           "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isReceiptOut",
+          "type": "bool"
         }
       ],
       "name": "repayAndWithdraw",
@@ -1229,19 +1521,36 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "collatAmountToLiquidate",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tgUSDToRepay",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "minTgUSDOut",
-          "type": "uint256"
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "collatAmountToLiquidate",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "usgToRepay",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "maxUsgToBurn",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "minUsgOut",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "isReceiptOut",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct SelfLiquidateIn",
+          "name": "selfLiquidateIn",
+          "type": "tuple"
         },
         {
           "components": [
@@ -1275,45 +1584,6 @@
         }
       ],
       "name": "setCollatOracle",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bool",
-          "name": "_isBorrowPaused",
-          "type": "bool"
-        }
-      ],
-      "name": "setIsBorrowPaused",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bool",
-          "name": "_isDepositPaused",
-          "type": "bool"
-        }
-      ],
-      "name": "setIsDepositPaused",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bool",
-          "name": "_isLeveragePaused",
-          "type": "bool"
-        }
-      ],
-      "name": "setIsLeveragePaused",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -1384,34 +1654,26 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "tgUSD",
-      "outputs": [
+      "inputs": [
         {
-          "internalType": "contract ITgUSD",
-          "name": "",
-          "type": "address"
+          "internalType": "enum PauseSettings.PauseEnum",
+          "name": "pauseType",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint64",
+          "name": "isPaused",
+          "type": "uint64"
         }
       ],
-      "stateMutability": "view",
+      "name": "setPause",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
       "inputs": [],
       "name": "totalCollateral",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "totalDebt",
       "outputs": [
         {
           "internalType": "uint256",
@@ -1452,25 +1714,6 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "userDebt",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
           "name": "",
           "type": "address"
         }
@@ -1492,6 +1735,11 @@
           "internalType": "uint256",
           "name": "withdrawAmount",
           "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isReceiptOut",
+          "type": "bool"
         }
       ],
       "name": "withdraw",
@@ -1505,11 +1753,6 @@
           "internalType": "address",
           "name": "_for",
           "type": "address"
-        },
-        {
-          "internalType": "bool",
-          "name": "isStaked",
-          "type": "bool"
         },
         {
           "components": [
@@ -1564,11 +1807,6 @@
           "type": "uint256"
         },
         {
-          "internalType": "bool",
-          "name": "isStaked",
-          "type": "bool"
-        },
-        {
           "components": [
             {
               "internalType": "contract IERC20",
@@ -1617,18 +1855,13 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "tgUSDToFlashMint",
+          "name": "usgToFlashMint",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
           "name": "minCollatAmountOut",
           "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "isStaked",
-          "type": "bool"
         },
         {
           "components": [
@@ -1750,6 +1983,11 @@
           "internalType": "uint256",
           "name": "withdrawAmount",
           "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isReceiptOut",
+          "type": "bool"
         },
         {
           "components": [

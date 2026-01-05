@@ -13,6 +13,7 @@ import { LiquidationExecutionContext } from "../../services/LiquidationExecution
 import { setUpIndexer } from "../../config/indexer_setup.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { routers } from "@tangent/defi-resources"
+import { getAddressesJson } from "../utils/jsonReader.js"
 
 dotenv.config()
 const { providers, walletsPks, handleError } = setUpIndexer()
@@ -21,6 +22,8 @@ const { liquidationService, context, liquidationBotService, telegramNotifierServ
 // Run main function if this file is being run directly
 if (process.env.NODE_ENV !== "test") {
   const checkLiquidationService = new CheckLiquidationService(liquidationService, context, liquidationBotService, telegramNotifierService, providers)
+  const marketViewerAddress = (await getAddressesJson()).utilities.marketViewer
+  checkLiquidationService.marketViewerAddress = marketViewerAddress
   let exitCode = 0
 
   checkLiquidationService

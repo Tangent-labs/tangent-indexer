@@ -63,6 +63,8 @@ export const EVENT_TOPICS = {
   [id(BASIC_ERC20_MARKET_CREATED)]: "BasicERC20MarketCreated",
   [id(MARKET_STAKEDAO_VAULT_V2_CREATED)]: "MarketStakeDaoVaultV2Created",
   [id(MARKET_CURVE_GAUGE_CREATED)]: "MarketCurveGaugeCreated",
+  [id(MARKET_CURVE_GAUGE_CREATED)]: "MarketStakeDaoVaultV2",
+  [id(BASIC_ERC20_MARKET_CREATED)]: "BasicERC20MarketCreated",
 }
 
 export function encodeRepay(repayer: string, repaidAmount: bigint, newUserDebtShares: bigint) {

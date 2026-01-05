@@ -686,10 +686,10 @@ describe("LiquidationService - executeLiquidation", () => {
 
     await liquidationService.executeLiquidation(0, account)
 
-    // Verify slippage calculation: 10n + (10n * 0n) / 10000n = 10n
+    // Verify slippage calculation: 50n + (10n * 0n) / 10000n = 50n
     expect(estimateSpy).toHaveBeenCalled()
     const callArgs = estimateSpy.mock.calls[0]
-    expect(callArgs[2]).toBe(10n) // Default slippage when slippageModifierBps is 0n
+    expect(callArgs[2]).toBe(50n) // Default slippage when slippageModifierBps is 0n
     expect(mockMarketContract.liquidate).toHaveBeenCalledTimes(1)
   })
 
@@ -705,7 +705,7 @@ describe("LiquidationService - executeLiquidation", () => {
     }
 
     const slippageModifierBps = 500n // 5% modifier
-    const expectedSlippage = 10n + (10n * slippageModifierBps) / 10000n // 10n + 0.5n = 10.5n
+    const expectedSlippage = 50n + (10n * slippageModifierBps) / 10000n // 50n + 0.5n = 50.5n
 
     const mockEstimate: LiquidationEstimateInfo[] = [
       {
