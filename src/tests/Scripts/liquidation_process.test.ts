@@ -211,14 +211,18 @@ describe("liquidation_process", () => {
 
       // Verify that executeSeizing was called with the correct arguments
       expect(mockLiquidationService.executeSeizing).toHaveBeenCalledTimes(1)
-      expect(mockLiquidationService.executeSeizing).toHaveBeenCalledWith(
-        mockSigner,
-        expect.objectContaining({
-          account: "0xUser1",
-          market: "0xMarket1",
-          type: "seizing",
-        })
-      )
+      const executeSeizingSpy = mockLiquidationService.executeSeizing as any
+      const executeSeizingCall = executeSeizingSpy.mock.calls[0]
+      expect(executeSeizingCall[0]).toBe(mockSigner)
+      expect(executeSeizingCall[1]).toMatchObject({
+        account: "0xUser1",
+        market: "0xMarket1",
+        type: "seizing",
+      })
+      expect(executeSeizingCall[2]).toMatchObject({
+        currentRpcIndex: expect.any(Number),
+        currentBlock: expect.any(Number),
+      }) // logContext
       expect(mockLiquidationService.executeLiquidation).not.toHaveBeenCalled()
     })
 
@@ -249,21 +253,28 @@ describe("liquidation_process", () => {
       // slippageModifierBps is 0n when attemptsMade is 0
       // nbAttempt is the attemptsMade value from the job (0 in this case)
       // Note: executionKey is also included in the action object
-      expect(mockLiquidationService.executeLiquidation).toHaveBeenCalledWith(
-        0,
-        expect.objectContaining({
-          account: "0xUser2",
-          market: "0xMarket2",
-          healthRatio: 2000000000000000000n,
-          userDebt: 760n * DECIMALS,
-          positionValue: 1000n * DECIMALS,
-          collateralBalance: 1500n * DECIMALS,
-          type: "liquidation",
-          executionKey: TEST_EXECUTION_KEY,
-        }),
-        0n, // slippageModifierBps when attemptsMade is 0
-        0 // nbAttempt (attemptsMade from job)
-      )
+      const executeLiquidationSpy = mockLiquidationService.executeLiquidation as any
+      const executeLiquidationCall = executeLiquidationSpy.mock.calls[0]
+      expect(executeLiquidationCall[0]).toBe(0) // walletIndex
+      expect(executeLiquidationCall[1]).toMatchObject({
+        account: "0xUser2",
+        market: "0xMarket2",
+        healthRatio: 2000000000000000000n,
+        userDebt: 760n * DECIMALS,
+        positionValue: 1000n * DECIMALS,
+        collateralBalance: 1500n * DECIMALS,
+        type: "liquidation",
+        executionKey: TEST_EXECUTION_KEY,
+      })
+      expect(executeLiquidationCall[2]).toBe(0n) // slippageModifierBps when attemptsMade is 0
+      expect(executeLiquidationCall[3]).toBe(0) // nbAttempt (attemptsMade from job)
+      // rpcIndex (optional, can be undefined or a number)
+      expect(typeof executeLiquidationCall[4] === "undefined" || typeof executeLiquidationCall[4] === "number").toBe(true)
+      // logContext (optional)
+      expect(executeLiquidationCall[5]).toMatchObject({
+        currentRpcIndex: expect.any(Number),
+        currentBlock: expect.any(Number),
+      })
       expect(mockLiquidationService.executeLiquidation).toHaveBeenCalledTimes(1)
       expect(mockLiquidationService.executeSeizing).not.toHaveBeenCalled()
     })
@@ -303,16 +314,23 @@ describe("liquidation_process", () => {
         await mockLiquidationService.processJob(liquidationJob, mockTelegramNotifierService, walletPk)
 
         // Verify executeLiquidation was called with correct slippageModifierBps
-        expect(mockLiquidationService.executeLiquidation).toHaveBeenCalledWith(
-          0,
-          expect.objectContaining({
-            account: "0xUserRetry",
-            market: "0xMarketRetry",
-            type: "liquidation",
-          }),
-          testCase.expectedSlippageModifier, // slippageModifierBps
-          testCase.attemptsMade // nbAttempt
-        )
+        const executeLiquidationSpy = mockLiquidationService.executeLiquidation as any
+        const executeLiquidationCall = executeLiquidationSpy.mock.calls[0]
+        expect(executeLiquidationCall[0]).toBe(0) // walletIndex
+        expect(executeLiquidationCall[1]).toMatchObject({
+          account: "0xUserRetry",
+          market: "0xMarketRetry",
+          type: "liquidation",
+        })
+        expect(executeLiquidationCall[2]).toEqual(testCase.expectedSlippageModifier) // slippageModifierBps
+        expect(executeLiquidationCall[3]).toBe(testCase.attemptsMade) // nbAttempt
+        // rpcIndex (optional, can be undefined or a number)
+        expect(typeof executeLiquidationCall[4] === "undefined" || typeof executeLiquidationCall[4] === "number").toBe(true)
+        // logContext (optional)
+        expect(executeLiquidationCall[5]).toMatchObject({
+          currentRpcIndex: expect.any(Number),
+          currentBlock: expect.any(Number),
+        })
 
         // Verify telegram notification was sent for retries (attemptsMade > 0)
         if (testCase.attemptsMade > 0) {

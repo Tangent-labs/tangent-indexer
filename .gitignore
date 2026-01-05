@@ -14,4 +14,5 @@ prisma/migrations
 /.local/*
 /src/addresses.json
 /src/config/credentials-gDrive.json
+.liquidation_errors.log
 

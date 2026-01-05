@@ -4,6 +4,7 @@ import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
 import { prepareSerialize } from "../utils/jsonSerializer.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 import { AddressLike } from "ethers"
+import { compactOnchainDataToCsv } from "../utils/csvCompactor.js"
 
 export class LiquidationBotLogService {
   liquidationBotLogRepository: LiquidationBotLogRepository
@@ -23,7 +24,29 @@ export class LiquidationBotLogService {
 
   async _logAction(action: LiquidationBotLogAction, context: LiquidationExecutionContext, data?: unknown, isError?: boolean) {
     const loggedContext = this._cleanContext(context)
-    const dataToLog = { context: loggedContext, data: data || { no_data: true } }
+
+    // For on_chain_data action, compact the data to CSV format to save space
+    // Only compact if data is actually a LiquidationMarketAccountOutInfo (has markets and accounts properties)
+    let dataToLog: any
+    if (action === "on_chain_data" && data !== null && data !== undefined) {
+      const onChainData = data as LiquidationMarketAccountOutInfo
+      // Check if data has the expected structure (markets and accounts arrays)
+      if (onChainData.markets && Array.isArray(onChainData.markets) && onChainData.accounts && Array.isArray(onChainData.accounts)) {
+        const csvData = compactOnchainDataToCsv(onChainData)
+        dataToLog = {
+          context: loggedContext,
+          data: {
+            markets: csvData.marketsCsv,
+            accounts: csvData.accountsCsv,
+          },
+        }
+      } else {
+        // If it's not the expected structure (e.g., error data), log it normally
+        dataToLog = { context: loggedContext, data: data || { no_data: true } }
+      }
+    } else {
+      dataToLog = { context: loggedContext, data: data || { no_data: true } }
+    }
 
     await this.liquidationBotLogRepository.insertLiquidationLog({
       action: action as string,
