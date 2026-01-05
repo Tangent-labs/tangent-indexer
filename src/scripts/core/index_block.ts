@@ -86,10 +86,8 @@ async function main() {
           await voteEnventService.runDetection(bestProvider, startBlock, endBlock)
 
           // Call fetchTransferLogs with the addresses
-          if (!transferToWatch?.length) {
-            throw new Error("ERC20 to track is not filled")
-          }
-          const transferLogs = await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch)
+
+          const transferLogs = transferToWatch?.length ? await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch) : []
 
           const savingAccountsLogs = await getSavingAccountLogs(bestProvider, startBlock, endBlock, [addresses.tokens.sUSG, addresses.tokens.sTAN])
           const savingAccountsBlockIds = savingAccountsLogs.map((log) => log.block_id)
