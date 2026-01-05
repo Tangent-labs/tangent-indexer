@@ -121,7 +121,7 @@ export class GlobalMarketDataService {
 
     // Retrieve the onchain data containing everything
     const globalData = (
-      await chainView<[(string | number)[][], string, string, string, string, string[], string], USGIndexingGlobalDataOut[]>(
+      await chainView<[(string | number)[][], string, string, string, string, string[], string, string], USGIndexingGlobalDataOut[]>(
         this.provider,
         GlobalDataChainview.abi,
         GlobalDataChainview.bytecode,
@@ -135,6 +135,7 @@ export class GlobalMarketDataService {
           addresses.tokens.sUSG,
           [addresses.pegKeepers["USG-USDC"], addresses.pegKeepers["USG-wcrvUSD"]],
           addresses.oracles.USG,
+          addresses?.utilities?.marketViewer,
         ]
       )
     )[0]

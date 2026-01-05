@@ -18,7 +18,7 @@ describe("UserPointsService.updateBoosts", () => {
     timestamp: 100n,
     snapshot: [
       {
-        user: "uA",
+        user: "ua",
         tokenBalance: [
           { token: "0xe127cE638293FA123Be79C25782a5652581Db234", balance: "1" },
           { token: "0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2", balance: "150" },
@@ -27,10 +27,10 @@ describe("UserPointsService.updateBoosts", () => {
       },
 
       {
-        user: "uE",
+        user: "ue",
         tokenBalance: [
           { token: "0x0C30476f66034E11782938DF8e4384970B6c9e8a", balance: parseEther("2500").toString() },
-          { token: "0xfe4bce4b3949c35fb17691d8b03c3cadbe2e5e23", balance: parseEther("9999").toString() },
+          { token: "0xFE4BCE4b3949c35fB17691D8b03c3caDBE2E5E23", balance: parseEther("9999").toString() },
           { token: "0x90c1f9220d90d3966FbeE24045EDd73E1d588aD5", balance: parseEther("25").toString() },
         ],
       },
@@ -63,11 +63,11 @@ describe("UserPointsService.updateBoosts", () => {
 
   it("Should compute and insert properly new boosts", async () => {
     getBoostSubscribersSpy.mockResolvedValue([
-      { user_address: "uA" },
-      { user_address: "uB" },
+      { user_address: "ua" },
+      { user_address: "ub" },
       { user_address: "uC" },
       { user_address: "uD" },
-      { user_address: "uE" },
+      { user_address: "ue" },
     ])
     vi.spyOn(boostService, "getOnchainBalancesSnapshot").mockResolvedValue(onChainSnapshot)
 
@@ -79,12 +79,12 @@ describe("UserPointsService.updateBoosts", () => {
     getOffChainBoostUsersSpy.mockResolvedValue([
       {
         id: 1n,
-        user_address: "uE",
+        user_address: "ue",
         type: "CVG_PEPE",
       },
       {
         id: 2n,
-        user_address: "uY",
+        user_address: "uy",
         type: "LP_DEALS",
       },
     ])
@@ -93,17 +93,17 @@ describe("UserPointsService.updateBoosts", () => {
 
     expect(insertUserBoostsSpy).toBeCalledWith([
       {
-        user_address: "uA",
+        user_address: "ua",
         start_at: new Date(100 * 1000),
         multiplier: 1.75,
       },
       {
-        user_address: "uE",
+        user_address: "ue",
         start_at: new Date(100 * 1000),
         multiplier: 2.25,
       },
       {
-        user_address: "uY",
+        user_address: "uy",
         start_at: new Date(100 * 1000),
         multiplier: 2,
       },
@@ -120,14 +120,14 @@ describe("UserPointsService.updateBoosts", () => {
     getActiveBoostsSpy.mockResolvedValue([
       {
         id: 1n,
-        user_address: "uA",
+        user_address: "ua",
         multiplier: 1.5,
         start_at: new Date(100 * 1000),
         end_at: null,
       },
       {
         id: 2n,
-        user_address: "uB",
+        user_address: "ub",
         multiplier: 1.25,
         start_at: new Date(100 * 1000),
         end_at: null,
@@ -140,12 +140,12 @@ describe("UserPointsService.updateBoosts", () => {
     getOffChainBoostUsersSpy.mockResolvedValue([
       {
         id: 1n,
-        user_address: "uE",
+        user_address: "ue",
         type: "CVG_PEPE",
       },
       {
         id: 2n,
-        user_address: "uY",
+        user_address: "uy",
         type: "LP_DEALS",
       },
     ])
@@ -153,32 +153,32 @@ describe("UserPointsService.updateBoosts", () => {
     expect(insertUserBoostsSpy).toBeCalledWith([
       {
         id: 1n,
-        user_address: "uA",
+        user_address: "ua",
         multiplier: 1.5,
         start_at: new Date(100 * 1000),
         end_at: new Date(120 * 1000),
       },
 
       {
-        user_address: "uA",
+        user_address: "ua",
         multiplier: 1.75,
         start_at: new Date(120 * 1000),
       },
 
       {
-        user_address: "uE",
+        user_address: "ue",
         multiplier: 2.25,
         start_at: new Date(120 * 1000),
       },
 
       {
-        user_address: "uY",
+        user_address: "uy",
         multiplier: 2,
         start_at: new Date(120 * 1000),
       },
       {
         id: 2n,
-        user_address: "uB",
+        user_address: "ub",
         multiplier: 1.25,
         start_at: new Date(100 * 1000),
         end_at: new Date(120 * 1000),

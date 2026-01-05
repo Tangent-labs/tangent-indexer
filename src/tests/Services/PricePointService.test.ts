@@ -19,6 +19,7 @@ const addresses: AddressesJson = {
     pegKeeperRegulator: "0xD",
     rewardAccumulator: "0xE",
     zappingProxy: "0xF",
+    marketViewer: "0xG",
   },
   implementations: {
     basicERC20Market: "0xG",
@@ -28,6 +29,7 @@ const addresses: AddressesJson = {
   oracles: {},
   markets: [],
   pegKeepers: {},
+  lps: {},
   tokens: {
     sTAN: "0xJ",
     sUSG: "0xK",
