@@ -31,6 +31,7 @@ import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 import { getAddressesJson } from "src/utils/jsonReader.js"
 import { parseEthersError } from "../utils/errorParser.js"
 import { indexerConfig } from "src/config/indexer_config.js"
+import { getBestRpcProvider } from "../utils/getBestRpcProvider.js"
 
 const successRoutes = successRoutesJson as unknown as SuccessRoutes
 
@@ -119,30 +120,28 @@ export class LiquidationService {
       this.context.isDbAlive = false
     }
 
-    // get the current block from all rpcs, do not throw an error if one fails
-    const currentBlocks = await Promise.all(
-      providers.map((provider) =>
-        provider.getBlockNumber().catch(() => {
-          return 0
-        })
-      )
+    // Get the best RPC provider for checking wallet balances
+    // Note: Each job will check the best provider at the start, so we don't need to set it in the shared context
+    const bestRpc = await getBestRpcProvider(providers)
+    const rpcIndexForBalanceCheck = bestRpc.index
+    const provider = providers[rpcIndexForBalanceCheck]
+
+    // check all wallets balance remove under the limit (parallelized)
+    const walletBalanceChecks = await Promise.all(
+      this.context.walletsPks.map(async (pk) => {
+        const signer = new Wallet(pk, provider)
+        const address = await signer.getAddress()
+        const balance = await provider.getBalance(address)
+        return {
+          pk,
+          balance,
+          hasSufficientBalance: balance > BigInt(this.minEthBalance * 10 ** 18),
+        }
+      })
     )
 
-    // get max block index
-    const maxBlockIndex = currentBlocks.indexOf(Math.max(...currentBlocks))
-    if (maxBlockIndex === -1 || currentBlocks[maxBlockIndex] === 0) {
-      throw new Error("NO_RPC_CONNECTED")
-    }
-
-    this.context.currentRpcIndex = maxBlockIndex
-    this.context.currentBlock = Number(currentBlocks[maxBlockIndex])
-
-    // check all wallets balance remove under the limit
-    this.context.walletsPks = this.context.walletsPks.filter(async (pk) => {
-      const signer = new Wallet(pk, providers[this.context.currentRpcIndex])
-      const balance = await providers[this.context.currentRpcIndex].getBalance(await signer.getAddress())
-      return balance > BigInt(this.minEthBalance * 10 ** 18)
-    })
+    // Filter wallets with sufficient balance
+    this.context.walletsPks = walletBalanceChecks.filter((check) => check.hasSufficientBalance).map((check) => check.pk)
   }
 
   async getLiquidationParams(): Promise<{ markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }> {
@@ -346,14 +345,17 @@ export class LiquidationService {
 
   /**
    * Executes a single seizing of collateral for a given market and account
-   * @param pkIndex  the index of the wallet in the context
+   * @param signer The wallet signer
    * @param account The account/market address to liquidate
+   * @param logContext The context for logging (includes RPC index)
    */
-  public async executeSeizing(signer: Wallet, account: LiquidationUserFullInfo) {
+  public async executeSeizing(signer: Wallet, account: LiquidationUserFullInfo, logContext: LiquidationExecutionContext) {
     const signerAddress = await signer.getAddress()
-    const loggedContext = { ...this.context, currentWalletAddress: signerAddress }
+    const loggedContext = { ...logContext, currentWalletAddress: signerAddress }
     try {
-      const currentNonce = await this.context.providers[this.context.currentRpcIndex].getTransactionCount(signerAddress, "pending")
+      // Use the provider from the signer (which was created with the correct RPC)
+      const provider = signer.provider!
+      const currentNonce = await provider.getTransactionCount(signerAddress, "pending")
       const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
       const tx = await marketContract.seizeCollateral(account.account, { nonce: currentNonce })
       await tx.wait() // Wait for the transaction to be mined
@@ -373,18 +375,33 @@ export class LiquidationService {
    * @param account The account to be liquidated
    * @param slippageModifierBps Slippage modifier in basis points
    * @param nbAttempt Number of attempts made for this liquidation
+   * @param rpcIndex Optional RPC provider index (if not provided, uses context.currentRpcIndex)
+   * @param logContext Optional context for logging (if not provided, creates one from context)
    */
-  public async executeLiquidation(pkIndex: number, account: LiquidationUserFullInfo, slippageModifierBps: bigint = 0n, nbAttempt?: number) {
-    const loggedContext = { ...this.context, currentWalletIndex: pkIndex }
-
-    const provider = this.context.providers[this.context.currentRpcIndex]
+  public async executeLiquidation(
+    pkIndex: number,
+    account: LiquidationUserFullInfo,
+    slippageModifierBps: bigint = 0n,
+    nbAttempt?: number,
+    rpcIndex?: number,
+    logContext?: LiquidationExecutionContext
+  ) {
+    // Use provided rpcIndex or fallback to context.currentRpcIndex
+    const providerIndex = rpcIndex ?? this.context.currentRpcIndex
+    const provider = this.context.providers[providerIndex]
     const signer = new Wallet(this.context.walletsPks[pkIndex], provider)
     const signerAddress = await signer.getAddress()
+
+    // Use provided logContext or create one from context
+    const loggedContext = logContext
+      ? { ...logContext, currentWalletIndex: pkIndex }
+      : { ...this.context, currentWalletIndex: pkIndex, currentRpcIndex: providerIndex }
+
     const slippage = 50n + (10n * slippageModifierBps) / 10000n
 
     let estimations: LiquidationEstimateInfo[] = []
     try {
-      estimations = await this.estimateLiquidation(signer, account, slippage)
+      estimations = await this.estimateLiquidation(signer, account, slippage, providerIndex)
     } catch (error) {
       // Parse the error to extract more specific information
       const parsedError = parseEthersError(error as any)
@@ -580,7 +597,8 @@ export class LiquidationService {
 
   private async _getBestRoute(
     providers: JsonRpcProvider[],
-    info: LiquidationUserFullInfo
+    info: LiquidationUserFullInfo,
+    rpcIndex?: number
   ): Promise<{ route: LiquidationRoute | null; amount: bigint; priceImpact: number }> {
     // Flatten the nested structure: success[inputTokenAddress][outputTokenAddress] = LiquidationRoute[]
     // The input token address is the key, so we need to find routes where the key matches the collateral token
@@ -617,7 +635,8 @@ export class LiquidationService {
   private async _evaluatesRoutes(
     providers: JsonRpcProvider[],
     allRoutesMap: (LiquidationRoute & { in: string })[],
-    info: LiquidationUserFullInfo
+    info: LiquidationUserFullInfo,
+    rpcIndex?: number
   ): Promise<{ route: LiquidationRoute | null; amount: bigint; priceImpact: number }> {
     const routeParams: CurveQuote[] = Array.from(allRoutesMap.values()).map(
       (route) =>
@@ -628,9 +647,11 @@ export class LiquidationService {
           _pools: [ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress],
         }) satisfies CurveQuote
     )
+    // Use provided rpcIndex or fallback to context.currentRpcIndex
+    const providerIndex = rpcIndex ?? this.context.currentRpcIndex
     const quotes = (
       await chainView<[CurveQuote[]], { quote: bigint; priceImpact: bigint }[][]>(
-        providers[this.context.currentRpcIndex],
+        providers[providerIndex],
         QuotesCurveRouterImpactAbi.abi,
         QuotesCurveRouterImpactAbi.bytecode,
         [routeParams]
@@ -652,7 +673,8 @@ export class LiquidationService {
 
   private async _getBestSplittedRoutes(
     providers: JsonRpcProvider[],
-    account: LiquidationUserFullInfo
+    account: LiquidationUserFullInfo,
+    rpcIndex?: number
   ): Promise<
     | {
         route1: { route: LiquidationRoute | null; info: LiquidationUserFullInfo; amount: bigint }
@@ -689,7 +711,7 @@ export class LiquidationService {
     const dataLp2 = { ...account, collateralBalance: account.collateralBalance - dataLp1.collateralBalance }
 
     // evaluate the best routes for each LP
-    const promises = [this._evaluatesRoutes(providers, lp1Routes, dataLp1), this._evaluatesRoutes(providers, lp2Routes, dataLp2)]
+    const promises = [this._evaluatesRoutes(providers, lp1Routes, dataLp1, rpcIndex), this._evaluatesRoutes(providers, lp2Routes, dataLp2, rpcIndex)]
     const [{ route: route1, amount: amount1, priceImpact: priceImpact1 }, { route: route2, amount: amount2, priceImpact: priceImpact2 }] =
       await Promise.all(promises)
     // return the combaison of the best routes for each LP
@@ -797,14 +819,21 @@ export class LiquidationService {
     }
   }
 
-  public async estimateLiquidation(signer: Wallet, account: LiquidationUserFullInfo, slippageBps: bigint): Promise<LiquidationEstimateInfo[]> {
+  public async estimateLiquidation(
+    signer: Wallet,
+    account: LiquidationUserFullInfo,
+    slippageBps: bigint,
+    rpcIndex?: number
+  ): Promise<LiquidationEstimateInfo[]> {
     if (!this.curveRouterAddress) {
       throw new Error("curveRouterAddress is not set in LiquidationService")
     }
-    const provider = this.context.providers[this.context.currentRpcIndex]
+    // Use provided rpcIndex or fallback to context.currentRpcIndex
+    const providerIndex = rpcIndex ?? this.context.currentRpcIndex
+    const provider = this.context.providers[providerIndex]
 
     // Get expected output from the best route
-    const { route, amount, priceImpact } = await this._getBestRoute(this.context.providers, account)
+    const { route, amount, priceImpact } = await this._getBestRoute(this.context.providers, account, providerIndex)
 
     if (!route) {
       throw new Error(`No route found for collateral: ${account.collatToken}`)
@@ -813,7 +842,7 @@ export class LiquidationService {
     // price impact is too high, we try to split the liquidation into 2 parts
 
     if (priceImpact > indexerConfig.liquidationLimits.maxPriceImpact) {
-      const splittedRoutes = await this._getBestSplittedRoutes(this.context.providers, account)
+      const splittedRoutes = await this._getBestSplittedRoutes(this.context.providers, account, providerIndex)
       if (splittedRoutes) {
         const {
           route1: { route: route1, info: info1, amount: amount1 },
@@ -864,20 +893,34 @@ export class LiquidationService {
    * Processes a single job from the liquidation queue
    * @param job The Bull queue job containing the serialized liquidation action
    * @param telegramNotifierService Service for sending error notifications
-   * @param walletsPks Array of wallet private keys
-   * @param walletCounter Counter object for round-robin wallet distribution
+   * @param walletsPk Wallet private key
+   * @param signal Abort signal for cancellation support
+   * @param rpcIndex Optional RPC provider index (if not provided, uses context.currentRpcIndex)
+   * @param currentBlock Optional current block number (if not provided, uses context.currentBlock)
    * @returns Promise that resolves when the job is processed
    */
   public async processJob(
     job: Job<SerializedLiquidationUserFullInfo>,
     telegramNotifierService: TelegramNotifierService,
     walletsPk: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    rpcIndex?: number,
+    currentBlock?: number
   ): Promise<void> {
     // Deserialize the job data (convert string BigInt values back to BigInt)
     const action = this.deserializeLiquidationAction(job.data)
 
-    const signer = new Wallet(walletsPk, this.context.providers[this.context.currentRpcIndex])
+    // Use provided rpcIndex or fallback to context.currentRpcIndex
+    const providerIndex = rpcIndex ?? this.context.currentRpcIndex
+    const provider = this.context.providers[providerIndex]
+    const signer = new Wallet(walletsPk, provider)
+
+    // Create a local context for logging with the correct RPC index
+    const logContext: LiquidationExecutionContext = {
+      ...this.context,
+      currentRpcIndex: providerIndex,
+      currentBlock: currentBlock ?? this.context.currentBlock,
+    }
 
     try {
       // Check if job was cancelled before processing
@@ -886,14 +929,14 @@ export class LiquidationService {
       }
 
       if (action.type === "seizing") {
-        await this.executeSeizing(signer, action)
+        await this.executeSeizing(signer, action, logContext)
       } else if (action.type === "liquidation") {
         // Find wallet index for executeLiquidation (it still uses pkIndex)
         const walletIndex = this.context.walletsPks.findIndex((pk) => pk === walletsPk)
         if (walletIndex === -1) {
           throw new Error(`Wallet not found in context for private key`)
         }
-        this.context = { ...this.context, currentWalletIndex: walletIndex }
+        logContext.currentWalletIndex = walletIndex
 
         // Calculate slippage modifier based on retry attempts
         // Pattern: 1.0% => 2.0% (increases by 1% per retry)
@@ -911,7 +954,7 @@ export class LiquidationService {
           await telegramNotifierService.sendError(logMessage)
         }
 
-        await this.executeLiquidation(walletIndex, action, slippageModifierBps, attemptsMade)
+        await this.executeLiquidation(walletIndex, action, slippageModifierBps, attemptsMade, providerIndex, logContext)
       } else {
         throw new Error(`Unknown action type: ${(action as any).type}`)
       }

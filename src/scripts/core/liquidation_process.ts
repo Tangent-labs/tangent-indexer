@@ -14,7 +14,8 @@ import { LiquidationExecutionContext } from "../../services/LiquidationExecution
 import { setUpIndexer } from "../../config/indexer_setup.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { routers } from "@tangent/defi-resources"
-import { SerializedLiquidationUserFullInfo } from "../../type/data.js"
+import { SerializedLiquidationUserFullInfo } from "../type/data.js"
+import { getBestRpcProvider } from "../utils/getBestRpcProvider.js"
 
 dotenv.config()
 
@@ -203,6 +204,11 @@ async function main() {
           // Execute async work
           ;(async () => {
             try {
+              // ✅ Check for the best RPC provider at the start of each job
+              const bestRpc = await getBestRpcProvider(providers)
+              const rpcIndex = bestRpc.index
+              const currentBlock = Number(bestRpc.blockNumber)
+
               // Pre-check before processing
               const state = walletStates.get(address)
               if (!state || !state.available) {
@@ -234,8 +240,8 @@ async function main() {
                 throw new Error("Job cancelled before liquidation")
               }
 
-              // Process liquidation (pass signal for cancellation support)
-              await liquidationService.processJob(job, telegramNotifierService, walletPk, signal)
+              // Process liquidation (pass signal, rpcIndex, and currentBlock for cancellation support)
+              await liquidationService.processJob(job, telegramNotifierService, walletPk, signal, rpcIndex, currentBlock)
 
               // Check if cancelled after processing
               if (signal?.aborted) {
