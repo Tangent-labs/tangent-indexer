@@ -29,7 +29,6 @@ const addresses: AddressesJson = {
   oracles: {},
   markets: [],
   pegKeepers: {},
-  lps: {},
   tokens: {
     sTAN: "0xJ",
     sUSG: "0xK",
