@@ -1,14 +1,26 @@
 import { LiquidationBotLogRepository } from "../db/LiquidationBotLogRepository.js"
-import { AddressLike } from "ethers"
-import { LiquidationBotLogAction, LiquidationMarketAccountOutInfo, LiquidationUserInfo, LiquidationUserInInfo } from "../type/data.js"
+import { LiquidationAnalyseInfo, LiquidationBotLogAction, LiquidationMarketAccountOutInfo, LiquidationUserInfo, LiquidationUserInInfo } from "../type/data.js"
 import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
 import { prepareSerialize } from "../utils/jsonSerializer.js"
+import { TelegramNotifierService } from "./TelegramNotificationServices.js"
+import { AddressLike } from "ethers"
 
-export class LiquidationBotService {
+/**
+ * Escape special characters for MarkdownV2 format
+ * Characters that need escaping: _ * [ ] ( ) ~ ` > # + - = | { } . !
+ */
+function escapeMarkdownV2(text: string): string {
+  // Escape all special MarkdownV2 characters
+  return text.replace(/([_*[\]()~`>#+\-=|{}.!\\])/g, "\\$1")
+}
+
+export class LiquidationBotLogService {
   liquidationBotLogRepository: LiquidationBotLogRepository
+  private readonly telegramNotifierService: TelegramNotifierService
 
-  constructor(LiquidationBotLogRepository: LiquidationBotLogRepository) {
+  constructor(LiquidationBotLogRepository: LiquidationBotLogRepository, telegramNotifierService: TelegramNotifierService) {
     this.liquidationBotLogRepository = LiquidationBotLogRepository
+    this.telegramNotifierService = telegramNotifierService
   }
 
   private _cleanContext(context: LiquidationExecutionContext) {
@@ -30,11 +42,31 @@ export class LiquidationBotService {
     })
   }
 
-  async logError(action: LiquidationBotLogAction, error: Error, context: LiquidationExecutionContext, additionalData?: any) {
-    await this._logAction(action, context, { ...error, ...additionalData }, true)
+  async logError(
+    action: LiquidationBotLogAction,
+    error: Error,
+    context: LiquidationExecutionContext,
+    additionalData?: any,
+    sendTelegramNotification?: boolean
+  ) {
+    // Send Telegram notification by default (unless explicitly disabled)
+    if (sendTelegramNotification) {
+      const fullMessage = `Liquidation Error in action ${action}: ${error.message.slice(0, 100)}`
+      await this.telegramNotifierService.sendError(escapeMarkdownV2(fullMessage))
+    }
+    // Ensure account data is always accessible at the top level
+    const errorData = {
+      error: {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+      },
+      ...additionalData,
+    }
+    await this._logAction(action, context, errorData, true)
   }
 
-  async logLiquidationParams(data: { markets: AddressLike[] | null; borrowers: LiquidationUserInInfo[] | null }, context: LiquidationExecutionContext) {
+  async logLiquidationParams(data: { markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }, context: LiquidationExecutionContext) {
     const action: LiquidationBotLogAction = "liquidation_params"
     await this._logAction(action, context, data)
   }
@@ -44,13 +76,8 @@ export class LiquidationBotService {
     await this._logAction(action, context, data)
   }
 
-  async logLiquidationAnalysis(data: LiquidationMarketAccountOutInfo | null, context: LiquidationExecutionContext) {
+  async logLiquidationAnalysis(data: LiquidationAnalyseInfo | null, context: LiquidationExecutionContext) {
     const action: LiquidationBotLogAction = "liquidation_analysis"
-    await this._logAction(action, context, data)
-  }
-
-  async logCleanDebtors(data: LiquidationUserInInfo[] | null, context: LiquidationExecutionContext) {
-    const action: LiquidationBotLogAction = "clean_debtors"
     await this._logAction(action, context, data)
   }
 

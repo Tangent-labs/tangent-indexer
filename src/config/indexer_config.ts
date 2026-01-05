@@ -29,6 +29,17 @@ export type IndexerConfig = {
   enso: {
     baseUrl: string
   }
+  liquidationQueueRedis: string
+  liquidationQueue: {
+    attempts: number
+    backoff: {
+      type: "fixed" | "exponential"
+      delay: number
+    }
+  }
+  liquidationLimits: {
+    maxPriceImpact: number
+  }
 }
 
 const { blockRange, chainId, chainRpcs, walletPks, startingBlock } = _initEnv()
@@ -53,6 +64,17 @@ export const indexerConfig = {
   },
   enso: {
     baseUrl: "https://api.enso.finance/api/v1/shortcuts/route",
+  },
+  liquidationQueueRedis: process.env.LIQUIDATION_QUEUE_REDIS,
+  liquidationQueue: {
+    attempts: Number(process.env.LIQUIDATION_QUEUE_ATTEMPTS) || 10,
+    backoff: {
+      type: (process.env.LIQUIDATION_QUEUE_BACKOFF_TYPE as "fixed" | "exponential") || "exponential",
+      delay: Number(process.env.LIQUIDATION_QUEUE_BACKOFF_DELAY) || 5000, // 5 seconds
+    },
+  },
+  liquidationLimits: {
+    maxPriceImpact: Number(process.env.MAX_PRICE_IMPACT) || 1,
   },
 } as IndexerConfig
 

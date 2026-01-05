@@ -4,14 +4,12 @@ import { AddressLike, JsonRpcProvider } from "ethers"
 import { PrismaClient } from "@prisma/client"
 import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
 import { LiquidationBotLogRepository } from "../../db/LiquidationBotLogRepository.js"
-import { LiquidationBotService } from "../../services/LiquidationBotLogService.js"
+import { LiquidationBotLogService } from "../../services/LiquidationBotLogService.js"
 import { LiquidationService } from "../../services/LiquidationService.js"
 import { LiquidationExecutionContext } from "../../services/LiquidationExecutionContext.js"
 
 import { LiquidationUserFullInfo } from "../../type/data.js"
-import { NotificationService } from "../../services/NotificationService.js"
-import { CheckLiquidationService } from "../../services/CheckLiquidationService.js"
-import { PointsBotLogRepository } from "../../db/Points/PointsBotLogRepository.js"
+import { CheckLiquidationService } from "../../services/LiquidationCheckService.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 
 const DECIMALS = BigInt(10 ** 18)
@@ -39,13 +37,28 @@ vi.mock("config/indexer_setup", () => ({
   })),
 }))
 
+// Mock BullMQ
+const mocks = vi.hoisted(() => ({
+  add: vi.fn().mockResolvedValue({}),
+  close: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock("bullmq", () => {
+  class MockQueue {
+    add = mocks.add
+    close = mocks.close
+  }
+  return {
+    Queue: MockQueue,
+  }
+})
+
 describe("CheckLiquidationService", () => {
   let activeBorrowersRepository: ActiveBorrowersRepository
   let mockLiquidationBotLogRepository: LiquidationBotLogRepository
-  let mockLiquidationBotService: LiquidationBotService
+  let mockLiquidationBotLogService: LiquidationBotLogService
   let mockLiquidationService: LiquidationService
   let mockContext: LiquidationExecutionContext
-  let mockNotificationService: NotificationService
   let mockProviders: JsonRpcProvider[]
   let checkLiquidationService: CheckLiquidationService
   let mockTelegramNotifierService: TelegramNotifierService
@@ -53,6 +66,8 @@ describe("CheckLiquidationService", () => {
   beforeEach(() => {
     // Reset all mocks
     vi.resetAllMocks()
+    mocks.add.mockReset()
+    mocks.close.mockReset()
 
     // Setup mock context
     mockContext = new LiquidationExecutionContext()
@@ -61,16 +76,13 @@ describe("CheckLiquidationService", () => {
     // Setup mock repositories
     activeBorrowersRepository = new ActiveBorrowersRepository({} as PrismaClient)
     mockLiquidationBotLogRepository = new LiquidationBotLogRepository({} as PrismaClient)
-
-    // Setup mock services
-    mockLiquidationBotService = new LiquidationBotService(mockLiquidationBotLogRepository)
-    mockLiquidationService = new LiquidationService(activeBorrowersRepository, mockContext, mockLiquidationBotService)
-    mockNotificationService = new NotificationService(new PointsBotLogRepository({} as PrismaClient), mockTelegramNotifierService)
     mockTelegramNotifierService = new TelegramNotifierService({
-      botToken: process.env.TELEGRAM_BOT_TOKEN!,
-      chatId: process.env.TELEGRAM_CHAT_ID!,
+      botToken: "process.env.TELEGRAM_BOT_TOKEN!",
+      chatId: "process.env.TELEGRAM_CHAT_ID!",
     })
-    mockNotificationService = new NotificationService(new PointsBotLogRepository({} as PrismaClient), mockTelegramNotifierService)
+    // Setup mock services
+    mockLiquidationBotLogService = new LiquidationBotLogService(mockLiquidationBotLogRepository, mockTelegramNotifierService)
+    mockLiquidationService = new LiquidationService(activeBorrowersRepository, mockContext, mockLiquidationBotLogService)
     mockProviders = [{} as JsonRpcProvider]
 
     // Mock service methods
@@ -86,7 +98,6 @@ describe("CheckLiquidationService", () => {
     vi.spyOn(mockLiquidationService, "analyzeLiquidation").mockResolvedValue({
       seizingList: [],
       liquidationList: [],
-      notDebtorAnymoreList: [],
     })
     vi.spyOn(mockLiquidationService, "prioritizeActions").mockReturnValue([])
     vi.spyOn(mockLiquidationService, "executeSeizing").mockResolvedValue(undefined)
@@ -94,19 +105,18 @@ describe("CheckLiquidationService", () => {
     vi.spyOn(mockLiquidationService, "saveFiles").mockResolvedValue(undefined)
 
     // Mock bot service methods
-    vi.spyOn(mockLiquidationBotService, "logLiquidationParams").mockResolvedValue(undefined)
-    vi.spyOn(mockLiquidationBotService, "logOnchainData").mockResolvedValue(undefined)
-    vi.spyOn(mockLiquidationBotService, "logLiquidationAnalysis").mockResolvedValue(undefined)
-    vi.spyOn(mockLiquidationBotService, "logCleanDebtors").mockResolvedValue(undefined)
-    vi.spyOn(mockLiquidationBotService, "logError").mockResolvedValue(undefined)
-    vi.spyOn(mockNotificationService, "sendImmediateNotification").mockResolvedValue(undefined)
+    vi.spyOn(mockLiquidationBotLogService, "logLiquidationParams").mockResolvedValue(undefined)
+    vi.spyOn(mockLiquidationBotLogService, "logOnchainData").mockResolvedValue(undefined)
+    vi.spyOn(mockLiquidationBotLogService, "logLiquidationAnalysis").mockResolvedValue(undefined)
+    vi.spyOn(mockLiquidationBotLogService, "logError").mockResolvedValue(undefined)
+    vi.spyOn(mockTelegramNotifierService, "sendMessage").mockResolvedValue(true)
 
     // Create service instance
     checkLiquidationService = new CheckLiquidationService(
       mockLiquidationService,
       mockContext,
-      mockLiquidationBotService,
-      mockNotificationService,
+      mockLiquidationBotLogService,
+      mockTelegramNotifierService,
       mockProviders
     )
   })
@@ -127,11 +137,11 @@ describe("CheckLiquidationService", () => {
     vi.spyOn(mockLiquidationService, "checkContext").mockRejectedValue(error)
 
     await expect(checkLiquidationService.run()).rejects.toThrow("Test error")
-    expect(mockLiquidationBotService.logError).toHaveBeenCalledWith("check_context", error, mockContext)
-    expect(mockNotificationService.sendImmediateNotification).toHaveBeenCalledWith("Test error")
+    expect(mockLiquidationBotLogService.logError).toHaveBeenCalledWith("check_context", error, mockContext, undefined, true)
+    expect(mockTelegramNotifierService.sendMessage).toHaveBeenCalledWith("Liquidation Error on check_context: Test error")
   })
 
-  it("should process seizing when present", async () => {
+  it("should add seizing actions to the queue", async () => {
     const seizing: LiquidationUserFullInfo & { type: "seizing" } = {
       account: "0xUser1" as AddressLike,
       market: "0xMarket1" as AddressLike,
@@ -147,10 +157,32 @@ describe("CheckLiquidationService", () => {
 
     await checkLiquidationService.run()
 
-    expect(mockLiquidationService.executeSeizing).toHaveBeenCalledWith(0, seizing)
+    // The action is passed through prepareSerialize (which is mocked to return data as-is in tests)
+    // BullMQ add signature: add(name, data, options)
+    expect(mocks.add).toHaveBeenCalledWith(
+      "0xMarket1-0xUser1-seizing", // jobId (first parameter)
+      expect.objectContaining({
+        account: "0xUser1",
+        market: "0xMarket1",
+        healthRatio: 500000000000000000n,
+        userDebt: 600n * DECIMALS,
+        positionValue: 550n * DECIMALS,
+        collateralBalance: 1500n * DECIMALS,
+        collatToken: "0xToken1",
+        type: "seizing",
+      }),
+      expect.objectContaining({
+        priority: 3, // seizing has priority 3
+        attempts: expect.any(Number),
+        backoff: expect.any(Object),
+        removeOnComplete: true,
+        removeOnFail: false,
+      })
+    )
+    expect(mockLiquidationService.executeSeizing).not.toHaveBeenCalled()
   })
 
-  it("should process liquidations when present", async () => {
+  it("should add liquidation actions to the queue", async () => {
     const liquidation: LiquidationUserFullInfo & { type: "liquidation" } = {
       account: "0xUser1" as AddressLike,
       market: "0xMarket1" as AddressLike,
@@ -166,6 +198,76 @@ describe("CheckLiquidationService", () => {
 
     await checkLiquidationService.run()
 
-    expect(mockLiquidationService.executeLiquidation).toHaveBeenCalledWith(0, liquidation)
+    // The action is passed through prepareSerialize (which is mocked to return data as-is in tests)
+    // BullMQ add signature: add(name, data, options)
+    expect(mocks.add).toHaveBeenCalledWith(
+      "0xMarket1-0xUser1-liquidation", // jobId (first parameter)
+      expect.objectContaining({
+        account: "0xUser1",
+        market: "0xMarket1",
+        healthRatio: 2000000000000000000n,
+        userDebt: 760n * DECIMALS,
+        positionValue: 1000n * DECIMALS,
+        collateralBalance: 1500n * DECIMALS,
+        collatToken: "0xToken1",
+        type: "liquidation",
+      }),
+      expect.objectContaining({
+        priority: 2, // liquidation has priority 2 (processed before seizing)
+        attempts: expect.any(Number),
+        backoff: expect.any(Object),
+        removeOnComplete: true,
+        removeOnFail: false,
+      })
+    )
+    expect(mockLiquidationService.executeLiquidation).not.toHaveBeenCalled()
+  })
+
+  it("should handle multiple actions and add them to the queue", async () => {
+    const actions: Array<LiquidationUserFullInfo & { type: "seizing" | "liquidation" }> = []
+    for (let i = 0; i < 5; i++) {
+      actions.push({
+        account: `0xUser${i}` as AddressLike,
+        market: `0xMarket${i}` as AddressLike,
+        healthRatio: 500000000000000000n,
+        userDebt: 600n * DECIMALS,
+        positionValue: (1000n - BigInt(i * 100)) * DECIMALS,
+        collateralBalance: 1500n * DECIMALS,
+        collatToken: "0xToken1" as AddressLike,
+        type: i % 2 === 0 ? "seizing" : "liquidation",
+      })
+    }
+
+    vi.spyOn(mockLiquidationService, "prioritizeActions").mockReturnValue(actions)
+
+    await checkLiquidationService.run()
+
+    expect(mocks.add).toHaveBeenCalledTimes(5)
+    actions.forEach((action) => {
+      const expectedPriority = action.type === "liquidation" ? 2 : 3
+      const jobId = `${action.market}-${action.account}-${action.type}`
+      // BullMQ add signature: add(name, data, options)
+      expect(mocks.add).toHaveBeenCalledWith(
+        jobId, // jobId (first parameter)
+        expect.objectContaining({
+          account: action.account,
+          market: action.market,
+          type: action.type,
+          // prepareSerialize is mocked to return data as-is in tests, so BigInt values remain BigInt
+          healthRatio: action.healthRatio,
+          userDebt: action.userDebt,
+          positionValue: action.positionValue,
+          collateralBalance: action.collateralBalance,
+          collatToken: action.collatToken,
+        }),
+        expect.objectContaining({
+          priority: expectedPriority,
+          attempts: expect.any(Number),
+          backoff: expect.any(Object),
+          removeOnComplete: true,
+          removeOnFail: false,
+        })
+      )
+    })
   })
 })

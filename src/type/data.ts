@@ -31,10 +31,37 @@ export type LiquidationMarketAccountOutInfo = {
 export type LiquidationUserInfo = LiquidationAccountOutInfo & LiquidationUserInInfo
 export type LiquidationUserFullInfo = LiquidationUserInfo & { collatToken: AddressLike }
 
+/**
+ * Serialized version of LiquidationUserFullInfo for queue storage (BigInt as strings)
+ */
+export type SerializedLiquidationUserFullInfo = Omit<LiquidationUserFullInfo, "healthRatio" | "userDebt" | "positionValue" | "collateralBalance"> & {
+  healthRatio: string
+  userDebt: string
+  positionValue: string
+  collateralBalance: string
+} & { type: "seizing" | "liquidation" }
+
 export type LiquidationAnalyseInfo = {
   seizingList?: LiquidationUserFullInfo[]
   liquidationList?: LiquidationUserFullInfo[]
-  notDebtorAnymoreList?: LiquidationUserInInfo[]
+}
+
+export type LiquidationEstimateInfo = {
+  // Swap info needed to call liquidate on the contract
+  account: AddressLike
+  collatToLiquidate: bigint
+  minTgUSDOut: bigint
+  liquidationCall: {
+    routerCall: string // bytes encoded as hex string
+  }
+  // Additional estimate information
+  expectedOutput: bigint
+  slippageBps: bigint
+  gasEstimate: {
+    gasLimit: bigint
+    eth: number
+  }
+  grossProfit: bigint
 }
 
 export type LiquidationBotLogAction =
@@ -47,6 +74,7 @@ export type LiquidationBotLogAction =
   | "clean_debtors"
   | "liquidation_execution"
   | "end_execution"
+  | "error"
 
 export type CurveQuote = {
   _route: string[] // address[11]
@@ -57,6 +85,36 @@ export type CurveQuote = {
 
 export type QuoteLiquidationRouterIn = {
   quotes: CurveQuote[]
+}
+
+/**
+ * Route parameters for liquidation swaps
+ */
+export type LiquidationRouteParams = {
+  routeAddresses: string[]
+  swapParamsFull: number[][]
+}
+
+/**
+ * A single liquidation route with display name and swap parameters
+ * Note: The input token address is the key in the parent object, not a property of the route
+ */
+export type LiquidationRoute = {
+  display: string // Human-readable route description
+  params: LiquidationRouteParams
+}
+
+/**
+ * Structure of the successRoutes JSON file
+ * Nested object structure: success[inputTokenAddress][outputTokenAddress] = LiquidationRoute[]
+ * The input token address (in) is the key, not a property of the route
+ */
+export type SuccessRoutes = {
+  success: {
+    [inputTokenAddress: string]: {
+      [outputTokenAddress: string]: LiquidationRoute[]
+    }
+  }
 }
 
 // Snapshot Proposal Types
@@ -147,6 +205,7 @@ export type PriceSource = Prisma.price_sourceGetPayload<{}>
 export type PriceSourceCreate = Prisma.price_sourceCreateManyInput
 
 export type AddressesJson = {
+  lps: { [lpName: string]: string }
   utilities: {
     controlTower: string
     rewardAccumulator: string
@@ -169,7 +228,6 @@ export type AddressesJson = {
     basicERC20Market: string
   }
   oracles: { [tokenName: string]: string }
-  lps: { [lpName: string]: string }
 
   pegKeepers: { [poolName: string]: string }
   markets: { marketAddress: string; collatName: string; collatAddress: string; marketType: string }[]

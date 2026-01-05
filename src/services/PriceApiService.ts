@@ -13,8 +13,33 @@ import axios from "axios"
 export const CURVE_API = "https://api.curve.finance/api"
 const PENDLE_PRICE_API = "https://api-v2.pendle.finance/core/v1/1/assets/prices"
 const LLAMA_API = "https://coins.llama.fi/prices/current/"
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes in milliseconds
 
 export class PriceApiService {
+  private ethPriceCache: { price: number; timestamp: number } | null = null
+
+  async getEthPrice(): Promise<number> {
+    const now = Date.now()
+
+    // Check if cache is valid (less than 5 minutes old)
+    if (this.ethPriceCache && now - this.ethPriceCache.timestamp < CACHE_TTL_MS) {
+      return this.ethPriceCache.price
+    }
+
+    // Fetch new price and update cache
+    const url = `${LLAMA_API}/ethereum:0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2`
+    const call = await axios.get<LlamaPriceApiResult>(url)
+    const price = call.data.coins["ethereum:0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"]?.price || 0
+
+    // Update cache
+    this.ethPriceCache = {
+      price,
+      timestamp: now,
+    }
+
+    return price
+  }
+
   async getLlamaPrice(addresses: string[]): Promise<PriceApiResult> {
     if (!addresses?.length) {
       return { prices: [] }
