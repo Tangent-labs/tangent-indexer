@@ -50,12 +50,12 @@ export class SnapShotVoteService {
     await this.userVoteRepository.markProcessedProposals(proposals)
   }
 
-  updateUserVoteTasks = async (totalVotes: Array<ValidatedTask>, voteTasks: Prisma.vote_taskCreateManyInput[]) => {
+  updateUserVoteTasks = async (totalVotes: ValidatedTask[], voteTasks: { id: bigint, description: string, point_rate: number }[]) => {
     const userAddresses = Array.from(new Set(totalVotes.map((t) => t?.voterAddress?.toLowerCase())))
 
     const boosts = await this.userVoteRepository.fetchUsersBoosts(userAddresses)
 
-    const voteTasksMap = new Map<string, Prisma.vote_taskCreateManyInput>()
+    const voteTasksMap = new Map<string, { id: bigint, description: string, point_rate: number }>()
     for (const t of voteTasks) voteTasksMap.set(t.description, t)
 
     const rows: Prisma.vote_user_tasksCreateManyInput[] = totalVotes
@@ -75,7 +75,7 @@ export class SnapShotVoteService {
         const points = v.votingPower * task.point_rate * multiplier
 
         return {
-          vote_task_id: task.id as number,
+          vote_task_id: task.id,
           user_address: v.voterAddress.toLowerCase(),
           proposal_id: v.proposalId,
           voting_power: v.votingPower,
@@ -99,42 +99,12 @@ export class SnapShotVoteService {
     await this.userVoteRepository.insertAddresses(votersAddresses)
   }
 
-  getOrganizations(): OrganizationConfig[] {
-    const list = [
-      {
-        key: "cvx.eth",
-        value: "https://vote.convexfinance.com/",
-        title: "Gauge Weight for Week",
-        rewards: [
-          { task: VOTE_TASK_DESCRIPTION.CVX_ON_USG_USDC, value: "crvUSD+USD0" },
-          { task: VOTE_TASK_DESCRIPTION.CVX_ON_USG_frxUSD, value: "Lending: Borrow crvUSD (ETHFI collateral)" },
-          { task: VOTE_TASK_DESCRIPTION.CVX_ON_USG_wcrvUSD, value: "WETH+CVX" },
-          { task: VOTE_TASK_DESCRIPTION.CVX_ON_USG_wUSDe, value: "CRV+cvxCRV" },
-        ],
-        excludedVoters: [
-          "0x0000000000000000000000000000000000000000", // Example excluded address
-          "0x1111111111111111111111111111111111111111", // Example excluded address
-        ],
-      },
-      {
-        key: "sdcrv.eth",
-        value: "https://snapshot.box/#/s:sdcrv.eth",
-        title: "Gauge vote CRV",
-        rewards: [
-          { task: VOTE_TASK_DESCRIPTION.SDCRV_ON_USG_USDC, value: "crvUSD+USD0" },
-          { task: VOTE_TASK_DESCRIPTION.SDCRV_ON_USG_frxUSD, value: "Lending: Borrow crvUSD (ETHFI collateral)" },
-        ],
-        excludedVoters: [
-          "0x2222222222222222222222222222222222222222", // Example excluded address
-        ],
-      },
-    ]
-
-    return list
+  async getOrganizations() {
+    return await this.userVoteRepository.getSnapshotOrganisations()
   }
 
   async listProposals(fromTs: number, toTs: number): Promise<Proposal[]> {
-    const organizations = this.getOrganizations()
+    const organizations = await this.getOrganizations()
 
     const organisationKeys = organizations.map((o) => o.key)
 
@@ -144,11 +114,11 @@ export class SnapShotVoteService {
     const proposalsWithRewards = orgaProposals.map((p) => {
       const orga = organizations.find((o) => o.key === p.space.id)
 
-      return { ...p, organizationRewards: orga?.rewards || [], excludedVoters: orga?.excludedVoters || [] }
+      return { ...p, organizationRewards: orga?.scoringChoices || [], excludedVoters: orga?.votersToExclude || [] }
     })
 
     // Get all rewarded choices from all organizations
-    const allRewardedChoices = organizations.flatMap((org) => org.rewards.map((reward) => reward.value))
+    const allRewardedChoices = organizations.flatMap((org) => org.scoringChoices.map((reward) => reward.choice_name))
 
     // we search for the rewarded choice in the choices array
     return proposalsWithRewards.map((proposal) => {

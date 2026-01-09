@@ -5,7 +5,7 @@ import { UserPointsVoteRepository } from "../../db/Points/UserPointsVoteReposito
 import { VOTE_FOR_GAUGE } from "../../resources/eventSignatures.js"
 import { NumMap } from "../../services/boost/types.js"
 import { getEthLogs } from "../../eventFectcher/_baseFetcher.js"
-import { CONTROLLER_MAPPING } from "src/scripts/db-seed/seed_vote_tasks.js"
+import { GAUGE_CONTROLLER_MAPPING } from "src/scripts/db-seed/seed_vote_tasks.js"
 
 type ParsedVote = {
   gauge_controller: string
@@ -20,7 +20,7 @@ export class VotesEventService {
   }
 
   voteRepository: UserPointsVoteRepository
-  gaugeControllers = [CONTROLLER_MAPPING.CRV.controller, CONTROLLER_MAPPING.FXN.controller]
+  gaugeControllers = [GAUGE_CONTROLLER_MAPPING.CRV.controller, GAUGE_CONTROLLER_MAPPING.FXN.controller]
 
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
     // TODO Fetch dynamically in db the gauge controllers

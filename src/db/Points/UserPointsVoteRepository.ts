@@ -16,7 +16,7 @@ export class UserPointsVoteRepository extends AbstractRepository {
 
   async fetchTasks() {
     return await this.prismaClient.vote_task.findMany({
-      select: { id: true, name: true, point_rate: true },
+      select: { id: true, description: true, point_rate: true },
     })
   }
 
@@ -76,7 +76,7 @@ export class UserPointsVoteRepository extends AbstractRepository {
       select: {
         point_rate: true,
         id: true,
-        gauge_pools: {
+        gaugePools: {
           select: {
             gauge_controller: {
               select: {
@@ -102,7 +102,7 @@ export class UserPointsVoteRepository extends AbstractRepository {
       },
       select: {
         point_rate: true,
-        gauge_pools: {
+        gaugePools: {
           select: {
             gauge_address: true,
             gauge_votes: {
@@ -134,6 +134,20 @@ export class UserPointsVoteRepository extends AbstractRepository {
       select: {
         gauge_address: true,
         id: true,
+      },
+    })
+  }
+
+
+  async getSnapshotOrganisations() {
+    return await this.prismaClient.snapshot_organisations.findMany({
+      select: {
+        id: true,
+        proposal_title_search: true,
+        url: true,
+        key: true,
+        votersToExclude: true,
+        scoringChoices: true,
       },
     })
   }

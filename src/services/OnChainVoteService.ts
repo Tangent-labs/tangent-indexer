@@ -37,7 +37,7 @@ export type GaugeVoteDb = {
 }
 
 export type VotesFromDb = {
-  gauge_pools: {
+  gauge_pools?: {
     gauge_address: string
     gauge_controller: {
       controller_address: string
@@ -45,7 +45,7 @@ export type VotesFromDb = {
     gauge_votes: {
       user_address: string
     }[]
-  }[]
+  }
   id: bigint
   point_rate: number
 }
@@ -126,7 +126,7 @@ export class OnChainVoteService {
 
   formatDbReturn(
     tasks: {
-      gauge_pools: {
+      gaugePools?: {
         gauge_address: string
         gauge_controller: {
           controller_address: string
@@ -134,7 +134,7 @@ export class OnChainVoteService {
         gauge_votes: {
           user_address: string
         }[]
-      }[]
+      }
       id: bigint
       point_rate: number
     }[]
@@ -144,7 +144,8 @@ export class OnChainVoteService {
     const taskIdPerGauge: { [key: string]: string } = {}
 
     tasks.forEach((task) => {
-      task.gauge_pools.forEach((gp) => {
+      if (task.gaugePools) {
+        const gp = task.gaugePools
         // Retrieve the taskID and the point rate linked to a gauge
         pointRatesPerGauge[gp.gauge_address] = task.point_rate
         taskIdPerGauge[gp.gauge_address] = task.id.toString()
@@ -166,7 +167,7 @@ export class OnChainVoteService {
             paramInChainview.push({ gaugeController: gp.gauge_controller.controller_address, accountGauges: [accountGauge] })
           }
         })
-      })
+      }
     })
     return { paramInChainview, pointRatesPerGauge, taskIdPerGauge }
   }
