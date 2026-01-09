@@ -38,7 +38,6 @@ export class MarketCreationService {
       })
       await this.marketContractsRepository.insertContracts(marketsCreated)
 
-
       // This part is for points program only
       // It adds the market as an ERC20 to track the debtShares of users like ERC20
       // Dirty but fast

@@ -14,7 +14,6 @@ type ParsedVote = {
   gauge_pool: string
 }
 
-
 export class VotesEventService {
   constructor(voteRepository: UserPointsVoteRepository) {
     this.voteRepository = voteRepository
@@ -24,8 +23,7 @@ export class VotesEventService {
   gaugeControllers = [CONTROLLER_MAPPING.CRV.controller, CONTROLLER_MAPPING.FXN.controller]
 
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
-
-    //TODO Fetch dynamically in db the gauge controllers
+    // TODO Fetch dynamically in db the gauge controllers
     // Fetch logs from the gauge controllerts
     const voteLogs = await getEthLogs(provider, startingBlock, endingBlock, this.gaugeControllers, [id(VOTE_FOR_GAUGE)])
 

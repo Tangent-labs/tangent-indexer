@@ -196,7 +196,6 @@ export class CallApiService {
   }
 
   async fetchStakeDao() {
-
     const query = `
     query GetAllVaultsWithAssets {
       Vault {
@@ -274,22 +273,21 @@ export class CallApiService {
         totalSupplyUSD
       }
     }
-`;
+`
     // Fetch APY of curve LP on their API
     try {
-
       const response = await axios.post(
         "https://api-strategies.stakedao.org/v1/graphql",
         {
-          query: query,
-          operationName: "GetAllVaultsWithAssets"
+          query,
+          operationName: "GetAllVaultsWithAssets",
         },
         {
           headers: {
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+          },
         }
-      );
+      )
       const data: StakeDaoApiReturn = response.data
       return data
     } catch (e) {
@@ -301,7 +299,6 @@ export class CallApiService {
       return { error: apiError }
     }
   }
-
 
   async fetchPendleApiData() {
     try {

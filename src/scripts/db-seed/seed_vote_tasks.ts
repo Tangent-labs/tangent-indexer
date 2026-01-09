@@ -56,7 +56,7 @@ export async function seedVoteTasks(prisma: PrismaClient | TransactionPrisma) {
     data: votersToExclude,
   })
 
-  // INSERT VOTE_TASKS 
+  // INSERT VOTE_TASKS
   const voteTask = await prisma.vote_task.createManyAndReturn({
     data: ONCHAIN_VOTE_TASK_INIT.concat(OFFCHAIN_VOTE_TASK_INIT),
   })
@@ -98,10 +98,22 @@ export const GAUGE_CONTROLLER_INIT = [{ controller_address: CONTROLLER_MAPPING.C
 
 export function controllerIdPerGaugePool(controllerIdPerAddress: NumMap, taskIdPerDescription: NumMap): GaugePoolMapping {
   return {
-    [CONTROLLER_MAPPING.CRV.gauges.USDC_USDf]: { controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.CRV.controller], taskId: taskIdPerDescription[VOTE_TASK_DESCRIPTION.VECRV_ON_USG_USDC] },
-    [CONTROLLER_MAPPING.CRV.gauges.crvUSD_USDC]: { controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.CRV.controller], taskId: taskIdPerDescription[VOTE_TASK_DESCRIPTION.VECRV_ON_USG_frxUSD] },
-    [CONTROLLER_MAPPING.CRV.gauges.crvUSD_USDT]: { controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.CRV.controller], taskId: taskIdPerDescription[VOTE_TASK_DESCRIPTION.VECRV_ON_USG_wcrvUSD] },
-    [CONTROLLER_MAPPING.FXN.gauges.STABILITY_POOL]: { controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.FXN.controller], taskId: taskIdPerDescription[VOTE_TASK_DESCRIPTION.VEFXN_ON_USG_fxUSD] },
+    [CONTROLLER_MAPPING.CRV.gauges.USDC_USDf]: {
+      controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.CRV.controller],
+      taskId: taskIdPerDescription[VOTE_TASK_DESCRIPTION.VECRV_ON_USG_USDC],
+    },
+    [CONTROLLER_MAPPING.CRV.gauges.crvUSD_USDC]: {
+      controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.CRV.controller],
+      taskId: taskIdPerDescription[VOTE_TASK_DESCRIPTION.VECRV_ON_USG_frxUSD],
+    },
+    [CONTROLLER_MAPPING.CRV.gauges.crvUSD_USDT]: {
+      controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.CRV.controller],
+      taskId: taskIdPerDescription[VOTE_TASK_DESCRIPTION.VECRV_ON_USG_wcrvUSD],
+    },
+    [CONTROLLER_MAPPING.FXN.gauges.STABILITY_POOL]: {
+      controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.FXN.controller],
+      taskId: taskIdPerDescription[VOTE_TASK_DESCRIPTION.VEFXN_ON_USG_fxUSD],
+    },
   }
 }
 
@@ -125,9 +137,8 @@ export const VOTE_TASK_DESCRIPTION = {
   VECRV_ON_USG_USDC: "Vote on USG-USDC on veCRV gauge",
   VECRV_ON_USG_frxUSD: "Vote on USG-frxUSD on veCRV gauge",
   VECRV_ON_USG_wcrvUSD: "Vote on USG-wcrvUSD on veCRV gauge",
-  VEFXN_ON_USG_fxUSD: "Vote on USG-fxUSD on veCRV gauge"
+  VEFXN_ON_USG_fxUSD: "Vote on USG-fxUSD on veCRV gauge",
 }
-
 
 export const OFFCHAIN_VOTE_TASK_INIT: Prisma.vote_taskCreateManyInput[] = [
   // CVX
@@ -182,8 +193,6 @@ export const OFFCHAIN_VOTE_TASK_INIT: Prisma.vote_taskCreateManyInput[] = [
     is_onchain: false,
   },
 ]
-
-
 
 export const ONCHAIN_VOTE_TASK_INIT: Prisma.vote_taskCreateManyInput[] = [
   {

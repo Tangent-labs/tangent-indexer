@@ -48,26 +48,25 @@ export type CurveApiReturn = {
     poolList: { address: string; latestWeeklyApy: number }[]
   }
 }
-export type StakeDaoApiReturn = {
-  data: {
-    Vault: {
-      address: string;
-      gauge: {
-        aprDetails: { apr: string, asset: { address: string, symbol: string } }[]
-      };
-      asset: {
-        address: string;
-      };
-    }[],
-
-  }
-}
-  |
-{ errors: any[] }
+export type StakeDaoApiReturn =
+  | {
+      data: {
+        Vault: {
+          address: string
+          gauge: {
+            aprDetails: { apr: string; asset: { address: string; symbol: string } }[]
+          }
+          asset: {
+            address: string
+          }
+        }[]
+      }
+    }
+  | { errors: any[] }
 
 export type CurveFactoryStableNGApiReturn = {
   data: {
-    poolData: { address: string; gaugeRewards: { tokenAddress: string, symbol: string, apy: number }[] }[]
+    poolData: { address: string; gaugeRewards: { tokenAddress: string; symbol: string; apy: number }[] }[]
   }
 }
 
@@ -86,7 +85,7 @@ export const APR_TYPE: { [name: string]: number } = {
   "Convex FXN": 1,
   "Pendle PT": 2,
   "StakeDao Vault": 3,
-  "Curve Gauge": 4
+  "Curve Gauge": 4,
 }
 
 export type Aprs = { current: NumMap; projected: NumMap }

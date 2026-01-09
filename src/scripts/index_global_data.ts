@@ -49,7 +49,7 @@ async function main() {
         timeout: 10_000_000,
       }
     )
-    .then((_) => { })
+    .then((_) => {})
     .catch((e) => {
       console.error(e)
     })
@@ -67,7 +67,7 @@ async function main() {
         timeout: 10_000_000,
       }
     )
-    .then((_) => { })
+    .then((_) => {})
     .catch((e) => {
       console.error(e)
     })

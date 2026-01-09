@@ -39,7 +39,7 @@ const addresses: AddressesJson = {
 }
 
 const mockConsole = {
-  error: vi.spyOn(console, "error").mockImplementation(() => { }),
+  error: vi.spyOn(console, "error").mockImplementation(() => {}),
 }
 
 describe("PricePointService", () => {

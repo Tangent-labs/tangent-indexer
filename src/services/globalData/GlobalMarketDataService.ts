@@ -1,6 +1,6 @@
 import { formatEther, formatUnits, JsonRpcProvider } from "ethers"
 import { Prisma } from "@prisma/client"
-import { COMMON_ERC20S, CURVE_LPS, curveLpMapping } from "@tangent/defi-resources"
+import { COMMON_ERC20S, curveLpMapping } from "@tangent/defi-resources"
 
 import { ERC20Repository } from "../../db/ERC20Repository.js"
 import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
@@ -8,7 +8,18 @@ import { MarketContractsRepository } from "../../db/MarketContractsRepository.js
 import { chainView } from "../../utils/chainView.js"
 
 import GlobalDataChainview from "../../abis/GlobalDataChainview.json" with { type: "json" }
-import { APR_TYPE, TVLAprs, Prices, CurveApiReturn, PendleApiReturn, ConvexFxnApiReturn, USGIndexingGlobalDataOut, USGInfoOut, CurveFactoryStableNGApiReturn, StakeDaoApiReturn } from "./types.js"
+import {
+  APR_TYPE,
+  TVLAprs,
+  Prices,
+  CurveApiReturn,
+  PendleApiReturn,
+  ConvexFxnApiReturn,
+  USGIndexingGlobalDataOut,
+  USGInfoOut,
+  CurveFactoryStableNGApiReturn,
+  StakeDaoApiReturn,
+} from "./types.js"
 import { defiLLamaFetchPrices, getPriceInfos } from "./DefiLLamaPriceFetcher.js"
 import { bigIntToNumber } from "../../utils/formatting.js"
 import { NumMap } from "../../services/boost/types.js"
@@ -30,7 +41,6 @@ const rewardTokens = [
   { symbol: "PYUSD", address: COMMON_ERC20S.PYUSD },
   { symbol: "RLUSD", address: COMMON_ERC20S.RLUSD },
   { symbol: "USDS", address: COMMON_ERC20S.USDS },
-
 ]
 
 type Markets = {
@@ -109,13 +119,21 @@ export class GlobalMarketDataService {
     }
     if ("error" in stakeDaoAPIData) {
       throw new Error(`Erreur dans fetchStakeDaoApiData: ${stakeDaoAPIData.error.reason}`)
-    }
-    else if ("errors" in stakeDaoAPIData) {
+    } else if ("errors" in stakeDaoAPIData) {
       throw new Error(`Erreur dans fetchStakeDaoApiData: ${JSON.stringify(stakeDaoAPIData.errors)}`)
-
     }
 
-    const formattedMarketData = this.formatMarketData(markets, rawMarketData, formattedPrices, curveAPIData, curveStableSwapData, convexFXNAPIData, pendleAPIData, stakeDaoAPIData, now)
+    const formattedMarketData = this.formatMarketData(
+      markets,
+      rawMarketData,
+      formattedPrices,
+      curveAPIData,
+      curveStableSwapData,
+      convexFXNAPIData,
+      pendleAPIData,
+      stakeDaoAPIData,
+      now
+    )
 
     return formattedMarketData
   }
@@ -138,7 +156,6 @@ export class GlobalMarketDataService {
 
   async fetchGlobalDataChainview(markets: Markets[]) {
     const addresses = await getAddressesJson()
-
 
     const marketParams = markets.map((market) => {
       return [market.contract_address, market.contract_type]
@@ -215,7 +232,6 @@ export class GlobalMarketDataService {
 
       // Convex CRV & FXN / StakeDao Vault / Curve Gauge
       if ([APR_TYPE["Convex CRV"], APR_TYPE["Convex FXN"], APR_TYPE["StakeDao Vault"], APR_TYPE["Curve Gauge"]].includes(marketType)) {
-
         // Get the APY fees of curve LP
         let item = curveAPIData.data.poolList.find((pool: { address: string }) => pool.address.toLowerCase() === collateralAddress)
         if (!item) {
@@ -259,14 +275,14 @@ export class GlobalMarketDataService {
         // StakeDaoVault Gauge
         else if (market.contract_type === APR_TYPE["StakeDao Vault"]) {
           if (!("errors" in stakeDaoAPIData)) {
-            const vaultData = stakeDaoAPIData.data.Vault.find(data => {
+            const vaultData = stakeDaoAPIData.data.Vault.find((data) => {
               const lpAddress = data.asset.address.toLowerCase()
               return lpAddress === collateralAddress
             })
             if (!vaultData) {
               throw Error(`Reward data for StakeDao vault ${collateralAddress} not found`)
             }
-            vaultData.gauge.aprDetails.forEach(rewards => {
+            vaultData.gauge.aprDetails.forEach((rewards) => {
               const symbol = rewards.asset.symbol
               // If the symbol length is more than 7, we consider it's the LP itself, that we already saved in the projectedAPR object under the "APY" key
               // It's a dirty hack but an honnest working hack :D
@@ -274,22 +290,18 @@ export class GlobalMarketDataService {
                 projectedAPR[rewards.asset.symbol] = Number(rewards.apr)
               }
             })
-          }
-          else {
+          } else {
             throw Error(`Error in graphQL call to StakeDao`)
-
           }
-
         }
 
         // Curve Gauge
         else if (market.contract_type === APR_TYPE["Curve Gauge"]) {
-
-          const stableSwapData = curveStableSwapData.data.poolData.find(data => data.address.toLowerCase() === collateralAddress)
+          const stableSwapData = curveStableSwapData.data.poolData.find((data) => data.address.toLowerCase() === collateralAddress)
           if (!stableSwapData) {
             throw Error(`Reward data for Curve gauge not found`)
           }
-          stableSwapData.gaugeRewards.forEach(rewards => {
+          stableSwapData.gaugeRewards.forEach((rewards) => {
             projectedAPR[rewards.symbol] = rewards.apy
           })
         }
