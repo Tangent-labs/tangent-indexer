@@ -9,8 +9,7 @@ import { BlockService } from "./BlockService.js"
 import { VOTE_TASK_DESCRIPTION } from "src/scripts/db-seed/seed_vote_tasks.js"
 
 // https://snapshot.box/#/s:sdcrv.eth/proposal/0x10c44649c31c9716592c5ad92752e449d8b024d50adbd75cecea00864920941e
-// https://vote.convexfinance.com
-// /?ref=littlemight.com#/proposal/0x662c82169a3e7c0ff0baeb3ceb20f9d76115b2cd2d9b138cee48d8f8f80812b0
+// https://vote.convexfinance.com/?ref=littlemight.com#/proposal/0x662c82169a3e7c0ff0baeb3ceb20f9d76115b2cd2d9b138cee48d8f8f80812b0
 
 export class SnapShotVoteService {
   userVoteRepository: UserPointsVoteRepository
@@ -51,13 +50,13 @@ export class SnapShotVoteService {
     await this.userVoteRepository.markProcessedProposals(proposals)
   }
 
-  updateUserVoteTasks = async (totalVotes: Array<ValidatedTask>, voteTasks: { id: bigint; name: string; point_rate?: number }[]) => {
+  updateUserVoteTasks = async (totalVotes: Array<ValidatedTask>, voteTasks: Prisma.vote_taskCreateManyInput[]) => {
     const userAddresses = Array.from(new Set(totalVotes.map((t) => t?.voterAddress?.toLowerCase())))
 
     const boosts = await this.userVoteRepository.fetchUsersBoosts(userAddresses)
 
-    const voteTasksMap = new Map<string, { id: bigint; point_rate?: number }>()
-    for (const t of voteTasks) voteTasksMap.set(t.name, t)
+    const voteTasksMap = new Map<string, Prisma.vote_taskCreateManyInput>()
+    for (const t of voteTasks) voteTasksMap.set(t.description, t)
 
     const rows: Prisma.vote_user_tasksCreateManyInput[] = totalVotes
       .map((v) => {
@@ -76,7 +75,7 @@ export class SnapShotVoteService {
         const points = v.votingPower * task.point_rate * multiplier
 
         return {
-          vote_task_id: task.id,
+          vote_task_id: task.id as number,
           user_address: v.voterAddress.toLowerCase(),
           proposal_id: v.proposalId,
           voting_power: v.votingPower,
