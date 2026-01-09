@@ -3,7 +3,7 @@ import { AddressesJson } from "../../type/data.js"
 import { TransactionPrisma } from "../../type/prisma.js"
 import { ZeroAddress } from "ethers"
 import { CONVEX_LOCKER } from "@tangent/defi-resources/build/ressources/contracts/convex.js"
-import { PendlePools } from "@tangent/defi-resources"
+import { PENDLE_POOLS } from "@tangent/defi-resources"
 import { Prisma } from "@prisma/client"
 
 const ONE_HOUR = 3600
@@ -250,7 +250,7 @@ function TASKS(addresses: AddressesJson, priceSources: Prisma.price_sourceCreate
       name: "YT sUSDe 27/11/25",
       action_type: "YT",
       protocol: "Pendle",
-      token_address: PendlePools["sUSDe 27/11/25"].YT.toLowerCase(),
+      token_address: PENDLE_POOLS["sUSDe 27/11/25"].YT.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[30],
       description: "Hold YT sUSDe 27/11/25",
       url: "https://app.pendle.finance/trade/markets/0xb6ac3d5da138918ac4e84441e924a20daa60dbdd/swap?view=yt&chain=ethereum",
@@ -261,7 +261,7 @@ function TASKS(addresses: AddressesJson, priceSources: Prisma.price_sourceCreate
       name: "LP sUSDe 27/11/25",
       action_type: "LP",
       protocol: "Pendle",
-      token_address: PendlePools["sUSDe 27/11/25"].MARKET.toLowerCase(),
+      token_address: PENDLE_POOLS["sUSDe 27/11/25"].MARKET.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[30],
       description: "Hold LP sUSDe 27/11/25",
       url: "https://app.pendle.finance/trade/pools/0xb6ac3d5da138918ac4e84441e924a20daa60dbdd/zap/in?chain=ethereum",
@@ -272,7 +272,7 @@ function TASKS(addresses: AddressesJson, priceSources: Prisma.price_sourceCreate
       name: "PT sUSDe 27/11/25",
       action_type: "PT",
       protocol: "Pendle",
-      token_address: PendlePools["sUSDe 27/11/25"].PT.toLowerCase(),
+      token_address: PENDLE_POOLS["sUSDe 27/11/25"].PT.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[15],
       description: "Hold PT sUSDe 27/11/25",
       url: "https://app.pendle.finance/trade/markets/0xb6ac3d5da138918ac4e84441e924a20daa60dbdd/swap?view=pt&chain=ethereum",
@@ -311,7 +311,7 @@ export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addr
     CURVE_CONTEXT.LLAMALEND_sDOLA_crvUSD.curveGauge.toLowerCase(),
 
     // Remove Pendle Market because it holds PT
-    PendlePools["sUSDe 27/11/25"].MARKET.toLowerCase(),
+    PENDLE_POOLS["sUSDe 27/11/25"].MARKET.toLowerCase(),
   ].map((uE) => ({ user: uE }))
 
   await prisma.lp_points_users_excluded.createMany({

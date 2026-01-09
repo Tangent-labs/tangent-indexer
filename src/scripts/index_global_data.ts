@@ -5,7 +5,7 @@ import { JsonRpcProvider } from "ethers"
 import { MarketGlobalDataRepository } from "../db/MarketGlobalDataRepository.js"
 import { TotalSupplyRepository } from "../db/TotalSupplyRepository.js"
 import { GlobalMarketDataService } from "../services/globalData/GlobalMarketDataService.js"
-import { PriceApiService } from "../services/PriceApiService.js"
+import { CallApiService } from "../services/CallApiService.js"
 import { TransactionPrisma } from "../type/prisma.js"
 import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
 import { ERC20Repository } from "../db/ERC20Repository.js"
@@ -49,7 +49,7 @@ async function main() {
         timeout: 10_000_000,
       }
     )
-    .then((_) => {})
+    .then((_) => { })
     .catch((e) => {
       console.error(e)
     })
@@ -67,7 +67,7 @@ async function main() {
         timeout: 10_000_000,
       }
     )
-    .then((_) => {})
+    .then((_) => { })
     .catch((e) => {
       console.error(e)
     })
@@ -93,8 +93,8 @@ function setUpIndexerGlobalData() {
     savingAccountRepository.setClient(dbTransaction)
   }
 
-  const priceApiService = new PriceApiService()
-  const globalDataService = new GlobalMarketDataService(provider, priceApiService, erc20Repository, marketContractsRepository)
+  const callApiService = new CallApiService()
+  const globalDataService = new GlobalMarketDataService(provider, callApiService, erc20Repository, marketContractsRepository)
   const totalSupplyRepo = new TotalSupplyRepository(prismaClient)
   const savingAccountService = new SavingAccountServices(savingAccountRepository)
   return {

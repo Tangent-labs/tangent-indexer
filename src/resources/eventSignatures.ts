@@ -24,9 +24,9 @@ export const MIGRATE_TO = "MigrateTo(address,uint256,uint256,uint256)"
 
 export const MARKET_CONVEX_CRV_CREATED = "MarketConvexCrvCreated(address,string)"
 export const MARKET_CONVEX_FXN_CREATED = "MarketConvexFxnCreated(address,string)"
-export const MARKET_NO_SOCIABILIZATION_CREATED = "BasicERC20MarketCreatedCreated(address,string)"
-export const MARKET_STAKEDAO_VAULT_V2_CREATED = "MarketStakeDaoVaultV2(address,string)"
-export const MARKET_CURVE_GAUGE_CREATED = "MarketCurveGauge(address,string)"
+export const BASIC_ERC20_MARKET_CREATED = "BasicERC20MarketCreated(address,string)"
+export const MARKET_STAKEDAO_VAULT_V2_CREATED = "MarketStakeDaoVaultV2Created(address,string)"
+export const MARKET_CURVE_GAUGE_CREATED = "MarketCurveGaugeCreated(address,string)"
 
 export const TRANSFER = "Transfer(address,address,uint256)"
 export const STAKED = "Staked(address,uint256)"
@@ -58,10 +58,9 @@ export const EVENT_TOPICS = {
   [id(WITHDRAWN)]: "Withdrawn",
 
   // Market Creation
-
   [id(MARKET_CONVEX_CRV_CREATED)]: "MarketConvexCrvCreated",
   [id(MARKET_CONVEX_FXN_CREATED)]: "MarketConvexFxnCreated",
-  [id(MARKET_NO_SOCIABILIZATION_CREATED)]: "BasicERC20MarketCreatedCreated",
+  [id(BASIC_ERC20_MARKET_CREATED)]: "BasicERC20MarketCreated",
   [id(MARKET_STAKEDAO_VAULT_V2_CREATED)]: "MarketStakeDaoVaultV2Created",
   [id(MARKET_CURVE_GAUGE_CREATED)]: "MarketCurveGaugeCreated",
 }

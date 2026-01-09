@@ -1,7 +1,31 @@
 import { Prisma, PrismaClient } from "@prisma/client"
 import { NumMap } from "../../services/boost/types.js"
-import { CONTROLLER_MAPPING } from "../../services/events/VotesEventService.js"
 import { TransactionPrisma } from "../../type/prisma.js"
+
+export const CONTROLLER_MAPPING: {
+  [gaugeControllerKey: string]: {
+    controller: string
+    gauges: {
+      [gaugeKey: string]: string
+    }
+  }
+} = {
+  CRV: {
+    controller: "0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB".toLowerCase(),
+    gauges: {
+      USDC_USDf: "0x156527deF9a2AB4F54C849575f23dC4BB439d9d9".toLowerCase(),
+      crvUSD_USDC: "0x95f00391cB5EebCd190EB58728B4CE23DbFa6ac1".toLowerCase(),
+      crvUSD_USDT: "0x4e6bB6B7447B7B2Aa268C16AB87F4Bb48BF57939".toLowerCase(),
+    },
+  },
+  FXN: {
+    controller: "0xe60eB8098B34eD775ac44B1ddE864e098C6d7f37".toLowerCase(),
+    gauges: {
+      STABILITY_POOL: "0x215D87bd3c7482E2348338815E059DE07Daf798A".toLowerCase(),
+      FXN_ETH: "0xA5250C540914E012E22e623275E290c4dC993D11".toLowerCase(),
+    },
+  },
+}
 
 export async function seedVoteTasks(prisma: PrismaClient | TransactionPrisma) {
   // INSERT GAUGE_CONTROLLER
@@ -16,7 +40,7 @@ export async function seedVoteTasks(prisma: PrismaClient | TransactionPrisma) {
     }
   }, {})
 
-  // INSERT VOTER_TO_EXCLUDE
+  // INSERT VOTER_TO_EXCLUDE PER GAUGE CONTROLLER
 
   const votersToExclude: Prisma.voter_to_excludeCreateManyInput[] = Object.entries(voterToExcludePerControllerId(controllerIdPerAddress)).flatMap(
     ([controllerId, votersToExclude]) => {
@@ -32,21 +56,21 @@ export async function seedVoteTasks(prisma: PrismaClient | TransactionPrisma) {
     data: votersToExclude,
   })
 
-  // INSERT VOTE_TASKS
+  // INSERT VOTE_TASKS 
   const voteTask = await prisma.vote_task.createManyAndReturn({
-    data: VOTE_TASK_INIT,
+    data: ONCHAIN_VOTE_TASK_INIT.concat(OFFCHAIN_VOTE_TASK_INIT),
   })
 
-  const voteIdPerName: NumMap = voteTask.reduce((acc, current) => {
+  const voteIdPerDescription: NumMap = voteTask.reduce((acc, current) => {
     return {
       ...acc,
-      [current.name]: current.id,
+      [current.description]: current.id,
     }
   }, {})
 
   // INSERT GAUGE_POOLS
   await prisma.gauge_pools.createMany({
-    data: gaugePools(controllerIdPerGaugePool(controllerIdPerAddress, voteIdPerName)),
+    data: gaugePools(controllerIdPerGaugePool(controllerIdPerAddress, voteIdPerDescription)),
   })
 
   console.log("Vote_task seeded")
@@ -72,13 +96,12 @@ export function gaugePools(gaugePoolMapping: GaugePoolMapping): Prisma.gauge_poo
 
 export const GAUGE_CONTROLLER_INIT = [{ controller_address: CONTROLLER_MAPPING.CRV.controller }, { controller_address: CONTROLLER_MAPPING.FXN.controller }]
 
-export function controllerIdPerGaugePool(controllerIdPerAddress: NumMap, taskIdPerName: NumMap): GaugePoolMapping {
+export function controllerIdPerGaugePool(controllerIdPerAddress: NumMap, taskIdPerDescription: NumMap): GaugePoolMapping {
   return {
-    [CONTROLLER_MAPPING.CRV.gauges.USDC_USDf]: { controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.CRV.controller], taskId: taskIdPerName[VOTE_05] },
-    [CONTROLLER_MAPPING.CRV.gauges.crvUSD_USDC]: { controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.CRV.controller], taskId: taskIdPerName[VOTE_05] },
-    [CONTROLLER_MAPPING.CRV.gauges.crvUSD_USDT]: { controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.CRV.controller], taskId: taskIdPerName[VOTE_06] },
-    [CONTROLLER_MAPPING.FXN.gauges.STABILITY_POOL]: { controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.FXN.controller], taskId: taskIdPerName[VOTE_07] },
-    [CONTROLLER_MAPPING.FXN.gauges.FXN_ETH]: { controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.FXN.controller], taskId: taskIdPerName[VOTE_07] },
+    [CONTROLLER_MAPPING.CRV.gauges.USDC_USDf]: { controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.CRV.controller], taskId: taskIdPerDescription[VOTE_TASK_DESCRIPTION.VECRV_ON_USG_USDC] },
+    [CONTROLLER_MAPPING.CRV.gauges.crvUSD_USDC]: { controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.CRV.controller], taskId: taskIdPerDescription[VOTE_TASK_DESCRIPTION.VECRV_ON_USG_frxUSD] },
+    [CONTROLLER_MAPPING.CRV.gauges.crvUSD_USDT]: { controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.CRV.controller], taskId: taskIdPerDescription[VOTE_TASK_DESCRIPTION.VECRV_ON_USG_wcrvUSD] },
+    [CONTROLLER_MAPPING.FXN.gauges.STABILITY_POOL]: { controllerId: controllerIdPerAddress[CONTROLLER_MAPPING.FXN.controller], taskId: taskIdPerDescription[VOTE_TASK_DESCRIPTION.VEFXN_ON_USG_fxUSD] },
   }
 }
 
@@ -89,72 +112,82 @@ export function voterToExcludePerControllerId(controllerIdPerAddress: NumMap): {
   }
 }
 
-// export const taskNamePerGaugeAddress = {
-//   VOTE_05: { controller: "", gaugePools: [CONTROLLER_MAPPING.CRV.gauges.USDC_USDf] },
-//   VOTE_06: { gaugePools: [CONTROLLER_MAPPING.CRV.gauges.crvUSD_USDC, CONTROLLER_MAPPING.CRV.gauges.crvUSD_USDT] },
-//   VOTE_07: { gaugePools: [CONTROLLER_MAPPING.FXN.gauges.STABILITY_POOL, CONTROLLER_MAPPING.FXN.gauges.cvxFXN_FXN] }
-// }
+export const VOTE_TASK_DESCRIPTION = {
+  CVX_ON_USG_USDC: "Vote on USG-USDC on CVX snapshot",
+  CVX_ON_USG_frxUSD: "Vote on USG-frxUSD on CVX snapshot",
+  CVX_ON_USG_wcrvUSD: "Vote on USG-wcrvUSD on CVX snapshot",
+  CVX_ON_USG_wUSDe: "Vote on USG-USDe on CVX snapshot",
 
-export const VOTE_01 = "VOTE_01"
-export const VOTE_02 = "VOTE_02"
-export const VOTE_03 = "VOTE_03"
-export const VOTE_04 = "VOTE_04"
-export const VOTE_05 = "VOTE_05"
-export const VOTE_06 = "VOTE_06"
-export const VOTE_07 = "VOTE_07"
-export const VOTE_12 = "VOTE_12"
+  SDCRV_ON_USG_USDC: "Vote on USG-USDC on sdCRV snapshot",
+  SDCRV_ON_USG_frxUSD: "Vote on USG-frxUSD on sdCRV snapshot",
+  SDCRV_ON_USG_wcrvUSD: "Vote on USG-wcrvUSD on sdCRV snapshot",
 
-export const VOTE_TASK_INIT = [
+  VECRV_ON_USG_USDC: "Vote on USG-USDC on veCRV gauge",
+  VECRV_ON_USG_frxUSD: "Vote on USG-frxUSD on veCRV gauge",
+  VECRV_ON_USG_wcrvUSD: "Vote on USG-wcrvUSD on veCRV gauge",
+  VEFXN_ON_USG_fxUSD: "Vote on USG-fxUSD on veCRV gauge"
+}
+
+
+export const OFFCHAIN_VOTE_TASK_INIT: Prisma.vote_taskCreateManyInput[] = [
+  // CVX
   {
-    name: VOTE_01,
     organisation: "cvx.eth",
     protocol: "Convex",
     point_rate: 1,
-    description: "Convex rewarded choice vote",
+    description: VOTE_TASK_DESCRIPTION.CVX_ON_USG_USDC,
     url: "https://vote.convexfinance.com/",
     is_onchain: false,
   },
   {
-    name: VOTE_02,
     organisation: "cvx.eth",
     protocol: "Convex",
     point_rate: 1,
-    description: "Convex rewarded choice vote",
+    description: VOTE_TASK_DESCRIPTION.CVX_ON_USG_frxUSD,
     url: "https://vote.convexfinance.com/",
     is_onchain: false,
   },
   {
-    // sdCRV weekly “rewarded choice” votes (sdcrv.eth)
-    name: VOTE_03,
+    organisation: "cvx.eth",
+    protocol: "Convex",
+    point_rate: 1,
+    description: VOTE_TASK_DESCRIPTION.CVX_ON_USG_wcrvUSD,
+    url: "https://vote.convexfinance.com/",
+    is_onchain: false,
+  },
+
+  // STAKEDAO CRV
+  {
     organisation: "sdcrv.eth",
-    protocol: "Curve",
+    protocol: "StakeDao",
     point_rate: 2,
-    description: "sdCRV rewarded choice vote",
+    description: VOTE_TASK_DESCRIPTION.SDCRV_ON_USG_USDC,
     url: "https://snapshot.box/#/s:sdcrv.eth",
     is_onchain: false,
   },
   {
-    // Optional: participation reward once per proposal (any org)
-    name: VOTE_04,
-    organisation: "*",
-    protocol: "Generic",
-    point_rate: 10,
-    description: "Flat reward for participating in a proposal (once per proposal)",
-    url: "https://hub.snapshot.org",
+    organisation: "sdcrv.eth",
+    protocol: "StakeDao",
+    point_rate: 2,
+    description: VOTE_TASK_DESCRIPTION.SDCRV_ON_USG_frxUSD,
+    url: "https://snapshot.box/#/s:sdcrv.eth",
     is_onchain: false,
   },
   {
-    name: VOTE_05,
-    description: "Vote on USG-USDC with veCRV",
-    is_onchain: true,
-    organisation: "CRV",
-    point_rate: 12,
-    protocol: "CRV",
-    url: "https://www.curve.finance/dao/ethereum/gauges",
+    organisation: "sdcrv.eth",
+    protocol: "StakeDao",
+    point_rate: 2,
+    description: VOTE_TASK_DESCRIPTION.SDCRV_ON_USG_wcrvUSD,
+    url: "https://snapshot.box/#/s:sdcrv.eth",
+    is_onchain: false,
   },
+]
+
+
+
+export const ONCHAIN_VOTE_TASK_INIT: Prisma.vote_taskCreateManyInput[] = [
   {
-    name: VOTE_06,
-    description: "Vote on USG-USDC with veCRV",
+    description: VOTE_TASK_DESCRIPTION.VECRV_ON_USG_USDC,
     is_onchain: true,
     organisation: "CRV",
     point_rate: 6,
@@ -162,21 +195,27 @@ export const VOTE_TASK_INIT = [
     url: "https://www.curve.finance/dao/ethereum/gauges",
   },
   {
-    name: VOTE_07,
-    description: "Vote on 1 pool with veFXN",
+    description: VOTE_TASK_DESCRIPTION.VECRV_ON_USG_frxUSD,
+    is_onchain: true,
+    organisation: "CRV",
+    point_rate: 12,
+    protocol: "CRV",
+    url: "https://curve.finance",
+  },
+  {
+    description: VOTE_TASK_DESCRIPTION.VECRV_ON_USG_wcrvUSD,
+    is_onchain: true,
+    organisation: "CRV",
+    point_rate: 12,
+    protocol: "CRV",
+    url: "https://curve.finance",
+  },
+  {
+    description: VOTE_TASK_DESCRIPTION.VEFXN_ON_USG_fxUSD,
     is_onchain: true,
     organisation: "FXN",
     point_rate: 10,
     protocol: "FXN",
     url: "https://fx.aladdin.club/gauge/",
-  },
-  {
-    name: VOTE_12,
-    description: "Vote on CRV+cvxCRV",
-    is_onchain: false,
-    organisation: "CRV",
-    point_rate: 12,
-    protocol: "CRV",
-    url: "https://curve.finance",
   },
 ]

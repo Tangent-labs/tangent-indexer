@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client"
 import { Proposal, ValidatedTask, Reward, RewardedChoice, OrganizationConfig } from "../type/data.js"
 import { UserPointsVoteRepository } from "../db/Points/UserPointsVoteRepository.js"
 import { BlockService } from "./BlockService.js"
+import { VOTE_TASK_DESCRIPTION } from "src/scripts/db-seed/seed_vote_tasks.js"
 
 // https://snapshot.box/#/s:sdcrv.eth/proposal/0x10c44649c31c9716592c5ad92752e449d8b024d50adbd75cecea00864920941e
 // https://vote.convexfinance.com
@@ -106,10 +107,10 @@ export class SnapShotVoteService {
         value: "https://vote.convexfinance.com/",
         title: "Gauge Weight for Week",
         rewards: [
-          { task: "VOTE_01", value: "crvUSD+USD0" },
-          { task: "VOTE_02", value: "Lending: Borrow crvUSD (ETHFI collateral)" },
-          { task: "VOTE_03", value: "WETH+CVX" },
-          { task: "VOTE_12", value: "CRV+cvxCRV" },
+          { task: VOTE_TASK_DESCRIPTION.CVX_ON_USG_USDC, value: "crvUSD+USD0" },
+          { task: VOTE_TASK_DESCRIPTION.CVX_ON_USG_frxUSD, value: "Lending: Borrow crvUSD (ETHFI collateral)" },
+          { task: VOTE_TASK_DESCRIPTION.CVX_ON_USG_wcrvUSD, value: "WETH+CVX" },
+          { task: VOTE_TASK_DESCRIPTION.CVX_ON_USG_wUSDe, value: "CRV+cvxCRV" },
         ],
         excludedVoters: [
           "0x0000000000000000000000000000000000000000", // Example excluded address
@@ -121,8 +122,8 @@ export class SnapShotVoteService {
         value: "https://snapshot.box/#/s:sdcrv.eth",
         title: "Gauge vote CRV",
         rewards: [
-          { task: "VOTE_03", value: "crvUSD+USD0" },
-          { task: "VOTE_04", value: "Lending: Borrow crvUSD (ETHFI collateral)" },
+          { task: VOTE_TASK_DESCRIPTION.SDCRV_ON_USG_USDC, value: "crvUSD+USD0" },
+          { task: VOTE_TASK_DESCRIPTION.SDCRV_ON_USG_frxUSD, value: "Lending: Borrow crvUSD (ETHFI collateral)" },
         ],
         excludedVoters: [
           "0x2222222222222222222222222222222222222222", // Example excluded address
