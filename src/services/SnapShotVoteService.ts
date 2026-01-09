@@ -109,6 +109,7 @@ export class SnapShotVoteService {
           { task: "VOTE_01", value: "crvUSD+USD0" },
           { task: "VOTE_02", value: "Lending: Borrow crvUSD (ETHFI collateral)" },
           { task: "VOTE_03", value: "WETH+CVX" },
+          { task: "VOTE_12", value: "CRV+cvxCRV" },
         ],
         excludedVoters: [
           "0x0000000000000000000000000000000000000000", // Example excluded address
