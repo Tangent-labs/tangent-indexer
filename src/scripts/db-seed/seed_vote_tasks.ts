@@ -102,6 +102,7 @@ export const VOTE_04 = "VOTE_04"
 export const VOTE_05 = "VOTE_05"
 export const VOTE_06 = "VOTE_06"
 export const VOTE_07 = "VOTE_07"
+export const VOTE_12 = "VOTE_12"
 
 export const VOTE_TASK_INIT = [
   {
@@ -168,5 +169,14 @@ export const VOTE_TASK_INIT = [
     point_rate: 10,
     protocol: "FXN",
     url: "https://fx.aladdin.club/gauge/",
+  },
+  {
+    name: VOTE_12,
+    description: "Vote on CRV+cvxCRV",
+    is_onchain: false,
+    organisation: "CRV",
+    point_rate: 12,
+    protocol: "CRV",
+    url: "https://curve.finance",
   },
 ]
