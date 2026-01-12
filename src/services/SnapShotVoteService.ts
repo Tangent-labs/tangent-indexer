@@ -266,8 +266,6 @@ export class SnapShotVoteService {
     }
   }
 
-
-
   private async loadGraphQLQuery(queryName: string): Promise<string> {
     const queryPath = path.join(process.cwd(), "src", "services", "snapshotQueries", `${queryName}.graphql`)
     return fs.readFileSync(queryPath, "utf-8")
