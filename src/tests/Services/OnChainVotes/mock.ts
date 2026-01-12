@@ -3,9 +3,7 @@ import { GetGaugeVotesOut, VotesFromDb } from "../../../services/OnChainVoteServ
 
 const GAUGE_A = "GAUGE_A"
 const GAUGE_B = "GAUGE_B"
-const GAUGE_C = "GAUGE_C"
 const GAUGE_D = "GAUGE_D"
-const GAUGE_E = "GAUGE_D"
 
 const CONTROLLER_A = "CONTROLLER_A"
 const CONTROLLER_B = "CONTROLLER_B"
@@ -31,8 +29,7 @@ export const votesFromDbPerTask: VotesFromDb[] = [
   {
     id: 2n,
     point_rate: 3,
-    gauge_pools:
-    {
+    gauge_pools: {
       gauge_address: GAUGE_B,
       gauge_controller: { controller_address: CONTROLLER_A },
       gauge_votes: [{ user_address: USER_A }, { user_address: USER_B }],
@@ -46,7 +43,7 @@ export const votesFromDbPerTask: VotesFromDb[] = [
       gauge_address: GAUGE_A,
       gauge_controller: { controller_address: CONTROLLER_A },
       gauge_votes: [{ user_address: USER_A }, { user_address: USER_B }],
-    }
+    },
   },
   {
     id: 3n,
