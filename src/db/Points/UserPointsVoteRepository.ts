@@ -35,6 +35,8 @@ export class UserPointsVoteRepository extends AbstractRepository {
   }
 
   async createUserVoteTasks(userTasks: Prisma.vote_user_tasksCreateManyInput[]) {
+    if (userTasks.length === 0) return
+
     return await this.prismaClient.vote_user_tasks.createMany({
       data: userTasks,
     })
@@ -50,19 +52,19 @@ export class UserPointsVoteRepository extends AbstractRepository {
   async markProcessedProposals(proposals: Proposal[]) {
     if (proposals.length === 0) return
 
-    const proposalsToInsert = proposals.map((p) => {
-      return {
-        proposal_id: p.id,
-        title: p.title,
-      }
-    })
-
     return await this.prismaClient.processed_proposal.createMany({
-      data: proposalsToInsert,
+      data: proposals.map((p) => {
+        return {
+          proposal_id: p.id,
+          title: p.title,
+        }
+      }),
     })
   }
 
   async insertVotesForGauge(votes: Prisma.gauges_votesCreateManyInput[]) {
+    if (votes.length === 0) return
+
     await this.prismaClient.gauges_votes.createMany({
       data: votes,
     })
@@ -137,7 +139,6 @@ export class UserPointsVoteRepository extends AbstractRepository {
       },
     })
   }
-
 
   async getSnapshotOrganisations() {
     return await this.prismaClient.snapshot_organisations.findMany({

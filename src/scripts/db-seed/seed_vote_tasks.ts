@@ -2,7 +2,6 @@ import { Prisma, PrismaClient } from "@prisma/client"
 import { NumMap } from "../../services/boost/types.js"
 import { TransactionPrisma } from "../../type/prisma.js"
 
-
 export const VOTE_TASK_DESCRIPTION = {
   CVX_ON_USG_USDC: "Vote on USG-USDC on CVX snapshot",
   CVX_ON_USG_frxUSD: "Vote on USG-frxUSD on CVX snapshot",
@@ -51,15 +50,12 @@ export const SNAPSHOT_ORGANISATIONS = [
     title: "Gauge Weight for Week",
     scoringChoices: [
       { taskDescription: VOTE_TASK_DESCRIPTION.CVX_ON_USG_USDC, name: "crvUSD+USD0" },
-      { taskDescription: VOTE_TASK_DESCRIPTION.CVX_ON_USG_frxUSD, name: "Lending: Borrow crvUSD (ETHFI collateral)" },
+      { taskDescription: VOTE_TASK_DESCRIPTION.CVX_ON_USG_frxUSD, name: "MIM+3CRV" },
       { taskDescription: VOTE_TASK_DESCRIPTION.CVX_ON_USG_wcrvUSD, name: "WETH+CVX" },
       { taskDescription: VOTE_TASK_DESCRIPTION.CVX_ON_USG_wUSDe, name: "CRV+cvxCRV" },
     ],
-    //TODO Exclude voters to add
-    excludedVoters: [
-      "0x0000000000000000000000000000000000000000",
-      "0x1111111111111111111111111111111111111111",
-    ],
+    // TODO Exclude voters to add
+    excludedVoters: ["0x0000000000000000000000000000000000000000", "0x1111111111111111111111111111111111111111"],
   },
   {
     orga: "sdcrv.eth",
@@ -67,17 +63,14 @@ export const SNAPSHOT_ORGANISATIONS = [
     title: "Gauge vote CRV",
     scoringChoices: [
       { taskDescription: VOTE_TASK_DESCRIPTION.SDCRV_ON_USG_USDC, name: "crvUSD+USD0" },
-      { taskDescription: VOTE_TASK_DESCRIPTION.SDCRV_ON_USG_frxUSD, name: "Lending: Borrow crvUSD (ETHFI collateral)" },
+      { taskDescription: VOTE_TASK_DESCRIPTION.SDCRV_ON_USG_frxUSD, name: "ETH++WETH" },
     ],
-    //TODO Exclude voters to add
-    excludedVoters: [
-      "0x2222222222222222222222222222222222222222",
-    ],
+    // TODO Exclude voters to add
+    excludedVoters: ["0x2222222222222222222222222222222222222222"],
   },
 ]
 
 export async function seedVoteTasks(prisma: PrismaClient | TransactionPrisma) {
-
   // INSERT VOTE_TASKS
   const voteTask = await prisma.vote_task.createManyAndReturn({
     data: ONCHAIN_VOTE_TASK_INIT.concat(OFFCHAIN_VOTE_TASK_INIT),
@@ -90,46 +83,44 @@ export async function seedVoteTasks(prisma: PrismaClient | TransactionPrisma) {
     }
   }, {})
 
-
   // INSERT SNAPSHOT ORGANISATIONS
 
   const snapshotOrgas = await prisma.snapshot_organisations.createManyAndReturn({
-    data: SNAPSHOT_ORGANISATIONS.map(snap => {
+    data: SNAPSHOT_ORGANISATIONS.map((snap) => {
       return {
         key: snap.orga,
         url: snap.url,
-        proposal_title_search: snap.title
+        proposal_title_search: snap.title,
       }
-    })
+    }),
   })
 
   // INSERT SCORING CHOICES
   await prisma.snapshot_scoring_choices.createMany({
-    data: SNAPSHOT_ORGANISATIONS.map(snap => {
+    data: SNAPSHOT_ORGANISATIONS.map((snap) => {
       const orga = snap.orga
-      return snap.scoringChoices.map(choice => {
+      return snap.scoringChoices.map((choice) => {
         return {
           choice_name: choice.name,
-          snapshot_organisation_id: snapshotOrgas.find(o => o.key === orga)!.id,
-          vote_task_id: voteIdPerDescription[choice.taskDescription]
+          snapshot_organisation_id: snapshotOrgas.find((o) => o.key === orga)!.id,
+          vote_task_id: voteIdPerDescription[choice.taskDescription],
         }
       })
-    }).flat()
+    }).flat(),
   })
 
   // INSERT VOTER TO EXCLUDE
   await prisma.snapshot_voter_to_exclude.createMany({
-    data: SNAPSHOT_ORGANISATIONS.map(snap => {
+    data: SNAPSHOT_ORGANISATIONS.map((snap) => {
       const orga = snap.orga
-      return snap.excludedVoters.map(voter => {
+      return snap.excludedVoters.map((voter) => {
         return {
           user_address: voter,
-          snapshot_organisation_id: snapshotOrgas.find(o => o.key === orga)!.id,
+          snapshot_organisation_id: snapshotOrgas.find((o) => o.key === orga)!.id,
         }
       })
-    }).flat()
+    }).flat(),
   })
-
 
   // INSERT GAUGE_CONTROLLER
   const gaugeControllers = await prisma.gauge_controllers.createManyAndReturn({
@@ -159,14 +150,10 @@ export async function seedVoteTasks(prisma: PrismaClient | TransactionPrisma) {
     data: votersToExclude,
   })
 
-
-
   // INSERT GAUGE_POOLS
   await prisma.gauge_pools.createMany({
     data: gaugePools(controllerIdPerGaugePool(controllerIdPerAddress, voteIdPerDescription)),
   })
-
-  console.log("Vote_task seeded")
 }
 
 export type GaugePoolMapping = {
@@ -187,7 +174,10 @@ export function gaugePools(gaugePoolMapping: GaugePoolMapping): Prisma.gauge_poo
   return gaugePools
 }
 
-export const GAUGE_CONTROLLER_INIT = [{ controller_address: GAUGE_CONTROLLER_MAPPING.CRV.controller }, { controller_address: GAUGE_CONTROLLER_MAPPING.FXN.controller }]
+export const GAUGE_CONTROLLER_INIT = [
+  { controller_address: GAUGE_CONTROLLER_MAPPING.CRV.controller },
+  { controller_address: GAUGE_CONTROLLER_MAPPING.FXN.controller },
+]
 
 export function controllerIdPerGaugePool(controllerIdPerAddress: NumMap, taskIdPerDescription: NumMap): GaugePoolMapping {
   return {
@@ -216,8 +206,6 @@ export function voterToExcludePerControllerId(controllerIdPerAddress: NumMap): {
     [controllerIdPerAddress[GAUGE_CONTROLLER_MAPPING.FXN.controller]]: ["0XC", "0XD"],
   }
 }
-
-
 
 export const OFFCHAIN_VOTE_TASK_INIT: Prisma.vote_taskCreateManyInput[] = [
   // CVX

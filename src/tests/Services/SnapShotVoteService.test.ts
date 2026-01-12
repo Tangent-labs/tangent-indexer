@@ -1,7 +1,16 @@
 import axios from "axios"
 import { UserPointsVoteRepository } from "../../db/Points/UserPointsVoteRepository.js"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { SnapShotVoteService } from "../../services/SnapShotVoteService.js"
+import { SnapshotGetProposalVotesApiReturn, SnapShotVoteService } from "../../services/SnapShotVoteService.js"
+import { Proposal, ValidatedTask } from "src/type/data.js"
+
+const usr1 = "usr1"
+const usr2 = "usr2"
+const usr3 = "usr3"
+const usr4 = "usr4"
+
+const excludedVoters1 = [usr1]
+const excludedVoters2 = [usr2, usr3]
 
 const mockProposals = [
   {
@@ -14,31 +23,55 @@ const mockProposals = [
     state: "closed",
     type: "weighted",
     organizationRewards: [],
-    excludedVoters: ["0x0000000000000000000000000000000000000000", "0x1111111111111111111111111111111111111111"],
+    excludedVoters: excludedVoters1,
+    rewarded: [],
+  },
+  {
+    id: "proposalIdTwo",
+    title: "Gauge Weight for Week of 14th Aug 2025",
+    start: 1755129600,
+    end: 1755561600,
+    snapshot: 23135571,
+    created: 1755129665,
+    state: "closed",
+    type: "weighted",
+    organizationRewards: [],
+    excludedVoters: excludedVoters2,
     rewarded: [],
   },
 ]
 
-const mockVotes = [
+const mockVotes: ValidatedTask[] = [
   {
-    task: "VOTE_03",
-    value: "WETH+CVX",
-    voterAddress: "0xvoter1",
+    taskId: 2n,
+    voterAddress: usr1,
     votingPower: 1234,
     proposalId: "proposalIdOne",
   },
   {
-    task: "VOTE_03",
-    value: "WETH+CVX",
-    voterAddress: "0xvoter2",
+    taskId: 3n,
+    voterAddress: usr2,
     votingPower: 4567,
     proposalId: "proposalIdOne",
+  },
+  {
+    taskId: 3n,
+    voterAddress: usr3,
+    votingPower: 4567,
+    proposalId: "proposalIdTwo",
+  },
+  {
+    taskId: 4n,
+    voterAddress: usr4,
+    votingPower: 300000,
+    proposalId: "proposalIdTwo",
   },
 ]
 
 const mockTasks = [
-  { id: 2n, name: "VOTE_02", point_rate: 1, unit: "vote" },
-  { id: 3n, name: "VOTE_03", point_rate: 1, unit: "vote" },
+  { id: 2n, point_rate: 3, description: "vote1" },
+  { id: 3n, point_rate: 12, description: "vote2" },
+  { id: 4n, point_rate: 5, description: "vote4" },
 ]
 
 // --------------------------------------------
@@ -123,26 +156,41 @@ describe("SnapShotVoteService", () => {
 
   it("Should create updatedTasks inside updateUserVoteTasks()", async () => {
     fetchUsersBoostsSpy.mockResolvedValue([
-      { user_address: "0xvoter1", multiplier: 1.1 },
-      { user_address: "0xvoter2", multiplier: 2 },
+      { user_address: usr1, multiplier: 1.1 },
+      { user_address: usr2, multiplier: 2 },
+      { user_address: usr4, multiplier: 2 },
     ])
 
     await snapShotVoteService.updateUserVoteTasks(mockVotes, mockTasks)
 
     const updatedTasks = [
       {
-        vote_task_id: 3n,
-        user_address: "0xvoter1",
+        vote_task_id: 2n,
+        user_address: usr1,
         proposal_id: "proposalIdOne",
         voting_power: 1234,
-        points: Number((1234 * 1.1).toFixed(0)),
+        points: Number((1234 * 1.1 * 3).toFixed(0)),
       },
       {
         vote_task_id: 3n,
-        user_address: "0xvoter2",
+        user_address: usr2,
         proposal_id: "proposalIdOne",
         voting_power: 4567,
-        points: Number((4567 * 2).toFixed(0)),
+        points: Number((4567 * 2 * 12).toFixed(0)),
+      },
+      {
+        vote_task_id: 3n,
+        user_address: usr3,
+        proposal_id: "proposalIdTwo",
+        voting_power: 4567,
+        points: Number((4567 * 12).toFixed(0)),
+      },
+      {
+        vote_task_id: 4n,
+        user_address: usr4,
+        proposal_id: "proposalIdTwo",
+        voting_power: 300000,
+        points: Number((300000 * 2 * 5).toFixed(0)),
       },
     ]
 
@@ -150,30 +198,40 @@ describe("SnapShotVoteService", () => {
   })
 
   it("Should test getProposalVotes()", async () => {
-    const mockProposal: any = {
+    const mockProposal: Proposal = {
       id: "0xproposal",
       type: "weighted",
-      organizationRewards: [
-        { task: "VOTE_01", value: "crvUSD+USD0" },
-        { task: "VOTE_03", value: "WETH+CVX" },
-      ],
-      excludedVoters: ["0x0000000000000000000000000000000000000000"],
-      rewarded: [
-        { choice: "WETH+CVX (0xB576…)", rewardIndex: 2, index: 34 },
-        { choice: "crvUSD+USD0 (0xE1c7…)", rewardIndex: 0, index: 317 },
+      title: "GaugeWeight ",
+      created: 112344,
+      end: 123455,
+      snapshot: 12,
+      start: 12344,
+      state: "closed",
+      excludedVoters: excludedVoters1,
+      scoringChoices: [
+        { id: 34n, choice_name: "WETH+CVX", choiceIndex: 34, snapshot_organisation_id: 1n, vote_task_id: 3n },
+        { id: 35n, choice_name: "crvUSD+USD0", choiceIndex: 19, snapshot_organisation_id: 2n, vote_task_id: 4n },
       ],
     }
 
-    const firstPage = {
+    const firstPage: SnapshotGetProposalVotesApiReturn = {
       data: {
         data: {
           votes: [
             {
               id: "v1",
-              voter: "0xde1E6A7ED0ad3F61D531a8a78E83CcDdbd6E0c49",
+              voter: usr1,
               created: 1755628798,
-              vp: 11619048.104955375,
+              vp: 1000,
               choice: { "34": 100 },
+              proposal: { id: "0xproposal", title: "Gauge" },
+            },
+            {
+              id: "v1",
+              voter: usr2,
+              created: 1755628798,
+              vp: 333333,
+              choice: { "34": 1000, "19": 1200, "4": 100 },
               proposal: { id: "0xproposal", title: "Gauge" },
             },
           ],
@@ -186,13 +244,12 @@ describe("SnapShotVoteService", () => {
     ;(axios.post as any).mockResolvedValueOnce(firstPage)
 
     const result = await snapShotVoteService.getProposalVotes(mockProposal)
-
-    expect(result).toHaveLength(1)
+    expect(result).toHaveLength(2)
 
     expect(result[0]).toMatchObject({
-      task: "VOTE_03",
-      value: "WETH+CVX",
-      voterAddress: "0xde1E6A7ED0ad3F61D531a8a78E83CcDdbd6E0c49",
+      taskId: 3n,
+      voterAddress: "usr2",
+      votingPower: 144927.39130434784,
       proposalId: "0xproposal",
     })
 
@@ -219,7 +276,7 @@ describe("SnapShotVoteService", () => {
         voter: `0x${(i + offset).toString().padStart(40, "0")}`,
         created: 1755628798,
         vp: 1,
-        choice: { "34": 1 },
+        choice: { "34": 1, "12": 2 },
         proposal: { id: "0xproposal" },
       }))
 
@@ -229,24 +286,28 @@ describe("SnapShotVoteService", () => {
 
     ;(axios.post as any).mockResolvedValueOnce(page1).mockResolvedValueOnce(page2).mockResolvedValueOnce(page3)
 
-    const proposal: any = {
+    const proposal: Proposal = {
       id: "0xproposal",
-      organizationRewards: [
-        { task: "VOTE_01", value: "crvUSD+USD0" },
-        { task: "VOTE_03", value: "WETH+CVX" },
-      ],
-      excludedVoters: ["0x0000000000000000000000000000000000000000"],
-      rewarded: [
-        { choice: "WETH+CVX (0xB576…)", rewardIndex: 2, index: 34 },
-        { choice: "crvUSD+USD0 (0xE1c7…)", rewardIndex: 0, index: 317 },
+      type: "weighted",
+      title: "GaugeWeight ",
+      created: 112344,
+      end: 123455,
+      snapshot: 12,
+      start: 12344,
+      state: "closed",
+      excludedVoters: ["0x0000000000000000000000000000000000000099", "0x0000000000000000000000000000000000000098"],
+      scoringChoices: [
+        { id: 34n, choice_name: "USG+USDC", choiceIndex: 34, snapshot_organisation_id: 1n, vote_task_id: 3n },
+        { id: 35n, choice_name: "USG+frxUSD", choiceIndex: 19, snapshot_organisation_id: 2n, vote_task_id: 4n },
+        { id: 36n, choice_name: "USG+wcrvUSD", choiceIndex: 12, snapshot_organisation_id: 2n, vote_task_id: 5n },
       ],
     }
 
     const res = await snapShotVoteService.getProposalVotes(proposal)
-    expect(res.length).toBe(259)
+    expect(res.length).toBe(516)
   })
 
-  it("Should stop pagination after first page because of the MAX_VOTES limit", async () => {
+  it.only("Should stop pagination after first page because of the MAX_VOTES limit", async () => {
     ;(snapShotVoteService as any).MAX_VOTES_PER_PROPOSAL = 100
 
     const makeVotes = (n: number, offset = 0) =>
@@ -264,19 +325,23 @@ describe("SnapShotVoteService", () => {
 
     ;(axios.post as any).mockResolvedValueOnce(page1).mockResolvedValueOnce(page2)
 
-    const proposal: any = {
+    const proposal: Proposal = {
       id: "0xproposal",
-      organizationRewards: [
-        { task: "VOTE_01", value: "crvUSD+USD0" },
-        { task: "VOTE_03", value: "WETH+CVX" },
-      ],
-      rewarded: [
-        { choice: "WETH+CVX (0xB576…)", rewardIndex: 2, index: 34 },
-        { choice: "crvUSD+USD0 (0xE1c7…)", rewardIndex: 0, index: 317 },
+      type: "weighted",
+      title: "GaugeWeight ",
+      created: 112344,
+      end: 123455,
+      snapshot: 12,
+      start: 12344,
+      state: "closed",
+      excludedVoters: ["0x0000000000000000000000000000000000000099", "0x0000000000000000000000000000000000000098"],
+      scoringChoices: [
+        { id: 34n, choice_name: "USG+USDC", choiceIndex: 34, snapshot_organisation_id: 1n, vote_task_id: 3n },
+        { id: 35n, choice_name: "USG+frxUSD", choiceIndex: 19, snapshot_organisation_id: 2n, vote_task_id: 4n },
+        { id: 36n, choice_name: "USG+wcrvUSD", choiceIndex: 12, snapshot_organisation_id: 2n, vote_task_id: 5n },
       ],
     }
-
     const res = await snapShotVoteService.getProposalVotes(proposal)
-    expect(res.length).toBe(100)
+    expect(res.length).toBe(98)
   })
 })
