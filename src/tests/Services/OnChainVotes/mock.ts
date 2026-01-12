@@ -26,55 +26,35 @@ export const votesFromDbPerTask: VotesFromDb[] = [
   {
     id: 1n,
     point_rate: 6,
-    gauge_pools: [{ gauge_address: GAUGE_A, gauge_controller: { controller_address: CONTROLLER_A }, gauge_votes: [{ user_address: USER_A }] }],
+    gauge_pools: { gauge_address: GAUGE_A, gauge_controller: { controller_address: CONTROLLER_A }, gauge_votes: [{ user_address: USER_A }] },
   },
   {
     id: 2n,
     point_rate: 3,
-    gauge_pools: [
-      {
-        gauge_address: GAUGE_B,
-        gauge_controller: { controller_address: CONTROLLER_A },
-        gauge_votes: [{ user_address: USER_A }, { user_address: USER_B }],
-      },
-      {
-        gauge_address: GAUGE_C,
-        gauge_controller: { controller_address: CONTROLLER_A },
-        gauge_votes: [{ user_address: USER_C }],
-      },
-    ],
+    gauge_pools:
+    {
+      gauge_address: GAUGE_B,
+      gauge_controller: { controller_address: CONTROLLER_A },
+      gauge_votes: [{ user_address: USER_A }, { user_address: USER_B }],
+    },
   },
 
   {
     id: 2n,
     point_rate: 3,
-    gauge_pools: [
-      {
-        gauge_address: GAUGE_A,
-        gauge_controller: { controller_address: CONTROLLER_A },
-        gauge_votes: [{ user_address: USER_A }, { user_address: USER_B }],
-      },
-      {
-        gauge_address: GAUGE_C,
-        gauge_controller: { controller_address: CONTROLLER_A },
-        gauge_votes: [{ user_address: USER_C }],
-      },
-    ],
+    gauge_pools: {
+      gauge_address: GAUGE_A,
+      gauge_controller: { controller_address: CONTROLLER_A },
+      gauge_votes: [{ user_address: USER_A }, { user_address: USER_B }],
+    }
   },
   {
     id: 3n,
     point_rate: 0.25,
-    gauge_pools: [
-      {
-        gauge_address: GAUGE_D,
-        gauge_controller: { controller_address: CONTROLLER_B },
-        gauge_votes: [{ user_address: USER_A }, { user_address: USER_B }, { user_address: USER_C }],
-      },
-      {
-        gauge_address: GAUGE_E,
-        gauge_controller: { controller_address: CONTROLLER_B },
-        gauge_votes: [{ user_address: USER_A }],
-      },
-    ],
+    gauge_pools: {
+      gauge_address: GAUGE_D,
+      gauge_controller: { controller_address: CONTROLLER_B },
+      gauge_votes: [{ user_address: USER_A }, { user_address: USER_B }, { user_address: USER_C }],
+    },
   },
 ]
