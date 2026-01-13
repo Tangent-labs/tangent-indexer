@@ -70,14 +70,14 @@ export class SnapShotVoteService {
 
     const proposals = await this.listProposals(blockDates.get(startBlock)!, blockDates.get(endBlock)!)
 
-    let totalVotes: ValidatedTask[] = []
+    let allVotes: ValidatedTask[] = []
     for (const proposal of proposals) {
-      totalVotes = totalVotes.concat(await this.getProposalVotes(proposal))
+      allVotes = allVotes.concat(await this.getProposalVotes(proposal))
     }
 
     const voteTasks = await this.userVoteRepository.fetchTasks()
-
-    await this.updateUserVoteTasks(totalVotes, voteTasks)
+    console.log(allVotes)
+    await this.updateUserVoteTasks(allVotes, voteTasks)
 
     await this.userVoteRepository.markProcessedProposals(proposals)
   }
