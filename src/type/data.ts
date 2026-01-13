@@ -131,11 +131,12 @@ export type Reward = {
   value: string
 }
 
-export type ValidatedTask = {
+export type ValidatedVotes = {
   taskId: bigint
   voterAddress: string
   votingPower: number
   proposalId: string
+  date: Date
 }
 
 export type Proposal = {

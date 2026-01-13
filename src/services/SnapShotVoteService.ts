@@ -3,7 +3,7 @@ import fs from "fs"
 import path from "path"
 import { Prisma } from "@prisma/client"
 
-import { Proposal, ValidatedTask } from "../type/data.js"
+import { Proposal, ValidatedVotes } from "../type/data.js"
 import { UserPointsVoteRepository } from "../db/Points/UserPointsVoteRepository.js"
 import { BlockService } from "./BlockService.js"
 
@@ -70,7 +70,7 @@ export class SnapShotVoteService {
 
     const proposals = await this.listProposals(blockDates.get(startBlock)!, blockDates.get(endBlock)!)
 
-    let allVotes: ValidatedTask[] = []
+    let allVotes: ValidatedVotes[] = []
     for (const proposal of proposals) {
       allVotes = allVotes.concat(await this.getProposalVotes(proposal))
     }
@@ -81,7 +81,7 @@ export class SnapShotVoteService {
     await this.userVoteRepository.markProcessedProposals(proposals)
   }
 
-  updateUserVoteTasks = async (totalVotes: ValidatedTask[], voteTasks: VoteTask[]) => {
+  updateUserVoteTasks = async (totalVotes: ValidatedVotes[], voteTasks: VoteTask[]) => {
     const userAddresses = Array.from(new Set(totalVotes.map((t) => t?.voterAddress?.toLowerCase())))
 
     const boosts = await this.userVoteRepository.fetchUsersBoosts(userAddresses)
@@ -94,7 +94,7 @@ export class SnapShotVoteService {
     const rows: Prisma.vote_user_tasksCreateManyInput[] = totalVotes.map((v) => {
       const task = voteTasksMap.get(v.taskId)
       if (!task) {
-        throw new Error(`No vote_tasks foudn with the ID : ${v.taskId}`)
+        throw new Error(`No vote_tasks found with the ID : ${v.taskId}`)
       }
       const multiplier = Number(boosts.find((b) => b.user_address.toLowerCase() === v.voterAddress)?.multiplier) || 1
       const points = v.votingPower * task.point_rate * multiplier
@@ -104,6 +104,7 @@ export class SnapShotVoteService {
         proposal_id: v.proposalId,
         voting_power: v.votingPower,
         points: Number(points.toFixed(0)),
+        date: v.date,
       }
     })
 
@@ -235,7 +236,7 @@ export class SnapShotVoteService {
         allVotes = allVotes.filter((vote) => Object.entries(vote.choice).some(([option, weight]) => weight > 0 && rewardedIndices.includes(parseInt(option))))
       }
 
-      const validatedVotes: ValidatedTask[] = []
+      const validatedVotes: ValidatedVotes[] = []
 
       // Iteration over all votes from the proposal
       for (const vote of allVotes) {
@@ -254,6 +255,7 @@ export class SnapShotVoteService {
               // Compute real voting power regarding the weight
               votingPower: (vote.vp * found[1]) / totalWeight,
               proposalId: proposal.id,
+              date: new Date(vote.created),
             })
           }
         }

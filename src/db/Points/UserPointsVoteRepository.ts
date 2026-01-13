@@ -43,7 +43,7 @@ export class UserPointsVoteRepository extends AbstractRepository {
   }
 
   async getProcessedProposals(ids: Array<string>) {
-    return await this.prismaClient.processed_proposal.findMany({
+    return await this.prismaClient.snapshot_processed_proposal.findMany({
       select: { id: true, proposal_id: true },
       where: { proposal_id: { in: ids } },
     })
@@ -52,7 +52,7 @@ export class UserPointsVoteRepository extends AbstractRepository {
   async markProcessedProposals(proposals: Proposal[]) {
     if (proposals.length === 0) return
 
-    return await this.prismaClient.processed_proposal.createMany({
+    return await this.prismaClient.snapshot_processed_proposal.createMany({
       data: proposals.map((p) => {
         return {
           proposal_id: p.id,

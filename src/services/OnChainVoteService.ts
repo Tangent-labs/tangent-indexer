@@ -103,6 +103,7 @@ export class OnChainVoteService {
           voting_power: weightInNumber,
           vote_task_id: BigInt(taskIdPerGauge[gauge]),
           points: Math.trunc(weightInNumber * pointRatesPerGauge[gauge] * boost),
+          date: new Date(Number(votingPowers.timestamp) * 1_000),
         })
       })
     })

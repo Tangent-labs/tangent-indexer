@@ -2,7 +2,7 @@ import axios from "axios"
 import { UserPointsVoteRepository } from "../../db/Points/UserPointsVoteRepository.js"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { SnapshotGetProposalVotesApiReturn, SnapShotVoteService } from "../../services/SnapShotVoteService.js"
-import { Proposal, ValidatedTask } from "src/type/data.js"
+import { Proposal, ValidatedVotes } from "src/type/data.js"
 
 const usr1 = "usr1"
 const usr2 = "usr2"
@@ -41,30 +41,34 @@ const mockProposals = [
   },
 ]
 
-const mockVotes: ValidatedTask[] = [
+const mockVotes: ValidatedVotes[] = [
   {
     taskId: 2n,
     voterAddress: usr1,
     votingPower: 1234,
     proposalId: "proposalIdOne",
+    date: new Date(),
   },
   {
     taskId: 3n,
     voterAddress: usr2,
     votingPower: 4567,
     proposalId: "proposalIdOne",
+    date: new Date(),
   },
   {
     taskId: 3n,
     voterAddress: usr3,
     votingPower: 4567,
     proposalId: "proposalIdOne",
+    date: new Date(),
   },
   {
     taskId: 4n,
     voterAddress: usr4,
     votingPower: 300000,
     proposalId: "proposalIdTwo",
+    date: new Date(),
   },
 ]
 
@@ -160,7 +164,7 @@ describe("SnapShotVoteService", () => {
       { user_address: usr2, multiplier: 2 },
       { user_address: usr4, multiplier: 2 },
     ])
-
+    const date = mockVotes[0].date
     await snapShotVoteService.updateUserVoteTasks(mockVotes, mockTasks)
 
     const updatedTasks = [
@@ -170,6 +174,7 @@ describe("SnapShotVoteService", () => {
         proposal_id: "proposalIdOne",
         voting_power: 1234,
         points: Number((1234 * 1.1 * 3).toFixed(0)),
+        date,
       },
       {
         vote_task_id: 3n,
@@ -177,6 +182,7 @@ describe("SnapShotVoteService", () => {
         proposal_id: "proposalIdOne",
         voting_power: 4567,
         points: Number((4567 * 2 * 12).toFixed(0)),
+        date,
       },
       {
         vote_task_id: 3n,
@@ -184,6 +190,7 @@ describe("SnapShotVoteService", () => {
         proposal_id: "proposalIdOne",
         voting_power: 4567,
         points: Number((4567 * 12).toFixed(0)),
+        date,
       },
       {
         vote_task_id: 4n,
@@ -191,6 +198,7 @@ describe("SnapShotVoteService", () => {
         proposal_id: "proposalIdTwo",
         voting_power: 300000,
         points: Number((300000 * 2 * 5).toFixed(0)),
+        date,
       },
     ]
 
