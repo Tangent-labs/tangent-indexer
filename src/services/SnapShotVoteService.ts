@@ -76,7 +76,6 @@ export class SnapShotVoteService {
     }
 
     const voteTasks = await this.userVoteRepository.fetchTasks()
-    console.log(allVotes)
     await this.updateUserVoteTasks(allVotes, voteTasks)
 
     await this.userVoteRepository.markProcessedProposals(proposals)
@@ -95,7 +94,7 @@ export class SnapShotVoteService {
     const rows: Prisma.vote_user_tasksCreateManyInput[] = totalVotes.map((v) => {
       const task = voteTasksMap.get(v.taskId)
       if (!task) {
-        throw Error(`No vote_tasks foudn with the ID : ${v.taskId}`)
+        throw new Error(`No vote_tasks foudn with the ID : ${v.taskId}`)
       }
       const multiplier = Number(boosts.find((b) => b.user_address.toLowerCase() === v.voterAddress)?.multiplier) || 1
       const points = v.votingPower * task.point_rate * multiplier
@@ -141,7 +140,7 @@ export class SnapShotVoteService {
     const proposalsWithRewards = proposalsToTreat.map((p) => {
       const orga = organizations.find((o) => o.key === p.space.id)
       if (!orga) {
-        throw Error(`No organisation found in db with the space id : ${p.space.id}`)
+        throw new Error(`No organisation found in db with the space id : ${p.space.id}`)
       }
       return { ...p, scoringChoices: orga.scoringChoices || [], excludedVoters: orga.votersToExclude.map((v) => v.user_address) || [] }
     })
@@ -262,7 +261,7 @@ export class SnapShotVoteService {
 
       return validatedVotes
     } catch (error) {
-      throw Error(`Error fetching votes for proposal ${proposal.id}: ${error}`)
+      throw new Error(`Error fetching votes for proposal ${proposal.id}: ${error}`)
     }
   }
 

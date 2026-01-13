@@ -312,7 +312,7 @@ export class PredepositCampaignService {
   async getPredepositState() {
     const state = await this.predepositRepository.getPredepositState()
     if (!state) {
-      throw Error("No state in database")
+      throw new Error("No state in database")
     }
     return state.state
   }

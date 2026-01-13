@@ -106,21 +106,21 @@ export class GlobalMarketDataService {
 
     // Verify if there is an error field in the API returns
     if ("error" in curveAPIData) {
-      throw new Error(`Erreur dans fetchCurveApiData: ${curveAPIData.error.reason}`)
+      throw new Error(`Error in fetchCurveApiData: ${curveAPIData.error.reason}`)
     }
     if ("error" in curveStableSwapData) {
-      throw new Error(`Erreur dans fetchCurveStableSwapApiData: ${curveStableSwapData.error.reason}`)
+      throw new Error(`Error in  fetchCurveStableSwapApiData: ${curveStableSwapData.error.reason}`)
     }
     if ("error" in convexFXNAPIData) {
-      throw new Error(`Erreur dans fetchConvexFXNApiData: ${convexFXNAPIData.error.reason}`)
+      throw new Error(`Error in  fetchConvexFXNApiData: ${convexFXNAPIData.error.reason}`)
     }
     if ("error" in pendleAPIData) {
-      throw new Error(`Erreur dans fetchPendleApiData: ${pendleAPIData.error.reason}`)
+      throw new Error(`Error in  fetchPendleApiData: ${pendleAPIData.error.reason}`)
     }
     if ("error" in stakeDaoAPIData) {
-      throw new Error(`Erreur dans fetchStakeDaoApiData: ${stakeDaoAPIData.error.reason}`)
+      throw new Error(`Error in fetchStakeDaoApiData: ${stakeDaoAPIData.error.reason}`)
     } else if ("errors" in stakeDaoAPIData) {
-      throw new Error(`Erreur dans fetchStakeDaoApiData: ${JSON.stringify(stakeDaoAPIData.errors)}`)
+      throw new Error(`Error in  fetchStakeDaoApiData: ${JSON.stringify(stakeDaoAPIData.errors)}`)
     }
 
     const formattedMarketData = this.formatMarketData(
@@ -189,12 +189,13 @@ export class GlobalMarketDataService {
     onchainData.currentAPR.forEach((streamData) => {
       const rewardAddress = streamData.token.toLowerCase()
       const priceInfo = prices[rewardAddress]
-      if (!priceInfo) {
+      if (priceInfo) {
+        const usdPerYear = Number(formatUnits(streamData.amountPerYear, priceInfo.decimals)) * priceInfo.price
+        const key = rewardTokens.find((rewardToken) => rewardToken.address.toLowerCase() === rewardAddress.toLowerCase())!.symbol
+        actualAPRs[key] = (usdPerYear * 100) / tvlTangent
+      } else {
         console.error(`No priceInfo for ${rewardAddress}`)
       }
-      const usdPerYear = Number(formatUnits(streamData.amountPerYear, priceInfo.decimals)) * priceInfo.price
-      const key = rewardTokens.find((rewardToken) => rewardToken.address.toLowerCase() === rewardAddress.toLowerCase())!.symbol
-      actualAPRs[key] = (usdPerYear * 100) / tvlTangent
     })
     return actualAPRs
   }
@@ -279,31 +280,33 @@ export class GlobalMarketDataService {
               const lpAddress = data.asset.address.toLowerCase()
               return lpAddress === collateralAddress
             })
-            if (!vaultData) {
-              throw Error(`Reward data for StakeDao vault ${collateralAddress} not found`)
+            if (vaultData) {
+              vaultData.gauge.aprDetails.forEach((rewards) => {
+                const symbol = rewards.asset.symbol
+                // If the symbol length is more than 7, we consider it's the LP itself, that we already saved in the projectedAPR object under the "APY" key
+                // It's a dirty hack but an honnest working hack :D
+                if (symbol.length < 7) {
+                  projectedAPR[rewards.asset.symbol] = Number(rewards.apr)
+                }
+              })
+            } else {
+              console.error(`Reward data for StakeDao vault ${collateralAddress} not found`)
             }
-            vaultData.gauge.aprDetails.forEach((rewards) => {
-              const symbol = rewards.asset.symbol
-              // If the symbol length is more than 7, we consider it's the LP itself, that we already saved in the projectedAPR object under the "APY" key
-              // It's a dirty hack but an honnest working hack :D
-              if (symbol.length < 7) {
-                projectedAPR[rewards.asset.symbol] = Number(rewards.apr)
-              }
-            })
           } else {
-            throw Error(`Error in graphQL call to StakeDao`)
+            console.error(`Error in graphQL call to StakeDao`)
           }
         }
 
         // Curve Gauge
         else if (market.contract_type === APR_TYPE["Curve Gauge"]) {
           const stableSwapData = curveStableSwapData.data.poolData.find((data) => data.address.toLowerCase() === collateralAddress)
-          if (!stableSwapData) {
-            throw Error(`Reward data for Curve gauge not found`)
+          if (stableSwapData) {
+            stableSwapData.gaugeRewards.forEach((rewards) => {
+              projectedAPR[rewards.symbol] = rewards.apy
+            })
+          } else {
+            console.error(`Reward data for Curve gauge not found`)
           }
-          stableSwapData.gaugeRewards.forEach((rewards) => {
-            projectedAPR[rewards.symbol] = rewards.apy
-          })
         }
       }
 
