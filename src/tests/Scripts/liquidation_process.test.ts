@@ -151,7 +151,8 @@ describe("liquidation_process", () => {
 
     // Setup mock services
     mockLiquidationBotLogService = new LiquidationBotLogService(mockLiquidationBotLogRepository, mockTelegramNotifierService)
-    mockLiquidationService = new LiquidationService(activeBorrowersRepository, mockContext, mockLiquidationBotLogService)
+    const mockRouterService = {} as any
+    mockLiquidationService = new LiquidationService(activeBorrowersRepository, mockContext, mockRouterService, mockLiquidationBotLogService)
 
     // Mock service methods
     vi.spyOn(mockLiquidationService, "checkContext").mockResolvedValue(undefined)

@@ -11,6 +11,7 @@ import { LiquidationExecutionContext } from "../../services/LiquidationExecution
 import { LiquidationUserFullInfo } from "../../type/data.js"
 import { CheckLiquidationService } from "../../services/LiquidationCheckService.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
+import { RouterService } from "src/services/RouterService.js"
 
 const DECIMALS = BigInt(10 ** 18)
 
@@ -96,9 +97,16 @@ describe("CheckLiquidationService", () => {
       botToken: "process.env.TELEGRAM_BOT_TOKEN!",
       chatId: "process.env.TELEGRAM_CHAT_ID!",
     })
+    const mockRouterService = {} // Provide a dummy object since we don't need its implementation here
     // Setup mock services
     mockLiquidationBotLogService = new LiquidationBotLogService(mockLiquidationBotLogRepository, mockTelegramNotifierService)
-    mockLiquidationService = new LiquidationService(activeBorrowersRepository, mockContext, mockLiquidationBotLogService)
+
+    mockLiquidationService = new LiquidationService(
+      activeBorrowersRepository,
+      mockContext,
+      mockRouterService as unknown as RouterService,
+      mockLiquidationBotLogService
+    )
     mockProviders = [{} as JsonRpcProvider]
 
     // Mock service methods

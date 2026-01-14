@@ -31,6 +31,22 @@ vi.mock("ethers", async () => {
   }
 })
 
+// Create mock RouterService factory
+const createMockRouterService = () => ({
+  getBestRoute: vi.fn().mockResolvedValue({
+    route: { display: "mock-route", params: { routeAddresses: [], swapParamsFull: [] } },
+    amount: 1000n * BigInt(10 ** 18),
+    priceImpact: 0.001,
+    routerType: "curve" as const,
+    routerAddress: "0xCurveRouter",
+  }),
+  getBestSplitCurveRoutes: vi.fn().mockResolvedValue(undefined),
+  buildRouterCallData: vi.fn().mockReturnValue("0xMockRouterCallData"),
+  isPendleCollateral: vi.fn().mockReturnValue(false),
+  getRouterType: vi.fn().mockReturnValue("curve"),
+  getRouterAddress: vi.fn().mockReturnValue("0xCurveRouter"),
+})
+
 const DECIMALS = BigInt(10 ** 18)
 
 const baseMarketValues = {
@@ -54,10 +70,12 @@ describe("LiquidationService", () => {
   let liquidationService: LiquidationService
   let marketBorrowerRepository: ActiveBorrowersRepository
   let mockBlockRepository: any
+  let mockRouterService: ReturnType<typeof createMockRouterService>
 
   beforeEach(() => {
     marketBorrowerRepository = new ActiveBorrowersRepository({} as any) // Mock Prisma client
-    liquidationService = new LiquidationService(marketBorrowerRepository, nominalContext)
+    mockRouterService = createMockRouterService()
+    liquidationService = new LiquidationService(marketBorrowerRepository, nominalContext, mockRouterService as unknown as RouterService)
 
     // Mock BlockRepository
     mockBlockRepository = {
@@ -189,7 +207,11 @@ describe("LiquidationService", () => {
       getAll: vi.fn().mockResolvedValue(mockBorrowers),
     }
 
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as ActiveBorrowersRepository, nominalContext)
+    liquidationService = new LiquidationService(
+      mockMarketBorrowerRepository as any as ActiveBorrowersRepository,
+      nominalContext,
+      mockRouterService as unknown as RouterService
+    )
 
     const { markets, borrowers } = await liquidationService.getLiquidationParams()
 
@@ -238,7 +260,11 @@ describe("LiquidationService", () => {
     }
 
     const context = { ...nominalContext, isDbAlive: true, currentBlock: 0, providers: [], walletsPks: [] }
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as ActiveBorrowersRepository, context)
+    liquidationService = new LiquidationService(
+      mockMarketBorrowerRepository as any as ActiveBorrowersRepository,
+      context,
+      mockRouterService as unknown as RouterService
+    )
 
     const { markets, borrowers } = await liquidationService.getLiquidationParams()
 
@@ -265,7 +291,11 @@ describe("LiquidationService", () => {
     }
 
     const context = { ...nominalContext, isDbAlive: false, currentBlock: 0, providers: [], walletsPks: [] }
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as ActiveBorrowersRepository, context)
+    liquidationService = new LiquidationService(
+      mockMarketBorrowerRepository as any as ActiveBorrowersRepository,
+      context,
+      mockRouterService as unknown as RouterService
+    )
 
     // Mock fs.readFileSync
     const mockFileData = {
@@ -295,6 +325,7 @@ describe("LiquidationService", () => {
 describe("LiquidationService - analyzeLiquidation", () => {
   let liquidationService: LiquidationService
   let mockMarketBorrowerRepository: ActiveBorrowersRepository
+  let mockRouterService: ReturnType<typeof createMockRouterService>
 
   beforeEach(() => {
     // Mock repository
@@ -303,8 +334,10 @@ describe("LiquidationService - analyzeLiquidation", () => {
       deleteMarketBorrowers: vi.fn(),
     } as unknown as ActiveBorrowersRepository
 
+    mockRouterService = createMockRouterService()
+
     // Create service instance
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext)
+    liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext, mockRouterService as unknown as RouterService)
   })
 
   it("should correctly classify accounts into hard, soft, and non-debtor categories", async () => {})
@@ -452,9 +485,12 @@ describe("LiquidationService - prioritizeActions", () => {
   let liquidationService: LiquidationService
   let mockMarketBorrowerRepository: ActiveBorrowersRepository
 
+  let mockRouterService: Partial<RouterService>
+
   beforeEach(() => {
     mockMarketBorrowerRepository = new ActiveBorrowersRepository({} as any)
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext)
+    mockRouterService = {} // Provide a dummy object since we don't need its implementation here
+    liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext, mockRouterService as unknown as RouterService)
   })
 
   it("should prioritize actions based on position value and return all actions", () => {
@@ -639,6 +675,7 @@ describe("LiquidationService - executeLiquidation", () => {
   let mockMarketContract: any
   let mockLiquidationBotService: any
   let mockTx: any
+  let mockRouterService: ReturnType<typeof createMockRouterService>
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -679,8 +716,13 @@ describe("LiquidationService - executeLiquidation", () => {
     mockWallet.mockImplementation(() => mockSigner)
     mockContract.mockImplementation(() => mockMarketContract)
 
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository, mockContext, mockLiquidationBotService)
-    liquidationService.curveRouterAddress = "0xCurveRouter" as AddressLike
+    mockRouterService = createMockRouterService()
+    liquidationService = new LiquidationService(
+      mockMarketBorrowerRepository,
+      mockContext,
+      mockRouterService as unknown as RouterService,
+      mockLiquidationBotService
+    )
   })
 
   it("should execute liquidation with default slippageModifierBps (0n)", async () => {
@@ -701,6 +743,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 900n * DECIMALS,
         liquidationCall: {
           routerCall: "0x1234",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 1000n * DECIMALS,
         slippageBps: 10n,
@@ -709,6 +752,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
     ]
 
@@ -749,6 +793,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 900n * DECIMALS,
         liquidationCall: {
           routerCall: "0x1234",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 1000n * DECIMALS,
         slippageBps: expectedSlippage,
@@ -757,6 +802,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
     ]
 
@@ -791,6 +837,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x1234",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 500n * DECIMALS,
         slippageBps: 10n,
@@ -799,6 +846,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
       {
         account: account.account,
@@ -806,6 +854,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x5678",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 500n * DECIMALS,
         slippageBps: 10n,
@@ -814,6 +863,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
     ]
 
@@ -869,6 +919,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x1234",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 500n * DECIMALS,
         slippageBps: 10n,
@@ -877,6 +928,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
       {
         account: account.account,
@@ -884,6 +936,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 451n * DECIMALS, // Slightly more due to larger balance
         liquidationCall: {
           routerCall: "0x5678",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 501n * DECIMALS,
         slippageBps: 10n,
@@ -892,6 +945,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 241n * DECIMALS,
+        routerType: "curve" as const,
       },
     ]
 
@@ -932,6 +986,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x1234",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 500n * DECIMALS,
         slippageBps: 10n,
@@ -940,6 +995,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
       {
         account: account.account,
@@ -947,6 +1003,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x5678",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 500n * DECIMALS,
         slippageBps: 10n,
@@ -955,6 +1012,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
     ]
 
@@ -1015,6 +1073,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x1234",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: amount1,
         slippageBps: 10n,
@@ -1023,6 +1082,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
       {
         account: account.account,
@@ -1030,6 +1090,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x5678",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: amount2,
         slippageBps: 10n,
@@ -1038,6 +1099,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
     ]
 
@@ -1086,6 +1148,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x1234",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 500n * DECIMALS,
         slippageBps: 10n,
@@ -1094,6 +1157,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
       {
         account: account.account,
@@ -1101,6 +1165,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x5678",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 500n * DECIMALS,
         slippageBps: 10n,
@@ -1109,6 +1174,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
     ]
 
@@ -1141,6 +1207,7 @@ describe("LiquidationService - Best RPC Provider", () => {
   let mockProviders: any[]
   let mockLiquidationBotService: any
   let mockJob: any
+  let mockRouterService: ReturnType<typeof createMockRouterService>
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -1199,8 +1266,13 @@ describe("LiquidationService - Best RPC Provider", () => {
       attemptsMade: 0,
     }
 
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository, mockContext, mockLiquidationBotService)
-    liquidationService.curveRouterAddress = "0xCurveRouter" as AddressLike
+    mockRouterService = createMockRouterService()
+    liquidationService = new LiquidationService(
+      mockMarketBorrowerRepository,
+      mockContext,
+      mockRouterService as unknown as RouterService,
+      mockLiquidationBotService
+    )
   })
 
   describe("processJob with rpcIndex", () => {
@@ -1219,6 +1291,7 @@ describe("LiquidationService - Best RPC Provider", () => {
           minTgUSDOut: 900n * DECIMALS,
           liquidationCall: {
             routerCall: "0x1234",
+            routerAddress: "0xCurveRouter",
           },
           expectedOutput: 1000n * DECIMALS,
           slippageBps: 50n,
@@ -1227,6 +1300,7 @@ describe("LiquidationService - Best RPC Provider", () => {
             eth: 0.0002,
           },
           grossProfit: 240n * DECIMALS,
+          routerType: "curve" as const,
         },
       ]
 
@@ -1277,6 +1351,7 @@ describe("LiquidationService - Best RPC Provider", () => {
           minTgUSDOut: 900n * DECIMALS,
           liquidationCall: {
             routerCall: "0x1234",
+            routerAddress: "0xCurveRouter",
           },
           expectedOutput: 1000n * DECIMALS,
           slippageBps: 50n,
@@ -1285,6 +1360,7 @@ describe("LiquidationService - Best RPC Provider", () => {
             eth: 0.0002,
           },
           grossProfit: 240n * DECIMALS,
+          routerType: "curve" as const,
         },
       ]
 
@@ -1329,6 +1405,7 @@ describe("LiquidationService - Best RPC Provider", () => {
           minTgUSDOut: 900n * DECIMALS,
           liquidationCall: {
             routerCall: "0x1234",
+            routerAddress: "0xCurveRouter",
           },
           expectedOutput: 1000n * DECIMALS,
           slippageBps: 50n,
@@ -1337,6 +1414,7 @@ describe("LiquidationService - Best RPC Provider", () => {
             eth: 0.0002,
           },
           grossProfit: 240n * DECIMALS,
+          routerType: "curve" as const,
         },
       ]
 
@@ -1392,7 +1470,9 @@ describe("LiquidationService - Best RPC Provider", () => {
           minTgUSDOut: 900n * DECIMALS,
           liquidationCall: {
             routerCall: "0x1234",
+            routerAddress: "0xPendlePTRouter",
           },
+          routerType: "pendle" as const,
           expectedOutput: 1000n * DECIMALS,
           slippageBps: 50n,
           gasEstimate: {

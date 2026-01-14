@@ -16,3 +16,6 @@ prisma/migrations
 /src/config/credentials-gDrive.json
 .liquidation_errors.log
 
+
+.claude
+.cursor
