@@ -11,14 +11,10 @@ export class UserEventsRepository extends AbstractRepository {
   }
 
   async insertDeposits(events: Prisma.depositCreateManyInput[]) {
-    try {
-      if (events.length > 0) {
-        await this.prismaClient.deposit.createMany({
-          data: events,
-        })
-      }
-    } catch (error) {
-      console.error("error inserting deposits", events.length)
+    if (events.length > 0) {
+      await this.prismaClient.deposit.createMany({
+        data: events,
+      })
     }
   }
 

@@ -30,7 +30,7 @@
     "db:mock-db-data": "tsx src/scripts/db-mock/_index.ts",
     "db:actualize-views": "tsx src/scripts/actualize-views.ts",
     "build": "node src/utils/build.js",
-    "extract:markets-from-log": "tsx src/scripts/utils/extract_markets_from_log.ts",
+    "dev:liquidation:fast": "npm run db:truncate & npm run db:empty-queue & npm run db:seed-db &  npm run tangent:indexer-block  & npm run tangent:indexer-block & npm run tangent:indexer-block & npm run tangent:indexer-block",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "lint": "eslint . --ignore-pattern dist/",
