@@ -1,4 +1,4 @@
-import { commonERC20, PendlePools } from "@tangent/defi-resources"
+import { commonERC20, PENDLE_POOLS } from "@tangent/defi-resources"
 import { AddressesJson, PriceSourceCreate } from "../../type/data.js"
 import { TransactionPrisma } from "../../type/prisma.js"
 
@@ -45,17 +45,17 @@ function PRICE_SOURCES(addresses: AddressesJson): PriceSourceCreate[] {
     {
       name: "PT sUSDe 27/11/25",
       type: "pendleApi",
-      address: PendlePools["sUSDe 27/11/25"].PT,
+      address: PENDLE_POOLS["sUSDe 27/11/25"].PT,
     },
     {
       name: "LP sUSDe 27/11/25",
       type: "pendleApi",
-      address: PendlePools["sUSDe 27/11/25"].MARKET,
+      address: PENDLE_POOLS["sUSDe 27/11/25"].MARKET,
     },
     {
       name: "YT sUSDe 27/11/25",
       type: "pendleApi",
-      address: PendlePools["sUSDe 27/11/25"].YT,
+      address: PENDLE_POOLS["sUSDe 27/11/25"].YT,
     },
   ]
 }
