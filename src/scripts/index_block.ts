@@ -74,6 +74,9 @@ async function main() {
           }
 
           const transferToWatch = await userPointsService.getERC20ToTrack()
+          if (!transferToWatch?.length) {
+            throw new Error("tracked_erc20 table is empty.")
+          }
 
           await voteEnventService.runDetection(bestProvider, startBlock, endBlock)
 
