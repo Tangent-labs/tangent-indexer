@@ -255,7 +255,7 @@ export class SnapShotVoteService {
               // Compute real voting power regarding the weight
               votingPower: (vote.vp * found[1]) / totalWeight,
               proposalId: proposal.id,
-              date: new Date(vote.created),
+              date: new Date(vote.created * 1_000),
             })
           }
         }

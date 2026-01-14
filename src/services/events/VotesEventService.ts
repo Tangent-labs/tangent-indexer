@@ -5,7 +5,6 @@ import { UserPointsVoteRepository } from "../../db/Points/UserPointsVoteReposito
 import { VOTE_FOR_GAUGE } from "../../resources/eventSignatures.js"
 import { NumMap } from "../../services/boost/types.js"
 import { getEthLogs } from "../../eventFectcher/_baseFetcher.js"
-import { GAUGE_CONTROLLER_MAPPING } from "src/scripts/db-seed/seed_vote_tasks.js"
 
 type ParsedVote = {
   gauge_controller: string
@@ -20,12 +19,12 @@ export class VotesEventService {
   }
 
   voteRepository: UserPointsVoteRepository
-  gaugeControllers = [GAUGE_CONTROLLER_MAPPING.CRV.controller, GAUGE_CONTROLLER_MAPPING.FXN.controller]
 
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
-    // TODO Fetch dynamically in db the gauge controllers
+    // Get tracked gauge controllers in database
+    const gaugeControllers = (await this.voteRepository.getTrackedGaugeControllers()).map((g) => g.controller_address)
     // Fetch logs from the gauge controllerts
-    const voteLogs = await getEthLogs(provider, startingBlock, endingBlock, this.gaugeControllers, [id(VOTE_FOR_GAUGE)])
+    const voteLogs = await getEthLogs(provider, startingBlock, endingBlock, gaugeControllers, [id(VOTE_FOR_GAUGE)])
 
     if (voteLogs.length) {
       // Format all raw logs from the blockchain

@@ -57,6 +57,7 @@ export class UserPointsVoteRepository extends AbstractRepository {
         return {
           proposal_id: p.id,
           title: p.title,
+          processed_at: new Date(p.end),
         }
       }),
     })
@@ -149,6 +150,14 @@ export class UserPointsVoteRepository extends AbstractRepository {
         key: true,
         votersToExclude: true,
         scoringChoices: true,
+      },
+    })
+  }
+
+  async getTrackedGaugeControllers() {
+    return await this.prismaClient.gauge_controllers.findMany({
+      select: {
+        controller_address: true,
       },
     })
   }
