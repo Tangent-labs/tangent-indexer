@@ -20,6 +20,7 @@ const addresses: AddressesJson = {
     rewardAccumulator: "0xE",
     zappingProxy: "0xF",
     marketViewer: "0xG",
+    pendlePTRouter: "0xH",
   },
   implementations: {
     basicERC20Market: "0xG",

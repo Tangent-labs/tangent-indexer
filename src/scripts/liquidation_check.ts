@@ -14,6 +14,7 @@ import { setUpIndexer } from "../config/indexer_setup.js"
 import { TelegramNotifierService } from "../services/TelegramNotificationServices.js"
 import { routers } from "@tangent/defi-resources"
 import { getAddressesJson } from "../utils/jsonReader.js"
+import { RouterService } from "src/services/RouterService.js"
 
 dotenv.config()
 const { providers, walletsPks, handleError } = setUpIndexer()
@@ -60,9 +61,10 @@ export function setUpCheckLiquidationServices() {
   const liquidationBotLogRepository = new LiquidationBotLogRepository(prismaClient)
   const liquidationBotService = new LiquidationBotLogService(liquidationBotLogRepository, telegramNotifierService)
 
-  const liquidationService = new LiquidationService(new ActiveBorrowersRepository(prismaClient), context, liquidationBotService)
+  const routerService = new RouterService(providers, routers.CURVE_V1_2_ROUTER, routers.PENDLE_ROUTER_V4)
+
+  const liquidationService = new LiquidationService(new ActiveBorrowersRepository(prismaClient), context, routerService, liquidationBotService)
   liquidationService.minEthBalance = indexerConfig.minEthBalance
-  liquidationService.curveRouterAddress = routers.CURVE_V1_2_ROUTER
 
   return {
     liquidationService,

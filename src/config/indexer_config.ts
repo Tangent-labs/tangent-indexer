@@ -25,6 +25,7 @@ export type IndexerConfig = {
     liquidatorProxyAddress: AddressLike
     liquidatorAddress: AddressLike
     curveRouterAddress: AddressLike
+    pendleRouterAddress: AddressLike
   }
   enso: {
     baseUrl: string

@@ -16,6 +16,7 @@ import { TelegramNotifierService } from "../services/TelegramNotificationService
 import { routers } from "@tangent/defi-resources"
 import { SerializedLiquidationUserFullInfo } from "../type/data.js"
 import { getBestRpcProvider } from "../utils/getBestRpcProvider.js"
+import { RouterService } from "src/services/RouterService.js"
 
 dotenv.config()
 
@@ -373,10 +374,10 @@ export function setUpLiquidationProcessServices() {
   })
   const liquidationBotLogRepository = new LiquidationBotLogRepository(prismaClient)
   const liquidationBotService = new LiquidationBotLogService(liquidationBotLogRepository, telegramNotifierService)
+  const routerService = new RouterService(providers, routers.CURVE_V1_2_ROUTER, routers.PENDLE_ROUTER_V4)
 
-  const liquidationService = new LiquidationService(new ActiveBorrowersRepository(prismaClient), context, liquidationBotService)
+  const liquidationService = new LiquidationService(new ActiveBorrowersRepository(prismaClient), context, routerService, liquidationBotService)
   liquidationService.minEthBalance = indexerConfig.minEthBalance
-  liquidationService.curveRouterAddress = routers.CURVE_V1_2_ROUTER
 
   return {
     liquidationService,
