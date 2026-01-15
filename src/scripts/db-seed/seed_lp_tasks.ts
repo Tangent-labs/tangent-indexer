@@ -9,13 +9,14 @@ import { LP_TASKS } from "./config/config_lp_tasks.js"
 
 export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addresses: AddressesJson, priceSources: Prisma.price_sourceCreateManyInput[]) {
   const lpTasks = LP_TASKS(addresses, priceSources)
-
   await prisma.tracked_erc20.createMany({
-    data: lpTasks.map((t) => ({
-      address: t.token_address,
-      name: t.name + " " + t.protocol,
-      symbol: t.name + " " + t.protocol,
-    })),
+    data: lpTasks.map((t) => {
+      return {
+        address: t.token_address,
+        name: t.name + " " + t.protocol,
+        symbol: t.name + " " + t.protocol,
+      }
+    }),
   })
 
   await prisma.lp_task.createMany({
@@ -36,6 +37,8 @@ export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addr
 
     // Remove Pendle Market because it holds PT
     PENDLE_POOLS["sUSDe 27/11/25"].MARKET.toLowerCase(),
+    PENDLE_POOLS["sUSDe 27/11/25"].PT.toLowerCase(),
+    PENDLE_POOLS["sUSDe 27/11/25"].SY.toLowerCase(),
   ].map((uE) => ({ user: uE }))
 
   await prisma.lp_points_users_excluded.createMany({

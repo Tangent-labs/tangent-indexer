@@ -76,12 +76,22 @@ export class SnapShotVoteService {
     }
 
     const voteTasks = await this.userVoteRepository.fetchTasks()
-    await this.updateUserVoteTasks(allVotes, voteTasks)
 
-    await this.userVoteRepository.markProcessedProposals(proposals)
+    const processedProposals = await this.userVoteRepository.storeEpochProposal(
+      proposals.map((p) => {
+        return {
+          epoch_id: p.id,
+          epoch_name: p.title,
+          processed_at: new Date(p.end * 1000),
+          snapshot_organisation_id: p.scoringChoices[0].snapshot_organisation_id,
+        }
+      })
+    )
+
+    await this.updateUserVoteTasks(allVotes, voteTasks, processedProposals)
   }
 
-  updateUserVoteTasks = async (totalVotes: ValidatedVotes[], voteTasks: VoteTask[]) => {
+  updateUserVoteTasks = async (totalVotes: ValidatedVotes[], voteTasks: VoteTask[], processedProposals: Prisma.votes_epoch_processed_proposalCreateInput[]) => {
     const userAddresses = Array.from(new Set(totalVotes.map((t) => t?.voterAddress?.toLowerCase())))
 
     const boosts = await this.userVoteRepository.fetchUsersBoosts(userAddresses)
@@ -98,13 +108,15 @@ export class SnapShotVoteService {
       }
       const multiplier = Number(boosts.find((b) => b.user_address.toLowerCase() === v.voterAddress)?.multiplier) || 1
       const points = v.votingPower * task.point_rate * multiplier
+      const idProposal = processedProposals.find((pp) => pp.epoch_id === v.proposalId)!.id!
+
       return {
         vote_task_id: task.id,
         user_address: v.voterAddress,
-        proposal_id: v.proposalId,
         voting_power: v.votingPower,
         points: Number(points.toFixed(0)),
         date: v.date,
+        votes_epoch_processed_proposal_id: idProposal,
       }
     })
 
@@ -195,9 +207,9 @@ export class SnapShotVoteService {
     return (
       proposals
         // Remove the already processed proposals
-        .filter((p) => !processedProposals.some((processedP) => processedP.proposal_id === p.id))
+        .filter((p) => !processedProposals.some((processedP) => processedP.epoch_id === p.id))
         // Filter only proposals containing the filter that we get from Organisation in database
-        .filter((proposal) => titlesToFilter.some((titleFilter) => proposal.title.includes(titleFilter)))
+        .filter((proposal) => titlesToFilter.some((titleFilter) => proposal.title.startsWith(titleFilter)))
     )
   }
 

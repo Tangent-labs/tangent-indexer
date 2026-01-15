@@ -1,8 +1,6 @@
 import { Prisma } from "@prisma/client"
 
-import { Proposal } from "../../type/data.js"
 import { AbstractRepository } from "../AbstractRepository.js"
-import { VotesFromDb } from "../../services/OnChainVoteService.js"
 
 export class UserPointsVoteRepository extends AbstractRepository {
   insertAddresses = async (addresses: Prisma.userCreateInput[]) => {
@@ -42,25 +40,17 @@ export class UserPointsVoteRepository extends AbstractRepository {
     })
   }
 
-  async getProcessedProposals(ids: Array<string>) {
-    return await this.prismaClient.snapshot_processed_proposal.findMany({
-      select: { id: true, proposal_id: true },
-      where: { proposal_id: { in: ids } },
+  async getProcessedProposals(epochIds: Array<string>) {
+    return await this.prismaClient.votes_epoch_processed_proposal.findMany({
+      select: { id: true, epoch_id: true },
+      where: { epoch_id: { in: epochIds } },
     })
   }
 
-  async markProcessedProposals(proposals: Proposal[]) {
-    if (proposals.length === 0) return
+  async storeEpochProposal(proposals: Prisma.votes_epoch_processed_proposalCreateManyInput[]) {
+    if (proposals.length === 0) return []
 
-    return await this.prismaClient.snapshot_processed_proposal.createMany({
-      data: proposals.map((p) => {
-        return {
-          proposal_id: p.id,
-          title: p.title,
-          processed_at: new Date(p.end),
-        }
-      }),
-    })
+    return await this.prismaClient.votes_epoch_processed_proposal.createManyAndReturn({ data: proposals })
   }
 
   async insertVotesForGauge(votes: Prisma.gauges_votesCreateManyInput[]) {
@@ -71,7 +61,7 @@ export class UserPointsVoteRepository extends AbstractRepository {
     })
   }
 
-  async getGaugeVoters(): Promise<VotesFromDb[]> {
+  async getGaugeVoters() {
     return await this.prismaClient.vote_task.findMany({
       where: {
         is_onchain: true,
@@ -83,6 +73,7 @@ export class UserPointsVoteRepository extends AbstractRepository {
           select: {
             gauge_controller: {
               select: {
+                id: true,
                 controller_address: true,
               },
             },
