@@ -76,7 +76,7 @@ async function main() {
 
           // Call fetchTransferLogs with the addresses
           if (!transferToWatch?.length) {
-            throw Error("ERC20 to track is not filled")
+            throw new Error("ERC20 to track is not filled")
           }
           const transferLogs = await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch)
 

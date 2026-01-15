@@ -5,7 +5,7 @@ import {
   MARKET_CONVEX_CRV_CREATED,
   MARKET_CONVEX_FXN_CREATED,
   MARKET_CURVE_GAUGE_CREATED,
-  MARKET_NO_SOCIABILIZATION_CREATED,
+  BASIC_ERC20_MARKET_CREATED,
   MARKET_STAKEDAO_VAULT_V2_CREATED,
 } from "../resources/eventSignatures.js"
 import { getEthLogs } from "./_baseFetcher.js"
@@ -35,7 +35,7 @@ export const fetchMarketCreationLogs = async (
     [
       id(MARKET_CONVEX_CRV_CREATED),
       id(MARKET_CONVEX_FXN_CREATED),
-      id(MARKET_NO_SOCIABILIZATION_CREATED),
+      id(BASIC_ERC20_MARKET_CREATED),
       id(MARKET_STAKEDAO_VAULT_V2_CREATED),
       id(MARKET_CURVE_GAUGE_CREATED),
     ]

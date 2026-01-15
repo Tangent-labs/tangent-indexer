@@ -48,6 +48,27 @@ export type CurveApiReturn = {
     poolList: { address: string; latestWeeklyApy: number }[]
   }
 }
+export type StakeDaoApiReturn =
+  | {
+      data: {
+        Vault: {
+          address: string
+          gauge: {
+            aprDetails: { apr: string; asset: { address: string; symbol: string } }[]
+          }
+          asset: {
+            address: string
+          }
+        }[]
+      }
+    }
+  | { errors: any[] }
+
+export type CurveFactoryStableNGApiReturn = {
+  data: {
+    poolData: { address: string; gaugeRewards: { tokenAddress: string; symbol: string; apy: number }[] }[]
+  }
+}
 
 export type PendleApiReturn = {
   markets: { underlyingAsset: string; expiry: string; pt: string; address: string; details: { impliedApy: number }; yt: string }[]
@@ -62,7 +83,9 @@ export type Prices = { [address: string]: { decimals: number; symbol: string; pr
 export const APR_TYPE: { [name: string]: number } = {
   "Convex CRV": 0,
   "Convex FXN": 1,
-  "PENDLE PT": 2,
+  "Pendle PT": 2,
+  "StakeDao Vault": 3,
+  "Curve Gauge": 4,
 }
 
 export type Aprs = { current: NumMap; projected: NumMap }

@@ -45,7 +45,7 @@ async function setup() {
     setupErrors.push("CHAIN_RPCS_NOT_SET")
   }
   if (setupErrors.length !== 0) {
-    throw Error(`Following env variables are not set : ${setupErrors.join(",")}`)
+    throw new Error(`Following env variables are not set : ${setupErrors.join(",")}`)
   }
 
   const telegramNotifierService = new TelegramNotifierService({

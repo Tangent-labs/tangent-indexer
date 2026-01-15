@@ -2,13 +2,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { JsonRpcProvider } from "ethers"
 import { GetPriceFeedsResult, PricePointService } from "../../services/PricePointService.js"
 import { AddressesJson, NotificationMessage, POINTS_BOT_ACTIONS, PriceApiInfo, PriceSource } from "../../type/data.js"
-import { PriceApiService } from "../../services/PriceApiService.js"
+import { CallApiService } from "../../services/CallApiService.js"
 import { chainView } from "../../utils/chainView.js"
 
 // Mock dependencies (including console for error logging)
 vi.mock("../../db/PriceRepository")
 vi.mock("../../db/MarketContractsRepository")
-vi.mock("../../services/PriceApiService")
+vi.mock("../../services/CallApiService")
 vi.mock("../../utils/chainView")
 const addresses: AddressesJson = {
   lps: {},
@@ -47,7 +47,7 @@ describe("PricePointService", () => {
   let mockPriceRepository: any
   let mockMarketContractsRepository: any
   let mockProvider: JsonRpcProvider
-  let mockPriceApiService: any
+  let mockCallApiService: any
 
   const mockPriceSources: PriceSource[] = [
     { address: "0x1000000000000000000000000000000000000001", name: "USDC", type: "llamaApi", reference: null, id: BigInt(1) },
@@ -96,18 +96,18 @@ describe("PricePointService", () => {
 
     mockProvider = {} as JsonRpcProvider
 
-    mockPriceApiService = {
+    mockCallApiService = {
       getLlamaPrice: vi.fn().mockResolvedValue({ prices: [{ address: "0x1000000000000000000000000000000000000001", price: 1.0 }] }),
       fetchCurveApiPrices: vi.fn().mockResolvedValue({ prices: [{ address: "0x2000000000000000000000000000000000000002", price: 1.5 }] }),
       fetchPendleApiPrices: vi.fn().mockResolvedValue({ prices: [{ address: "0x3000000000000000000000000000000000000003", price: 2.0 }] }),
     }
 
-    vi.mocked(PriceApiService).mockImplementation(() => mockPriceApiService)
+    vi.mocked(CallApiService).mockImplementation(() => mockCallApiService)
 
     pricePointService = new PricePointService(mockPriceRepository, mockMarketContractsRepository, mockProvider, addresses)
 
-    // Override the priceApiService with our mock after construction
-    pricePointService.priceApiService = mockPriceApiService
+    // Override the callApiService with our mock after construction
+    pricePointService.callApiService = mockCallApiService
   })
 
   afterEach(() => {
@@ -122,9 +122,9 @@ describe("PricePointService", () => {
 
       expect(mockPriceRepository.getPriceSources).toHaveBeenCalledOnce()
       expect(mockMarketContractsRepository.getContracts).toHaveBeenCalledOnce()
-      expect(mockPriceApiService.getLlamaPrice).toHaveBeenCalledWith(["0x1000000000000000000000000000000000000001"])
-      expect(mockPriceApiService.fetchCurveApiPrices).toHaveBeenCalledWith(["0x2000000000000000000000000000000000000002"], "factory-stable-ng")
-      expect(mockPriceApiService.fetchPendleApiPrices).toHaveBeenCalledWith(["0x3000000000000000000000000000000000000003"])
+      expect(mockCallApiService.getLlamaPrice).toHaveBeenCalledWith(["0x1000000000000000000000000000000000000001"])
+      expect(mockCallApiService.fetchCurveApiPrices).toHaveBeenCalledWith(["0x2000000000000000000000000000000000000002"], "factory-stable-ng")
+      expect(mockCallApiService.fetchPendleApiPrices).toHaveBeenCalledWith(["0x3000000000000000000000000000000000000003"])
       expect(chainView).toHaveBeenCalled()
       expect(result.prices).toHaveLength(8) // 3 APIs + 1 ERC4626 + 2 USG/sUSG + 2 debt
       expect(result.notifications).toEqual([]) // No notifications expected
@@ -172,7 +172,7 @@ describe("PricePointService", () => {
     })
 
     it("should handle API errors and collect them as warnings", async () => {
-      mockPriceApiService.getLlamaPrice.mockResolvedValue({
+      mockCallApiService.getLlamaPrice.mockResolvedValue({
         prices: [],
         error: {
           api: "Llama",
@@ -206,7 +206,7 @@ describe("PricePointService", () => {
     })
 
     it("should handle partial promise failures with allSettled and return warnings", async () => {
-      mockPriceApiService.getLlamaPrice.mockRejectedValue(new Error("Llama failed"))
+      mockCallApiService.getLlamaPrice.mockRejectedValue(new Error("Llama failed"))
 
       const result = await pricePointService.getPriceFeeds()
 
@@ -235,9 +235,9 @@ describe("PricePointService", () => {
 
     it("should handle non-found price error for ERC4626 reference token", async () => {
       // Mock API services to return empty results (no prices found)
-      mockPriceApiService.getLlamaPrice.mockResolvedValue({ prices: [] })
-      mockPriceApiService.fetchCurveApiPrices.mockResolvedValue({ prices: [] })
-      mockPriceApiService.fetchPendleApiPrices.mockResolvedValue({ prices: [] })
+      mockCallApiService.getLlamaPrice.mockResolvedValue({ prices: [] })
+      mockCallApiService.fetchCurveApiPrices.mockResolvedValue({ prices: [] })
+      mockCallApiService.fetchPendleApiPrices.mockResolvedValue({ prices: [] })
 
       const result = await pricePointService.getPriceFeeds()
 
@@ -254,9 +254,9 @@ describe("PricePointService", () => {
     })
 
     it("should handle all promises failing gracefully", async () => {
-      mockPriceApiService.getLlamaPrice.mockRejectedValue(new Error("Llama failed"))
-      mockPriceApiService.fetchCurveApiPrices.mockRejectedValue(new Error("Curve failed"))
-      mockPriceApiService.fetchPendleApiPrices.mockRejectedValue(new Error("Pendle failed"))
+      mockCallApiService.getLlamaPrice.mockRejectedValue(new Error("Llama failed"))
+      mockCallApiService.fetchCurveApiPrices.mockRejectedValue(new Error("Curve failed"))
+      mockCallApiService.fetchPendleApiPrices.mockRejectedValue(new Error("Pendle failed"))
       vi.mocked(chainView).mockRejectedValue(new Error("Chain view failed"))
 
       const result = await pricePointService.getPriceFeeds()
@@ -275,7 +275,7 @@ describe("PricePointService", () => {
 
     it("should handle HTTP 429 Too Many Requests errors from Llama API", async () => {
       // Mock Llama API to return 429 error
-      mockPriceApiService.getLlamaPrice.mockResolvedValue({
+      mockCallApiService.getLlamaPrice.mockResolvedValue({
         prices: [],
         error: {
           api: "LlamaPriceAPi",
@@ -313,7 +313,7 @@ describe("PricePointService", () => {
 
     it("should handle HTTP 429 Too Many Requests errors from Curve API", async () => {
       // Mock Curve API to return 429 error
-      mockPriceApiService.fetchCurveApiPrices.mockResolvedValue({
+      mockCallApiService.fetchCurveApiPrices.mockResolvedValue({
         prices: [],
         error: {
           api: "CurvePriceApi",
@@ -343,7 +343,7 @@ describe("PricePointService", () => {
 
     it("should handle HTTP 500 server errors from Pendle API", async () => {
       // Mock Pendle API to return 500 error
-      mockPriceApiService.fetchPendleApiPrices.mockResolvedValue({
+      mockCallApiService.fetchPendleApiPrices.mockResolvedValue({
         prices: [],
         error: {
           api: "PendlePriceApi",
@@ -406,9 +406,9 @@ describe("PricePointService", () => {
       const result = await pricePointService.getPriceFeeds()
 
       // Curve API should not be called since the source has no registry
-      expect(mockPriceApiService.fetchCurveApiPrices).not.toHaveBeenCalled()
-      expect(mockPriceApiService.getLlamaPrice).toHaveBeenCalled()
-      expect(mockPriceApiService.fetchPendleApiPrices).toHaveBeenCalled()
+      expect(mockCallApiService.fetchCurveApiPrices).not.toHaveBeenCalled()
+      expect(mockCallApiService.getLlamaPrice).toHaveBeenCalled()
+      expect(mockCallApiService.fetchPendleApiPrices).toHaveBeenCalled()
 
       // Should have warning for missing registry
       expect(result.notifications).toHaveLength(1)
