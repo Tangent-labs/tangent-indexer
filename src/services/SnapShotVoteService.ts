@@ -199,6 +199,8 @@ export class SnapShotVoteService {
 
       skip += this.PAGE_SIZE
     }
+    // Find in database the already processed proposals
+    const processedProposals = await this.userVoteRepository.getProcessedProposals(proposals.map((p) => p.id))
 
     // Find in database the already processed proposals
     const processedProposals = await this.userVoteRepository.getProcessedProposals(proposals.map((p) => p.id))

@@ -97,6 +97,27 @@ export type CurveFactoryStableNGApiReturn = {
   }
   error?: any
 }
+export type StakeDaoApiReturn =
+  | {
+      data: {
+        Vault: {
+          address: string
+          gauge: {
+            aprDetails: { apr: string; asset: { address: string; symbol: string } }[]
+          }
+          asset: {
+            address: string
+          }
+        }[]
+      }
+    }
+  | { errors: any[] }
+
+export type CurveFactoryStableNGApiReturn = {
+  data: {
+    poolData: { address: string; gaugeRewards: { tokenAddress: string; symbol: string; apy: number }[] }[]
+  }
+}
 
 export type PendleApiReturn = {
   markets?: { underlyingAsset: string; expiry: string; pt: string; address: string; details: { impliedApy: number }; yt: string }[]
