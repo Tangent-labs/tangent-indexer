@@ -1,8 +1,11 @@
+import { CURVE_GLOBAL_CONTRACTS, FXN_GLOBAL_CONTRACTS } from "@tangent/defi-resources"
+
+//
 export const ONCHAIN_TASKS = [
   {
     orga: "CRV",
     url: "https://www.curve.finance/dao/ethereum/gauges",
-    controller: "0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB".toLowerCase(),
+    controller: CURVE_GLOBAL_CONTRACTS.GAUGE_CONTROLLER.toLowerCase(),
     gauges: [
       {
         taskDescription: "crvUSD_USDC on veCRV gauge",
@@ -24,15 +27,15 @@ export const ONCHAIN_TASKS = [
       },
     ],
     votersToExclude: [
-      { name: "Convex", address: "0x989AEb4d175e16225E39E87d0D97A3360524AD80" },
-      { name: "Stake DAO", address: "0x52f541764E6e90eeBc5c21Ff570De0e2D63766B6" },
-      { name: "Yearn", address: "0xF147b8125d2ef93FB6965Db97D6746952a133934" },
+      { name: "Convex", address: CURVE_GLOBAL_CONTRACTS.CONVEX_veCRV_VOTER.toLowerCase() },
+      { name: "Stake DAO", address: CURVE_GLOBAL_CONTRACTS.STAKE_DAO_veCRV_VOTER.toLowerCase() },
+      { name: "Yearn", address: CURVE_GLOBAL_CONTRACTS.YEARN_veCRV_VOTER.toLowerCase() },
     ],
   },
   {
     orga: "FXN",
     url: "https://fx.aladdin.club/gauge/",
-    controller: "0xe60eB8098B34eD775ac44B1ddE864e098C6d7f37".toLowerCase(),
+    controller: FXN_GLOBAL_CONTRACTS.GAUGE_CONTROLLER.toLowerCase(),
     gauges: [
       {
         taskDescription: "STABILITY_POOL on veFXN gauge",
@@ -48,8 +51,8 @@ export const ONCHAIN_TASKS = [
       },
     ],
     votersToExclude: [
-      { name: "Convex", address: "0xd11a4ee017ca0beca8fa45ff2abfe9c6267b7881" },
-      { name: "Stake DAO", address: "0x75736518075a01034fa72D675D36a47e9B06B2Fb" },
+      { name: "Convex", address: FXN_GLOBAL_CONTRACTS.CONVEX_veFXN_VOTER.toLowerCase() },
+      { name: "Stake DAO", address: FXN_GLOBAL_CONTRACTS.STAKE_DAO_veFXN_VOTER.toLowerCase() },
     ],
   },
 ]

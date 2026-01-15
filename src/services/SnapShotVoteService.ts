@@ -147,10 +147,10 @@ export class SnapShotVoteService {
     const proposalTitleFilter = organizations.map((o) => o.proposal_title_search)
 
     // Fetch and filter proposals that have not being already treaded accross all organisations we are tracking
-    const proposalsToTreat = await this.getFilteredProposalsByOrga(organisationKeys, proposalTitleFilter, { fromTs, toTs })
+    const proposalsToProcess = await this.getFilteredProposalsByOrga(organisationKeys, proposalTitleFilter, { fromTs, toTs })
 
     // Add organization rewardedChoices and votersToExclude to each proposal
-    const proposalsWithRewards = proposalsToTreat.map((p) => {
+    const proposalsWithRewards = proposalsToProcess.map((p) => {
       const orga = organizations.find((o) => o.key === p.space.id)
       if (!orga) {
         throw new Error(`No organisation found in db with the space id : ${p.space.id}`)
