@@ -119,10 +119,12 @@ export type SuccessRoutes = {
 }
 
 // Snapshot Proposal Types
-export type RewardedChoice = {
-  choice: string
-  index: number
-  rewardIndex: number
+export type ScoringChoice = {
+  id: bigint
+  choice_name: string
+  snapshot_organisation_id: bigint
+  vote_task_id: bigint
+  choiceIndex: number
 }
 
 export type Reward = {
@@ -130,12 +132,12 @@ export type Reward = {
   value: string
 }
 
-export type ValidatedTask = {
-  task: string
-  value: string
+export type ValidatedVotes = {
+  taskId: bigint
   voterAddress: string
-  votingPower?: number
-  proposalId?: string
+  votingPower: number
+  proposalId: string
+  date: Date
 }
 
 export type Proposal = {
@@ -145,11 +147,10 @@ export type Proposal = {
   end: number
   created: number
   state: string
-  snapshot: string
+  snapshot: number
   type: string
-  rewarded?: RewardedChoice[]
-  organizationRewards?: Reward[]
-  excludedVoters?: string[]
+  scoringChoices: ScoringChoice[]
+  excludedVoters: string[]
 }
 
 export type Vote = {

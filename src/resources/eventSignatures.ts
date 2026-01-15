@@ -58,7 +58,6 @@ export const EVENT_TOPICS = {
   [id(WITHDRAWN)]: "Withdrawn",
 
   // Market Creation
-
   [id(MARKET_CONVEX_CRV_CREATED)]: "MarketConvexCrvCreated",
   [id(MARKET_CONVEX_FXN_CREATED)]: "MarketConvexFxnCreated",
   [id(MARKET_CURVE_GAUGE_CREATED)]: "MarketCurveGaugeCreated",

@@ -2,11 +2,13 @@ import { PriceApiInfo, PriceApiResult, PriceApiError, CurverRegistry } from "../
 import {
   ConvexFxnApiReturn,
   CurveApiReturn,
+  CurveFactoryStableNGApiReturn,
   CurvePoolListApiResult,
   CurvePriceApiResult,
   LlamaPriceApiResult,
   PendleApiReturn,
   PendlePriceApiResult,
+  StakeDaoApiReturn,
 } from "./globalData/types.js"
 import axios from "axios"
 
@@ -15,7 +17,7 @@ const PENDLE_PRICE_API = "https://api-v2.pendle.finance/core/v1/1/assets/prices"
 const LLAMA_API = "https://coins.llama.fi/prices/current/"
 const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes in milliseconds
 
-export class PriceApiService {
+export class CallApiService {
   private ethPriceCache: { price: number; timestamp: number } | null = null
 
   async getEthPrice(): Promise<number> {
@@ -170,6 +172,127 @@ export class PriceApiService {
     } catch (e) {
       const apiError: PriceApiError = {
         api: "CurvePriceApi",
+        reason: e instanceof Error ? e.message : "Unknown error",
+        httpCode: axios.isAxiosError(e) && e.response ? e.response.status : undefined,
+      }
+      return { error: apiError }
+    }
+  }
+
+  async fetchCurveFactoryStableNg() {
+    // Fetch APY of curve LP on their API
+    try {
+      const response = await axios.get(CURVE_API + "/getPools/ethereum/factory-stable-ng")
+      const curveJson: CurveFactoryStableNGApiReturn = response.data
+      return curveJson
+    } catch (e) {
+      const apiError: PriceApiError = {
+        api: "CurvePriceApi",
+        reason: e instanceof Error ? e.message : "Unknown error",
+        httpCode: axios.isAxiosError(e) && e.response ? e.response.status : undefined,
+      }
+      return { error: apiError }
+    }
+  }
+
+  async fetchStakeDao() {
+    const query = `
+    query GetAllVaultsWithAssets {
+      Vault {
+        id
+        chainId
+        address
+        protocolId
+        asset {
+          id
+          name
+          symbol
+          address
+          chainId
+          decimals
+          assetType
+          components {
+            childAsset {
+              id
+              name
+              symbol
+              address
+              chainId
+              decimals
+              assetType
+              components {
+                childAsset {
+                  id
+                  name
+                  symbol
+                  address
+                  chainId
+                  decimals
+                  assetType
+                }
+              }
+            }
+          }
+        }
+        gauge {
+          address
+          name
+          symbol
+          totalSupply
+          totalSupplyUSD
+          aprDetails {
+            yieldType
+            apr
+            aprUSD
+            asset {
+              id
+              name
+              symbol
+              decimals
+              address
+            }
+          }
+          metadata {
+            id
+            key
+            value
+            valueType
+          }
+        }
+        rewardTokens {
+          id
+          asset {
+            id
+            symbol
+          }
+        }
+        sidecar
+        sidecarBalance
+        rewardReceiver
+        totalSupply
+        totalSupplyUSD
+      }
+    }
+`
+    // Fetch APY of curve LP on their API
+    try {
+      const response = await axios.post(
+        "https://api-strategies.stakedao.org/v1/graphql",
+        {
+          query,
+          operationName: "GetAllVaultsWithAssets",
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      const data: StakeDaoApiReturn = response.data
+      return data
+    } catch (e) {
+      const apiError: PriceApiError = {
+        api: "StakeDaoApi",
         reason: e instanceof Error ? e.message : "Unknown error",
         httpCode: axios.isAxiosError(e) && e.response ? e.response.status : undefined,
       }
