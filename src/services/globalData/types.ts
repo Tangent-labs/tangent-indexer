@@ -44,36 +44,39 @@ export type USGIndexingGlobalDataOut = {
 }
 
 export type CurveApiReturn = {
-  data: {
+  data?: {
     poolList: { address: string; latestWeeklyApy: number }[]
   }
+  error?: any
 }
-export type StakeDaoApiReturn =
-  | {
-      Vault: {
-        address: string
-        gauge: {
-          aprDetails: { apr: string; asset: { address: string; symbol: string } }[]
-        }
-        asset: {
-          address: string
-        }
-      }[]
+export type StakeDaoApiReturn = {
+  Vault?: {
+    address: string
+    gauge: {
+      aprDetails: { apr: string; asset: { address: string; symbol: string } }[]
     }
-  | { errors: any[] }
+    asset: {
+      address: string
+    }
+  }[]
+  error?: any
+}
 
 export type CurveFactoryStableNGApiReturn = {
-  data: {
+  data?: {
     poolData: { address: string; gaugeRewards: { tokenAddress: string; symbol: string; apy: number }[] }[]
   }
+  error?: any
 }
 
 export type PendleApiReturn = {
-  markets: { underlyingAsset: string; expiry: string; pt: string; address: string; details: { impliedApy: number }; yt: string }[]
+  markets?: { underlyingAsset: string; expiry: string; pt: string; address: string; details: { impliedApy: number }; yt: string }[]
+  error?: any
 }
 
 export type ConvexFxnApiReturn = {
-  pools: { augmentedPoolData: { curvePoolData?: { address: string }; rewardCoins: { address: string }[]; rewardAprs: number[] }[] }
+  pools?: { augmentedPoolData: { curvePoolData?: { address: string }; rewardCoins: { address: string }[]; rewardAprs: number[] }[] }
+  error?: any
 }
 
 export type Prices = { [address: string]: { decimals: number; symbol: string; price: number; timestamp: number; confidence: number } }
