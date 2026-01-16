@@ -50,17 +50,15 @@ export type CurveApiReturn = {
 }
 export type StakeDaoApiReturn =
   | {
-      data: {
-        Vault: {
+      Vault: {
+        address: string
+        gauge: {
+          aprDetails: { apr: string; asset: { address: string; symbol: string } }[]
+        }
+        asset: {
           address: string
-          gauge: {
-            aprDetails: { apr: string; asset: { address: string; symbol: string } }[]
-          }
-          asset: {
-            address: string
-          }
-        }[]
-      }
+        }
+      }[]
     }
   | { errors: any[] }
 

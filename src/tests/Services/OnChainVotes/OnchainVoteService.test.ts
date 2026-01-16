@@ -122,4 +122,34 @@ describe("OnchainVoteService", () => {
       },
     ])
   })
+
+  it("verifyEpochFullyFinished should fail when not 1 week is passed since last epoch", async () => {
+    const currentDate = new Date(1768577573 * 1000)
+
+    const lastEpochDate = new Date(currentDate)
+    lastEpochDate.setDate(lastEpochDate.getDate() - 3)
+
+    expect(() => onChainVoteService.verifyEpochFullyFinished(currentDate, lastEpochDate)).toThrow(
+      "Votes point indexer can run only one time per week : 96 hours left"
+    )
+  })
+
+  it("verifyEpochFullyFinished should success when the last epoch is passed more than 1 week", async () => {
+    const currentDate = new Date(1768577573 * 1000)
+
+    const lastEpochDate = new Date(currentDate)
+    lastEpochDate.setDate(lastEpochDate.getDate() - 8)
+
+    const newEpoch = onChainVoteService.verifyEpochFullyFinished(currentDate, lastEpochDate)
+
+    expect(newEpoch.getTime()).to.be.eq(new Date("2026-01-15T14:00:00.000Z").getTime())
+  })
+
+  it("verifyEpochFullyFinished should success when it's the first epoch", async () => {
+    const currentDate = new Date(1768577573 * 1000)
+
+    const newEpoch = onChainVoteService.verifyEpochFullyFinished(currentDate, undefined)
+
+    expect(newEpoch.getTime()).to.be.eq(new Date("2026-01-15T14:00:00.000Z").getTime())
+  })
 })

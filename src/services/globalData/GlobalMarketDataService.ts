@@ -276,7 +276,7 @@ export class GlobalMarketDataService {
         // StakeDaoVault Gauge
         else if (market.contract_type === APR_TYPE["StakeDao Vault"]) {
           if (!("errors" in stakeDaoAPIData)) {
-            const vaultData = stakeDaoAPIData.data.Vault.find((data) => {
+            const vaultData = stakeDaoAPIData.Vault.find((data) => {
               const lpAddress = data.asset.address.toLowerCase()
               return lpAddress === collateralAddress
             })
