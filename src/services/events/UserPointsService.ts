@@ -8,7 +8,7 @@ import { parseAddLiquidity, parseStakeConvexEvent, parseTransferEvent, parseWith
 import { BlockService } from "../BlockService.js"
 import { TRANSFER_TOPICS } from "../../eventFectcher/erc20TransferEventFetcher.js"
 import { DebtSharesCheckpointStruct } from "./UserMarketService.js"
-import { ActiveBorrowersRepository } from "src/db/ActiveBorrowersRepository.js"
+import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
 
 export type SortedEvents = {
   Transfer: Prisma.transfer_eventsCreateManyInput[]

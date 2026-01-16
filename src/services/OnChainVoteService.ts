@@ -129,6 +129,8 @@ export class OnChainVoteService {
     })
     // Insert all the
     await this.userVoteRepository.createUserVoteTasks(newPoints)
+
+    return now
   }
 
   formatProposalId(gaugeController: string, date: Date) {

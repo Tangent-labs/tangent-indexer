@@ -36,10 +36,15 @@ async function main() {
           setTransaction(dbTransaction)
           const providerURL = indexerConfig.provider.chainRpc[bestProviderIndex]
 
-          await snapShotVoteService.computeUserVoteTasks(startBlock, endBlock, blockService, providerURL)
-          await onChainVoteService.computeUserVoteTasks(bestProvider)
+          // const lastEpochDate = await blockRepository.getLastVotesPointsBlock()
+          const now = await onChainVoteService.computeUserVoteTasks(bestProvider)
+          // if (lastEpochDate && lastEpochDate.block_date > ) {
 
-          await blockRepository.storeVotesPointsBlock(endBlock)
+          // }
+
+          await snapShotVoteService.computeUserVoteTasks(startBlock, endBlock, blockService, providerURL)
+
+          await blockRepository.storeVotesPointsBlock(endBlock, now)
         },
         {
           timeout: 10_000_000,
