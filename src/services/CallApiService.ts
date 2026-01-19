@@ -304,7 +304,13 @@ export class CallApiService {
   async fetchPendleApiData() {
     try {
       const PENDLE_API = "https://api-v2.pendle.finance/core/v1/1/markets/active"
-      const pendleResponse = await axios.get(PENDLE_API)
+      const pendleResponse = await axios.get(PENDLE_API, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120",
+          Accept: "application/json",
+          "Accept-Language": "fr-FR,fr;q=0.9",
+        },
+      })
       const pendleJson: PendleApiReturn = pendleResponse.data
       return pendleJson
     } catch (e) {

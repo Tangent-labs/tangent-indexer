@@ -276,7 +276,7 @@ export class GlobalMarketDataService {
                 // If the symbol length is more than 7, we consider it's the LP itself, that we already saved in the projectedAPR object under the "APY" key
                 // It's a dirty hack but an honnest working hack :D
                 if (symbol.length < 7) {
-                  projectedAPR[rewards.asset.symbol] = Number(rewards.apr)
+                  projectedAPR[rewards.asset.symbol] = Number(rewards.apr) * 100
                 }
               })
             } else {
