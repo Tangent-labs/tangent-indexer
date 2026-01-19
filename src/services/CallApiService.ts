@@ -11,7 +11,7 @@ import {
   StakeDaoApiReturn,
 } from "./globalData/types.js"
 import axios from "axios"
-// import https from "https";
+import https from "https"
 
 export const CURVE_API = "https://api.curve.finance/api"
 const PENDLE_PRICE_API = "https://api-v2.pendle.finance/core/v1/1/assets/prices"
@@ -293,18 +293,22 @@ export class CallApiService {
       // const agent = new https.Agent({
       //   keepAlive: true
       // });
-
-      const response = await fetch("https://api-staking-v2-worker.stakedao.org/api/rest/getallvaultswithassets", {
-        method: "GET",
+      const agent = new https.Agent({ keepAlive: true })
+      const response = await axios.get("https://api-staking-v2-worker.stakedao.org/api/rest/getallvaultswithassets", {
+        httpsAgent: agent, // ensures proper TLS connection
         headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " + "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          // Copy exactly from the working curl
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " + "AppleWebKit/537.36 (KHTML, like Gecko) " + "Chrome/120.0.0.0 Safari/537.36",
           Accept: "application/json, text/plain, */*",
           "Accept-Language": "fr-FR,fr;q=0.9,en;q=0.8",
           Referer: "https://stakedao.org/",
           Origin: "https://stakedao.org",
+          Connection: "keep-alive",
         },
+        timeout: 15000, // optional but recommended
       })
-      const data: StakeDaoApiReturn = await response.json()
+      const data: StakeDaoApiReturn = await response.data
+      console.log(data)
       return data
     } catch (e) {
       const apiError: PriceApiError = {
