@@ -1,9 +1,11 @@
-import { UserPointsVoteRepository } from "../db/Points/UserPointsVoteRepository.js"
 import { formatEther, JsonRpcProvider } from "ethers"
+import { Prisma } from "@prisma/client"
+import { ONE_WEEK_IN_SECONDS } from "@tangent/defi-resources/build/utils/durations.js"
+
+import { UserPointsVoteRepository } from "../db/Points/UserPointsVoteRepository.js"
 import { chainView } from "../utils/chainView.js"
 import GetGaugeVotes from "../abis/GetGaugeVotes.json" with { type: "json" }
 import { NumMap } from "./boost/types.js"
-import { Prisma } from "@prisma/client"
 import { BoostRepository } from "../db/Points/BoostRepository.js"
 // IN
 export type AccountGauge = {
@@ -129,6 +131,8 @@ export class OnChainVoteService {
     })
     // Insert all the
     await this.userVoteRepository.createUserVoteTasks(newPoints)
+
+    return now
   }
 
   formatProposalId(gaugeController: string, date: Date) {
@@ -212,5 +216,19 @@ export class OnChainVoteService {
     }, {})
 
     return boostPerUser
+  }
+
+  verifyEpochFullyFinished(currentBlockDate: Date, lastEpochDate: Date | undefined) {
+    const nowTimestamp = currentBlockDate.getTime()
+    if (lastEpochDate) {
+      const lastEpochMili = lastEpochDate.getTime()
+      const delta = nowTimestamp - (lastEpochMili + ONE_WEEK_IN_SECONDS * 1000)
+      if (delta < 0) {
+        throw new Error(`Votes point indexer can run only one time per week : ${delta / -1000 / 3600} hours left`)
+      }
+    }
+    const weekId = BigInt(nowTimestamp) / BigInt(ONE_WEEK_IN_SECONDS * 1000)
+    const adjustedDate = new Date((Number(weekId) * ONE_WEEK_IN_SECONDS + 3600 * 14) * 1000)
+    return adjustedDate
   }
 }

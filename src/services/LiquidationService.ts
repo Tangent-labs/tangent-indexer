@@ -28,8 +28,8 @@ import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
 import { BlockRepository } from "../db/BlockRepository.js"
 import { LiquidationBotLogService } from "./LiquidationBotLogService.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"
-import { indexerConfig } from "src/config/indexer_config.js"
-import { getAddressesJson } from "src/utils/jsonReader.js"
+import { indexerConfig } from "../config/indexer_config.js"
+import { getAddressesJson } from "../utils/jsonReader.js"
 
 const successRoutes = successRoutesJson as unknown as SuccessRoutes
 

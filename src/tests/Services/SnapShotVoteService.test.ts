@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client"
 import { UserPointsVoteRepository } from "../../db/Points/UserPointsVoteRepository.js"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { SnapshotGetProposalVotesApiReturn, SnapShotVoteService } from "../../services/SnapShotVoteService.js"
-import { Proposal, ValidatedVotes } from "src/type/data.js"
+import { Proposal, ValidatedVotes } from "../../type/data.js"
 
 const usr1 = "usr1"
 const usr2 = "usr2"
