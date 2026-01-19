@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import fs from "fs"
 import { AddressLike, JsonRpcProvider } from "ethers"
-import { LiquidationService } from "../../../src/services/LiquidationService.js"
-import { ActiveBorrowersRepository } from "../../../src/db/ActiveBorrowersRepository.js"
+import { LiquidationService } from "../..//services/LiquidationService.js"
+import { ActiveBorrowersRepository } from "../..//db/ActiveBorrowersRepository.js"
 import {
   LiquidationAccountOutInfo,
   LiquidationMarketAccountOutInfo,

@@ -196,98 +196,99 @@ export class CallApiService {
   }
 
   async fetchStakeDao() {
-    const query = `
-    query GetAllVaultsWithAssets {
-      Vault {
-        id
-        chainId
-        address
-        protocolId
-        asset {
-          id
-          name
-          symbol
-          address
-          chainId
-          decimals
-          assetType
-          components {
-            childAsset {
-              id
-              name
-              symbol
-              address
-              chainId
-              decimals
-              assetType
-              components {
-                childAsset {
-                  id
-                  name
-                  symbol
-                  address
-                  chainId
-                  decimals
-                  assetType
-                }
-              }
-            }
-          }
-        }
-        gauge {
-          address
-          name
-          symbol
-          totalSupply
-          totalSupplyUSD
-          aprDetails {
-            yieldType
-            apr
-            aprUSD
-            asset {
-              id
-              name
-              symbol
-              decimals
-              address
-            }
-          }
-          metadata {
-            id
-            key
-            value
-            valueType
-          }
-        }
-        rewardTokens {
-          id
-          asset {
-            id
-            symbol
-          }
-        }
-        sidecar
-        sidecarBalance
-        rewardReceiver
-        totalSupply
-        totalSupplyUSD
-      }
-    }
-`
+    //     const query = `
+    //     query GetAllVaultsWithAssets {
+    //       Vault {
+    //         id
+    //         chainId
+    //         address
+    //         protocolId
+    //         asset {
+    //           id
+    //           name
+    //           symbol
+    //           address
+    //           chainId
+    //           decimals
+    //           assetType
+    //           components {
+    //             childAsset {
+    //               id
+    //               name
+    //               symbol
+    //               address
+    //               chainId
+    //               decimals
+    //               assetType
+    //               components {
+    //                 childAsset {
+    //                   id
+    //                   name
+    //                   symbol
+    //                   address
+    //                   chainId
+    //                   decimals
+    //                   assetType
+    //                 }
+    //               }
+    //             }
+    //           }
+    //         }
+    //         gauge {
+    //           address
+    //           name
+    //           symbol
+    //           totalSupply
+    //           totalSupplyUSD
+    //           aprDetails {
+    //             yieldType
+    //             apr
+    //             aprUSD
+    //             asset {
+    //               id
+    //               name
+    //               symbol
+    //               decimals
+    //               address
+    //             }
+    //           }
+    //           metadata {
+    //             id
+    //             key
+    //             value
+    //             valueType
+    //           }
+    //         }
+    //         rewardTokens {
+    //           id
+    //           asset {
+    //             id
+    //             symbol
+    //           }
+    //         }
+    //         sidecar
+    //         sidecarBalance
+    //         rewardReceiver
+    //         totalSupply
+    //         totalSupplyUSD
+    //       }
+    //     }
+    // `
     // Fetch APY of curve LP on their API
     try {
-      const response = await axios.post(
-        "https://api-strategies.stakedao.org/v1/graphql",
-        {
-          query,
-          operationName: "GetAllVaultsWithAssets",
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      )
+      // const response = await axios.post(
+      //   "https://api-strategies.stakedao.org/v1/graphql",
+      //   {
+      //     query,
+      //     operationName: "GetAllVaultsWithAssets",
+      //   },
+      //   {
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //   }
+      // )
+      const response = await axios.get("https://api-staking-v2-worker.stakedao.org/api/rest/getallvaultswithassets")
       const data: StakeDaoApiReturn = response.data
       return data
     } catch (e) {

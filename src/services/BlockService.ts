@@ -14,14 +14,12 @@ export class BlockService {
 
   // VOTES POINTS
 
-  async getLastVoteBlockIndexed() {
-    const blocks = await this.blockRepository.getLastVotesPointsBlock()
-    return !blocks ? Number(process.env.STARTING_BLOCK) : blocks.block_id
-  }
-
   async getVotesBlockInfo(providers: JsonRpcProvider[]) {
     const { startingBlock, blockRange } = indexerConfig
-    const startBlock = Number(await this.getLastVoteBlockIndexed()) + 1 || startingBlock
+    const lastVoteBlockInfo = await this.blockRepository.getLastVotesPointsBlock()
+    const lastVoteBlockId = !lastVoteBlockInfo ? Number(process.env.STARTING_BLOCK) : lastVoteBlockInfo.block_id
+
+    const startBlock = Number(lastVoteBlockId) + 1 || startingBlock
     let endBlock = Number(await this.getLastEventBlockIndexed())
 
     const actualBlocks = await Promise.all(providers.map((provider) => provider.getBlockNumber()))
@@ -39,7 +37,7 @@ export class BlockService {
       // Else we get a step toward it
       endBlock = startBlock + blockRange
     }
-    return { startBlock, endBlock, bestProvider, bestProviderIndex }
+    return { startBlock, endBlock, lastEpochDate: lastVoteBlockInfo?.epoch_date, bestProvider, bestProviderIndex }
   }
 
   // LP POINTS

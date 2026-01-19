@@ -27,7 +27,7 @@ async function main() {
       return
     }
 
-    const { startBlock, endBlock, bestProviderIndex, bestProvider } = blockInfo
+    const { startBlock, endBlock, bestProviderIndex, bestProvider, lastEpochDate } = blockInfo
 
     if (startBlock && endBlock) {
       console.log("indexing :", startBlock, "<----------------->", endBlock)
@@ -35,11 +35,14 @@ async function main() {
         async (dbTransaction: TransactionPrisma) => {
           setTransaction(dbTransaction)
           const providerURL = indexerConfig.provider.chainRpc[bestProviderIndex]
+          // Retrieve the last block
+          const now = await onChainVoteService.computeUserVoteTasks(bestProvider)
+
+          const newEpochDate = onChainVoteService.verifyEpochFullyFinished(now, lastEpochDate)
 
           await snapShotVoteService.computeUserVoteTasks(startBlock, endBlock, blockService, providerURL)
-          await onChainVoteService.computeUserVoteTasks(bestProvider)
 
-          await blockRepository.storeVotesPointsBlock(endBlock)
+          await blockRepository.storeVotesPointsBlock(endBlock, now, newEpochDate)
         },
         {
           timeout: 10_000_000,

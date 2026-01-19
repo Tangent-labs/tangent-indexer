@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { PredepositCampaignRepository } from "src/db/PredepositCampaignRepository.js"
-import { BlockRepository } from "src/db/BlockRepository.js"
-import { PredepositCampaignService } from "src/services/PredepositCampaignService.js"
+import { PredepositCampaignRepository } from "../../../db/PredepositCampaignRepository.js"
+import { BlockRepository } from "../../../db/BlockRepository.js"
+import { PredepositCampaignService } from "../../../services/PredepositCampaignService.js"
 import { parseEther, JsonRpcProvider } from "ethers"
 
 describe("PredepositCampaignServiceIncrease - Increase amounts part", () => {

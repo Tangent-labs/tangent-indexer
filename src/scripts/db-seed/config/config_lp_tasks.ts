@@ -1,7 +1,6 @@
 import { Prisma } from "@prisma/client"
-import { PENDLE_POOLS } from "@tangent/defi-resources"
-import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext.js"
-import { AddressesJson } from "src/type/data.js"
+import { PENDLE_POOLS, CURVE_CONTEXT } from "@tangent/defi-resources"
+import { AddressesJson } from "../../../type/data.js"
 
 const ONE_HOUR = 3600
 export const PTS_PER_HOUR_TO_SECONDS_RATE = {
@@ -13,6 +12,7 @@ export const PTS_PER_HOUR_TO_SECONDS_RATE = {
   40: 40 / ONE_HOUR,
 }
 export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_sourceCreateManyInput[]) {
+  const ctx = CURVE_CONTEXT.CURVE_CONTEXT
   // Retrieve the price source ID for each lp_tasks
   const tasks: Prisma.lp_taskCreateManyInput[] = [
     // USG
@@ -65,7 +65,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       name: "crvUSD_USDC",
       action_type: "LP",
       protocol: "Curve",
-      token_address: CURVE_CONTEXT.USDC_crvUSD.curveLp.toLowerCase(),
+      token_address: ctx.USDC_crvUSD.curveLp.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[40],
       description: "Hold Curve crvUSD/USDC LP tokens",
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-0/deposit",
@@ -76,7 +76,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       name: "DOLA_sUSDS",
       action_type: "LP",
       protocol: "Curve",
-      token_address: CURVE_CONTEXT.DOLA_sUSDS.curveLp.toLowerCase(),
+      token_address: ctx.DOLA_sUSDS.curveLp.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[30],
       description: "Hold Curve DOLA/sUSDS LP tokens",
       url: "https://www.curve.finance/dex/ethereum/pools/factory-stable-ng-12/deposit",
@@ -87,7 +87,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       name: "crvUSD_USDT",
       action_type: "LP",
       protocol: "Curve",
-      token_address: CURVE_CONTEXT.USDT_crvUSD.curveLp.toLowerCase(),
+      token_address: ctx.USDT_crvUSD.curveLp.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[30],
       description: "Hold Curve crvUSD/USDT LP tokens",
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-1/deposit",
@@ -98,7 +98,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       name: "Llamalend sDOLA/crvUSD",
       action_type: "LP",
       protocol: "Llamalend",
-      token_address: CURVE_CONTEXT.LLAMALEND_sDOLA_crvUSD.curveLp.toLowerCase(),
+      token_address: ctx.LLAMALEND_sDOLA_crvUSD.curveLp.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[40],
       description: "Supply crvUSD to sDOLA lenders",
       url: "https://www.curve.finance/lend/ethereum/markets/one-way-market-30/create",
@@ -110,7 +110,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       name: "crvUSD_USDC",
       action_type: "LP",
       protocol: "Curve",
-      token_address: CURVE_CONTEXT.USDC_crvUSD.curveGauge.toLowerCase(),
+      token_address: ctx.USDC_crvUSD.curveGauge.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
       description: "Stake crvUSD/USDC LP in Curve gauge",
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-1/deposit",
@@ -121,7 +121,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       name: "DOLA_sUSDS",
       action_type: "LP",
       protocol: "Curve",
-      token_address: CURVE_CONTEXT.DOLA_sUSDS.curveGauge.toLowerCase(),
+      token_address: ctx.DOLA_sUSDS.curveGauge.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[15],
       description: "Stake USDe/USDC LP in Curve gauge",
       url: "https://www.curve.finance/dex/ethereum/pools/factory-stable-ng-12/deposit",
@@ -132,7 +132,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       name: "crvUSD_USDT",
       action_type: "LP",
       protocol: "Curve",
-      token_address: CURVE_CONTEXT.USDT_crvUSD.curveGauge.toLowerCase(),
+      token_address: ctx.USDT_crvUSD.curveGauge.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[15],
       description: "Stake crvUSD/USDT LP in Curve gauge",
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-1/deposit",
@@ -144,7 +144,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       name: "Llamalend sDOLA/crvUSD",
       action_type: "LP",
       protocol: "Llamalend",
-      token_address: CURVE_CONTEXT.LLAMALEND_sDOLA_crvUSD.curveGauge.toLowerCase(),
+      token_address: ctx.LLAMALEND_sDOLA_crvUSD.curveGauge.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
       description: "Supply crvUSD to sDOLA lenders and stake on Curve",
       url: "https://www.curve.finance/lend/ethereum/markets/one-way-market-30/create",
@@ -156,7 +156,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       name: "crvUSD_USDC",
       action_type: "LP",
       protocol: "StakeDAO",
-      token_address: CURVE_CONTEXT.USDC_crvUSD.stakeDaoVault.toLowerCase(),
+      token_address: ctx.USDC_crvUSD.stakeDaoVault.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
       description: "Stake crvUSD/USDC LP in StakeDAO gauge",
       url: "https://www.stakedao.org/yield",
@@ -167,7 +167,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       name: "DOLA_sUSDS",
       action_type: "LP",
       protocol: "StakeDAO",
-      token_address: CURVE_CONTEXT.DOLA_sUSDS.stakeDaoVault.toLowerCase(),
+      token_address: ctx.DOLA_sUSDS.stakeDaoVault.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[15],
       description: "Stake DOLA/sUSDS LP in StakeDAO gauge",
       url: "https://www.stakedao.org/yield",
@@ -178,7 +178,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       name: "crvUSD_USDT",
       action_type: "LP",
       protocol: "StakeDAO",
-      token_address: CURVE_CONTEXT.USDT_crvUSD.stakeDaoVault.toLowerCase(),
+      token_address: ctx.USDT_crvUSD.stakeDaoVault.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[15],
       description: "Stake crvUSD/USDT LP in StakeDAO gauge",
       url: "https://www.stakedao.org/yield",
@@ -189,7 +189,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       name: "Llamalend sDola/crvUSD",
       action_type: "LP",
       protocol: "StakeDao",
-      token_address: CURVE_CONTEXT.LLAMALEND_sDOLA_crvUSD.stakeDaoVault.toLowerCase(),
+      token_address: ctx.LLAMALEND_sDOLA_crvUSD.stakeDaoVault.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
       description: "Supply crvUSD to sDOLA lenders and stake on StakeDao",
       url: "https://www.curve.finance/lend/ethereum/markets/one-way-market-30/create",
@@ -202,7 +202,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       name: "crvUSD_USDC",
       action_type: "LP",
       protocol: "Convex",
-      token_address: CURVE_CONTEXT.USDC_crvUSD.convexRewardToken.toLowerCase(),
+      token_address: ctx.USDC_crvUSD.convexRewardToken.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
       description: "Stake crvUSD/USDC LP on Convex",
       url: "https://curve.convexfinance.com/stake/ethereum/444",
@@ -213,7 +213,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       name: "DOLA_sUSDS",
       action_type: "LP",
       protocol: "Convex",
-      token_address: CURVE_CONTEXT.DOLA_sUSDS.convexRewardToken.toLowerCase(),
+      token_address: ctx.DOLA_sUSDS.convexRewardToken.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[15],
       description: "Stake DOLA/sUSDS LP on Convex",
       url: "https://curve.convexfinance.com/stake/ethereum/444",
@@ -224,7 +224,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       name: "crvUSD_USDT",
       action_type: "LP",
       protocol: "Convex",
-      token_address: CURVE_CONTEXT.USDT_crvUSD.convexRewardToken.toLowerCase(),
+      token_address: ctx.USDT_crvUSD.convexRewardToken.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[15],
       description: "Stake crvUSD/USDT LP on Convex",
       url: "https://curve.convexfinance.com/stake/ethereum/444",
@@ -235,7 +235,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       name: "Llamalend sDola/crvUSD",
       action_type: "LP",
       protocol: "Convex",
-      token_address: CURVE_CONTEXT.LLAMALEND_sDOLA_crvUSD.convexRewardToken.toLowerCase(),
+      token_address: ctx.LLAMALEND_sDOLA_crvUSD.convexRewardToken.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
       description: "Supply crvUSD to sDOLA lenders and stake on Convex",
       url: "https://www.curve.finance/lend/ethereum/markets/one-way-market-30/create",
