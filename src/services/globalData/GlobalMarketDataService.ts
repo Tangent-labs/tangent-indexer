@@ -313,8 +313,8 @@ export class GlobalMarketDataService {
           })!
 
           const impliedApy = item?.details?.impliedApy * 100
-          currentAPR["PT APY"] = impliedApy
-          projectedAPR["PT APY"] = impliedApy
+          currentAPR.APY = impliedApy
+          projectedAPR.APY = impliedApy
         } else {
           console.error("No PendleAPI data ")
         }
