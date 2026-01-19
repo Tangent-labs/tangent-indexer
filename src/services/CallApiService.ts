@@ -294,8 +294,8 @@ export class CallApiService {
 
           Accept: "application/json, text/plain, */*",
           "Accept-Language": "fr-FR,fr;q=0.9,en;q=0.8",
-          Referer: "https://api-v2.pendle.finance/",
-          Origin: "https://api-v2.pendle.finance/",
+          Referer: "https://api-staking-v2-worker.stakedao.org/",
+          Origin: "https://api-staking-v2-worker.stakedao.org/",
         },
       })
       const data: StakeDaoApiReturn = response.data
