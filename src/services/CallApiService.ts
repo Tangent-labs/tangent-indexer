@@ -297,6 +297,7 @@ export class CallApiService {
         reason: e instanceof Error ? e.message : "Unknown error",
         httpCode: axios.isAxiosError(e) && e.response ? e.response.status : undefined,
       }
+      console.error(apiError)
       return { error: apiError }
     }
   }
@@ -319,6 +320,7 @@ export class CallApiService {
         reason: e instanceof Error ? e.message : "Unknown error",
         httpCode: axios.isAxiosError(e) && e.response ? e.response.status : undefined,
       }
+      console.error(apiError)
       return { error: apiError }
     }
   }
