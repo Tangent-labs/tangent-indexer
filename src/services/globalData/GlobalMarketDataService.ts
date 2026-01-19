@@ -237,7 +237,8 @@ export class GlobalMarketDataService {
 
         // Convex CRV
         if (market.contract_type === APR_TYPE["Convex CRV"]) {
-          const crvPriceInfo = formattedPrices.CRV
+          const crvPriceInfo = formattedPrices[COMMON_ERC20S?.CRV.toLocaleLowerCase()]
+
           const usdPerYear = Number(formatUnits(aprTvlData.projectedAPR.streamingData[0].amountPerYear, crvPriceInfo.decimals)) * crvPriceInfo.price
 
           projectedAPR.CRV = (usdPerYear * 100) / underlyingTvl
