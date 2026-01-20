@@ -109,7 +109,7 @@ export class OnChainVoteService {
         const weightInNumber = Number(formatEther(w))
         if (weightInNumber !== 0) {
           // Composite ID created to understand what it is
-          const epochKey = vp.gaugeController + " " + now.toString()
+          const epochKey = vp.gaugeController.toLowerCase() + " " + now.toString()
           const epochId = proposals.find((p) => {
             return p.epoch_name === epochKey
           })
