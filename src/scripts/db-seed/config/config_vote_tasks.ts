@@ -46,7 +46,7 @@ export const ONCHAIN_TASKS = [
       {
         taskDescription: "Stability Pool on veFXN gauge",
         name: "Stability Pool",
-        address: "0xEd92dDe3214c24Ae04F5f96927E3bE8f8DbC3289".toLowerCase(),
+        address: "0x215D87bd3c7482E2348338815E059DE07Daf798A".toLowerCase(),
         pointRate: 75,
       },
     ],

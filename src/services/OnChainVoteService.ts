@@ -96,6 +96,7 @@ export class OnChainVoteService {
     })
 
     const proposals = await this.userVoteRepository.storeEpochProposal(newEpochs)
+    console.log(proposals)
 
     // For each Gauge controller
     votingPowers.gaugeControllerWeights.forEach((vp, i) => {
