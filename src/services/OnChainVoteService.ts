@@ -228,8 +228,8 @@ export class OnChainVoteService {
         throw new Error(`Votes point indexer can run only one time per week : ${delta / -1000 / 3600} hours left`)
       }
     }
-    const weekId = BigInt(nowTimestamp) / BigInt(ONE_WEEK_IN_SECONDS * 1000)
-    const adjustedDate = new Date((Number(weekId) * ONE_WEEK_IN_SECONDS + 3600 * 14) * 1000)
+    const weekId = BigInt(nowTimestamp) / BigInt(ONE_WEEK_IN_SECONDS * 1000) + 1n
+    const adjustedDate = new Date((Number(weekId) * ONE_WEEK_IN_SECONDS + 3600 * 10) * 1000)
     return adjustedDate
   }
 }

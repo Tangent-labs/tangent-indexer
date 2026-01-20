@@ -21,36 +21,23 @@ async function main() {
   const { prismaClient, blockService, snapShotVoteService, onChainVoteService, blockRepository, setTransaction } = setUpIndexerVoteServices()
 
   try {
-    const blockInfo = await blockService.getVotesBlockInfo(providers)
-    if (blockInfo === false) {
-      console.log("Nothing to index")
-      return
-    }
+    const blockInfo = await blockService.getLastEpochDateAndBestProvider(providers)
 
-    const { startBlock, endBlock, bestProviderIndex, bestProvider, lastEpochDate } = blockInfo
+    const { bestProvider, lastEpochDate } = blockInfo
+    await prismaClient.$transaction(
+      async (dbTransaction: TransactionPrisma) => {
+        setTransaction(dbTransaction)
+        // Retrieve the last block
+        const now = await onChainVoteService.computeUserVoteTasks(bestProvider)
+        const newEpochDate = onChainVoteService.verifyEpochFullyFinished(now, lastEpochDate)
+        await snapShotVoteService.computeUserVoteTasks(newEpochDate)
+        await blockRepository.storeVotesPointsBlock(now, newEpochDate)
+      },
+      {
+        timeout: 10_000_000,
+      }
+    )
 
-    if (startBlock && endBlock) {
-      console.log("indexing :", startBlock, "<----------------->", endBlock)
-      await prismaClient.$transaction(
-        async (dbTransaction: TransactionPrisma) => {
-          setTransaction(dbTransaction)
-          const providerURL = indexerConfig.provider.chainRpc[bestProviderIndex]
-          // Retrieve the last block
-          const now = await onChainVoteService.computeUserVoteTasks(bestProvider)
-
-          const newEpochDate = onChainVoteService.verifyEpochFullyFinished(now, lastEpochDate)
-
-          await snapShotVoteService.computeUserVoteTasks(startBlock, endBlock, blockService, providerURL)
-
-          await blockRepository.storeVotesPointsBlock(endBlock, now, newEpochDate)
-        },
-        {
-          timeout: 10_000_000,
-        }
-      )
-    } else {
-      console.log("Nothing to index")
-    }
   } catch (e: any) {
     console.error("Error while indexing blocks", (e as Error).message)
     handleError(e as Error)
