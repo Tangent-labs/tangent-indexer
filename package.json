@@ -5,7 +5,7 @@
   "description": "Will index data in a DB when some event",
   "main": "index.ts",
   "scripts": {
-    "tangent:reset-liquidation-test": "npm run db:truncate & npm run tangent:indexer-block & npm run tangent:check-liquidation",
+    "tangent:reset-liquidation-test": "npm run db:truncate && npm run tangent:indexer-block && npm run tangent:check-liquidation",
     "tangent:indexer-block": "npm run build && node dist/scripts/index_block.js",
     "tangent:indexer-points-lp": "npm run build && node dist/scripts/index_points_lp.js",
     "tangent:indexer-points-votes": "npm run build && node dist/scripts/index_points_votes.js",
@@ -17,6 +17,7 @@
     "tangent:update-price-source-registry": "tsx src/scripts/update_price_source_registry.ts",
     "tangent:send-points-execution-summary": "tsx src/scripts/send_points_execution_summary.ts",
     "tangent:predeposit-script": "npm run build &&  node dist/scripts/predeposit_script.js",
+    "tangent:reset-indexers": "npm run build && npm run db:truncate && npm run db:seed-db && node dist/scripts/index_block.js && node dist/scripts/index_points_votes.js",
     "prisma:truncate": "tsx src/scripts/utils/truncate_tables.ts",
     "prisma:generate": "prisma generate --schema node_modules/@tangent/prisma-schema-shared/schema.prisma",
     "prisma:push": "prisma db push --schema node_modules/@tangent/prisma-schema-shared/schema.prisma",
