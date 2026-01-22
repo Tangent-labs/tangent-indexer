@@ -171,8 +171,8 @@ describe("liquidation_process", () => {
   })
 
   describe("setUpLiquidationProcessServices", () => {
-    it("should set up all services correctly", () => {
-      const services = setUpLiquidationProcessServices()
+    it("should set up all services correctly", async () => {
+      const services = await setUpLiquidationProcessServices()
 
       expect(services.liquidationService).toBeDefined()
       expect(services.context).toBeDefined()

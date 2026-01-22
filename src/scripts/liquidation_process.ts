@@ -16,12 +16,13 @@ import { TelegramNotifierService } from "../services/TelegramNotificationService
 import { routers } from "@tangent/defi-resources"
 import { SerializedLiquidationUserFullInfo } from "../type/data.js"
 import { getBestRpcProvider } from "../utils/getBestRpcProvider.js"
-import { RouterService } from "src/services/RouterService.js"
+import { RouterService } from "../services/RouterService.js"
+import { getAddressesJson } from "../utils/jsonReader.js"
 
 dotenv.config()
 
 const { providers, walletsPks, handleError } = setUpIndexer()
-const { liquidationService, context, telegramNotifierService } = setUpLiquidationProcessServices()
+const { liquidationService, context, telegramNotifierService } = await setUpLiquidationProcessServices()
 
 // Export for testing
 export { providers, context, telegramNotifierService }
@@ -362,8 +363,9 @@ if (process.env.NODE_ENV !== "test") {
     })
 }
 
-export function setUpLiquidationProcessServices() {
+export async function setUpLiquidationProcessServices() {
   const prismaClient = new PrismaClient()
+  const addresses = await getAddressesJson()
 
   const context = new LiquidationExecutionContext()
   context.providers = providers
@@ -374,7 +376,7 @@ export function setUpLiquidationProcessServices() {
   })
   const liquidationBotLogRepository = new LiquidationBotLogRepository(prismaClient)
   const liquidationBotService = new LiquidationBotLogService(liquidationBotLogRepository, telegramNotifierService)
-  const routerService = new RouterService(providers, routers.CURVE_V1_2_ROUTER, routers.PENDLE_ROUTER_V4)
+  const routerService = new RouterService(providers, routers.CURVE_V1_2_ROUTER, addresses.utilities.pendlePTRouter)
 
   const liquidationService = new LiquidationService(new ActiveBorrowersRepository(prismaClient), context, routerService, liquidationBotService)
   liquidationService.minEthBalance = indexerConfig.minEthBalance
