@@ -1,17 +1,17 @@
 import { parseEther } from "ethers"
 import { GetGaugeVotesOut } from "../../../services/OnChainVoteService.js"
 
-const GAUGE_A = "GAUGE_A"
-const GAUGE_B = "GAUGE_B"
-const GAUGE_C = "GAUGE_C"
-const GAUGE_D = "GAUGE_D"
+const GAUGE_A = "gauge_a"
+const GAUGE_B = "gauge_b"
+const GAUGE_C = "gauge_c"
+const GAUGE_D = "gauge_d"
 
-const CONTROLLER_A = "CONTROLLER_A"
-const CONTROLLER_B = "CONTROLLER_B"
+const CONTROLLER_A = "controller_a"
+const CONTROLLER_B = "controller_b"
 
-export const USER_A = "USER_A"
-export const USER_B = "USER_B"
-export const USER_C = "USER_C"
+export const USER_A = "user_A"
+export const USER_B = "user_b"
+export const USER_C = "user_c"
 
 const timestamp = 1768480830n
 export const dateTimestamp = new Date(Number(timestamp) * 1000)
