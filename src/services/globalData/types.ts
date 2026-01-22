@@ -1,14 +1,13 @@
 import { NumMap } from "../../services/boost/types.js"
 import { CurverRegistry } from "../../type/data.js"
 
-
 export type USGContractsIn = {
-  rewardAccumulator: string;
-  irCalculator: string;
-  usg: string;
-  sUSG: string;
-  usgOracle: string;
-  _marketViewer: string;
+  rewardAccumulator: string
+  irCalculator: string
+  usg: string
+  sUSG: string
+  usgOracle: string
+  _marketViewer: string
 }
 
 export type APR = {
@@ -47,19 +46,18 @@ export type USGInfoOut = {
   usgStakedOnSgUsd: bigint
 }
 export type KeeperData = {
-  keeper: string;
-  lp: string;
-  lpBalance: bigint;
-  virtualPrice: bigint;
-  coin0: string;
-  coin1: string;
-
+  keeper: string
+  lp: string
+  lpBalance: bigint
+  virtualPrice: bigint
+  coin0: string
+  coin1: string
 }
 
 export type WStableData = {
-  wStable: string;
-  stable: string;
-  totalSupply: string;
+  wStable: string
+  stable: string
+  totalSupply: string
 }
 
 export type USGIndexingGlobalDataOut = {

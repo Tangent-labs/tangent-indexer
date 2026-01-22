@@ -27,7 +27,7 @@ import { indexerConfig } from "../config/indexer_config.js"
 import { getAddressesJson } from "../utils/jsonReader.js"
 import { SavingAccountRepository } from "../db/SavingAccountRepository.js"
 import { SavingAccountServices } from "../services/events/SavingAccountServices.js"
-import { TelegramNotifierService } from "src/services/TelegramNotificationServices.js"
+import { TelegramNotifierService } from "../services/TelegramNotificationServices.js"
 
 dotenv.config()
 
@@ -135,7 +135,7 @@ async function main() {
       console.log("Nothing to index, Current block:", actualBlock)
     }
   } catch (e: any) {
-    await telegramNotifierService.sendError(`Error on indexer-block ${e}`)
+    await telegramNotifierService.sendError(`Error on indexer block  \`\`\` ${e.toString()} \`\`\``)
     handleError(e)
   }
 }
@@ -180,7 +180,6 @@ async function setUpIndexerBlockServices() {
     botToken: process.env.TELEGRAM_BOT_TOKEN!,
     chatId: process.env.TELEGRAM_CHAT_ID!,
   })
-
 
   return {
     prismaClient,

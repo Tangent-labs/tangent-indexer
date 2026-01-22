@@ -88,21 +88,37 @@ export class GlobalDataService {
     const usgAddresses = await getAddressesJson()
 
     // Retrieve the onchain data containing market data + total supplies
-    const onchainDatas = await this.fetchGlobalDataChainview(markets, usgAddresses, pegKeepers.map(k => k.address), wStables.map(w => w.address))
+    const onchainDatas = await this.fetchGlobalDataChainview(
+      markets,
+      usgAddresses,
+      pegKeepers.map((k) => k.address),
+      wStables.map((w) => w.address)
+    )
 
     const now = new Date(Number(onchainDatas.timestamp) * 1000)
 
     // Fetch from DefiLlama prices of ERC20 tokens distributed in the underlying protocols
     const prices = await defiLLamaFetchPrices(rewardTokens.map((a) => a.address))
 
-    const { formattedData: marketsData, marketsTotalDeposited, marketsTotalBorrowed } = await this.fetchAndFormatMarketData(markets, onchainDatas.marketData, now, prices)
+    const {
+      formattedData: marketsData,
+      marketsTotalDeposited,
+      marketsTotalBorrowed,
+    } = await this.fetchAndFormatMarketData(markets, onchainDatas.marketData, now, prices)
 
     // Total Supplies of USG & sUSG
     const totalSupplies = await this.fetchAndFormatTotalSupplies(onchainDatas.usgInfo, now)
     const tvlsUSG = Number(formatEther(onchainDatas.usgInfo.usgStakedOnSgUsd)) * Number(formatEther(onchainDatas.usgInfo.UsgPrice))
 
     // PegKeepers TVL computation
-    const { keepersSnapshot, keepersTVL } = this.computationTVLPegKeepers(onchainDatas.keepersData, pegKeepers, now, onchainDatas.usgInfo.UsgPrice, usgAddresses.tokens.USG, prices)
+    const { keepersSnapshot, keepersTVL } = this.computationTVLPegKeepers(
+      onchainDatas.keepersData,
+      pegKeepers,
+      now,
+      onchainDatas.usgInfo.UsgPrice,
+      usgAddresses.tokens.USG,
+      prices
+    )
 
     // WStable TVL computation
     const { wStableSnapshot, wStablesTVL } = this.computationTVLWStables(onchainDatas.wStablesData, wStables, now, prices)
@@ -114,7 +130,7 @@ export class GlobalDataService {
       tvl_peg_keepers: keepersTVL,
       tvl_wstables: wStablesTVL,
       total_debt: marketsTotalBorrowed,
-      total_tvl: marketsTotalDeposited + tvlsUSG + keepersTVL + wStablesTVL
+      total_tvl: marketsTotalDeposited + tvlsUSG + keepersTVL + wStablesTVL,
     }
 
     return { marketsData, totalSupplies, keepersSnapshot, wStableSnapshot, usgGlobalInfos }
@@ -123,11 +139,10 @@ export class GlobalDataService {
   private computationTVLWStables(wStablesData: WStableData[], wStables: Prisma.wrapped_stableCreateManyInput[], now: Date, prices: Prices) {
     // Retrieve WStableIDS
 
-
     let wStablesTVL = 0
     const wStableSnapshot: any[] = []
-    wStablesData.forEach(w => {
-      const wStableID = wStables.find(ww => ww.address.toLowerCase() === w.wStable.toLowerCase())?.id!
+    wStablesData.forEach((w) => {
+      const wStableID = wStables.find((ww) => ww.address.toLowerCase() === w.wStable.toLowerCase())?.id!
       const priceInfo = prices[w.stable]
       const totalSupply = Number(formatUnits(w.totalSupply, priceInfo.decimals))
       const totalValue = totalSupply * priceInfo.decimals
@@ -139,11 +154,18 @@ export class GlobalDataService {
     return { wStableSnapshot, wStablesTVL }
   }
 
-  private computationTVLPegKeepers(keepersData: KeeperData[], keepers: Prisma.peg_keeperCreateManyInput[], now: Date, usgPrice: bigint, usgAddress: string, prices: Prices) {
+  private computationTVLPegKeepers(
+    keepersData: KeeperData[],
+    keepers: Prisma.peg_keeperCreateManyInput[],
+    now: Date,
+    usgPrice: bigint,
+    usgAddress: string,
+    prices: Prices
+  ) {
     let keepersTVL = 0
     const keepersSnapshot: Prisma.peg_keeper_historyCreateManyInput[] = []
-    keepersData.forEach(k => {
-      const keeperId = keepers.find(kk => kk.address.toLowerCase() === k.keeper.toLowerCase())?.id!
+    keepersData.forEach((k) => {
+      const keeperId = keepers.find((kk) => kk.address.toLowerCase() === k.keeper.toLowerCase())?.id!
       const lpBalance = Number(formatEther(k.lpBalance))
       const pUSG = Number(formatEther(usgPrice))
 
@@ -177,7 +199,6 @@ export class GlobalDataService {
 
     // Fetch StakeDao markets informations on their API
     const stakeDaoAPIData = await this.callApiService.fetchStakeDao()
-
 
     const formattedMarketData = this.formatMarketData(
       markets,
@@ -215,7 +236,6 @@ export class GlobalDataService {
       return [market.contract_address, market.contract_type]
     })
 
-
     // Retrieve the onchain data containing everything
     const globalData = (
       await chainView<[(string | number)[][], USGContractsIn, string[], string[]], USGIndexingGlobalDataOut[]>(
@@ -230,10 +250,10 @@ export class GlobalDataService {
             rewardAccumulator: usgAddresses.utilities.rewardAccumulator,
             usg: usgAddresses.tokens.USG,
             sUSG: usgAddresses.tokens.sUSG,
-            usgOracle: usgAddresses.oracles.USG
+            usgOracle: usgAddresses.oracles.USG,
           } as USGContractsIn,
           pegKeepers,
-          wStables
+          wStables,
           // Object.values(usgAddresses.pegKeepers).map(k => k),
           // Object.values(usgAddresses.wStables).map(w => w),
         ]
@@ -242,8 +262,6 @@ export class GlobalDataService {
 
     return globalData
   }
-
-
 
   private async getAllMarkets() {
     // Retrieve all markets indexed in the database
@@ -265,7 +283,6 @@ export class GlobalDataService {
     stakeDaoAPIData: StakeDaoApiReturn,
     now: Date
   ) {
-
     let marketsTotalDeposited = 0
     let marketsTotalBorrowed = 0
     // Iterates over all markets and hydrate them with data previously fetched through a reduce
@@ -387,13 +404,12 @@ export class GlobalDataService {
         }
       }
 
-
       const tvlMarket = bigIntToNumber(aprTvlData.globalData.totalStakedUSD, 18)
       const totalDebt = bigIntToNumber(aprTvlData.globalData.totalDebt, 18)
       const badDebt = bigIntToNumber(aprTvlData.globalData.badDebt, 18)
 
       marketsTotalDeposited += tvlMarket
-      marketsTotalBorrowed += (badDebt + totalDebt)
+      marketsTotalBorrowed += badDebt + totalDebt
 
       return {
         market_id: market.id,

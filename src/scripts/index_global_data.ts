@@ -20,7 +20,7 @@ const NEW_ROWS_FREQUENCY = 900_000
 async function main() {
   const { prismaClient, setTransaction, globalDataService, globalDataRepository, totalSupplyRepo, savingAccountService } = setUpIndexerGlobalData()
 
-  let nowBC = new Date()
+  const nowBC = new Date()
 
   await prismaClient
     .$transaction(
@@ -48,7 +48,7 @@ async function main() {
         timeout: 10_000_000,
       }
     )
-    .then((_) => { })
+    .then((_) => {})
     .catch((e) => {
       console.error(e)
     })
@@ -66,7 +66,7 @@ async function main() {
         timeout: 10_000_000,
       }
     )
-    .then((_) => { })
+    .then((_) => {})
     .catch((e) => {
       console.error(e)
     })
