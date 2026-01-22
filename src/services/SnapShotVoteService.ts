@@ -5,7 +5,6 @@ import { Prisma } from "@prisma/client"
 
 import { Proposal, ValidatedVotes } from "../type/data.js"
 import { UserPointsVoteRepository } from "../db/Points/UserPointsVoteRepository.js"
-import { BlockService } from "./BlockService.js"
 
 type SnapshotProposal = {
   id: string
@@ -65,10 +64,8 @@ export class SnapShotVoteService {
    * Pass to updateUserVoteTasks retrieved votes and DB registered tasks
    * Marks fetched proposals as processed to not deal with them on the next iteration
    */
-  computeUserVoteTasks = async (startBlock: number, endBlock: number, blockService: BlockService, bestProvider: string) => {
-    const blockDates = await blockService.fetchBlockTimestamps([startBlock, endBlock], bestProvider)
-
-    const proposals = await this.listProposals(blockDates.get(startBlock)!, blockDates.get(endBlock)!)
+  computeUserVoteTasks = async (newEpoch: Date) => {
+    const proposals = await this.listProposals(newEpoch.getTime() / 1000)
 
     let allVotes: ValidatedVotes[] = []
     for (const proposal of proposals) {
@@ -139,7 +136,7 @@ export class SnapShotVoteService {
     return await this.userVoteRepository.getSnapshotOrganisations()
   }
 
-  async listProposals(fromTs: number, toTs: number): Promise<Proposal[]> {
+  async listProposals(newEpochSeconds: number): Promise<Proposal[]> {
     // Retrieve organisation structure in database
     const organizations = await this.getOrganizations()
 
@@ -147,7 +144,7 @@ export class SnapShotVoteService {
     const proposalTitleFilter = organizations.map((o) => o.proposal_title_search)
 
     // Fetch and filter proposals that have not being already treaded accross all organisations we are tracking
-    const proposalsToProcess = await this.getFilteredProposalsByOrga(organisationKeys, proposalTitleFilter, { fromTs, toTs })
+    const proposalsToProcess = await this.getFilteredProposalsByOrga(organisationKeys, proposalTitleFilter, newEpochSeconds)
 
     // Add organization rewardedChoices and votersToExclude to each proposal
     const proposalsWithRewards = proposalsToProcess.map((p) => {
@@ -167,6 +164,7 @@ export class SnapShotVoteService {
         type: proposal.type || "basic",
         scoringChoices: scoringChoices.map((scoringChoice) => {
           const rewardIndex = proposal.choices.findIndex((choice) => choice.includes(scoringChoice.choice_name))
+          // console.log(scoringChoice, rewardIndex)
           return {
             ...scoringChoice,
             choiceIndex: rewardIndex + 1,
@@ -176,7 +174,7 @@ export class SnapShotVoteService {
     })
   }
 
-  async getFilteredProposalsByOrga(organisationKeys: string[], titlesToFilter: string[], range: { fromTs: number; toTs: number }) {
+  async getFilteredProposalsByOrga(organisationKeys: string[], titlesToFilter: string[], newEpoch: number) {
     const query = await this.loadGraphQLQuery("ListProposals")
     const proposals: SnapshotProposal[] = []
     let skip = 0
@@ -187,8 +185,8 @@ export class SnapShotVoteService {
         query,
         variables: {
           organisationKeys,
-          start_lte: range.toTs,
-          end_gte: range.fromTs,
+          start_lte: newEpoch,
+          end_gte: newEpoch - 86400 * 7,
           first: this.PAGE_SIZE,
           skip,
         },
@@ -201,6 +199,8 @@ export class SnapShotVoteService {
 
       skip += this.PAGE_SIZE
     }
+
+    // console.log(proposals)
     // Find in database the already processed proposals
     const processedProposals = await this.userVoteRepository.getProcessedProposals(proposals.map((p) => p.id))
 
