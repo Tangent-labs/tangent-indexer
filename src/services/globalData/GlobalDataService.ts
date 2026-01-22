@@ -22,6 +22,7 @@ import {
   USGContractsIn,
   WStableData,
   KeeperData,
+  KeeperIn,
 } from "./types.js"
 import { defiLLamaFetchPrices } from "./DefiLLamaPriceFetcher.js"
 import { bigIntToNumber } from "../../utils/formatting.js"
@@ -29,8 +30,12 @@ import { NumMap } from "../../services/boost/types.js"
 
 import { CallApiService } from "../CallApiService.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
-import { AddressesJson } from "src/type/data.js"
-import { GlobalDataRepository } from "src/db/GlobalDataRepository.js"
+import { AddressesJson } from "../../type/data.js"
+import { GlobalDataRepository } from "../../db/GlobalDataRepository.js"
+import { TotalSupplyRepository } from "../../db/TotalSupplyRepository.js"
+import { PegKeeperRepository } from "../../db/PegKeepeerRepository.js"
+import { WStableRepository } from "../../db/WStableRepository.js"
+import { GlobalHistoryDataRepository } from "src/db/GlobalHistoryDataRepository.js"
 
 // TODO This is arbitraty, need a more dynamic version
 // eslint-disable-next-line no-loss-of-precision
@@ -50,6 +55,8 @@ const rewardTokens = [
   { symbol: "crvUSD", address: COMMON_ERC20S.crvUSD },
   { symbol: "USR", address: COMMON_ERC20S.USR },
   { symbol: "USDe", address: COMMON_ERC20S.USDe },
+  { symbol: "USDC", address: COMMON_ERC20S.USDC },
+  { symbol: "frxUSD", address: COMMON_ERC20S.frxUSD },
 ]
 
 type Markets = {
@@ -63,6 +70,10 @@ export class GlobalDataService {
   erc20Repository: ERC20Repository
   marketContractsRepo: MarketContractsRepository
   globalDataRepository: GlobalDataRepository
+  totalSupplyRepository: TotalSupplyRepository
+  pegKeeperRepository: PegKeeperRepository
+  wStableRepository: WStableRepository
+  globalHistoryDataRepository: GlobalHistoryDataRepository
   provider: JsonRpcProvider
   callApiService: CallApiService
 
@@ -71,16 +82,24 @@ export class GlobalDataService {
     callApiService: CallApiService,
     erc20Repository: ERC20Repository,
     globalDataRepository: GlobalDataRepository,
+    totalSupplyRepository: TotalSupplyRepository,
+    pegKeeperRepository: PegKeeperRepository,
+    wStableRepository: WStableRepository,
+    globalHistoryDataRepository: GlobalHistoryDataRepository,
     marketContractsRepository: MarketContractsRepository
   ) {
     this.provider = provider
     this.callApiService = callApiService
     this.erc20Repository = erc20Repository
     this.globalDataRepository = globalDataRepository
+    this.totalSupplyRepository = totalSupplyRepository
+    this.pegKeeperRepository = pegKeeperRepository
+    this.wStableRepository = wStableRepository
+    this.globalHistoryDataRepository = globalHistoryDataRepository
     this.marketContractsRepo = marketContractsRepository
   }
 
-  async computeAprTvlsAndTotalSupplies() {
+  async globalDataProcess() {
     // Retrieve all markets and their associated type
     const markets = await this.getAllMarkets()
     const pegKeepers = await this.globalDataRepository.getActiveKeepers()
@@ -91,7 +110,7 @@ export class GlobalDataService {
     const onchainDatas = await this.fetchGlobalDataChainview(
       markets,
       usgAddresses,
-      pegKeepers.map((k) => k.address),
+      pegKeepers.map((k) => ({ keeper: k.address, lp: k.lp_address })),
       wStables.map((w) => w.address)
     )
 
@@ -133,22 +152,77 @@ export class GlobalDataService {
       total_tvl: marketsTotalDeposited + tvlsUSG + keepersTVL + wStablesTVL,
     }
 
+    await this.insertOrUpdateGlobalData(marketsData, totalSupplies, keepersSnapshot, wStableSnapshot, usgGlobalInfos, now)
+
     return { marketsData, totalSupplies, keepersSnapshot, wStableSnapshot, usgGlobalInfos }
+  }
+
+  private async insertOrUpdateGlobalData(
+    marketsData: Prisma.market_global_dataUncheckedCreateInput[],
+    totalSupplies: Prisma.total_suppliesCreateManyInput[],
+    keepersData: Prisma.peg_keeper_historyCreateManyInput[],
+    wStablesData: Prisma.wrapped_stable_historyCreateManyInput[],
+    globalData: Prisma.usg_global_historyCreateInput,
+    now: Date
+  ) {
+    const NEW_ROWS_FREQUENCY = 10_000
+
+    // MARKETS DATA
+    const lastUpdateTimeMarkets = await this.globalDataRepository.fetchLastExecutionTime()
+    if (lastUpdateTimeMarkets && lastUpdateTimeMarkets.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
+      await this.globalDataRepository.updateRows(marketsData, lastUpdateTimeMarkets)
+    } else {
+      await this.globalDataRepository.insertRows(marketsData)
+    }
+    await this.globalDataRepository.wipeAndInsertLatestDataRows(marketsData)
+
+    // TOTAL SUPPLIES DATA
+    const lastUpdateTimeTotalSupplies = await this.totalSupplyRepository.fetchLastExecutionTime()
+    if (lastUpdateTimeTotalSupplies && lastUpdateTimeTotalSupplies.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
+      await this.totalSupplyRepository.updateRows(totalSupplies, lastUpdateTimeTotalSupplies)
+    } else {
+      await this.totalSupplyRepository.insertRows(totalSupplies)
+    }
+
+    // PEG KEEPERS TVL
+    const lastUpdateTimeKeepers = await this.pegKeeperRepository.fetchLastExecutionTime()
+    if (lastUpdateTimeKeepers && lastUpdateTimeKeepers.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
+      await this.pegKeeperRepository.updatePegKeepersHistory(keepersData, lastUpdateTimeKeepers)
+    } else {
+      await this.pegKeeperRepository.insertNewPegKeepersHistory(keepersData)
+    }
+
+    // WSTABLES TVL
+
+    const lastUpdateTimeWStables = await this.wStableRepository.fetchLastExecutionTime()
+    if (lastUpdateTimeWStables && lastUpdateTimeWStables.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
+      await this.wStableRepository.updateWStablesHistory(wStablesData, lastUpdateTimeWStables)
+    } else {
+      await this.wStableRepository.insertNewWStablesHistory(wStablesData)
+    }
+
+    // GLOBAL HISTORY DATA
+    const lastUpdateTimeGlobalRepositoryData = await this.globalHistoryDataRepository.fetchLastExecutionTime()
+    if (lastUpdateTimeGlobalRepositoryData && lastUpdateTimeGlobalRepositoryData.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
+      await this.globalHistoryDataRepository.updateGlobalHistory([globalData], lastUpdateTimeGlobalRepositoryData)
+    } else {
+      await this.globalHistoryDataRepository.insertNewGlobalHistory([globalData])
+    }
   }
 
   private computationTVLWStables(wStablesData: WStableData[], wStables: Prisma.wrapped_stableCreateManyInput[], now: Date, prices: Prices) {
     // Retrieve WStableIDS
 
     let wStablesTVL = 0
-    const wStableSnapshot: any[] = []
+    const wStableSnapshot: Prisma.wrapped_stable_historyCreateManyInput[] = []
     wStablesData.forEach((w) => {
       const wStableID = wStables.find((ww) => ww.address.toLowerCase() === w.wStable.toLowerCase())?.id!
-      const priceInfo = prices[w.stable]
+      const priceInfo = prices[w.stable.toLowerCase()]
       const totalSupply = Number(formatUnits(w.totalSupply, priceInfo.decimals))
-      const totalValue = totalSupply * priceInfo.decimals
+      const totalValue = totalSupply * priceInfo.price
 
       wStablesTVL += totalValue
-      wStableSnapshot.push({ wstable_id: wStableID, date: now, total_supply: totalSupply, total_value: totalValue })
+      wStableSnapshot.push({ wrapped_stable_id: wStableID, date: now, total_supply: totalSupply, total_value: totalValue })
     })
 
     return { wStableSnapshot, wStablesTVL }
@@ -169,8 +243,8 @@ export class GlobalDataService {
       const lpBalance = Number(formatEther(k.lpBalance))
       const pUSG = Number(formatEther(usgPrice))
 
-      const p0 = k.coin0.toLowerCase() === usgAddress.toLowerCase() ? pUSG : prices[k.coin0].price
-      const p1 = k.coin1.toLowerCase() === usgAddress.toLowerCase() ? pUSG : prices[k.coin1].price
+      const p0 = k.coin0.toLowerCase() === usgAddress.toLowerCase() ? pUSG : prices[k.coin0.toLowerCase()].price
+      const p1 = k.coin1.toLowerCase() === usgAddress.toLowerCase() ? pUSG : prices[k.coin1.toLowerCase()].price
 
       const lowestP = p0 > p1 ? p1 : p0
       const totalValue = lowestP * Number(formatEther(k.virtualPrice)) * lpBalance
@@ -231,31 +305,29 @@ export class GlobalDataService {
     return totalSupplies
   }
 
-  private async fetchGlobalDataChainview(markets: Markets[], usgAddresses: AddressesJson, pegKeepers: string[], wStables: string[]) {
+  private async fetchGlobalDataChainview(markets: Markets[], usgAddresses: AddressesJson, keepersIn: KeeperIn[], wStables: string[]) {
     const marketParams = markets.map((market) => {
       return [market.contract_address, market.contract_type]
     })
 
     // Retrieve the onchain data containing everything
     const globalData = (
-      await chainView<[(string | number)[][], USGContractsIn, string[], string[]], USGIndexingGlobalDataOut[]>(
+      await chainView<[(string | number)[][], USGContractsIn, KeeperIn[], string[]], USGIndexingGlobalDataOut[]>(
         this.provider,
         GlobalDataChainview.abi,
         GlobalDataChainview.bytecode,
         [
           marketParams,
           {
-            _marketViewer: usgAddresses.utilities.marketViewer,
-            irCalculator: usgAddresses.utilities.irCalculator,
             rewardAccumulator: usgAddresses.utilities.rewardAccumulator,
+            irCalculator: usgAddresses.utilities.irCalculator,
             usg: usgAddresses.tokens.USG,
             sUSG: usgAddresses.tokens.sUSG,
             usgOracle: usgAddresses.oracles.USG,
+            _marketViewer: usgAddresses.utilities.marketViewer,
           } as USGContractsIn,
-          pegKeepers,
+          keepersIn,
           wStables,
-          // Object.values(usgAddresses.pegKeepers).map(k => k),
-          // Object.values(usgAddresses.wStables).map(w => w),
         ]
       )
     )[0]

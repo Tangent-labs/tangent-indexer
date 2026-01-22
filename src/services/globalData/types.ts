@@ -53,11 +53,15 @@ export type KeeperData = {
   coin0: string
   coin1: string
 }
+export type KeeperIn = {
+  keeper: string
+  lp: string
+}
 
 export type WStableData = {
   wStable: string
   stable: string
-  totalSupply: string
+  totalSupply: bigint
 }
 
 export type USGIndexingGlobalDataOut = {

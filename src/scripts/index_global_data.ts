@@ -12,13 +12,14 @@ import { ERC20Repository } from "../db/ERC20Repository.js"
 import { SavingAccountRepository } from "../db/SavingAccountRepository.js"
 import { SavingAccountServices } from "../services/events/SavingAccountServices.js"
 import { getAddressesJson } from "../utils/jsonReader.js"
+import { PegKeeperRepository } from "../db/PegKeepeerRepository.js"
+import { WStableRepository } from "../db/WStableRepository.js"
+import { GlobalHistoryDataRepository } from "../db/GlobalHistoryDataRepository.js"
 
 dotenv.config()
 
-const NEW_ROWS_FREQUENCY = 900_000
-
 async function main() {
-  const { prismaClient, setTransaction, globalDataService, globalDataRepository, totalSupplyRepo, savingAccountService } = setUpIndexerGlobalData()
+  const { prismaClient, setTransaction, globalDataService, globalDataRepository, savingAccountService } = setUpIndexerGlobalData()
 
   const nowBC = new Date()
 
@@ -26,23 +27,7 @@ async function main() {
     .$transaction(
       async (dbTransaction: TransactionPrisma) => {
         setTransaction(dbTransaction)
-        const { marketsData, totalSupplies, keepersSnapshot, wStableSnapshot, usgGlobalInfos } = await globalDataService.computeAprTvlsAndTotalSupplies()
-        const nowBC = new Date(usgGlobalInfos.date)
-        const lastUpdateTimeMarkets = await globalDataRepository.fetchLastExecutionTime()
-        const lastUpdateTimeTotalSupplies = await totalSupplyRepo.fetchLastExecutionTime()
-
-        if (lastUpdateTimeMarkets && lastUpdateTimeMarkets.getTime() + NEW_ROWS_FREQUENCY > nowBC.getTime()) {
-          await globalDataRepository.updateRows(marketsData, lastUpdateTimeMarkets)
-        } else {
-          await globalDataRepository.insertRows(marketsData)
-        }
-        await globalDataRepository.wipeAndInsertLatestDataRows(marketsData)
-
-        if (lastUpdateTimeTotalSupplies && lastUpdateTimeTotalSupplies.getTime() + NEW_ROWS_FREQUENCY > nowBC.getTime()) {
-          await totalSupplyRepo.updateRows(totalSupplies, lastUpdateTimeTotalSupplies)
-        } else {
-          await totalSupplyRepo.insertRows(totalSupplies)
-        }
+        await globalDataService.globalDataProcess()
       },
       {
         timeout: 10_000_000,
@@ -79,21 +64,37 @@ function setUpIndexerGlobalData() {
     throw new Error("CHAIN_RPCS_NOT_SET")
   }
   const provider = new JsonRpcProvider(chainRpcs.split(",")[0])
-  const marketContractsRepository = new MarketContractsRepository(prismaClient)
   const erc20Repository = new ERC20Repository(prismaClient)
+  const marketContractsRepository = new MarketContractsRepository(prismaClient)
   const globalDataRepository = new GlobalDataRepository(prismaClient)
   const savingAccountRepository = new SavingAccountRepository(prismaClient)
+  const keeperRepository = new PegKeeperRepository(prismaClient)
+  const wStableRepository = new WStableRepository(prismaClient)
+  const totalSupplyRepository = new TotalSupplyRepository(prismaClient)
+  const globalHistoryDataRepository = new GlobalHistoryDataRepository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
     erc20Repository.setClient(dbTransaction)
     marketContractsRepository.setClient(dbTransaction)
     globalDataRepository.setClient(dbTransaction)
-    totalSupplyRepo.setClient(dbTransaction)
     savingAccountRepository.setClient(dbTransaction)
+    keeperRepository.setClient(dbTransaction)
+    wStableRepository.setClient(dbTransaction)
+    totalSupplyRepository.setClient(dbTransaction)
+    globalHistoryDataRepository.setClient(dbTransaction)
   }
 
-  const callApiService = new CallApiService()
-  const globalDataService = new GlobalDataService(provider, callApiService, erc20Repository, globalDataRepository, marketContractsRepository)
+  const globalDataService = new GlobalDataService(
+    provider,
+    new CallApiService(),
+    erc20Repository,
+    globalDataRepository,
+    totalSupplyRepository,
+    keeperRepository,
+    wStableRepository,
+    globalHistoryDataRepository,
+    marketContractsRepository
+  )
   const totalSupplyRepo = new TotalSupplyRepository(prismaClient)
   const savingAccountService = new SavingAccountServices(savingAccountRepository)
   return {

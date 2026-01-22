@@ -8,6 +8,7 @@ import * as dotenv from "dotenv"
 import { getAddressesJson } from "../../utils/jsonReader.js"
 import { seedPriceSources } from "./seed_price_sources.js"
 import { seedPredeposit } from "./seed_predeposit.js"
+import { seedUSGContracts } from "./seed_usg_contracts.js"
 dotenv.config()
 
 const prisma = new PrismaClient()
@@ -24,6 +25,8 @@ async function main() {
     await seedVoteTasks(tx)
     // Insert USG LP for mapping them with AddLiquidity during predeposit campaign
     await seedPredeposit(tx, addresses)
+    // Seed Keepers and WStables contracts
+    await seedUSGContracts(tx, addresses)
   })
 }
 
