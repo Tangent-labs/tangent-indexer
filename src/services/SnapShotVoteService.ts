@@ -5,7 +5,6 @@ import { Prisma } from "@prisma/client"
 
 import { Proposal, ValidatedVotes } from "../type/data.js"
 import { UserPointsVoteRepository } from "../db/Points/UserPointsVoteRepository.js"
-import { BlockService } from "./BlockService.js"
 
 type SnapshotProposal = {
   id: string

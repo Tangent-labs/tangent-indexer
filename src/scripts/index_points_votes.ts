@@ -8,7 +8,6 @@ import { UserPointsVoteRepository } from "../db/Points/UserPointsVoteRepository.
 import { BoostRepository } from "../db/Points/BoostRepository.js"
 
 import { setUpIndexer } from "../config/indexer_setup.js"
-import { indexerConfig } from "../config/indexer_config.js"
 
 import { BlockService } from "../services/BlockService.js"
 import { SnapShotVoteService } from "../services/SnapShotVoteService.js"
