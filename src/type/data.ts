@@ -231,6 +231,7 @@ export type AddressesJson = {
   oracles: { [tokenName: string]: string }
 
   pegKeepers: { [poolName: string]: string }
+  wStables: { [poolName: string]: string }
   markets: { marketAddress: string; collatName: string; collatAddress: string; marketType: string }[]
 }
 export type NotificationBotErrorLevel = PrismaErrorLevel

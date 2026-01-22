@@ -26,6 +26,7 @@ const addresses: AddressesJson = {
     convexCrvMarket: "0xH",
     convexFxnMarket: "0xI",
   },
+  wStables: {},
   oracles: {},
   markets: [],
   pegKeepers: {},

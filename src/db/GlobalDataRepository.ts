@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client"
 import { AbstractRepository } from "./AbstractRepository.js"
 
-export class MarketGlobalDataRepository extends AbstractRepository {
+export class GlobalDataRepository extends AbstractRepository {
   async fetchLastExecutionTime() {
     const lastUpdate = await this.prismaClient.market_global_data.findFirst({
       orderBy: [

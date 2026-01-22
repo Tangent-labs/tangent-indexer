@@ -19,6 +19,10 @@ import {
   USGInfoOut,
   CurveFactoryStableNGApiReturn,
   StakeDaoApiReturn,
+  USGContractsIn,
+  WStableData,
+  KeeperData,
+  KeeperIn,
 } from "./types.js"
 import { defiLLamaFetchPrices } from "./DefiLLamaPriceFetcher.js"
 import { bigIntToNumber } from "../../utils/formatting.js"
@@ -26,6 +30,12 @@ import { NumMap } from "../../services/boost/types.js"
 
 import { CallApiService } from "../CallApiService.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
+import { AddressesJson } from "../../type/data.js"
+import { GlobalDataRepository } from "../../db/GlobalDataRepository.js"
+import { TotalSupplyRepository } from "../../db/TotalSupplyRepository.js"
+import { PegKeeperRepository } from "../../db/PegKeepeerRepository.js"
+import { WStableRepository } from "../../db/WStableRepository.js"
+import { GlobalHistoryDataRepository } from "src/db/GlobalHistoryDataRepository.js"
 
 // TODO This is arbitraty, need a more dynamic version
 // eslint-disable-next-line no-loss-of-precision
@@ -41,6 +51,12 @@ const rewardTokens = [
   { symbol: "PYUSD", address: COMMON_ERC20S.PYUSD },
   { symbol: "RLUSD", address: COMMON_ERC20S.RLUSD },
   { symbol: "USDS", address: COMMON_ERC20S.USDS },
+  { symbol: "DOLA", address: COMMON_ERC20S.DOLA },
+  { symbol: "crvUSD", address: COMMON_ERC20S.crvUSD },
+  { symbol: "USR", address: COMMON_ERC20S.USR },
+  { symbol: "USDe", address: COMMON_ERC20S.USDe },
+  { symbol: "USDC", address: COMMON_ERC20S.USDC },
+  { symbol: "frxUSD", address: COMMON_ERC20S.frxUSD },
 ]
 
 type Markets = {
@@ -50,9 +66,14 @@ type Markets = {
   collateral_address: string
   contract_address: string
 }
-export class GlobalMarketDataService {
+export class GlobalDataService {
   erc20Repository: ERC20Repository
   marketContractsRepo: MarketContractsRepository
+  globalDataRepository: GlobalDataRepository
+  totalSupplyRepository: TotalSupplyRepository
+  pegKeeperRepository: PegKeeperRepository
+  wStableRepository: WStableRepository
+  globalHistoryDataRepository: GlobalHistoryDataRepository
   provider: JsonRpcProvider
   callApiService: CallApiService
 
@@ -60,35 +81,184 @@ export class GlobalMarketDataService {
     provider: JsonRpcProvider,
     callApiService: CallApiService,
     erc20Repository: ERC20Repository,
+    globalDataRepository: GlobalDataRepository,
+    totalSupplyRepository: TotalSupplyRepository,
+    pegKeeperRepository: PegKeeperRepository,
+    wStableRepository: WStableRepository,
+    globalHistoryDataRepository: GlobalHistoryDataRepository,
     marketContractsRepository: MarketContractsRepository
   ) {
     this.provider = provider
     this.callApiService = callApiService
     this.erc20Repository = erc20Repository
+    this.globalDataRepository = globalDataRepository
+    this.totalSupplyRepository = totalSupplyRepository
+    this.pegKeeperRepository = pegKeeperRepository
+    this.wStableRepository = wStableRepository
+    this.globalHistoryDataRepository = globalHistoryDataRepository
     this.marketContractsRepo = marketContractsRepository
   }
 
-  async computeAprTvlsAndTotalSupplies() {
+  async globalDataProcess() {
     // Retrieve all markets and their associated type
     const markets = await this.getAllMarkets()
+    const pegKeepers = await this.pegKeeperRepository.getActiveKeepers()
+    const wStables = await this.wStableRepository.getActiveWStables()
+    const usgAddresses = await getAddressesJson()
 
     // Retrieve the onchain data containing market data + total supplies
-    const onchainDatas = await this.fetchGlobalDataChainview(markets)
+    const onchainDatas = await this.fetchGlobalDataChainview(
+      markets,
+      usgAddresses,
+      pegKeepers.map((k) => ({ keeper: k.address, lp: k.lp_address })),
+      wStables.map((w) => w.address)
+    )
 
     const now = new Date(Number(onchainDatas.timestamp) * 1000)
 
-    const marketsData = await this.fetchAndFormatMarketData(markets, onchainDatas.marketData, now)
-    const totalSupplies = await this.fetchAndFormatTotalSupplies(onchainDatas.usgInfo, now)
+    // Fetch from DefiLlama prices of ERC20 tokens distributed in the underlying protocols
+    const prices = await defiLLamaFetchPrices(rewardTokens.map((a) => a.address))
 
-    return { marketsData, totalSupplies, now }
+    const {
+      formattedData: marketsData,
+      marketsTotalDeposited,
+      marketsTotalBorrowed,
+    } = await this.fetchAndFormatMarketData(markets, onchainDatas.marketData, now, prices)
+
+    // Total Supplies of USG & sUSG
+    const totalSupplies = await this.fetchAndFormatTotalSupplies(onchainDatas.usgInfo, now)
+    const tvlsUSG = Number(formatEther(onchainDatas.usgInfo.usgStakedOnSgUsd)) * Number(formatEther(onchainDatas.usgInfo.UsgPrice))
+
+    // PegKeepers TVL computation
+    const { keepersSnapshot, keepersTVL } = this.computationTVLPegKeepers(
+      onchainDatas.keepersData,
+      pegKeepers,
+      now,
+      onchainDatas.usgInfo.UsgPrice,
+      usgAddresses.tokens.USG,
+      prices
+    )
+
+    // WStable TVL computation
+    const { wStableSnapshot, wStablesTVL } = this.computationTVLWStables(onchainDatas.wStablesData, wStables, now, prices)
+
+    const usgGlobalInfos: Prisma.usg_global_historyCreateInput = {
+      date: now,
+      tvl_markets: marketsTotalDeposited,
+      tvl_susg: tvlsUSG,
+      tvl_peg_keepers: keepersTVL,
+      tvl_wstables: wStablesTVL,
+      total_debt: marketsTotalBorrowed,
+      total_tvl: marketsTotalDeposited + tvlsUSG + keepersTVL + wStablesTVL,
+    }
+
+    await this.insertOrUpdateGlobalData(marketsData, totalSupplies, keepersSnapshot, wStableSnapshot, usgGlobalInfos, now)
+
+    return { marketsData, totalSupplies, keepersSnapshot, wStableSnapshot, usgGlobalInfos }
+  }
+
+  private async insertOrUpdateGlobalData(
+    marketsData: Prisma.market_global_dataUncheckedCreateInput[],
+    totalSupplies: Prisma.total_suppliesCreateManyInput[],
+    keepersData: Prisma.peg_keeper_historyCreateManyInput[],
+    wStablesData: Prisma.wrapped_stable_historyCreateManyInput[],
+    globalData: Prisma.usg_global_historyCreateInput,
+    now: Date
+  ) {
+    const NEW_ROWS_FREQUENCY = 10_000
+
+    // MARKETS DATA
+    const lastUpdateTimeMarkets = await this.globalDataRepository.fetchLastExecutionTime()
+    if (lastUpdateTimeMarkets && lastUpdateTimeMarkets.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
+      await this.globalDataRepository.updateRows(marketsData, lastUpdateTimeMarkets)
+    } else {
+      await this.globalDataRepository.insertRows(marketsData)
+    }
+    await this.globalDataRepository.wipeAndInsertLatestDataRows(marketsData)
+
+    // TOTAL SUPPLIES DATA
+    const lastUpdateTimeTotalSupplies = await this.totalSupplyRepository.fetchLastExecutionTime()
+    if (lastUpdateTimeTotalSupplies && lastUpdateTimeTotalSupplies.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
+      await this.totalSupplyRepository.updateRows(totalSupplies, lastUpdateTimeTotalSupplies)
+    } else {
+      await this.totalSupplyRepository.insertRows(totalSupplies)
+    }
+
+    // PEG KEEPERS TVL
+    const lastUpdateTimeKeepers = await this.pegKeeperRepository.fetchLastExecutionTime()
+    if (lastUpdateTimeKeepers && lastUpdateTimeKeepers.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
+      await this.pegKeeperRepository.updatePegKeepersHistory(keepersData, lastUpdateTimeKeepers)
+    } else {
+      await this.pegKeeperRepository.insertNewPegKeepersHistory(keepersData)
+    }
+
+    // WSTABLES TVL
+
+    const lastUpdateTimeWStables = await this.wStableRepository.fetchLastExecutionTime()
+    if (lastUpdateTimeWStables && lastUpdateTimeWStables.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
+      await this.wStableRepository.updateWStablesHistory(wStablesData, lastUpdateTimeWStables)
+    } else {
+      await this.wStableRepository.insertNewWStablesHistory(wStablesData)
+    }
+
+    // GLOBAL HISTORY DATA
+    const lastUpdateTimeGlobalRepositoryData = await this.globalHistoryDataRepository.fetchLastExecutionTime()
+    if (lastUpdateTimeGlobalRepositoryData && lastUpdateTimeGlobalRepositoryData.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
+      await this.globalHistoryDataRepository.updateGlobalHistory([globalData], lastUpdateTimeGlobalRepositoryData)
+    } else {
+      await this.globalHistoryDataRepository.insertNewGlobalHistory([globalData])
+    }
+  }
+
+  private computationTVLWStables(wStablesData: WStableData[], wStables: Prisma.wrapped_stableCreateManyInput[], now: Date, prices: Prices) {
+    // Retrieve WStableIDS
+
+    let wStablesTVL = 0
+    const wStableSnapshot: Prisma.wrapped_stable_historyCreateManyInput[] = []
+    wStablesData.forEach((w) => {
+      const wStableID = wStables.find((ww) => ww.address.toLowerCase() === w.wStable.toLowerCase())?.id!
+      const priceInfo = prices[w.stable.toLowerCase()]
+      const totalSupply = Number(formatUnits(w.totalSupply, priceInfo.decimals))
+      const totalValue = totalSupply * priceInfo.price
+
+      wStablesTVL += totalValue
+      wStableSnapshot.push({ wrapped_stable_id: wStableID, date: now, total_supply: totalSupply, total_value: totalValue })
+    })
+
+    return { wStableSnapshot, wStablesTVL }
+  }
+
+  private computationTVLPegKeepers(
+    keepersData: KeeperData[],
+    keepers: Prisma.peg_keeperCreateManyInput[],
+    now: Date,
+    usgPrice: bigint,
+    usgAddress: string,
+    prices: Prices
+  ) {
+    let keepersTVL = 0
+    const keepersSnapshot: Prisma.peg_keeper_historyCreateManyInput[] = []
+    keepersData.forEach((k) => {
+      const keeperId = keepers.find((kk) => kk.address.toLowerCase() === k.keeper.toLowerCase())?.id!
+      const lpBalance = Number(formatEther(k.lpBalance))
+      const pUSG = Number(formatEther(usgPrice))
+
+      const p0 = k.coin0.toLowerCase() === usgAddress.toLowerCase() ? pUSG : prices[k.coin0.toLowerCase()].price
+      const p1 = k.coin1.toLowerCase() === usgAddress.toLowerCase() ? pUSG : prices[k.coin1.toLowerCase()].price
+
+      const lowestP = p0 > p1 ? p1 : p0
+      const totalValue = lowestP * Number(formatEther(k.virtualPrice)) * lpBalance
+
+      keepersTVL += totalValue
+      keepersSnapshot.push({ peg_keeper_id: keeperId, balance: lpBalance, total_value: totalValue, date: now })
+    })
+
+    return { keepersSnapshot, keepersTVL }
   }
 
   //  MARKET DATA FETCHING AND FORMATTING
 
-  async fetchAndFormatMarketData(markets: Markets[], rawMarketData: TVLAprs[], now: Date) {
-    // Fetch from DefiLlama prices of ERC20 tokens distributed in the underlying protocols
-    const formattedPrices = await defiLLamaFetchPrices(rewardTokens.map((a) => a.address))
-
+  private async fetchAndFormatMarketData(markets: Markets[], rawMarketData: TVLAprs[], now: Date, formattedPrices: Prices) {
     // Fetch Curve API data
     const curveAPIData = await this.callApiService.fetchCurveApiData()
 
@@ -119,7 +289,7 @@ export class GlobalMarketDataService {
     return formattedMarketData
   }
 
-  async fetchAndFormatTotalSupplies(usgInfos: USGInfoOut, now: Date) {
+  private async fetchAndFormatTotalSupplies(usgInfos: USGInfoOut, now: Date) {
     const totalSupplyUSG = usgInfos.circulatingUsg
     const totalSupplysUSG = usgInfos.sUsgSupply
 
@@ -127,7 +297,7 @@ export class GlobalMarketDataService {
     const usgRow = usgAndsUSG.find((erc20) => erc20.name === "USG Tangent")!
     const sUsgRow = usgAndsUSG.find((erc20) => erc20.name === "sUSG Tangent")!
 
-    const totalSupplies: Prisma.total_suppliesUncheckedCreateInput[] = [
+    const totalSupplies: Prisma.total_suppliesCreateManyInput[] = [
       { token_id: usgRow?.id, timestamp: now, total_supply: totalSupplyUSG.toString() },
       { token_id: sUsgRow?.id, timestamp: now, total_supply: totalSupplysUSG.toString() },
     ]
@@ -135,28 +305,29 @@ export class GlobalMarketDataService {
     return totalSupplies
   }
 
-  async fetchGlobalDataChainview(markets: Markets[]) {
-    const addresses = await getAddressesJson()
-
+  private async fetchGlobalDataChainview(markets: Markets[], usgAddresses: AddressesJson, keepersIn: KeeperIn[], wStables: string[]) {
     const marketParams = markets.map((market) => {
       return [market.contract_address, market.contract_type]
     })
 
     // Retrieve the onchain data containing everything
     const globalData = (
-      await chainView<[(string | number)[][], string, string, string, string, string[], string, string], USGIndexingGlobalDataOut[]>(
+      await chainView<[(string | number)[][], USGContractsIn, KeeperIn[], string[]], USGIndexingGlobalDataOut[]>(
         this.provider,
         GlobalDataChainview.abi,
         GlobalDataChainview.bytecode,
         [
           marketParams,
-          addresses.utilities.rewardAccumulator,
-          addresses.utilities.irCalculator,
-          addresses.tokens.USG,
-          addresses.tokens.sUSG,
-          [addresses.pegKeepers["USG-USDC"], addresses.pegKeepers["USG-wcrvUSD"]],
-          addresses.oracles.USG,
-          addresses?.utilities?.marketViewer,
+          {
+            rewardAccumulator: usgAddresses.utilities.rewardAccumulator,
+            irCalculator: usgAddresses.utilities.irCalculator,
+            usg: usgAddresses.tokens.USG,
+            sUSG: usgAddresses.tokens.sUSG,
+            usgOracle: usgAddresses.oracles.USG,
+            _marketViewer: usgAddresses.utilities.marketViewer,
+          } as USGContractsIn,
+          keepersIn,
+          wStables,
         ]
       )
     )[0]
@@ -164,24 +335,7 @@ export class GlobalMarketDataService {
     return globalData
   }
 
-  computeCurrentStreamedAPR(onchainData: TVLAprs, prices: Prices): NumMap {
-    const tvlTangent = Number(formatEther(onchainData.globalData.totalStakedUSD))
-    const actualAPRs: { [aprKey: string]: number } = {} // APY: item?.latestWeeklyApy
-    onchainData.currentAPR.forEach((streamData) => {
-      const rewardAddress = streamData.token.toLowerCase()
-      const priceInfo = prices[rewardAddress]
-      if (priceInfo) {
-        const usdPerYear = Number(formatUnits(streamData.amountPerYear, priceInfo.decimals)) * priceInfo.price
-        const key = rewardTokens.find((rewardToken) => rewardToken.address.toLowerCase() === rewardAddress.toLowerCase())!.symbol
-        actualAPRs[key] = (usdPerYear * 100) / tvlTangent
-      } else {
-        console.error(`No priceInfo for ${rewardAddress}`)
-      }
-    })
-    return actualAPRs
-  }
-
-  async getAllMarkets() {
+  private async getAllMarkets() {
     // Retrieve all markets indexed in the database
     const markets = (await this.marketContractsRepo.getContracts()).map((a) => {
       return { ...a, contract_type: APR_TYPE[a.contract_type] }
@@ -190,7 +344,7 @@ export class GlobalMarketDataService {
     return markets
   }
 
-  formatMarketData(
+  private formatMarketData(
     markets: Markets[],
     marketData: TVLAprs[],
     formattedPrices: Prices,
@@ -201,6 +355,8 @@ export class GlobalMarketDataService {
     stakeDaoAPIData: StakeDaoApiReturn,
     now: Date
   ) {
+    let marketsTotalDeposited = 0
+    let marketsTotalBorrowed = 0
     // Iterates over all markets and hydrate them with data previously fetched through a reduce
     const formattedData: Prisma.market_global_dataUncheckedCreateInput[] = markets.map((market) => {
       // Find the corresponding market in the onchain data
@@ -320,21 +476,45 @@ export class GlobalMarketDataService {
         }
       }
 
+      const tvlMarket = bigIntToNumber(aprTvlData.globalData.totalStakedUSD, 18)
+      const totalDebt = bigIntToNumber(aprTvlData.globalData.totalDebt, 18)
+      const badDebt = bigIntToNumber(aprTvlData.globalData.badDebt, 18)
+
+      marketsTotalDeposited += tvlMarket
+      marketsTotalBorrowed += badDebt + totalDebt
+
       return {
         market_id: market.id,
         timestamp: now,
         apr_current: currentAPR,
         apr_projected: projectedAPR,
-        tvl_usd: bigIntToNumber(aprTvlData.globalData.totalStakedUSD, 18),
+        tvl_usd: tvlMarket,
         tvl_amount: bigIntToNumber(aprTvlData.globalData.totalStakedAmount, 18),
-        total_debt: bigIntToNumber(aprTvlData.globalData.totalDebt, 18),
-        bad_debt: bigIntToNumber(aprTvlData.globalData.badDebt, 18),
+        total_debt: totalDebt,
+        bad_debt: badDebt,
         oracle_price: bigIntToNumber(aprTvlData.globalData.oraclePrice, 18),
         ir_apy: (Math.exp(bigIntToNumber(aprTvlData.globalData.irApr, 18)) - 1) * 100,
         reward_cut: bigIntToNumber(aprTvlData.globalData.rewardCut, 3),
       }
     })
 
-    return formattedData
+    return { formattedData, marketsTotalDeposited, marketsTotalBorrowed }
+  }
+
+  private computeCurrentStreamedAPR(onchainData: TVLAprs, prices: Prices): NumMap {
+    const tvlTangent = Number(formatEther(onchainData.globalData.totalStakedUSD))
+    const actualAPRs: { [aprKey: string]: number } = {} // APY: item?.latestWeeklyApy
+    onchainData.currentAPR.forEach((streamData) => {
+      const rewardAddress = streamData.token.toLowerCase()
+      const priceInfo = prices[rewardAddress]
+      if (priceInfo) {
+        const usdPerYear = Number(formatUnits(streamData.amountPerYear, priceInfo.decimals)) * priceInfo.price
+        const key = rewardTokens.find((rewardToken) => rewardToken.address.toLowerCase() === rewardAddress.toLowerCase())!.symbol
+        actualAPRs[key] = (usdPerYear * 100) / tvlTangent
+      } else {
+        console.error(`No priceInfo for ${rewardAddress}`)
+      }
+    })
+    return actualAPRs
   }
 }

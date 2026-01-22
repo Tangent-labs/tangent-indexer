@@ -39,7 +39,7 @@ describe("OnchainVoteService", () => {
     createUserVoteTasksSpy = vi.spyOn(userVoteRepository as any, "createUserVoteTasks")
   })
 
-  it("Should compute and insert properly new boosts", async () => {
+  it("Should compute the proper amount of points regarding boost and voting power", async () => {
     // Mock the call to retrieve all voters per task ID to know what what to give to
     getGaugeVotersSpy.mockResolvedValue(votesFromDbPerTask)
 
@@ -57,14 +57,14 @@ describe("OnchainVoteService", () => {
     // storeEpochProposal
     expect(storeEpochProposalSpy).toBeCalledWith([
       {
-        epoch_id: "CONTROLLER_A " + dateTimestamp.toString(),
-        epoch_name: "CONTROLLER_A " + dateTimestamp.toString(),
+        epoch_id: "controller_a " + dateTimestamp.toString(),
+        epoch_name: "controller_a " + dateTimestamp.toString(),
         gauge_controller_id: 1,
         processed_at: date,
       },
       {
-        epoch_id: "CONTROLLER_B " + dateTimestamp.toString(),
-        epoch_name: "CONTROLLER_B " + dateTimestamp.toString(),
+        epoch_id: "controller_b " + dateTimestamp.toString(),
+        epoch_name: "controller_b " + dateTimestamp.toString(),
         gauge_controller_id: 2,
         processed_at: date,
       },
@@ -135,21 +135,21 @@ describe("OnchainVoteService", () => {
   })
 
   it("verifyEpochFullyFinished should success when the last epoch is passed more than 1 week", async () => {
-    const currentDate = new Date(1768577573 * 1000)
+    const currentDate = new Date("2026-01-16T16:00:00.000Z")
 
     const lastEpochDate = new Date(currentDate)
     lastEpochDate.setDate(lastEpochDate.getDate() - 8)
 
     const newEpoch = onChainVoteService.verifyEpochFullyFinished(currentDate, lastEpochDate)
 
-    expect(newEpoch.getTime()).to.be.eq(new Date("2026-01-15T14:00:00.000Z").getTime())
+    expect(newEpoch.getTime()).to.be.eq(new Date("2026-01-15T15:00:00.000Z").getTime())
   })
 
   it("verifyEpochFullyFinished should success when it's the first epoch", async () => {
-    const currentDate = new Date(1768577573 * 1000)
+    const currentDate = new Date("2026-01-15T16:00:00.000Z")
 
     const newEpoch = onChainVoteService.verifyEpochFullyFinished(currentDate, undefined)
 
-    expect(newEpoch.getTime()).to.be.eq(new Date("2026-01-15T14:00:00.000Z").getTime())
+    expect(newEpoch).to.be.eql(new Date("2026-01-15T15:00:00.000Z"))
   })
 })
