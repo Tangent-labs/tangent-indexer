@@ -132,24 +132,4 @@ export class GlobalDataRepository extends AbstractRepository {
     }
     return map
   }
-
-  async getActiveKeepers() {
-    return await this.prismaClient.peg_keeper.findMany({
-      where: {
-        is_active: {
-          equals: true,
-        },
-      },
-    })
-  }
-
-  async getActiveWStables() {
-    return await this.prismaClient.wrapped_stable.findMany({
-      where: {
-        is_active: {
-          equals: true,
-        },
-      },
-    })
-  }
 }

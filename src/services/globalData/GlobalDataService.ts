@@ -102,8 +102,8 @@ export class GlobalDataService {
   async globalDataProcess() {
     // Retrieve all markets and their associated type
     const markets = await this.getAllMarkets()
-    const pegKeepers = await this.globalDataRepository.getActiveKeepers()
-    const wStables = await this.globalDataRepository.getActiveWStables()
+    const pegKeepers = await this.pegKeeperRepository.getActiveKeepers()
+    const wStables = await this.wStableRepository.getActiveWStables()
     const usgAddresses = await getAddressesJson()
 
     // Retrieve the onchain data containing market data + total supplies

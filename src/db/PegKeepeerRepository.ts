@@ -2,7 +2,7 @@ import { AbstractRepository } from "./AbstractRepository.js"
 import { Prisma } from "@prisma/client"
 
 export class PegKeeperRepository extends AbstractRepository {
-  async getAllActivePegKeepers() {
+  async getActiveKeepers() {
     return await this.prismaClient.peg_keeper.findMany({
       where: {
         is_active: {

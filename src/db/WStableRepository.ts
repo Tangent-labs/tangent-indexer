@@ -2,7 +2,7 @@ import { AbstractRepository } from "./AbstractRepository.js"
 import { Prisma } from "@prisma/client"
 
 export class WStableRepository extends AbstractRepository {
-  async getAllActiveWStables() {
+  async getActiveWStables() {
     return await this.prismaClient.wrapped_stable.findMany({
       where: {
         is_active: {
