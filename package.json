@@ -5,7 +5,6 @@
   "description": "Will index data in a DB when some event",
   "main": "index.ts",
   "scripts": {
-    "fast": "npm run db:truncate & npm run db:empty-queue & npm run tangent:indexer-block  & npm run tangent:indexer-block & npm run tangent:indexer-block & npm run tangent:indexer-block",
     "tangent:reset-liquidation-test": "npm run db:truncate & npm run tangent:indexer-block & npm run tangent:check-liquidation",
     "tangent:indexer-block": "tsx src/scripts/index_block.ts",
     "tangent:indexer-points-lp": "tsx src/scripts/index_points_lp.ts",
@@ -14,6 +13,7 @@
     "tangent:snapshot-prices": "tsx src/scripts/snapshot_prices.ts",
     "tangent:liquidation-check": "tsx src/scripts/liquidation_check.ts",
     "tangent:liquidation-process": "tsx src/scripts/liquidation_process.ts",
+    "tangent:liquidation-analyse-onchain-data": "tsx src/scripts/analyze_onchain_data.ts 39571",
     "tangent:onchain_tx_bot": "tsx src/scripts/onchain_tx_bot.ts",
     "tangent:update-price-source-registry": "tsx src/scripts/update_price_source_registry.ts",
     "tangent:send-points-execution-summary": "tsx src/scripts/send_points_execution_summary.ts",
@@ -32,11 +32,8 @@
     "db:mock-db-data": "tsx src/scripts/db-mock/_index.ts",
     "db:actualize-views": "tsx src/scripts/actualize-views.ts",
     "build": "node src/utils/build.js",
-<<<<<<< HEAD
     "dev:liquidation:fast": "npm run db:truncate & npm run db:empty-queue & npm run db:seed-db &  npm run tangent:indexer-block  & npm run tangent:indexer-block & npm run tangent:indexer-block & npm run tangent:indexer-block",
-=======
     "extract:markets-from-log": "tsx src/scripts/utils/extract_markets_from_log.ts",
->>>>>>> e098620 (feat: progressive slippage retry strategy for liquidations)
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "lint": "eslint . --ignore-pattern dist/",

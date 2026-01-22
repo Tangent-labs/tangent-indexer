@@ -1,6 +1,8 @@
 import { formatUnits } from "ethers"
 import { PrismaClient } from "@prisma/client"
 import * as dotenv from "dotenv"
+import * as fs from "fs"
+import * as path from "path"
 
 dotenv.config()
 
@@ -94,6 +96,26 @@ function formatLTV(value: bigint): string {
 
 const DENOMINATOR = 100000n // From the codebase
 
+/**
+ * Load market address to collatName mapping from addresses.json
+ */
+function loadMarketCollatNameMap(): Map<string, string> {
+  const addressesPath = path.join(process.cwd(), "addresses.json")
+  const addressesData = JSON.parse(fs.readFileSync(addressesPath, "utf-8"))
+  const marketMap = new Map<string, string>()
+
+  if (addressesData.markets && Array.isArray(addressesData.markets)) {
+    for (const market of addressesData.markets) {
+      if (market.marketAddress && market.collatName) {
+        // Use lowercase for case-insensitive matching
+        marketMap.set(market.marketAddress.toLowerCase(), market.collatName)
+      }
+    }
+  }
+
+  return marketMap
+}
+
 function analyzeOnchainData(jsonData: OnchainData): void {
   console.log("\n" + "=".repeat(120))
   console.log("                              ANALYSE DES DONNÉES ONCHAIN")
@@ -102,6 +124,9 @@ function analyzeOnchainData(jsonData: OnchainData): void {
   // Parse data
   const markets = parseCSV<MarketData>(jsonData.data.markets)
   const accounts = parseCSV<AccountData>(jsonData.data.accounts)
+
+  // Load market to collatName mapping
+  const marketCollatNameMap = loadMarketCollatNameMap()
 
   // Context info
   console.log("\n📋 CONTEXTE")
@@ -114,10 +139,12 @@ function analyzeOnchainData(jsonData: OnchainData): void {
 
   // Markets table
   console.log("\n\n📊 MARCHÉS (" + markets.length + " marchés)")
-  console.log("-".repeat(120))
+  console.log("-".repeat(150))
   console.log(
     "| " +
       "Market".padEnd(14) +
+      " | " +
+      "Collat Name".padEnd(20) +
       " | " +
       "Collat Token".padEnd(14) +
       " | " +
@@ -128,13 +155,16 @@ function analyzeOnchainData(jsonData: OnchainData): void {
       "Collat USD Price".padEnd(18) +
       " |"
   )
-  console.log("|" + "-".repeat(16) + "|" + "-".repeat(16) + "|" + "-".repeat(10) + "|" + "-".repeat(16) + "|" + "-".repeat(20) + "|")
+  console.log("|" + "-".repeat(16) + "|" + "-".repeat(22) + "|" + "-".repeat(16) + "|" + "-".repeat(10) + "|" + "-".repeat(16) + "|" + "-".repeat(20) + "|")
 
   for (const market of markets) {
     const price = formatBigNumber(market.collateralUSDPrice, market.oracleDecimals)
+    const collatName = marketCollatNameMap.get(market.market.toLowerCase()) || "N/A"
     console.log(
       "| " +
         formatAddress(market.market).padEnd(14) +
+        " | " +
+        collatName.padEnd(20) +
         " | " +
         formatAddress(market.collatToken).padEnd(14) +
         " | " +
@@ -163,10 +193,12 @@ function analyzeOnchainData(jsonData: OnchainData): void {
   }
 
   console.log("\n\n👤 COMPTES / POSITIONS (" + uniqueAccounts.size + " positions uniques)")
-  console.log("-".repeat(160))
+  console.log("-".repeat(180))
   console.log(
     "| " +
       "Market".padEnd(14) +
+      " | " +
+      "Collat Name".padEnd(20) +
       " | " +
       "LTV".padEnd(10) +
       " | " +
@@ -184,6 +216,8 @@ function analyzeOnchainData(jsonData: OnchainData): void {
   console.log(
     "|" +
       "-".repeat(16) +
+      "|" +
+      "-".repeat(22) +
       "|" +
       "-".repeat(12) +
       "|" +
@@ -203,6 +237,7 @@ function analyzeOnchainData(jsonData: OnchainData): void {
     // Calculate LTV: (userDebt * DENOMINATOR) / positionValue
     const ltv = account.positionValue === 0n ? 0n : (account.userDebt * DENOMINATOR) / account.positionValue
     const liquidationThreshold = BigInt(marketThresholds.get(account.market) || 0)
+    const collatName = marketCollatNameMap.get(account.market.toLowerCase()) || "N/A"
 
     // Status logic from LiquidationService.ts:
     // - Seizable: userDebt >= positionValue (bad debt)
@@ -217,6 +252,8 @@ function analyzeOnchainData(jsonData: OnchainData): void {
     console.log(
       "| " +
         formatAddress(account.market).padEnd(14) +
+        " | " +
+        collatName.padEnd(20) +
         " | " +
         formatLTV(ltv).padEnd(10) +
         " | " +

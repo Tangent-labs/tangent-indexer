@@ -25,12 +25,10 @@ import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
 import { BlockRepository } from "../db/BlockRepository.js"
 import { LiquidationBotLogService } from "./LiquidationBotLogService.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"
-import { getAddressesJson } from "src/utils/jsonReader.js"
 import { parseEthersError } from "../utils/errorParser.js"
 import { indexerConfig } from "src/config/indexer_config.js"
 import { getBestRpcProvider } from "../utils/getBestRpcProvider.js"
-
-const successRoutes = successRoutesJson as unknown as SuccessRoutes
+import { RouterService } from "./RouterService.js"
 
 const DENOMINATOR = 100_000n
 

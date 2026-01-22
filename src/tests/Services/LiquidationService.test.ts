@@ -15,6 +15,7 @@ import {
 import { BlockRepository } from "../../../src/db/BlockRepository.js"
 import { LiquidationExecutionContext } from "../../../src/services/LiquidationExecutionContext.js"
 import * as getBestRpcProviderModule from "../../../src/utils/getBestRpcProvider.js"
+import { RouterService } from "src/services/RouterService.js"
 
 // Mock ethers module - this needs to be before any imports that use it
 // We need to mock Wallet and Contract constructors
