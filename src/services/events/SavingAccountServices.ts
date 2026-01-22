@@ -1,9 +1,10 @@
 import { Prisma } from "@prisma/client"
 
-import { MarketGlobalDataRepository } from "../../db/MarketGlobalDataRepository.js"
+import { GlobalDataRepository } from "../../db/GlobalDataRepository.js"
 import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
 import { formatEther } from "ethers"
 import { ProcessReportEvent } from "../../eventFectcher/savingAccountEventFetcher.js"
+import { ONE_WEEK_IN_SECONDS } from "@tangent/defi-resources/build/utils/durations.js"
 
 export class SavingAccountServices {
   savingAccountRepository: SavingAccountRepository
@@ -30,7 +31,7 @@ export class SavingAccountServices {
     await this.savingAccountRepository.saveEvents(processReportEvents)
   }
 
-  async processSavingAccountApy(globalDataRepository: MarketGlobalDataRepository, nowBC: Date, sTanAddress: string, sUSGAddress: string): Promise<void> {
+  async processSavingAccountApy(globalDataRepository: GlobalDataRepository, nowBC: Date, sTanAddress: string, sUSGAddress: string): Promise<void> {
     if (!globalDataRepository) {
       throw new Error("SavingAccount: Missing globalDataRepository")
     }
@@ -57,8 +58,7 @@ export class SavingAccountServices {
       throw new Error("SavingAccount: Missing indicator in  global_indicators")
     }
     // get the last APY date  or an old date if no data .
-
-    const sevenDaysAgo = new Date(nowBC.getTime() - 7 * 24 * 60 * 60 * 1000)
+    const sevenDaysAgo = new Date(nowBC.getTime() - ONE_WEEK_IN_SECONDS * 1000)
 
     // find process_report events that occur after trhe last check date
     const processReportEvents = await this.savingAccountRepository.findEventsAfterDate(sevenDaysAgo)

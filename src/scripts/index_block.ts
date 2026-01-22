@@ -27,6 +27,7 @@ import { indexerConfig } from "../config/indexer_config.js"
 import { getAddressesJson } from "../utils/jsonReader.js"
 import { SavingAccountRepository } from "../db/SavingAccountRepository.js"
 import { SavingAccountServices } from "../services/events/SavingAccountServices.js"
+import { TelegramNotifierService } from "src/services/TelegramNotificationServices.js"
 
 dotenv.config()
 
@@ -34,6 +35,7 @@ async function main() {
   const { providers, handleError } = setUpIndexer()
   const {
     prismaClient,
+    telegramNotifierService,
     userMarketService,
     userPointsService,
     marketCreationService,
@@ -133,8 +135,8 @@ async function main() {
       console.log("Nothing to index, Current block:", actualBlock)
     }
   } catch (e: any) {
-    console.error("Error while indexing blocks", (e as Error).message)
-    handleError(e as Error)
+    await telegramNotifierService.sendError(`Error on indexer-block ${e}`)
+    handleError(e)
   }
 }
 
@@ -174,9 +176,16 @@ async function setUpIndexerBlockServices() {
   const voteEnventService = new VotesEventService(userPointsVoteRepository)
   const savingAccountService = new SavingAccountServices(savingAccountRepository)
 
+  const telegramNotifierService = new TelegramNotifierService({
+    botToken: process.env.TELEGRAM_BOT_TOKEN!,
+    chatId: process.env.TELEGRAM_CHAT_ID!,
+  })
+
+
   return {
     prismaClient,
     marketCreationService,
+    telegramNotifierService,
     userEventsRepository,
     userMarketService,
     userPointsService,

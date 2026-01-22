@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client"
 import { AbstractRepository } from "./AbstractRepository.js"
 
-export class MarketGlobalDataRepository extends AbstractRepository {
+export class GlobalDataRepository extends AbstractRepository {
   async fetchLastExecutionTime() {
     const lastUpdate = await this.prismaClient.market_global_data.findFirst({
       orderBy: [
@@ -132,4 +132,26 @@ export class MarketGlobalDataRepository extends AbstractRepository {
     }
     return map
   }
+
+
+  async getActiveKeepers() {
+    return await this.prismaClient.peg_keeper.findMany({
+      where: {
+        is_active: {
+          equals: true
+        }
+      }
+    })
+  }
+
+  async getActiveWStables() {
+    return await this.prismaClient.wrapped_stable.findMany({
+      where: {
+        is_active: {
+          equals: true
+        }
+      }
+    })
+  }
+
 }

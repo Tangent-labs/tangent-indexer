@@ -2,9 +2,9 @@ import { PrismaClient } from "@prisma/client"
 import * as dotenv from "dotenv"
 import { JsonRpcProvider } from "ethers"
 
-import { MarketGlobalDataRepository } from "../db/MarketGlobalDataRepository.js"
+import { GlobalDataRepository } from "../db/GlobalDataRepository.js"
 import { TotalSupplyRepository } from "../db/TotalSupplyRepository.js"
-import { GlobalMarketDataService } from "../services/globalData/GlobalMarketDataService.js"
+import { GlobalDataService } from "../services/globalData/GlobalDataService.js"
 import { CallApiService } from "../services/CallApiService.js"
 import { TransactionPrisma } from "../type/prisma.js"
 import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
@@ -18,7 +18,7 @@ dotenv.config()
 const NEW_ROWS_FREQUENCY = 900_000
 
 async function main() {
-  const { prismaClient, setTransaction, globalDataService, marketGlobalDataRepo, totalSupplyRepo, savingAccountService } = setUpIndexerGlobalData()
+  const { prismaClient, setTransaction, globalDataService, globalDataRepository, totalSupplyRepo, savingAccountService } = setUpIndexerGlobalData()
 
   let nowBC = new Date()
 
@@ -26,20 +26,19 @@ async function main() {
     .$transaction(
       async (dbTransaction: TransactionPrisma) => {
         setTransaction(dbTransaction)
-
-        const { marketsData, totalSupplies, now } = await globalDataService.computeAprTvlsAndTotalSupplies()
-        nowBC = now
-        const lastUpdateTimeMarkets = await marketGlobalDataRepo.fetchLastExecutionTime()
+        const { marketsData, totalSupplies, keepersSnapshot, wStableSnapshot, usgGlobalInfos } = await globalDataService.computeAprTvlsAndTotalSupplies()
+        const nowBC = new Date(usgGlobalInfos.date)
+        const lastUpdateTimeMarkets = await globalDataRepository.fetchLastExecutionTime()
         const lastUpdateTimeTotalSupplies = await totalSupplyRepo.fetchLastExecutionTime()
 
-        if (lastUpdateTimeMarkets && lastUpdateTimeMarkets.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
-          await marketGlobalDataRepo.updateRows(marketsData, lastUpdateTimeMarkets)
+        if (lastUpdateTimeMarkets && lastUpdateTimeMarkets.getTime() + NEW_ROWS_FREQUENCY > nowBC.getTime()) {
+          await globalDataRepository.updateRows(marketsData, lastUpdateTimeMarkets)
         } else {
-          await marketGlobalDataRepo.insertRows(marketsData)
+          await globalDataRepository.insertRows(marketsData)
         }
-        await marketGlobalDataRepo.wipeAndInsertLatestDataRows(marketsData)
+        await globalDataRepository.wipeAndInsertLatestDataRows(marketsData)
 
-        if (lastUpdateTimeTotalSupplies && lastUpdateTimeTotalSupplies.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
+        if (lastUpdateTimeTotalSupplies && lastUpdateTimeTotalSupplies.getTime() + NEW_ROWS_FREQUENCY > nowBC.getTime()) {
           await totalSupplyRepo.updateRows(totalSupplies, lastUpdateTimeTotalSupplies)
         } else {
           await totalSupplyRepo.insertRows(totalSupplies)
@@ -49,7 +48,7 @@ async function main() {
         timeout: 10_000_000,
       }
     )
-    .then((_) => {})
+    .then((_) => { })
     .catch((e) => {
       console.error(e)
     })
@@ -61,13 +60,13 @@ async function main() {
         const {
           tokens: { sTAN, sUSG },
         } = await getAddressesJson()
-        await savingAccountService.processSavingAccountApy(marketGlobalDataRepo, nowBC, sTAN, sUSG)
+        await savingAccountService.processSavingAccountApy(globalDataRepository, nowBC, sTAN, sUSG)
       },
       {
         timeout: 10_000_000,
       }
     )
-    .then((_) => {})
+    .then((_) => { })
     .catch((e) => {
       console.error(e)
     })
@@ -82,19 +81,19 @@ function setUpIndexerGlobalData() {
   const provider = new JsonRpcProvider(chainRpcs.split(",")[0])
   const marketContractsRepository = new MarketContractsRepository(prismaClient)
   const erc20Repository = new ERC20Repository(prismaClient)
-  const marketGlobalDataRepo = new MarketGlobalDataRepository(prismaClient)
+  const globalDataRepository = new GlobalDataRepository(prismaClient)
   const savingAccountRepository = new SavingAccountRepository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
     erc20Repository.setClient(dbTransaction)
     marketContractsRepository.setClient(dbTransaction)
-    marketGlobalDataRepo.setClient(dbTransaction)
+    globalDataRepository.setClient(dbTransaction)
     totalSupplyRepo.setClient(dbTransaction)
     savingAccountRepository.setClient(dbTransaction)
   }
 
   const callApiService = new CallApiService()
-  const globalDataService = new GlobalMarketDataService(provider, callApiService, erc20Repository, marketContractsRepository)
+  const globalDataService = new GlobalDataService(provider, callApiService, erc20Repository, globalDataRepository, marketContractsRepository)
   const totalSupplyRepo = new TotalSupplyRepository(prismaClient)
   const savingAccountService = new SavingAccountServices(savingAccountRepository)
   return {
@@ -102,7 +101,7 @@ function setUpIndexerGlobalData() {
     globalDataService,
     savingAccountService,
     totalSupplyRepo,
-    marketGlobalDataRepo,
+    globalDataRepository,
     setTransaction,
   }
 }
