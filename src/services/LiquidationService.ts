@@ -47,7 +47,6 @@ export class LiquidationService {
   transactionFilePath: string = "./src/data/transactions.json"
   minEthBalance: number = 0.1
   routerService: RouterService
-  errorLogFilePath: string = "./liquidation_errors.log"
   // Map to track pending transactions per wallet for sequential processing
 
   constructor(
@@ -60,51 +59,6 @@ export class LiquidationService {
     this.context = context
     this.routerService = routerService
     this.liquidationBotService = LiquidationBotService
-  }
-
-  /**
-   * Logs liquidation errors to a file with detailed information
-   * @param account The account being liquidated
-   * @param error The error that occurred
-   * @param isSplitTransaction Whether this is a split transaction (multiple estimations)
-   * @param estimationIndex The index of the estimation in the split (if applicable)
-   * @param totalEstimations Total number of estimations (for split transactions)
-   * @param nbAttempt Number of attempts made for this liquidation
-   * @param additionalInfo Additional information to log
-   */
-  private logErrorToFile(
-    account: LiquidationUserFullInfo,
-    error: Error,
-    isSplitTransaction: boolean,
-    estimationIndex: number | undefined,
-    totalEstimations: number | undefined,
-    nbAttempt: number | undefined,
-    additionalInfo?: any
-  ) {
-    try {
-      const timestamp = new Date().toISOString()
-      const errorEntry = {
-        timestamp,
-        isSplitTransaction,
-        estimationIndex: isSplitTransaction ? estimationIndex : undefined,
-        totalEstimations: isSplitTransaction ? totalEstimations : undefined,
-        nbAttempt,
-        account: account.account as string,
-        market: account.market as string,
-        collateralToken: account.collatToken as string,
-        errorMessage: error.message,
-        errorName: error.name,
-        errorCode: (error as any).code,
-        errorStack: error.stack,
-        ...(additionalInfo && { additionalInfo }),
-      }
-
-      const logLine = JSON.stringify(errorEntry) + "\n"
-      fs.appendFileSync(this.errorLogFilePath, logLine, "utf-8")
-    } catch (logError) {
-      // Silently fail if file logging fails to avoid breaking the liquidation process
-      console.error("Failed to write error to log file:", logError)
-    }
   }
 
   async checkContext() {
@@ -402,8 +356,10 @@ export class LiquidationService {
 
     let estimations: LiquidationEstimateInfo[] = []
     try {
+      console.log("estimateLiquidation")
       estimations = await this.estimateLiquidation(signer, account, slippage, providerIndex)
     } catch (error) {
+      console.error(error)
       // Parse the error to extract more specific information
       const parsedError = parseEthersError(error as any)
       const errorMessage = parsedError.message || (error as Error)?.message || "Unknown error during liquidation estimation"
@@ -443,12 +399,6 @@ export class LiquidationService {
         }
       }
 
-      // Log error to file (not a split transaction since estimation failed)
-      this.logErrorToFile(account, enhancedError, false, undefined, undefined, nbAttempt, {
-        step: "estimateLiquidation",
-        errorData,
-      })
-
       await this.liquidationBotService?.logError(
         "liquidation_execution",
         enhancedError,
@@ -473,12 +423,6 @@ export class LiquidationService {
         message: `No route found for collateral: ${account.collatToken}`,
         market: account.market as string,
       })
-
-      // Log error to file (not a split transaction since no route found)
-      this.logErrorToFile(account, error, false, undefined, undefined, nbAttempt, {
-        step: "no_route",
-      })
-
       await this.liquidationBotService?.logError("liquidation_execution", error as Error, loggedContext, { account, step: "no_route" }, true)
       // Don't throw - route not found is a permanent failure that won't succeed on retry
       return
@@ -486,7 +430,6 @@ export class LiquidationService {
 
     let successCount = 0
     const errors: Error[] = []
-    const isSplitTransaction = estimations.length > 1
 
     for (let i = 0; i < estimations.length; i++) {
       const estimation = estimations[i]
@@ -504,16 +447,6 @@ export class LiquidationService {
           action: "liquidation_preparation",
           message: error.message.slice(0, 200),
           market: account.market as string,
-        })
-
-        // Log error to file
-        this.logErrorToFile(account, error, isSplitTransaction, i, estimations.length, nbAttempt, {
-          step: "invalid_min_amount",
-          estimation: {
-            minTgUSDOut: estimation.minTgUSDOut.toString(),
-            expectedOutput: estimation.expectedOutput.toString(),
-            slippageBps: estimation.slippageBps.toString(),
-          },
         })
 
         await this.liquidationBotService?.logError("liquidation_preparation", error, loggedContext, {
@@ -555,16 +488,6 @@ export class LiquidationService {
       } catch (error) {
         this.errors.push({ action: "liquidation_execution", message: (error as Error)?.message.slice(0, 100), market: account.market as string })
 
-        // Log error to file with split transaction information
-        this.logErrorToFile(account, error as Error, isSplitTransaction, i, estimations.length, nbAttempt, {
-          estimation: {
-            minTgUSDOut: estimation.minTgUSDOut.toString(),
-            expectedOutput: estimation.expectedOutput.toString(),
-            slippageBps: estimation.slippageBps.toString(),
-            routerCall: estimation.liquidationCall.routerCall,
-          },
-        })
-
         await this.liquidationBotService?.logError("liquidation_execution", error as Error, loggedContext, {
           account,
           estimation,
@@ -583,13 +506,6 @@ export class LiquidationService {
       const aggregatedError = new Error(errorMessage)
       aggregatedError.name = lastError.name || "LiquidationError"
       ;(aggregatedError as any).code = (lastError as any).code
-
-      // Log aggregated error to file
-      this.logErrorToFile(account, aggregatedError, isSplitTransaction, undefined, estimations.length, nbAttempt, {
-        step: "all_transactions_failed",
-        failedCount: errors.length,
-        totalCount: estimations.length,
-      })
 
       // Re-throw the error so the job is retried by the queue
       throw aggregatedError
@@ -625,16 +541,17 @@ export class LiquidationService {
 
     // Build router call data using RouterService
     const data = this.routerService.buildRouterCallData(route, account, minAmount, signerAddress, routerType, pendleData)
+    console.log("estimateTransaction", data)
 
     // Estimate gas for the liquidation transaction
     const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
     try {
-      const gasLimit = await marketContract.liquidate.estimateGas(
+      const params = [
         {
           account: account.account,
           postLiquidate: {
             collatAmountToLiquidate: MaxUint256,
-            minUsgOut: minAmount,
+            minUsgOut: 0n,
             maxUsgToBurn: MaxUint256,
             minCollatAmountToLiquidate: 0n,
             isReceiptOut: false,
@@ -642,10 +559,15 @@ export class LiquidationService {
           minCollatValueToLiquidate: 0n,
         },
         {
+          // IMPORTANT: use the router that matches `routerCall` encoding.
+          // Hardcoding the Pendle router here makes Curve routes revert with INVALID_SELECTOR during estimateGas.
           router: routerAddress,
           routerCall: data,
-        }
-      )
+        },
+      ]
+      console.log("marketContract.liquidate", params)
+
+      const gasLimit = await marketContract.liquidate.estimateGas(params[0], params[1])
 
       // Get current gas price
       const feeData = await provider.getFeeData()
@@ -692,7 +614,7 @@ export class LiquidationService {
     const provider = this.context.providers[providerIndex]
 
     // Get expected output from the best route using RouterService
-    console.log()
+
     const { route, amount, priceImpact, routerType, routerAddress, pendleData } = await this.routerService.getBestRoute(account, providerIndex)
 
     if (!route) {
@@ -764,6 +686,8 @@ export class LiquidationService {
   ): Promise<void> {
     // Deserialize the job data (convert string BigInt values back to BigInt)
     const action = this.deserializeLiquidationAction(job.data)
+
+    console.log("process  ", action)
 
     // Use provided rpcIndex or fallback to context.currentRpcIndex
     const providerIndex = rpcIndex ?? this.context.currentRpcIndex

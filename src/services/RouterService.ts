@@ -4,7 +4,6 @@ import { PENDLE_POOLS as PendlePools } from "@tangent/defi-resources"
 import ICurveRouterAbi from "../abis/ICurveRouter.json" with { type: "json" }
 import PendlePTRouterAbi from "../abis/PendlePTRouter.json" with { type: "json" }
 import QuotesCurveRouterImpactAbi from "../abis/QuotesCurveRouterImpact.json" with { type: "json" }
-import QuoteTokenToPTAbi from "../abis/QuoteTokenToPT.json" with { type: "json" }
 import QuotePTToTokenAbi from "../abis/QuotePTToToken.json" with { type: "json" }
 import successRoutesJson from "../../finalRoutes.json" with { type: "json" }
 
@@ -18,16 +17,16 @@ import {
   PendlePTToSYQuote,
   QuotePTToTokenOut,
   QuotePTToTokenParams,
-  QuoteTokenToPTParams,
   RouteEvaluationResult,
   RouterType,
   SuccessRoutes,
 } from "../type/data.js"
+import { console } from "inspector"
 
 const successRoutes = successRoutesJson as unknown as SuccessRoutes
 
 // Default addresses for empty pool slots
-const ZERO_POOLS: [string, string, string, string, string] = [ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress]
+const ZERO_POOLS: string[] = [ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress]
 
 /**
  * RouterService handles routing logic for liquidations
@@ -171,7 +170,7 @@ export class RouterService {
       _route: route.params.routeAddresses,
       _swap_params: route.params.swapParamsFull,
       _amount: info.collateralBalance,
-      _pools: ZERO_POOLS as unknown as string[],
+      _pools: ZERO_POOLS,
     }))
 
     const quotes = (
@@ -281,7 +280,7 @@ export class RouterService {
   private async _getBestPendleRoute(info: LiquidationUserFullInfo, rpcIndex: number = 0): Promise<RouteEvaluationResult & { pendleData: PendlePTToSYQuote }> {
     const ptAddress = (info.collatToken as string).toLowerCase()
     const pendlePool = this._getPendlePoolForPT(ptAddress)
-
+    console.log("_getBestPendleRoute", { pendlePool })
     if (!pendlePool) {
       console.error("No Pendle pool found for PT:", info.collatToken)
       return { route: null, amount: 0n, priceImpact: 0, pendleData: {} as PendlePTToSYQuote }
@@ -289,6 +288,8 @@ export class RouterService {
 
     // For PT → Token (liquidation), we use UNDERLYING_OUT
     const underlyings = pendlePool.UNDERLYING_OUT
+
+    console.log("_getBestPendleRoute", { underlyings })
     if (!underlyings || underlyings.length === 0) {
       console.error("No underlying tokens configured for PT:", info.collatToken)
       return { route: null, amount: 0n, priceImpact: 0, pendleData: {} as PendlePTToSYQuote }
@@ -302,7 +303,7 @@ export class RouterService {
       const underlyingLower = underlying.toLowerCase()
       // Find Curve routes from this underlying to USG or any output
       const curveRoutesForUnderlying = successRoutes.success[underlyingLower]
-
+      console.log("_getBestPendleRoute", { curveRoutesForUnderlying })
       if (!curveRoutesForUnderlying) {
         continue
       }
@@ -310,6 +311,7 @@ export class RouterService {
       // Flatten routes for this underlying
       for (const routes of Object.values(curveRoutesForUnderlying)) {
         for (const route of routes) {
+          console.log("route", { route })
           if (route?.display) {
             const ptToSYData: PendlePTToSYQuote = {
               market: pendlePool.MARKET,
@@ -318,16 +320,16 @@ export class RouterService {
               underlyingOut: underlying,
               ptAmount: info.collateralBalance,
             }
-
+            console.log("_getBestPendleRoute", "params>push")
             params.push({
               ptToSYData,
               curveRouterData: {
                 _route: route.params.routeAddresses,
                 _swap_params: route.params.swapParamsFull,
-                _pools: ZERO_POOLS as unknown as string[],
+                _pools: ZERO_POOLS,
               },
             })
-
+            console.log("_getBestPendleRoute", "routeInfos>push")
             routeInfos.push({ underlying, route })
           }
         }
@@ -340,9 +342,20 @@ export class RouterService {
     }
 
     // Execute chainview to get quotes for all route combinations
-    const quotes = (
-      await chainView<[QuotePTToTokenParams[]], QuotePTToTokenOut[][]>(this.providers[rpcIndex], QuotePTToTokenAbi.abi, QuotePTToTokenAbi.bytecode, [params])
+    // chainView returns decoded!.args which is a tuple, so for error QuotePTToTokenError(QuotePtToTokenOut[] quotes)
+    // it returns [quotes] where quotes is QuotePtToTokenOut[]
+
+    const quotesRaw = (
+      await chainView<[QuotePTToTokenParams[]], [QuotePTToTokenOut[]]>(this.providers[rpcIndex], QuotePTToTokenAbi.abi, QuotePTToTokenAbi.bytecode, [params])
     )[0]
+
+    // Convert Result objects from ethers.js to plain JavaScript objects
+    type WithToObject<T> = T & {
+      toObject: () => T
+    }
+    const quotes: QuotePTToTokenOut[] = quotesRaw.map((quote: any) => ({
+      ...(quote as unknown as WithToObject<QuotePTToTokenOut>).toObject(),
+    }))
 
     // Find the best quote
     const optimizedIndex = quotes.reduce((maxIdx, cur, idx, arr) => (cur.quote > (arr[maxIdx]?.quote ?? 0n) ? idx : maxIdx), 0)
@@ -364,6 +377,7 @@ export class RouterService {
    */
   private _buildPendleRouterCallData(route: LiquidationRoute, pendleData: PendlePTToSYQuote, minAmountOut: bigint, receiver: string): string {
     const pendlePool = this._getPendlePoolForPT(pendleData.pt)
+    console.log("_buildPendleRouterCallData", pendlePool)
     if (!pendlePool) {
       throw new Error(`Pendle pool not found for PT: ${pendleData.pt}`)
     }
@@ -371,7 +385,7 @@ export class RouterService {
     const iface = new Interface(PendlePTRouterAbi.abi)
 
     // swapPTForToken(PendlePTToSY PTToSY, CurveRouterSwapNoAmount crvRouterData)
-    return iface.encodeFunctionData("swapPTForToken", [
+    const params = [
       {
         market: pendlePool.MARKET,
         pt: pendlePool.PT,
@@ -383,120 +397,11 @@ export class RouterService {
       {
         _route: route.params.routeAddresses,
         _swap_params: route.params.swapParamsFull,
-        _min_dy: minAmountOut,
+        _min_dy: 0n,
         _pools: ZERO_POOLS,
         _receiver: receiver,
       },
-    ])
-  }
-
-  // ============================================
-  // Token → PT Routing (for future use / zapping)
-  // ============================================
-
-  /**
-   * Get quote for Token → PT swap
-   * Used for minting PT from regular tokens
-   */
-  public async quoteTokenToPT(
-    tokenIn: string,
-    ptOut: string,
-    amount: bigint,
-    rpcIndex: number = 0
-  ): Promise<{ quote: bigint; route: LiquidationRoute | null }> {
-    const pendlePool = this._getPendlePoolForPT(ptOut)
-    if (!pendlePool) {
-      console.error("No Pendle pool found for PT:", ptOut)
-      return { quote: 0n, route: null }
-    }
-
-    const underlyings = pendlePool.UNDERLYING_IN
-    if (!underlyings || underlyings.length === 0) {
-      console.error("No underlying tokens configured for PT:", ptOut)
-      return { quote: 0n, route: null }
-    }
-
-    // Build quote parameters
-    const params: QuoteTokenToPTParams[] = []
-    const routeInfos: { underlying: string; route: LiquidationRoute }[] = []
-
-    for (const underlying of underlyings) {
-      const tokenInLower = tokenIn.toLowerCase()
-      const underlyingLower = underlying.toLowerCase()
-
-      // Find Curve routes from tokenIn to underlying
-      const curveRoutes = successRoutes.success[tokenInLower]?.[underlyingLower] || []
-
-      for (const route of curveRoutes) {
-        if (route?.display) {
-          const syToPTData = {
-            market: pendlePool.MARKET,
-            pt: pendlePool.PT,
-            sy: pendlePool.SY,
-            underlyingIn: underlying,
-            tokenInAmount: amount,
-          }
-
-          params.push({
-            curveRouterData: {
-              _route: route.params.routeAddresses,
-              _swap_params: route.params.swapParamsFull,
-              _amount: amount,
-              _pools: ZERO_POOLS as unknown as string[],
-            },
-            syToPTData,
-          })
-
-          routeInfos.push({ underlying, route })
-        }
-      }
-    }
-
-    if (params.length === 0) {
-      return { quote: 0n, route: null }
-    }
-
-    // Execute chainview to get quotes
-    const quotes = (
-      await chainView<[QuoteTokenToPTParams[]], bigint[][]>(this.providers[rpcIndex], QuoteTokenToPTAbi.abi, QuoteTokenToPTAbi.bytecode, [params])
-    )[0]
-
-    // Find the best quote
-    const optimizedIndex = quotes.reduce((maxIdx, cur, idx, arr) => (cur > (arr[maxIdx] ?? 0n) ? idx : maxIdx), 0)
-
-    return {
-      quote: quotes[optimizedIndex],
-      route: routeInfos[optimizedIndex].route,
-    }
-  }
-
-  /**
-   * Build Token → PT router call data
-   */
-  public buildTokenToPTCallData(route: LiquidationRoute, ptOut: string, amount: bigint, minPTOut: bigint, receiver: string, underlyingIn: string): string {
-    const pendlePool = this._getPendlePoolForPT(ptOut)
-    if (!pendlePool) {
-      throw new Error(`Pendle pool not found for PT: ${ptOut}`)
-    }
-
-    const iface = new Interface(PendlePTRouterAbi.abi)
-
-    // swapTokenForPT(CurveRouterSwapNoReceiver crvRouterData, PendleSYToPT SYToPT)
-    return iface.encodeFunctionData("swapTokenForPT", [
-      {
-        _route: route.params.routeAddresses,
-        _swap_params: route.params.swapParamsFull,
-        _amount: amount,
-        _pools: ZERO_POOLS,
-      },
-      {
-        market: pendlePool.MARKET,
-        pt: pendlePool.PT,
-        sy: pendlePool.SY,
-        underlyingIn,
-        receiver,
-        minPTOut,
-      },
-    ])
+    ]
+    return iface.encodeFunctionData("swapPTForToken", params)
   }
 }

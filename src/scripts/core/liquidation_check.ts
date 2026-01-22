@@ -18,7 +18,7 @@ import { RouterService } from "src/services/RouterService.js"
 
 dotenv.config()
 const { providers, walletsPks, handleError } = setUpIndexer()
-const { liquidationService, context, liquidationBotService, telegramNotifierService, prismaClient } = setUpCheckLiquidationServices()
+const { liquidationService, context, liquidationBotService, telegramNotifierService, prismaClient } = await setUpCheckLiquidationServices()
 
 // Run main function if this file is being run directly
 if (process.env.NODE_ENV !== "test") {
@@ -48,7 +48,8 @@ if (process.env.NODE_ENV !== "test") {
     })
 }
 
-export function setUpCheckLiquidationServices() {
+export async function setUpCheckLiquidationServices() {
+  const addresses = await getAddressesJson()
   const prismaClient = new PrismaClient()
 
   const context = new LiquidationExecutionContext()
@@ -61,7 +62,7 @@ export function setUpCheckLiquidationServices() {
   const liquidationBotLogRepository = new LiquidationBotLogRepository(prismaClient)
   const liquidationBotService = new LiquidationBotLogService(liquidationBotLogRepository, telegramNotifierService)
 
-  const routerService = new RouterService(providers, routers.CURVE_V1_2_ROUTER, routers.PENDLE_ROUTER_V4)
+  const routerService = new RouterService(providers, routers.CURVE_V1_2_ROUTER, addresses.utilities.pendlePTRouter)
 
   const liquidationService = new LiquidationService(new ActiveBorrowersRepository(prismaClient), context, routerService, liquidationBotService)
   liquidationService.minEthBalance = indexerConfig.minEthBalance
