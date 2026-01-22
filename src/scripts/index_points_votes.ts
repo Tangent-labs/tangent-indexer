@@ -36,7 +36,6 @@ async function main() {
         timeout: 10_000_000,
       }
     )
-
   } catch (e: any) {
     console.error("Error while indexing blocks", (e as Error).message)
     handleError(e as Error)

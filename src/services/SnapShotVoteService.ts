@@ -256,7 +256,6 @@ export class SnapShotVoteService {
         // Computation of the full vote weight
         const totalWeight = Object.values(choices).reduce((acc, start) => acc + start, 0)
 
-
         // Iteration over all scoring choices
         for (const scoringChoice of proposal.scoringChoices) {
           // For each scoring choice, check if it exist in the choice from snapshot

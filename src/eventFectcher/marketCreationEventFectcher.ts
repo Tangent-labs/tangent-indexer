@@ -73,6 +73,7 @@ const parseMarketEvent = async (log: Log, provider: JsonRpcProvider): Promise<Pr
 
   return {
     contract_name: name,
+    is_active: true,
     contract_address: marketAddress.toLowerCase(),
     contract_type: type,
     collateral_address: await marketContract.collatToken(),
