@@ -103,7 +103,6 @@ export class CheckLiquidationService {
 
       currentAction = "liquidation_execution"
 
-      console.log({ prioritizedLiquidationList })
       // Double-check that we have items to process before adding to queue
       if (!prioritizedLiquidationList || prioritizedLiquidationList.length === 0) {
         await this.liquidationBotService.logEndExecution(this.context)
