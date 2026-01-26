@@ -191,6 +191,9 @@ export class UserPointsService {
 
   insertEvents = async (transferEvents: Prisma.transfer_eventsCreateManyInput[], addLiquidityEvents: Prisma.add_liquidity_eventsCreateManyInput[]) => {
     await this.userPointsRepository.insertTransfers(transferEvents)
+
+    console.log("addLiquidityEvents : ", addLiquidityEvents)
+
     await this.userPointsRepository.insertAddLiquidity(addLiquidityEvents)
   }
 
@@ -243,12 +246,17 @@ export class UserPointsService {
         // We can so retrieve it this way
         const mintEvent = parseTransferEvent(logs[i - 1])
 
+        console.log("usgLpKeys : ", usgLpKeys)
+        console.log("log.address : ", log.address)
+
         // Find the ID of the USG lp to link
         const lpId = BigInt(usgLpKeys.find((usgLp) => usgLp.lp_address === log.address.toLowerCase())!.id!)
         addLiquidityEvents.push(parseAddLiquidity(log, lpId, mintEvent.amount))
         uniqueBlockId.add(log.blockNumber)
       }
     })
+
+    console.log("addLiquidityEvents : ", addLiquidityEvents)
 
     return { addLiquidityEvents, addLiquEventsBlockIds: Array.from(uniqueBlockId) }
   }
