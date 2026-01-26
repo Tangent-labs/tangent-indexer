@@ -29,7 +29,14 @@ export type LiquidationMarketAccountOutInfo = {
 }
 
 export type LiquidationUserInfo = LiquidationAccountOutInfo & LiquidationUserInInfo
-export type LiquidationUserFullInfo = LiquidationUserInfo & { collatToken: AddressLike }
+export type LiquidationUserFullInfo = LiquidationUserInfo & {
+  collatToken: AddressLike
+  // Market info from LiquidationMarketOutInfo
+  maxLTV?: bigint
+  liquidationThreshold?: bigint
+  collateralUSDPrice?: bigint
+  oracleDecimals?: bigint
+}
 
 /**
  * Serialized version of LiquidationUserFullInfo for queue storage (BigInt as strings)

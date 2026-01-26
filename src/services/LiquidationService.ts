@@ -297,6 +297,42 @@ export class LiquidationService {
   }
 
   /**
+   * Calculates the minimum collateral value to liquidate based on oracle price with protection percentage.
+   * This protects against executing liquidations when the oracle price drops drastically.
+   *
+   * Formula: minCollatValueToLiquidate = (collateralBalance * collateralUSDPrice * (10000 - protectionBps)) / (10^oracleDecimals * 10000)
+   *
+   * Example: If oracle is at $1, with 1.5% protection (150 bps), the minimum value is 98.5% of the oracle price.
+   *
+   * @param account The liquidation account with collateral balance and market price info
+   * @returns The minimum collateral value to liquidate in USD (with 18 decimals)
+   */
+  private calculateMinCollatValueToLiquidate(account: LiquidationUserFullInfo): bigint {
+    const bpsDenominator = 10_000n
+    const protectionBps = BigInt(indexerConfig.liquidationLimits.oraclePriceProtectionBps)
+    const protectionMultiplier = bpsDenominator - protectionBps // e.g., 10000 - 150 = 9850 for 1.5% protection
+
+    // Get collateral USD price (required for calculation)
+    if (!account.collateralUSDPrice || !account.oracleDecimals) {
+      throw new Error(`collateralUSDPrice or oracleDecimals is missing for account ${account.account} on market ${account.market}`)
+    }
+
+    // Get oracle decimals (default to 18 if not available)
+    // Ensure oracleDecimals is converted to number for exponentiation
+    const oracleDecimalsNumber = typeof account.oracleDecimals === "bigint" ? Number(account.oracleDecimals) : Number(account.oracleDecimals)
+    // Calculate 10^oracleDecimals as number then convert to BigInt to avoid TypeScript type issues
+    const oracleDecimalsDivisor = BigInt(10 ** oracleDecimalsNumber)
+
+    // Ensure BigInt values are properly converted (account may come from JSON with string values)
+    const collateralBalanceBigInt = BigInt(account.collateralBalance)
+    const collateralUSDPriceBigInt = BigInt(account.collateralUSDPrice || 0)
+
+    // Calculate: (collateralBalance * collateralUSDPrice * protectionMultiplier) / (oracleDecimalsDivisor * bpsDenominator)
+    // This gives the minimum collateral value in USD
+    return (collateralBalanceBigInt * collateralUSDPriceBigInt * protectionMultiplier) / (oracleDecimalsDivisor * bpsDenominator)
+  }
+
+  /**
    * Executes a single seizing of collateral for a given market and account
    * @param signer The wallet signer
    * @param account The account/market address to liquidate
@@ -352,9 +388,18 @@ export class LiquidationService {
 
     const slippage = 50n + (10n * slippageModifierBps) / 10000n
 
+    // Ensure BigInt values are properly converted (account may come from JSON with string values)
+    const normalizedAccount: LiquidationUserFullInfo = {
+      ...account,
+      collateralBalance: BigInt(account.collateralBalance),
+      positionValue: BigInt(account.positionValue),
+      userDebt: BigInt(account.userDebt),
+      healthRatio: BigInt(account.healthRatio),
+    }
+
     let estimations: LiquidationEstimateInfo[] = []
     try {
-      estimations = await this.estimateLiquidation(signer, account, slippage, providerIndex)
+      estimations = await this.estimateLiquidation(signer, normalizedAccount, slippage, providerIndex)
     } catch (error) {
       console.error(error)
       // Parse the error to extract more specific information
@@ -364,7 +409,7 @@ export class LiquidationService {
       this.errors.push({
         action: "liquidation_execution",
         message: errorMessage.slice(0, 200), // Increased limit for better context
-        market: account.market as string,
+        market: normalizedAccount.market as string,
       })
 
       // Create an enhanced error object with parsed information
@@ -412,15 +457,15 @@ export class LiquidationService {
     }
 
     if (!estimations?.length) {
-      const error = new Error(`No route found for collat :  ${account.collatToken} `)
+      const error = new Error(`No route found for collat :  ${normalizedAccount.collatToken} `)
       ;(error as any).code = "NO_ROUTE"
 
       this.errors.push({
         action: "liquidation_execution",
-        message: `No route found for collateral: ${account.collatToken}`,
-        market: account.market as string,
+        message: `No route found for collateral: ${normalizedAccount.collatToken}`,
+        market: normalizedAccount.market as string,
       })
-      await this.liquidationBotService?.logError("liquidation_execution", error as Error, loggedContext, { account, step: "no_route" }, true)
+      await this.liquidationBotService?.logError("liquidation_execution", error as Error, loggedContext, { account: normalizedAccount, step: "no_route" }, true)
       // Don't throw - route not found is a permanent failure that won't succeed on retry
       return
     }
@@ -443,11 +488,11 @@ export class LiquidationService {
         this.errors.push({
           action: "liquidation_preparation",
           message: error.message.slice(0, 200),
-          market: account.market as string,
+          market: normalizedAccount.market as string,
         })
 
         await this.liquidationBotService?.logError("liquidation_preparation", error, loggedContext, {
-          account,
+          account: normalizedAccount,
           estimation,
           step: "invalid_min_amount",
         })
@@ -457,7 +502,9 @@ export class LiquidationService {
 
       try {
         const currentNonce = await provider.getTransactionCount(signerAddress, "pending")
-        const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
+        const marketContract = new Contract(normalizedAccount.market as Addressable, MarketExternalActionsAbi.abi, signer)
+
+        const minCollatValueToLiquidate = this.calculateMinCollatValueToLiquidate(normalizedAccount)
 
         const tx = await marketContract.liquidate(
           {
@@ -466,10 +513,10 @@ export class LiquidationService {
               collatAmountToLiquidate: estimation.collatToLiquidate,
               minUsgOut: minAmount,
               maxUsgToBurn: MaxUint256,
-              minCollatAmountToLiquidate: 0n,
+              minCollatAmountToLiquidate: normalizedAccount.collateralBalance,
               isReceiptOut: false,
             },
-            minCollatValueToLiquidate: 0n,
+            minCollatValueToLiquidate,
           },
           {
             router: estimation.liquidationCall.routerAddress,
@@ -480,13 +527,13 @@ export class LiquidationService {
           }
         )
         await tx.wait() // Wait for the transaction to be mined
-        await this.liquidationBotService?.logLiquidationExecution(account, loggedContext)
+        await this.liquidationBotService?.logLiquidationExecution(normalizedAccount, loggedContext)
         successCount++
       } catch (error) {
-        this.errors.push({ action: "liquidation_execution", message: (error as Error)?.message.slice(0, 100), market: account.market as string })
+        this.errors.push({ action: "liquidation_execution", message: (error as Error)?.message.slice(0, 100), market: normalizedAccount.market as string })
 
         await this.liquidationBotService?.logError("liquidation_execution", error as Error, loggedContext, {
-          account,
+          account: normalizedAccount,
           estimation,
           error,
           step: "liquidate",
@@ -524,35 +571,53 @@ export class LiquidationService {
     const minAmount = quote - (quote * slippageBps) / 10000n
 
     // Validate that minAmount is positive
+    // This should not happen if quote validation in estimateLiquidation worked correctly
     if (minAmount <= 0n) {
       throw new Error(`Invalid minAmount calculated: ${minAmount.toString()}. Quote: ${quote.toString()}, SlippageBps: ${slippageBps.toString()}`)
     }
 
+    // Ensure BigInt values are properly converted (account may come from JSON with string values)
+    const collateralBalanceBigInt = BigInt(account.collateralBalance)
+    const positionValueBigInt = BigInt(account.positionValue)
+    const userDebtBigInt = BigInt(account.userDebt)
+    const healthRatioBigInt = BigInt(account.healthRatio)
+
     // Validate collateral balance and position value are positive
-    if (account.collateralBalance <= 0n) {
-      throw new Error(`Invalid collateralBalance: ${account.collateralBalance.toString()}`)
+    if (collateralBalanceBigInt <= 0n) {
+      throw new Error(`Invalid collateralBalance: ${collateralBalanceBigInt.toString()}`)
     }
-    if (account.positionValue <= 0n) {
-      throw new Error(`Invalid positionValue: ${account.positionValue.toString()}`)
+    if (positionValueBigInt <= 0n) {
+      throw new Error(`Invalid positionValue: ${positionValueBigInt.toString()}`)
+    }
+
+    // Create normalized account with BigInt values for use in RouterService
+    const normalizedAccount: LiquidationUserFullInfo = {
+      ...account,
+      collateralBalance: collateralBalanceBigInt,
+      positionValue: positionValueBigInt,
+      userDebt: userDebtBigInt,
+      healthRatio: healthRatioBigInt,
     }
 
     // Build router call data using RouterService
-    const data = this.routerService.buildRouterCallData(route, account, minAmount, signerAddress, routerType, pendleData)
+    const data = this.routerService.buildRouterCallData(route, normalizedAccount, minAmount, signerAddress, routerType, pendleData)
 
     // Estimate gas for the liquidation transaction
-    const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
+    const marketContract = new Contract(normalizedAccount.market as Addressable, MarketExternalActionsAbi.abi, signer)
     try {
+      const minCollatValueToLiquidate = this.calculateMinCollatValueToLiquidate(normalizedAccount)
+
       const params = [
         {
           account: account.account,
           postLiquidate: {
             collatAmountToLiquidate: MaxUint256,
-            minUsgOut: 0n,
+            minUsgOut: minAmount,
             maxUsgToBurn: MaxUint256,
-            minCollatAmountToLiquidate: 0n,
+            minCollatAmountToLiquidate: collateralBalanceBigInt,
             isReceiptOut: false,
           },
-          minCollatValueToLiquidate: 0n,
+          minCollatValueToLiquidate,
         },
         {
           // IMPORTANT: use the router that matches `routerCall` encoding.
@@ -566,14 +631,17 @@ export class LiquidationService {
 
       // Get current gas price
       const feeData = await provider.getFeeData()
-      const gasPrice = feeData.gasPrice || feeData.maxFeePerGas || 0n
-      const gasCostWei = gasLimit * gasPrice
+      // Ensure gasPrice is always BigInt - handle null values explicitly
+      const gasPrice = feeData.gasPrice ?? feeData.maxFeePerGas ?? 0n
+      // Ensure gasLimit is BigInt (should already be, but be explicit)
+      const gasLimitBigInt = BigInt(gasLimit || 0)
+      const gasCostWei = gasLimitBigInt * gasPrice
       const gasCostEth = Number(formatEther(gasCostWei))
 
-      const grossProfit = quote - account.userDebt
+      const grossProfit = quote - normalizedAccount.userDebt
 
       return {
-        account: account.account,
+        account: normalizedAccount.account,
         collatToLiquidate: MaxUint256,
         minTgUSDOut: minAmount,
         liquidationCall: {
@@ -616,6 +684,11 @@ export class LiquidationService {
       throw new Error(`No route found for collateral: ${account.collatToken}`)
     }
 
+    // Validate that the route quote is positive (non-zero)
+    if (!amount || amount <= 0n) {
+      throw new Error(`Invalid route quote: ${amount.toString()}. Route found but quote is zero or negative for collateral: ${account.collatToken}`)
+    }
+
     // For Curve routes with high price impact, try to split the liquidation
     // Note: Split routes are only supported for Curve, not Pendle
     if (routerType === "curve" && priceImpact > indexerConfig.liquidationLimits.maxPriceImpact) {
@@ -625,7 +698,7 @@ export class LiquidationService {
           route1: { route: route1, info: info1, amount: amount1 },
           route2: { route: route2, info: info2, amount: amount2 },
           amountTotal: splittedAmountTotal,
-        } = splittedRoutes
+        } = splittedRoutes || {}
         // is splitted profitable
         if (splittedAmountTotal > amount) {
           return [

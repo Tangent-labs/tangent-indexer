@@ -1185,6 +1185,83 @@
           "display": "USG* >> USG-USDC* >> USDC >> WBTC/ETH/USDC >> ETH >> OETH/ETH >> OETH >> msETH/OETH >> msETH/OETH"
         }
       ],
+      "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x56E6200931d9CA3a22af86D8BDB75Eace1255f3c",
+              "0x0011b54a34Bbd67367a65A33e9B5DB254A19b484",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> USDC/USDT >> USDC/USDT"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x56E6200931d9CA3a22af86D8BDB75Eace1255f3c",
+              "0x57a1ef037E0A5eEbADdE1A6d38A07Dc614f8213f",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-frxUSD* >> frxUSD >> crvUSD/frxUSD >> crvUSD >> USDC/crvUSD >> USDC >> USDC/USDT >> USDC/USDT"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x56E6200931d9CA3a22af86D8BDB75Eace1255f3c",
+              "0x57a1ef037E0A5eEbADdE1A6d38A07Dc614f8213f",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [1, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-frxUSD* >> frxUSD >> crvUSD/frxUSD >> crvUSD >> USDT/crvUSD >> USDT >> USDC/USDT >> USDC/USDT"
+        }
+      ],
       "0x1202f5c7b4b9e47a1a484e8b270be34dbbc75055": [
         {
           "params": {
@@ -2422,6 +2499,85 @@
             ]
           },
           "display": "msETH/OETH >> msETH/OETH >> OETH >> OETH/ETH >> ETH >> WBTC/ETH/USDC >> USDC >> USG-USDC* >> USG*"
+        }
+      ]
+    },
+    "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85": {
+      "0x56e6200931d9ca3a22af86d8bdb75eace1255f3c": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x0011b54a34Bbd67367a65A33e9B5DB254A19b484",
+              "0x56E6200931d9CA3a22af86D8BDB75Eace1255f3c",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDC/USDT >> USDC/USDT >> USDC >> USG-USDC* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0x57a1ef037E0A5eEbADdE1A6d38A07Dc614f8213f",
+              "0x56E6200931d9CA3a22af86D8BDB75Eace1255f3c",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDC/USDT >> USDC/USDT >> USDC >> USDC/crvUSD >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7",
+              "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0x57a1ef037E0A5eEbADdE1A6d38A07Dc614f8213f",
+              "0x56E6200931d9CA3a22af86D8BDB75Eace1255f3c",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDC/USDT >> USDC/USDT >> USDT >> USDT/crvUSD >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG*"
         }
       ]
     },
