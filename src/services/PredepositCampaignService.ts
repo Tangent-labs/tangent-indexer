@@ -6,7 +6,8 @@ import PredepositCampaignSnapshot from "../abis/PredepositCampaignSnapshot.json"
 import { BlockRepository } from "../db/BlockRepository.js"
 import { AccountedTotal, GetAccountedBalances, PredepositCampaignRepository } from "../db/PredepositCampaignRepository.js"
 import { chainView } from "../utils/chainView.js"
-import { getAddressesJson } from "../utils/jsonReader.js"
+// import { getAddressesJson } from "../utils/jsonReader.js"
+import { CURVE_LPS } from "@tangent/defi-resources"
 
 export class PredepositCampaignService {
   predepositRepository: PredepositCampaignRepository
@@ -222,12 +223,15 @@ export class PredepositCampaignService {
    */
   async decreaseAccountedAmounts(isPrivate: boolean, now: Date) {
     const users = await this.getAccountedUsers(isPrivate)
-    const addresses = await getAddressesJson()
+    // const addresses = await getAddressesJson()
 
     const { totalAccountedToDelete, totalAccountedToInsert, accountedBalancesToDelete, accountedBalancesToInsert } = await this.compareDbAndSnapshots(
       users,
       // TODO We need to add the addresses of Curve Gauge, StakeVault, ConvexRewardToken
-      (await this.getOnchainSnapshot(users, [addresses.lps["USG-USDC"]], [addresses.lps["USG-frxUSD"]]))[0],
+      // (await this.getOnchainSnapshot(users, [addresses.lps["USG-USDC"]], [addresses.lps["USG-frxUSD"]]))[0],
+
+      (await this.getOnchainSnapshot(users, [CURVE_LPS.crvUSD_USDC], [CURVE_LPS.crvUSD_USDC]))[0],
+
       await this.predepositRepository.getAllAccountedBalances(),
       await this.predepositRepository.getAccountedTotal()
     )
