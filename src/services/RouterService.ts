@@ -280,7 +280,6 @@ export class RouterService {
   private async _getBestPendleRoute(info: LiquidationUserFullInfo, rpcIndex: number = 0): Promise<RouteEvaluationResult & { pendleData: PendlePTToSYQuote }> {
     const ptAddress = (info.collatToken as string).toLowerCase()
     const pendlePool = this._getPendlePoolForPT(ptAddress)
-    console.log("_getBestPendleRoute", { pendlePool })
     if (!pendlePool) {
       console.error("No Pendle pool found for PT:", info.collatToken)
       return { route: null, amount: 0n, priceImpact: 0, pendleData: {} as PendlePTToSYQuote }
@@ -288,8 +287,6 @@ export class RouterService {
 
     // For PT → Token (liquidation), we use UNDERLYING_OUT
     const underlyings = pendlePool.UNDERLYING_OUT
-
-    console.log("_getBestPendleRoute", { underlyings })
     if (!underlyings || underlyings.length === 0) {
       console.error("No underlying tokens configured for PT:", info.collatToken)
       return { route: null, amount: 0n, priceImpact: 0, pendleData: {} as PendlePTToSYQuote }
@@ -303,7 +300,6 @@ export class RouterService {
       const underlyingLower = underlying.toLowerCase()
       // Find Curve routes from this underlying to USG or any output
       const curveRoutesForUnderlying = successRoutes.success[underlyingLower]
-      console.log("_getBestPendleRoute", { curveRoutesForUnderlying })
       if (!curveRoutesForUnderlying) {
         continue
       }
@@ -311,7 +307,6 @@ export class RouterService {
       // Flatten routes for this underlying
       for (const routes of Object.values(curveRoutesForUnderlying)) {
         for (const route of routes) {
-          console.log("route", { route })
           if (route?.display) {
             const ptToSYData: PendlePTToSYQuote = {
               market: pendlePool.MARKET,
@@ -320,7 +315,6 @@ export class RouterService {
               underlyingOut: underlying,
               ptAmount: info.collateralBalance,
             }
-            console.log("_getBestPendleRoute", "params>push")
             params.push({
               ptToSYData,
               curveRouterData: {
@@ -329,7 +323,7 @@ export class RouterService {
                 _pools: ZERO_POOLS,
               },
             })
-            console.log("_getBestPendleRoute", "routeInfos>push")
+
             routeInfos.push({ underlying, route })
           }
         }
@@ -377,7 +371,6 @@ export class RouterService {
    */
   private _buildPendleRouterCallData(route: LiquidationRoute, pendleData: PendlePTToSYQuote, minAmountOut: bigint, receiver: string): string {
     const pendlePool = this._getPendlePoolForPT(pendleData.pt)
-    console.log("_buildPendleRouterCallData", pendlePool)
     if (!pendlePool) {
       throw new Error(`Pendle pool not found for PT: ${pendleData.pt}`)
     }

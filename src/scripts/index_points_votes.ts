@@ -29,6 +29,7 @@ async function main() {
         // Retrieve the last block
         const now = await onChainVoteService.computeUserVoteTasks(bestProvider)
         const newEpochDate = onChainVoteService.verifyEpochFullyFinished(now, lastEpochDate)
+        /** @ts-ignore */
         await snapShotVoteService.computeUserVoteTasks(newEpochDate)
         await blockRepository.storeVotesPointsBlock(now, newEpochDate)
       },

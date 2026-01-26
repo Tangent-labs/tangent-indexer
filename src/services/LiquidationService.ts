@@ -354,7 +354,6 @@ export class LiquidationService {
 
     let estimations: LiquidationEstimateInfo[] = []
     try {
-      console.log("estimateLiquidation")
       estimations = await this.estimateLiquidation(signer, account, slippage, providerIndex)
     } catch (error) {
       console.error(error)
@@ -539,7 +538,6 @@ export class LiquidationService {
 
     // Build router call data using RouterService
     const data = this.routerService.buildRouterCallData(route, account, minAmount, signerAddress, routerType, pendleData)
-    console.log("estimateTransaction", data)
 
     // Estimate gas for the liquidation transaction
     const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
@@ -563,7 +561,6 @@ export class LiquidationService {
           routerCall: data,
         },
       ]
-      console.log("marketContract.liquidate", params)
 
       const gasLimit = await marketContract.liquidate.estimateGas(params[0], params[1])
 
@@ -684,8 +681,6 @@ export class LiquidationService {
   ): Promise<void> {
     // Deserialize the job data (convert string BigInt values back to BigInt)
     const action = this.deserializeLiquidationAction(job.data)
-
-    console.log("process  ", action)
 
     // Use provided rpcIndex or fallback to context.currentRpcIndex
     const providerIndex = rpcIndex ?? this.context.currentRpcIndex
