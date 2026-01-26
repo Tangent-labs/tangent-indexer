@@ -1,9 +1,9 @@
 import { PrismaClient } from "@prisma/client"
-import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
-import { PriceRepository } from "../db/Points/PriceRepository.js"
+import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
+import { PriceRepository } from "../../db/Points/PriceRepository.js"
 import { JsonRpcProvider } from "ethers"
-import { PricePointService } from "../services/PricePointService.js"
-import { getAddressesJson } from "../utils/jsonReader.js"
+import { PricePointService } from "../../services/PricePointService.js"
+import { getAddressesJson } from "../../utils/jsonReader.js"
 
 async function Main() {
   const prismaClient = new PrismaClient()

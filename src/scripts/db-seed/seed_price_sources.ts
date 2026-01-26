@@ -1,4 +1,4 @@
-import { commonERC20, PENDLE_POOLS } from "@tangent/defi-resources"
+import { COMMON_ERC20S, PENDLE_POOLS } from "@tangent/defi-resources"
 import { AddressesJson, PriceSourceCreate } from "../../type/data.js"
 import { TransactionPrisma } from "../../type/prisma.js"
 
@@ -28,7 +28,7 @@ function PRICE_SOURCES(addresses: AddressesJson): PriceSourceCreate[] {
     {
       name: "LLAMALEND_sDOLA_crvUSD",
       type: "ERC4626",
-      reference: commonERC20.crvUSD,
+      reference: COMMON_ERC20S.crvUSD,
       address: CURVE_CONTEXT.LLAMALEND_sDOLA_crvUSD.curveLp,
     },
     {

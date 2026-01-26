@@ -3,18 +3,18 @@ import * as dotenv from "dotenv"
 import { Queue, Worker, type Job } from "bullmq"
 import { Wallet, formatEther, parseEther } from "ethers"
 
-import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository.js"
-import { LiquidationBotLogRepository } from "../db/LiquidationBotLogRepository.js"
+import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
+import { LiquidationBotLogRepository } from "../../db/LiquidationBotLogRepository.js"
 
-import { LiquidationService } from "../services/LiquidationService.js"
-import { LiquidationBotLogService } from "../services/LiquidationBotLogService.js"
+import { LiquidationService } from "../../services/LiquidationService.js"
+import { LiquidationBotLogService } from "../../services/LiquidationBotLogService.js"
 
-import { indexerConfig } from "../config/indexer_config.js"
-import { LiquidationExecutionContext } from "../services/LiquidationExecutionContext.js"
-import { setUpIndexer } from "../config/indexer_setup.js"
-import { TelegramNotifierService } from "../services/TelegramNotificationServices.js"
+import { indexerConfig } from "../../config/indexer_config.js"
+import { LiquidationExecutionContext } from "../../services/LiquidationExecutionContext.js"
+import { setUpIndexer } from "../../config/indexer_setup.js"
+import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { routers } from "@tangent/defi-resources"
-import { SerializedLiquidationUserFullInfo } from "../type/data.js"
+import { SerializedLiquidationUserFullInfo } from "../../type/data.js"
 
 dotenv.config()
 

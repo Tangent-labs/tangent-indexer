@@ -1,17 +1,17 @@
 import { PrismaClient } from "@prisma/client"
 import * as dotenv from "dotenv"
 
-import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository.js"
-import { LiquidationBotLogRepository } from "../db/LiquidationBotLogRepository.js"
+import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
+import { LiquidationBotLogRepository } from "../../db/LiquidationBotLogRepository.js"
 
-import { LiquidationService } from "../services/LiquidationService.js"
-import { LiquidationBotLogService } from "../services/LiquidationBotLogService.js"
-import { CheckLiquidationService } from "../services/LiquidationCheckService.js"
+import { LiquidationService } from "../../services/LiquidationService.js"
+import { LiquidationBotLogService } from "../../services/LiquidationBotLogService.js"
+import { CheckLiquidationService } from "../../services/LiquidationCheckService.js"
 
-import { indexerConfig } from "../config/indexer_config.js"
-import { LiquidationExecutionContext } from "../services/LiquidationExecutionContext.js"
-import { setUpIndexer } from "../config/indexer_setup.js"
-import { TelegramNotifierService } from "../services/TelegramNotificationServices.js"
+import { indexerConfig } from "../../config/indexer_config.js"
+import { LiquidationExecutionContext } from "../../services/LiquidationExecutionContext.js"
+import { setUpIndexer } from "../../config/indexer_setup.js"
+import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { routers } from "@tangent/defi-resources"
 
 dotenv.config()

@@ -18,7 +18,7 @@ import {
   providers,
   context,
   telegramNotifierService,
-} from "../../scripts/liquidation_process.js"
+} from "../../scripts/core/liquidation_process.js"
 
 const DECIMALS = BigInt(10 ** 18)
 
