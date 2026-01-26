@@ -12,7 +12,7 @@ import { setUpIndexer } from "../../config/indexer_setup.js"
 import { BlockService } from "../../services/BlockService.js"
 import { SnapShotVoteService } from "../../services/SnapShotVoteService.js"
 import { OnChainVoteService } from "../../services/OnChainVoteService.js"
-import { TelegramNotifierService } from "src/services/TelegramNotificationServices.js"
+import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 
 dotenv.config()
 

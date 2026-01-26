@@ -15,7 +15,7 @@ import { getAddressesJson } from "../../utils/jsonReader.js"
 import { PegKeeperRepository } from "../../db/PegKeepeerRepository.js"
 import { WStableRepository } from "../../db/WStableRepository.js"
 import { GlobalHistoryDataRepository } from "../../db/GlobalHistoryDataRepository.js"
-import { TelegramNotifierService } from "src/services/TelegramNotificationServices.js"
+import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 
 dotenv.config()
 
