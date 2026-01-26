@@ -2,24 +2,25 @@ import { PrismaClient } from "@prisma/client"
 import * as dotenv from "dotenv"
 import { JsonRpcProvider } from "ethers"
 
-import { GlobalDataRepository } from "../db/GlobalDataRepository.js"
-import { TotalSupplyRepository } from "../db/TotalSupplyRepository.js"
-import { GlobalDataService } from "../services/globalData/GlobalDataService.js"
-import { CallApiService } from "../services/CallApiService.js"
-import { TransactionPrisma } from "../type/prisma.js"
-import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
-import { ERC20Repository } from "../db/ERC20Repository.js"
-import { SavingAccountRepository } from "../db/SavingAccountRepository.js"
-import { SavingAccountServices } from "../services/events/SavingAccountServices.js"
-import { getAddressesJson } from "../utils/jsonReader.js"
-import { PegKeeperRepository } from "../db/PegKeepeerRepository.js"
-import { WStableRepository } from "../db/WStableRepository.js"
-import { GlobalHistoryDataRepository } from "../db/GlobalHistoryDataRepository.js"
+import { GlobalDataRepository } from "../../db/GlobalDataRepository.js"
+import { TotalSupplyRepository } from "../../db/TotalSupplyRepository.js"
+import { GlobalDataService } from "../../services/globalData/GlobalDataService.js"
+import { CallApiService } from "../../services/CallApiService.js"
+import { TransactionPrisma } from "../../type/prisma.js"
+import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
+import { ERC20Repository } from "../../db/ERC20Repository.js"
+import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
+import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
+import { getAddressesJson } from "../../utils/jsonReader.js"
+import { PegKeeperRepository } from "../../db/PegKeepeerRepository.js"
+import { WStableRepository } from "../../db/WStableRepository.js"
+import { GlobalHistoryDataRepository } from "../../db/GlobalHistoryDataRepository.js"
+import { TelegramNotifierService } from "src/services/TelegramNotificationServices.js"
 
 dotenv.config()
 
 async function main() {
-  const { prismaClient, setTransaction, globalDataService, globalDataRepository, savingAccountService } = setUpIndexerGlobalData()
+  const { prismaClient, setTransaction, globalDataService, globalDataRepository, savingAccountService, telegramNotifierService } = setUpIndexerGlobalData()
 
   const nowBC = new Date()
 
@@ -34,7 +35,8 @@ async function main() {
       }
     )
     .then((_) => {})
-    .catch((e) => {
+    .catch(async (e) => {
+      await telegramNotifierService.sendError(`Error on GLOBAL DATA PROCESS  \`\`\` ${e.toString()} \`\`\``)
       console.error(e)
     })
 
@@ -52,7 +54,9 @@ async function main() {
       }
     )
     .then((_) => {})
-    .catch((e) => {
+    .catch(async (e) => {
+      await telegramNotifierService.sendError(`Error on SAVING ACCOUNT APY  \`\`\` ${e.toString()} \`\`\``)
+
       console.error(e)
     })
 }
@@ -63,6 +67,11 @@ function setUpIndexerGlobalData() {
   if (!chainRpcs) {
     throw new Error("CHAIN_RPCS_NOT_SET")
   }
+
+  const telegramNotifierService = new TelegramNotifierService({
+    botToken: process.env.TELEGRAM_BOT_TOKEN!,
+    chatId: process.env.TELEGRAM_CHAT_ID!,
+  })
   const provider = new JsonRpcProvider(chainRpcs.split(",")[0])
   const erc20Repository = new ERC20Repository(prismaClient)
   const marketContractsRepository = new MarketContractsRepository(prismaClient)
@@ -103,6 +112,7 @@ function setUpIndexerGlobalData() {
     savingAccountService,
     totalSupplyRepo,
     globalDataRepository,
+    telegramNotifierService,
     setTransaction,
   }
 }

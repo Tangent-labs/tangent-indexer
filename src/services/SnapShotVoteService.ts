@@ -5,6 +5,7 @@ import { Prisma } from "@prisma/client"
 
 import { Proposal, ValidatedVotes } from "../type/data.js"
 import { UserPointsVoteRepository } from "../db/Points/UserPointsVoteRepository.js"
+import { ONE_WEEK_IN_SECONDS } from "@tangent/defi-resources/build/utils/durations.js"
 
 type SnapshotProposal = {
   id: string
@@ -185,8 +186,8 @@ export class SnapShotVoteService {
         query,
         variables: {
           organisationKeys,
-          start_lte: newEpoch,
-          end_gte: newEpoch - 86400 * 7,
+          start_gte: newEpoch - ONE_WEEK_IN_SECONDS,
+          end_lte: newEpoch,
           first: this.PAGE_SIZE,
           skip,
         },

@@ -1,8 +1,8 @@
-query ListProposals($organisationKeys: [String!]!, $first: Int!, $skip: Int!, $start_lte: Int!, $end_gte: Int!) {
+query ListProposals($organisationKeys: [String!]!, $first: Int!, $skip: Int!, $start_gte: Int!, $end_lte: Int!) {
   proposals(
     first: $first
     skip: $skip
-    where: { space_in: $organisationKeys, start_lte: $start_lte, end_gte: $end_gte, state: "closed" }
+    where: { space_in: $organisationKeys, start_gte: $start_gte, end_lte: $end_lte, state: "closed" }
     orderBy: "start"
     orderDirection: asc
   ) {

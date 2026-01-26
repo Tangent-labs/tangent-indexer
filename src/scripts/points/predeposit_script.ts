@@ -1,14 +1,14 @@
 import * as dotenv from "dotenv"
 import { PrismaClient } from "@prisma/client"
 
-import { TransactionPrisma } from "../type/prisma.js"
+import { TransactionPrisma } from "../../type/prisma.js"
 
-import { setUpIndexer } from "../config/indexer_setup.js"
-import { TelegramNotifierService } from "../services/TelegramNotificationServices.js"
-import { PredepositCampaignRepository } from "../db/PredepositCampaignRepository.js"
-import { PredepositCampaignService } from "../services/PredepositCampaignService.js"
-import { BlockRepository } from "../db/BlockRepository.js"
-import { getLastBlock } from "../utils/getLastBlock.js"
+import { setUpIndexer } from "../../config/indexer_setup.js"
+import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
+import { PredepositCampaignRepository } from "../../db/PredepositCampaignRepository.js"
+import { PredepositCampaignService } from "../../services/PredepositCampaignService.js"
+import { BlockRepository } from "../../db/BlockRepository.js"
+import { getLastBlock } from "../../utils/getLastBlock.js"
 
 dotenv.config()
 

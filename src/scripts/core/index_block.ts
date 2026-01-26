@@ -1,33 +1,33 @@
 import * as dotenv from "dotenv"
-import { TransactionPrisma } from "../type/prisma.js"
+import { TransactionPrisma } from "../../type/prisma.js"
 import { Prisma, PrismaClient } from "@prisma/client"
 
-import { setUpIndexer } from "../config/indexer_setup.js"
+import { setUpIndexer } from "../../config/indexer_setup.js"
 
-import { BlockRepository } from "../db/BlockRepository.js"
-import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository.js"
-import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
-import { UserEventsRepository } from "../db/UserEventsRepository.js"
-import { UserPointsLPRepository } from "../db/Points/UserPointsLPRepository.js"
-import { UserPointsVoteRepository } from "../db/Points/UserPointsVoteRepository.js"
-import { ERC20Repository } from "../db/ERC20Repository.js"
+import { BlockRepository } from "../../db/BlockRepository.js"
+import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
+import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
+import { UserEventsRepository } from "../../db/UserEventsRepository.js"
+import { UserPointsLPRepository } from "../../db/Points/UserPointsLPRepository.js"
+import { UserPointsVoteRepository } from "../../db/Points/UserPointsVoteRepository.js"
+import { ERC20Repository } from "../../db/ERC20Repository.js"
 
-import { BlockService } from "../services/BlockService.js"
-import { MarketCreationService } from "../services/events/MarketCreationService.js"
-import { UserMarketService } from "../services/events/UserMarketService.js"
-import { VotesEventService } from "../services/events/VotesEventService.js"
-import { UserPointsService } from "../services/events/UserPointsService.js"
-import { ActiveBorrowersService } from "../services/ActiveBorrowersService.js"
+import { BlockService } from "../../services/BlockService.js"
+import { MarketCreationService } from "../../services/events/MarketCreationService.js"
+import { UserMarketService } from "../../services/events/UserMarketService.js"
+import { VotesEventService } from "../../services/events/VotesEventService.js"
+import { UserPointsService } from "../../services/events/UserPointsService.js"
+import { ActiveBorrowersService } from "../../services/ActiveBorrowersService.js"
 
-import { getEthLogs } from "../eventFectcher/_baseFetcher.js"
-import { fetchTransferLogs } from "../eventFectcher/erc20TransferEventFetcher.js"
-import { getSavingAccountLogs } from "../eventFectcher/savingAccountEventFetcher.js"
+import { getEthLogs } from "../../eventFectcher/_baseFetcher.js"
+import { fetchTransferLogs } from "../../eventFectcher/erc20TransferEventFetcher.js"
+import { getSavingAccountLogs } from "../../eventFectcher/savingAccountEventFetcher.js"
 
-import { indexerConfig } from "../config/indexer_config.js"
-import { getAddressesJson } from "../utils/jsonReader.js"
-import { SavingAccountRepository } from "../db/SavingAccountRepository.js"
-import { SavingAccountServices } from "../services/events/SavingAccountServices.js"
-import { TelegramNotifierService } from "../services/TelegramNotificationServices.js"
+import { indexerConfig } from "../../config/indexer_config.js"
+import { getAddressesJson } from "../../utils/jsonReader.js"
+import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
+import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
+import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 
 dotenv.config()
 
@@ -135,7 +135,7 @@ async function main() {
       console.log("Nothing to index, Current block:", actualBlock)
     }
   } catch (e: any) {
-    await telegramNotifierService.sendError(`Error on indexer block  \`\`\` ${e.toString()} \`\`\``)
+    await telegramNotifierService.sendError(`Error on INDEXER BLOCK  \`\`\` ${e.toString()} \`\`\``)
     handleError(e)
   }
 }

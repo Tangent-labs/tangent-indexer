@@ -1,9 +1,9 @@
 import { PrismaClient } from "@prisma/client"
-import { indexerConfig } from "../config/indexer_config.js"
-import { setUpIndexer } from "../config/indexer_setup.js"
-import { BlockRepository } from "../db/BlockRepository.js"
-import { BlockService } from "../services/BlockService.js"
-import { TransactionPrisma } from "../type/prisma.js"
+import { indexerConfig } from "../../config/indexer_config.js"
+import { setUpIndexer } from "../../config/indexer_setup.js"
+import { BlockRepository } from "../../db/BlockRepository.js"
+import { BlockService } from "../../services/BlockService.js"
+import { TransactionPrisma } from "../../type/prisma.js"
 
 const closeDesactivatedTasks = async (taskIds: bigint[]) => {
   const { providers, handleError } = setUpIndexer()

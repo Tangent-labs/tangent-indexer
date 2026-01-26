@@ -1,8 +1,8 @@
 import { JsonRpcProvider, Wallet } from "ethers"
 import * as dotenv from "dotenv"
-import { getAddressesJson } from "../utils/jsonReader.js"
-import { TelegramNotifierService } from "../services/TelegramNotificationServices.js"
-import { OnchainTxBotService } from "../services/OnchainTxBotService.js"
+import { getAddressesJson } from "../../utils/jsonReader.js"
+import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
+import { OnchainTxBotService } from "../../services/OnchainTxBotService.js"
 
 dotenv.config()
 
