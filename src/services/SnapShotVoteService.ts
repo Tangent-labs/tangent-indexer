@@ -186,7 +186,7 @@ export class SnapShotVoteService {
         query,
         variables: {
           organisationKeys,
-          start_gte: newEpoch - ONE_WEEK_IN_SECONDS,
+          start_gte: newEpoch - 2 * ONE_WEEK_IN_SECONDS,
           end_lte: newEpoch,
           first: this.PAGE_SIZE,
           skip,
