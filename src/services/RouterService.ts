@@ -390,7 +390,7 @@ export class RouterService {
       {
         _route: route.params.routeAddresses,
         _swap_params: route.params.swapParamsFull,
-        _min_dy: 0n,
+        _min_dy: minAmountOut,
         _pools: ZERO_POOLS,
         _receiver: receiver,
       },
