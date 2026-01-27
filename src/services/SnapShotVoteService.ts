@@ -165,7 +165,6 @@ export class SnapShotVoteService {
         type: proposal.type || "basic",
         scoringChoices: scoringChoices.map((scoringChoice) => {
           const rewardIndex = proposal.choices.findIndex((choice) => choice.includes(scoringChoice.choice_name))
-          // console.log(scoringChoice, rewardIndex)
           return {
             ...scoringChoice,
             choiceIndex: rewardIndex + 1,

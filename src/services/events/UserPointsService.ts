@@ -4,7 +4,13 @@ import { Log, ZeroAddress } from "ethers"
 import { UserPointsLPRepository } from "../../db/Points/UserPointsLPRepository.js"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
 
-import { parseAddLiquidity, parseStakeConvexEvent, parseTransferEvent, parseWithdrawConvexEvent } from "../../eventFectcher/marketUserEvents.parsers.js"
+import {
+  parseAddLiquidity,
+  parseAddLiquidity2,
+  parseStakeConvexEvent,
+  parseTransferEvent,
+  parseWithdrawConvexEvent,
+} from "../../eventFectcher/marketUserEvents.parsers.js"
 import { BlockService } from "../BlockService.js"
 import { TRANSFER_TOPICS } from "../../eventFectcher/erc20TransferEventFetcher.js"
 import { DebtSharesCheckpointStruct } from "./UserMarketService.js"
@@ -191,9 +197,6 @@ export class UserPointsService {
 
   insertEvents = async (transferEvents: Prisma.transfer_eventsCreateManyInput[], addLiquidityEvents: Prisma.add_liquidity_eventsCreateManyInput[]) => {
     await this.userPointsRepository.insertTransfers(transferEvents)
-
-    console.log("addLiquidityEvents : ", addLiquidityEvents)
-
     await this.userPointsRepository.insertAddLiquidity(addLiquidityEvents)
   }
 
@@ -214,7 +217,7 @@ export class UserPointsService {
 
     logs.forEach((log) => {
       const logSignature = log.topics[0]
-      if (logSignature !== TRANSFER_TOPICS.AddLiquidity) {
+      if (![TRANSFER_TOPICS.AddLiquidity, TRANSFER_TOPICS.AddLiquidity2].includes(logSignature)) {
         let transferEvent: Prisma.transfer_eventsUncheckedCreateInput
         switch (logSignature) {
           case TRANSFER_TOPICS.Staked:
@@ -241,23 +244,21 @@ export class UserPointsService {
     const addLiquidityEvents: Prisma.add_liquidity_eventsCreateManyInput[] = []
 
     logs.forEach((log, i) => {
-      if (log.topics[0] === TRANSFER_TOPICS.AddLiquidity) {
+      const logTopic = log.topics[0]
+      if ([TRANSFER_TOPICS.AddLiquidity, TRANSFER_TOPICS.AddLiquidity2].includes(logTopic)) {
         // The transfer event containing the minted amount of LP is always just before the AddLiquidity event
         // We can so retrieve it this way
         const mintEvent = parseTransferEvent(logs[i - 1])
-
-        console.log("usgLpKeys : ", usgLpKeys)
-        console.log("log.address : ", log.address)
-
         // Find the ID of the USG lp to link
         const lpId = BigInt(usgLpKeys.find((usgLp) => usgLp.lp_address === log.address.toLowerCase())!.id!)
-        addLiquidityEvents.push(parseAddLiquidity(log, lpId, mintEvent.amount))
+        if (TRANSFER_TOPICS.AddLiquidity === logTopic) {
+          addLiquidityEvents.push(parseAddLiquidity(log, lpId, mintEvent.amount))
+        } else if (TRANSFER_TOPICS.AddLiquidity2 === logTopic) {
+          addLiquidityEvents.push(parseAddLiquidity2(log, lpId, mintEvent.amount))
+        }
         uniqueBlockId.add(log.blockNumber)
       }
     })
-
-    console.log("addLiquidityEvents : ", addLiquidityEvents)
-
     return { addLiquidityEvents, addLiquEventsBlockIds: Array.from(uniqueBlockId) }
   }
 

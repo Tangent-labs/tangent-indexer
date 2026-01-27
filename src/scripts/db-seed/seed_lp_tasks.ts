@@ -23,7 +23,7 @@ export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addr
   await prisma.tracked_erc20.createMany({
     data: [
       // { address: CURVE_LPS.crvUSD_USDC, name: "crvUSD_USDC", symbol: "crvUSD_USDC" },
-      { address: CURVE_LPS.DUO_crvUSD_frxUSD, name: "crvUSD_frxUSD", symbol: "crvUSD_frxUSD" },
+      { address: CURVE_LPS.DUO_crvUSD_frxUSD.toLowerCase(), name: "crvUSD_frxUSD", symbol: "crvUSD_frxUSD" },
     ],
   })
 
