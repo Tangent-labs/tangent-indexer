@@ -7,6 +7,7 @@ export const TRANSFER_TOPICS = {
   Staked: ethers.id("Staked(address,uint256)"),
   Withdrawn: ethers.id("Withdrawn(address,uint256)"),
   AddLiquidity: ethers.id("AddLiquidity(address,uint256[],uint256[],uint256,uint256)"),
+  AddLiquidity2: ethers.id("AddLiquidity(address,uint256[2],uint256[2],uint256,uint256)"),
 }
 
 // Type Definition for Market Events
