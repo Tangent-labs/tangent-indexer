@@ -152,7 +152,7 @@ export class PredepositCampaignRepository extends AbstractRepository {
       where: {
         is_private: true,
         signature: {
-          not: undefined,
+          not: null,
         },
       },
     })
@@ -169,7 +169,7 @@ export class PredepositCampaignRepository extends AbstractRepository {
       },
       where: {
         signature: {
-          not: undefined,
+          not: null,
         },
       },
     })

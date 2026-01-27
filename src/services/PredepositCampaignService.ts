@@ -7,7 +7,7 @@ import { BlockRepository } from "../db/BlockRepository.js"
 import { AccountedTotal, GetAccountedBalances, PredepositCampaignRepository } from "../db/PredepositCampaignRepository.js"
 import { chainView } from "../utils/chainView.js"
 // import { getAddressesJson } from "../utils/jsonReader.js"
-import { CURVE_LPS } from "@tangent/defi-resources"
+import { CURVE_CONTEXT, CURVE_GAUGES, CURVE_LPS, stakeDaoERC20 } from "@tangent/defi-resources"
 
 export class PredepositCampaignService {
   predepositRepository: PredepositCampaignRepository
@@ -38,7 +38,6 @@ export class PredepositCampaignService {
       return
     }
     const accountedUsers = await this.getAccountedUsers(isPrivate)
-
     // Fetch events between 2 blocks, filter the users that are shouldn't be counted and sort them by LP
     const eventMap = await this.getAndSortAddLiquidityEvents(startBlock, endBlock, accountedUsers)
 
@@ -178,20 +177,15 @@ export class PredepositCampaignService {
           rowTotalToCreate.total_lp = (totalLp + eventLp).toString()
         }
         const rowBalance = accountedBalances.find((ac) => ac.user_address === ev.provider)
-        // First time an user deposited
-        if (!rowBalance) {
-          rowsBalancesToCreate.push({ usg_lp_id: lpId, balance_lp: ev.lp_amount, user_address: ev.provider })
-        }
-        // Not the first time so we need to update the previous row
-        else {
-          // It's possible that an user is doing several AddLiquidity in the same range
-          // Need to be carefull and take in priority the corresponding entry in rowsToCreate if it exists
-          const i = rowsBalancesToCreate.findIndex((r) => r.user_address === ev.provider)
-          if (i !== -1) {
-            rowsBalancesToCreate[i].balance_lp = (BigInt(rowsBalancesToCreate[i].balance_lp) + BigInt(ev.lp_amount)).toString()
-          }
-          // First time of the range that the provider has done a AddLiquidity
-          else {
+        // It's possible that an user is doing several AddLiquidity in the same range
+        // Need to be carefull and take in priority the corresponding entry in rowsToCreate if it exists
+        const i = rowsBalancesToCreate.findIndex((r) => r.user_address === ev.provider)
+        if (i !== -1) {
+          rowsBalancesToCreate[i].balance_lp = (BigInt(rowsBalancesToCreate[i].balance_lp) + BigInt(ev.lp_amount)).toString()
+        } else {
+          if (!rowBalance) {
+            rowsBalancesToCreate.push({ usg_lp_id: lpId, balance_lp: ev.lp_amount, user_address: ev.provider })
+          } else {
             rowsBalancesToCreate.push({
               id: rowBalance.id,
               usg_lp_id: lpId,
@@ -230,7 +224,18 @@ export class PredepositCampaignService {
       // TODO We need to add the addresses of Curve Gauge, StakeVault, ConvexRewardToken
       // (await this.getOnchainSnapshot(users, [addresses.lps["USG-USDC"]], [addresses.lps["USG-frxUSD"]]))[0],
 
-      (await this.getOnchainSnapshot(users, [CURVE_LPS.crvUSD_USDC], [CURVE_LPS.crvUSD_USDC]))[0],
+      (
+        await this.getOnchainSnapshot(
+          users,
+          [CURVE_LPS.crvUSD_USDC, CURVE_GAUGES.crvUSD_USDC, stakeDaoERC20.SDT_crvUSD_USDC_VAULT, CURVE_CONTEXT.CURVE_CONTEXT.USDC_crvUSD.convexRewardToken],
+          [
+            CURVE_LPS.DUO_crvUSD_frxUSD,
+            CURVE_GAUGES.crvUSD_frxUSD,
+            stakeDaoERC20.SDT_crvUSD_frxUSD_VAULT,
+            CURVE_CONTEXT.CURVE_CONTEXT.frxUSD_crvUSD.convexRewardToken,
+          ]
+        )
+      )[0],
 
       await this.predepositRepository.getAllAccountedBalances(),
       await this.predepositRepository.getAccountedTotal()
@@ -250,23 +255,18 @@ export class PredepositCampaignService {
       const lpKey = j === 0 ? "USG-USDC" : "USG-frxUSD"
       const dbData = databaseData.filter((d) => d.usg_lp.lp_name === lpKey)
       const accountedTotal = accountedTotals[j]
+      let isTotalChanged = false
       onChainSnapshot.forEach((onChainBal, i) => {
         // Retrieve user from the input of the chainview
-        const onChainAddress = users[i]
+        const onChainAddress = users[i].toLowerCase()
         // Find in the database the data containing the merged balance from the database
         const databaseBal = dbData.find((databaseValue) => databaseValue.user_address === onChainAddress)
         // If the onchain snapshot of balances is smaller that what we have in db
         // it means the user has less LP compare to what he had through `AddLiquidity` events.
         if (databaseBal) {
           if (onChainBal < BigInt(databaseBal.balance_lp)) {
-            totalAccountedToDelete.push(accountedTotal.id)
-            totalAccountedToInsert.push({
-              id: accountedTotal.id,
-              cap_lp: accountedTotal.cap_lp,
-              total_lp: (BigInt(accountedTotal.total_lp) - (BigInt(databaseBal.balance_lp) - onChainBal)).toString(),
-              usg_lp_id: accountedTotal.usg_lp_id,
-            })
-
+            isTotalChanged = true
+            accountedTotal.total_lp = (BigInt(accountedTotal.total_lp) - (BigInt(databaseBal.balance_lp) - onChainBal)).toString()
             accountedBalancesToDelete.push(databaseBal.id)
             accountedBalancesToInsert.push({
               id: databaseBal.id,
@@ -277,8 +277,12 @@ export class PredepositCampaignService {
           }
         }
       })
+      if (isTotalChanged) {
+        const { usg_lp, ...rest } = accountedTotal
+        totalAccountedToInsert.push(rest)
+        totalAccountedToDelete.push(accountedTotal.id)
+      }
     })
-
     return {
       totalAccountedToDelete,
       totalAccountedToInsert,

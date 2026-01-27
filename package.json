@@ -6,9 +6,9 @@
   "main": "index.ts",
   "scripts": {
     "tangent:reset-liquidation-test": "npm run db:truncate && npm run tangent:indexer-block && npm run tangent:check-liquidation",
-    "tangent:indexer-block": "npm run build && node dist/core/index_block.js",
-    "tangent:indexer-points-lp": "npm run build && node dist/points/index_points_lp.js",
-    "tangent:indexer-points-votes": "npm run build && node dist/points/index_points_votes.js",
+    "tangent:indexer-block": "npm run build && node dist/scripts/core/index_block.js",
+    "tangent:indexer-points-lp": "npm run build && node dist/scripts/points/index_points_lp.js",
+    "tangent:indexer-points-votes": "npm run build && node dist/scripts/points/index_points_votes.js",
     "tangent:indexer-global-data": "npm run build && node dist/scripts/core/index_global_data.js",
     "tangent:snapshot-prices": "npm run build && node dist/scripts/points/snapshot_prices.js",
     "tangent:liquidation-check": "npm run build && node dist/scripts/core/liquidation_check.js",

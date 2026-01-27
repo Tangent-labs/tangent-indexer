@@ -42,6 +42,7 @@ async function main() {
       }
     )
   } catch (e: any) {
+    console.error(e)
     await telegramNotifierService.sendError(`Error on predepositScript : \`\`\`${e.toString()}\`\`\``)
   }
 }
