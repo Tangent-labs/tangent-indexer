@@ -250,13 +250,19 @@ export class UserPointsService {
         // We can so retrieve it this way
         const mintEvent = parseTransferEvent(logs[i - 1])
         // Find the ID of the USG lp to link
-        const lpId = BigInt(usgLpKeys.find((usgLp) => usgLp.lp_address === log.address.toLowerCase())!.id!)
-        if (TRANSFER_TOPICS.AddLiquidity === logTopic) {
-          addLiquidityEvents.push(parseAddLiquidity(log, lpId, mintEvent.amount))
-        } else if (TRANSFER_TOPICS.AddLiquidity2 === logTopic) {
-          addLiquidityEvents.push(parseAddLiquidity2(log, lpId, mintEvent.amount))
+
+        const usgKey = usgLpKeys.find((usgLp) => usgLp.lp_address?.toLowerCase() === log.address.toLowerCase())
+
+        if (usgKey) {
+          const lpId = BigInt(usgKey?.id!)
+
+          if (TRANSFER_TOPICS.AddLiquidity === logTopic) {
+            addLiquidityEvents.push(parseAddLiquidity(log, lpId, mintEvent.amount))
+          } else if (TRANSFER_TOPICS.AddLiquidity2 === logTopic) {
+            addLiquidityEvents.push(parseAddLiquidity2(log, lpId, mintEvent.amount))
+          }
+          uniqueBlockId.add(log.blockNumber)
         }
-        uniqueBlockId.add(log.blockNumber)
       }
     })
     return { addLiquidityEvents, addLiquEventsBlockIds: Array.from(uniqueBlockId) }
