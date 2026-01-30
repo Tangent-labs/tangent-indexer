@@ -423,7 +423,7 @@ export class GlobalDataService {
         else if (market.contract_type === APR_TYPE["StakeDao Vault"]) {
           if (stakeDaoAPIData?.Vault) {
             const vaultData = stakeDaoAPIData?.Vault.find((data) => {
-              const lpAddress = data.asset.address.toLowerCase()
+              const lpAddress = data?.asset?.address.toLowerCase()
               return lpAddress === collateralAddress
             })
             if (vaultData) {
