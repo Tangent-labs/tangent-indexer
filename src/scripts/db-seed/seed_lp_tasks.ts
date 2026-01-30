@@ -3,7 +3,7 @@ import { AddressesJson } from "../../type/data.js"
 import { TransactionPrisma } from "../../type/prisma.js"
 import { ZeroAddress } from "ethers"
 import { CONVEX_LOCKER } from "@tangent/defi-resources/build/ressources/contracts/convex.js"
-import { CURVE_LPS, PENDLE_POOLS } from "@tangent/defi-resources"
+import { PENDLE_POOLS } from "@tangent/defi-resources"
 import { Prisma } from "@prisma/client"
 import { LP_TASKS } from "./config/config_lp_tasks.js"
 
@@ -17,14 +17,6 @@ export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addr
         symbol: t.name + " " + t.protocol,
       }
     }),
-  })
-
-  // TEST ONLY, TO REMOVE
-  await prisma.tracked_erc20.createMany({
-    data: [
-      // { address: CURVE_LPS.crvUSD_USDC, name: "crvUSD_USDC", symbol: "crvUSD_USDC" },
-      { address: CURVE_LPS.DUO_crvUSD_frxUSD.toLowerCase(), name: "crvUSD_frxUSD", symbol: "crvUSD_frxUSD" },
-    ],
   })
 
   await prisma.lp_task.createMany({
