@@ -6,7 +6,7 @@ import PredepositCampaignSnapshot from "../abis/PredepositCampaignSnapshot.json"
 import { BlockRepository } from "../db/BlockRepository.js"
 import { AccountedTotal, GetAccountedBalances, PredepositCampaignRepository } from "../db/PredepositCampaignRepository.js"
 import { chainView } from "../utils/chainView.js"
-import { getAddressesJson } from "src/utils/jsonReader.js"
+import { getAddressesJson } from "../utils/jsonReader.js"
 
 export class PredepositCampaignService {
   predepositRepository: PredepositCampaignRepository
