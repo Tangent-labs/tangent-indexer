@@ -139,10 +139,6 @@ export class OnChainVoteService {
     return gaugeController + " " + date.toString()
   }
 
-  formatProposalId(gaugeController: string, date: Date) {
-    return gaugeController + " " + date.toString()
-  }
-
   async getOnchainData(paramInChainview: GetGaugeVotesIn[], rpcProvider: JsonRpcProvider) {
     const votingPowers = (
       await chainView<[GetGaugeVotesIn[]], [GetGaugeVotesOut]>(

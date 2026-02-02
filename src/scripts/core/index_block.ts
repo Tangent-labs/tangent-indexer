@@ -72,22 +72,19 @@ async function main() {
           await marketCreationService.runDetection(bestProvider, startBlock, endBlock)
 
           const { marketAddresses, mapMarketIdAddresses } = await marketCreationService.getMarketsAddressesAndMap()
-          let logs: Log[] = []
-          if (marketAddresses.length > 0) {
-            // Fetch all User market logs
-            logs = await getEthLogs(bestProvider, startBlock, endBlock, marketAddresses, [])
-          }
+
+          // Fetch all User market logs
+          const logs = await getEthLogs(bestProvider, startBlock, endBlock, marketAddresses, [])
 
           const transferToWatch = await userPointsService.getERC20ToTrack()
-          if (!transferToWatch?.length) {
-            throw new Error("tracked_erc20 table is empty.")
-          }
 
           await voteEnventService.runDetection(bestProvider, startBlock, endBlock)
 
           // Call fetchTransferLogs with the addresses
-
-          const transferLogs = transferToWatch?.length ? await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch) : []
+          if (!transferToWatch?.length) {
+            throw new Error("ERC20 to track is not filled")
+          }
+          const transferLogs = await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch)
 
           const savingAccountsLogs = await getSavingAccountLogs(bestProvider, startBlock, endBlock, [addresses.tokens.sUSG, addresses.tokens.sTAN])
           const savingAccountsBlockIds = savingAccountsLogs.map((log) => log.block_id)
@@ -119,14 +116,14 @@ async function main() {
 
           const addLiquidityEventsRightDates = userPointsService.replaceDates<Prisma.add_liquidity_eventsCreateManyInput>(addLiquidityEvents, blocks)
 
-          // Update active borrowers
-          await activeBorrowersService.updateActiveBorrowers(hydratedWithCorrectDates.userActions)
-
           // Insert user points actions
           await userPointsService.insertEvents(transferEventsRightDates, addLiquidityEventsRightDates)
 
           // Insert user events
           await userMarketService.insertEvents(hydratedWithCorrectDates.sortedParsedEvents)
+
+          // Update active borrowers
+          await activeBorrowersService.updateActiveBorrowers(hydratedWithCorrectDates.userActions)
 
           // Save saving account events
           await savingAccountService.saveSavingAccountEvents(savingAccountsLogs, blocks)

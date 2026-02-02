@@ -14,10 +14,10 @@ import { LiquidationExecutionContext } from "../../services/LiquidationExecution
 import { setUpIndexer } from "../../config/indexer_setup.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { routers } from "@tangent/defi-resources"
-import { SerializedLiquidationUserFullInfo } from "../type/data.js"
-import { getBestRpcProvider } from "../utils/getBestRpcProvider.js"
-import { RouterService } from "../services/RouterService.js"
-import { getAddressesJson } from "../utils/jsonReader.js"
+import { SerializedLiquidationUserFullInfo } from "../../type/data.js"
+import { getBestRpcProvider } from "../../utils/getBestRpcProvider.js"
+import { RouterService } from "../../services/RouterService.js"
+import { getAddressesJson } from "../../utils/jsonReader.js"
 
 dotenv.config()
 
