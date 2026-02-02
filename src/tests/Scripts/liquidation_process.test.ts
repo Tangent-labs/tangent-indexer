@@ -151,7 +151,8 @@ describe("liquidation_process", () => {
 
     // Setup mock services
     mockLiquidationBotLogService = new LiquidationBotLogService(mockLiquidationBotLogRepository, mockTelegramNotifierService)
-    mockLiquidationService = new LiquidationService(activeBorrowersRepository, mockContext, mockLiquidationBotLogService)
+    const mockRouterService = {} as any
+    mockLiquidationService = new LiquidationService(activeBorrowersRepository, mockContext, mockRouterService, mockLiquidationBotLogService)
 
     // Mock service methods
     vi.spyOn(mockLiquidationService, "checkContext").mockResolvedValue(undefined)
@@ -170,8 +171,8 @@ describe("liquidation_process", () => {
   })
 
   describe("setUpLiquidationProcessServices", () => {
-    it("should set up all services correctly", () => {
-      const services = setUpLiquidationProcessServices()
+    it("should set up all services correctly", async () => {
+      const services = await setUpLiquidationProcessServices()
 
       expect(services.liquidationService).toBeDefined()
       expect(services.context).toBeDefined()

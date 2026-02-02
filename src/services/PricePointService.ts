@@ -15,7 +15,7 @@ import {
 } from "../type/data.js"
 
 import { chainView } from "../utils/chainView.js"
-import { PriceApiService } from "./PriceApiService.js"
+import { CallApiService } from "./CallApiService.js"
 import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
 
 const SCALE = 10n ** 18n
@@ -45,7 +45,7 @@ export class PricePointService {
   marketContractsRepository: MarketContractsRepository
   priceRepository: PriceRepository
   providers: JsonRpcProvider
-  priceApiService: PriceApiService
+  callApiService: CallApiService
   addresses: AddressesJson
 
   executionkey: string
@@ -53,7 +53,7 @@ export class PricePointService {
     this.priceRepository = priceRepository
     this.marketContractsRepository = marketContractsRepository
     this.providers = providers
-    this.priceApiService = new PriceApiService()
+    this.callApiService = new CallApiService()
     this.executionkey = uuidv4()
     this.addresses = addresses
   }
@@ -82,7 +82,7 @@ export class PricePointService {
     const pendlePrice = priceSource.filter((p) => p.type === "pendleApi").map((p) => p.address.toLowerCase())
 
     if (llamaPrice.length > 0) {
-      promises.set("Llama", this.priceApiService.getLlamaPrice(llamaPrice))
+      promises.set("Llama", this.callApiService.getLlamaPrice(llamaPrice))
     }
 
     // Group curve addresses by their reference (pool registry type) and make separate calls
@@ -115,12 +115,12 @@ export class PricePointService {
 
       // Create separate promises for each registry type
       curveGroups.forEach((addresses, registryType) => {
-        promises.set(`Curve-${registryType}`, this.priceApiService.fetchCurveApiPrices(addresses, registryType as CurverRegistry))
+        promises.set(`Curve-${registryType}`, this.callApiService.fetchCurveApiPrices(addresses, registryType as CurverRegistry))
       })
     }
 
     if (pendlePrice.length > 0) {
-      promises.set("Pendle", this.priceApiService.fetchPendleApiPrices(pendlePrice))
+      promises.set("Pendle", this.callApiService.fetchPendleApiPrices(pendlePrice))
     }
 
     // Add ERC4626 processing to the promises
@@ -392,7 +392,7 @@ export class PricePointService {
       return
     }
 
-    const registries = await this.priceApiService.fetchCurveApiRegisty(priceSources.map((p) => p.address))
+    const registries = await this.callApiService.fetchCurveApiRegisty(priceSources.map((p) => p.address))
     await this.priceRepository.updateCurvePriceSourceRegistry(registries)
   }
 }

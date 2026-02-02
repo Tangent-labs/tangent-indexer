@@ -2,20 +2,23 @@ import { PriceApiInfo, PriceApiResult, PriceApiError, CurverRegistry } from "../
 import {
   ConvexFxnApiReturn,
   CurveApiReturn,
+  CurveFactoryStableNGApiReturn,
   CurvePoolListApiResult,
   CurvePriceApiResult,
   LlamaPriceApiResult,
   PendleApiReturn,
   PendlePriceApiResult,
+  StakeDaoApiReturn,
 } from "./globalData/types.js"
 import axios from "axios"
+import { spawn } from "child_process"
 
 export const CURVE_API = "https://api.curve.finance/api"
 const PENDLE_PRICE_API = "https://api-v2.pendle.finance/core/v1/1/assets/prices"
 const LLAMA_API = "https://coins.llama.fi/prices/current/"
 const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes in milliseconds
 
-export class PriceApiService {
+export class CallApiService {
   private ethPriceCache: { price: number; timestamp: number } | null = null
 
   async getEthPrice(): Promise<number> {
@@ -177,6 +180,163 @@ export class PriceApiService {
     }
   }
 
+  async fetchCurveFactoryStableNg() {
+    // Fetch APY of curve LP on their API
+    try {
+      const response = await axios.get(CURVE_API + "/getPools/ethereum/factory-stable-ng")
+      const curveJson: CurveFactoryStableNGApiReturn = response.data
+      return curveJson
+    } catch (e) {
+      const apiError: PriceApiError = {
+        api: "CurvePriceApi",
+        reason: e instanceof Error ? e.message : "Unknown error",
+        httpCode: axios.isAxiosError(e) && e.response ? e.response.status : undefined,
+      }
+      return { error: apiError }
+    }
+  }
+
+  async fetchStakeDao(): Promise<StakeDaoApiReturn> {
+    const query = `
+        query GetAllVaultsWithAssets {
+          Vault {
+            id
+            chainId
+            address
+            protocolId
+            asset {
+              id
+              name
+              symbol
+              address
+              chainId
+              decimals
+              assetType
+              components {
+                childAsset {
+                  id
+                  name
+                  symbol
+                  address
+                  chainId
+                  decimals
+                  assetType
+                  components {
+                    childAsset {
+                      id
+                      name
+                      symbol
+                      address
+                      chainId
+                      decimals
+                      assetType
+                    }
+                  }
+                }
+              }
+            }
+            gauge {
+              address
+              name
+              symbol
+              totalSupply
+              totalSupplyUSD
+              aprDetails {
+                yieldType
+                apr
+                aprUSD
+                asset {
+                  id
+                  name
+                  symbol
+                  decimals
+                  address
+                }
+              }
+              metadata {
+                id
+                key
+                value
+                valueType
+              }
+            }
+            rewardTokens {
+              id
+              asset {
+                id
+                symbol
+              }
+            }
+            sidecar
+            sidecarBalance
+            rewardReceiver
+            totalSupply
+            totalSupplyUSD
+          }
+        }
+    `
+    const body = JSON.stringify({
+      query,
+      operationName: "GetAllVaultsWithAssets",
+    })
+
+    // Fetch APY of curve LP on their API
+
+    const url = "https://api-strategies.stakedao.org/v1/graphql"
+
+    return new Promise((resolve, reject) => {
+      const curl = spawn("curl", [
+        "-sS", // silencieux + erreur réelle
+        "-X",
+        "POST",
+        url,
+        "-H",
+        "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "-H",
+        "Accept: application/json, text/plain, */*",
+        "-H",
+        "Accept-Language: fr-FR,fr;q=0.9,en;q=0.8",
+        "-H",
+        "Referer: https://stakedao.org/",
+        "-H",
+        "Origin: https://stakedao.org",
+        "-H",
+        "Content-Type: application/json",
+        "-d",
+        body,
+      ])
+
+      let result = ""
+
+      curl.stdout.on("data", (chunk) => {
+        result += chunk.toString()
+      })
+
+      curl.stderr.on("data", (chunk) => {
+        // tu peux logger si tu veux
+        // console.error("curl stderr:", chunk.toString());
+      })
+
+      curl.on("close", (code) => {
+        if (code !== 0) {
+          reject(new Error(`curl exited with code ${code}`))
+          return
+        }
+        try {
+          const data = JSON.parse(result)
+          resolve(data.data as StakeDaoApiReturn)
+        } catch (e) {
+          const apiError: PriceApiError = {
+            api: "StakeDaoApi",
+            reason: e instanceof Error ? e.message : "Unknown error",
+            httpCode: undefined,
+          }
+          reject(apiError)
+        }
+      })
+    })
+  }
+
   async fetchPendleApiData() {
     try {
       const PENDLE_API = "https://api-v2.pendle.finance/core/v1/1/markets/active"
@@ -189,6 +349,7 @@ export class PriceApiService {
         reason: e instanceof Error ? e.message : "Unknown error",
         httpCode: axios.isAxiosError(e) && e.response ? e.response.status : undefined,
       }
+      console.error(apiError)
       return { error: apiError }
     }
   }

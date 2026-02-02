@@ -4,7 +4,7 @@ import { UserPointsService } from "../../services/events/UserPointsService.js"
 import { encodeTransfer, TRANSFER } from "../../resources/eventSignatures.js"
 import { AbiCoder, AddressLike, id, JsonRpcProvider, Log, parseEther, ZeroAddress } from "ethers"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
-import { ActiveBorrowersRepository } from "src/db/ActiveBorrowersRepository.js"
+import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
 
 function buildLog(topicId: string, from: AddressLike, to: AddressLike, blockNumber: number, data: string) {
   const fromEncoded = AbiCoder.defaultAbiCoder().encode(["address"], [from])

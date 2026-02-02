@@ -12,10 +12,11 @@ export class BlockRepository extends AbstractRepository {
     return lastBlock
   }
 
-  async storeVotesPointsBlock(blockId: number) {
+  async storeVotesPointsBlock(block_date: Date, new_epoch_date: Date) {
     await this.prismaClient.votes_points_blocks.create({
       data: {
-        block_id: blockId,
+        block_date,
+        epoch_date: new_epoch_date,
       },
     })
   }

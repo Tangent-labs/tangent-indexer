@@ -1,6 +1,6 @@
 import { formatEther, formatUnits, JsonRpcProvider } from "ethers"
 import { Prisma } from "@prisma/client"
-import { commonERC20, curveLpMapping } from "@tangent/defi-resources"
+import { COMMON_ERC20S, curveLpMapping } from "@tangent/defi-resources"
 
 import { ERC20Repository } from "../../db/ERC20Repository.js"
 import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
@@ -8,12 +8,23 @@ import { MarketContractsRepository } from "../../db/MarketContractsRepository.js
 import { chainView } from "../../utils/chainView.js"
 
 import GlobalDataChainview from "../../abis/GlobalDataChainview.json" with { type: "json" }
-import { APR_TYPE, TVLAprs, Prices, CurveApiReturn, PendleApiReturn, ConvexFxnApiReturn, USGIndexingGlobalDataOut, USGInfoOut } from "./types.js"
-import { defiLLamaFetchPrices, getPriceInfos } from "./DefiLLamaPriceFetcher.js"
+import {
+  APR_TYPE,
+  TVLAprs,
+  Prices,
+  CurveApiReturn,
+  PendleApiReturn,
+  ConvexFxnApiReturn,
+  USGIndexingGlobalDataOut,
+  USGInfoOut,
+  CurveFactoryStableNGApiReturn,
+  StakeDaoApiReturn,
+} from "./types.js"
+import { defiLLamaFetchPrices } from "./DefiLLamaPriceFetcher.js"
 import { bigIntToNumber } from "../../utils/formatting.js"
 import { NumMap } from "../../services/boost/types.js"
 
-import { PriceApiService } from "../../services/PriceApiService.js"
+import { CallApiService } from "../CallApiService.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
 
 // TODO This is arbitraty, need a more dynamic version
@@ -21,12 +32,15 @@ import { getAddressesJson } from "../../utils/jsonReader.js"
 const ratioCrvToConvex = 221.80769230769230769230769230769
 
 const rewardTokens = [
-  { symbol: "CRV", address: commonERC20.CRV },
-  { symbol: "CVX", address: commonERC20.CVX },
-  { symbol: "FXN", address: commonERC20.FXN },
+  { symbol: "CRV", address: COMMON_ERC20S.CRV },
+  { symbol: "CVX", address: COMMON_ERC20S.CVX },
+  { symbol: "FXN", address: COMMON_ERC20S.FXN },
   { symbol: "DINERO", address: "0x6df0e641fc9847c0c6fde39be6253045440c14d3" },
-  { symbol: "GHO", address: commonERC20.GHO },
-  { symbol: "wstETH", address: commonERC20.wstETH },
+  { symbol: "GHO", address: COMMON_ERC20S.GHO },
+  { symbol: "wstETH", address: COMMON_ERC20S.wstETH },
+  { symbol: "PYUSD", address: COMMON_ERC20S.PYUSD },
+  { symbol: "RLUSD", address: COMMON_ERC20S.RLUSD },
+  { symbol: "USDS", address: COMMON_ERC20S.USDS },
 ]
 
 type Markets = {
@@ -40,16 +54,16 @@ export class GlobalMarketDataService {
   erc20Repository: ERC20Repository
   marketContractsRepo: MarketContractsRepository
   provider: JsonRpcProvider
-  priceApiService: PriceApiService
+  callApiService: CallApiService
 
   constructor(
     provider: JsonRpcProvider,
-    priceApiService: PriceApiService,
+    callApiService: CallApiService,
     erc20Repository: ERC20Repository,
     marketContractsRepository: MarketContractsRepository
   ) {
     this.provider = provider
-    this.priceApiService = priceApiService
+    this.callApiService = callApiService
     this.erc20Repository = erc20Repository
     this.marketContractsRepo = marketContractsRepository
   }
@@ -76,26 +90,31 @@ export class GlobalMarketDataService {
     const formattedPrices = await defiLLamaFetchPrices(rewardTokens.map((a) => a.address))
 
     // Fetch Curve API data
-    const curveAPIData = await this.priceApiService.fetchCurveApiData()
+    const curveAPIData = await this.callApiService.fetchCurveApiData()
+
+    // Fetch Curve stableSwap API data
+    const curveStableSwapData = await this.callApiService.fetchCurveFactoryStableNg()
 
     // Fetch CONVEX FXN informations on their API
-    const convexFXNAPIData = await this.priceApiService.fetchConvexFXNApiData()
+    const convexFXNAPIData = await this.callApiService.fetchConvexFXNApiData()
 
     // Fetch PENDLE markets informations on their API
-    const pendleAPIData = await this.priceApiService.fetchPendleApiData()
+    const pendleAPIData = await this.callApiService.fetchPendleApiData()
 
-    // Verify if there is an error field in the API returns
-    if ("error" in curveAPIData) {
-      throw new Error(`Erreur dans fetchCurveApiData: ${curveAPIData.error.reason}`)
-    }
-    if ("error" in convexFXNAPIData) {
-      throw new Error(`Erreur dans fetchConvexFXNApiData: ${convexFXNAPIData.error.reason}`)
-    }
-    if ("error" in pendleAPIData) {
-      throw new Error(`Erreur dans fetchPendleApiData: ${pendleAPIData.error.reason}`)
-    }
+    // Fetch StakeDao markets informations on their API
+    const stakeDaoAPIData = await this.callApiService.fetchStakeDao()
 
-    const formattedMarketData = this.formatMarketData(markets, rawMarketData, formattedPrices, curveAPIData, convexFXNAPIData, pendleAPIData, now)
+    const formattedMarketData = this.formatMarketData(
+      markets,
+      rawMarketData,
+      formattedPrices,
+      curveAPIData,
+      curveStableSwapData,
+      convexFXNAPIData,
+      pendleAPIData,
+      stakeDaoAPIData,
+      now
+    )
 
     return formattedMarketData
   }
@@ -119,6 +138,10 @@ export class GlobalMarketDataService {
   async fetchGlobalDataChainview(markets: Markets[]) {
     const addresses = await getAddressesJson()
 
+    const marketParams = markets.map((market) => {
+      return [market.contract_address, market.contract_type]
+    })
+
     // Retrieve the onchain data containing everything
     const globalData = (
       await chainView<[(string | number)[][], string, string, string, string, string[], string, string], USGIndexingGlobalDataOut[]>(
@@ -126,9 +149,7 @@ export class GlobalMarketDataService {
         GlobalDataChainview.abi,
         GlobalDataChainview.bytecode,
         [
-          markets.map((market) => {
-            return [market.contract_address, market.contract_type]
-          }),
+          marketParams,
           addresses.utilities.rewardAccumulator,
           addresses.utilities.irCalculator,
           addresses.tokens.USG,
@@ -149,9 +170,13 @@ export class GlobalMarketDataService {
     onchainData.currentAPR.forEach((streamData) => {
       const rewardAddress = streamData.token.toLowerCase()
       const priceInfo = prices[rewardAddress]
-      const usdPerYear = Number(formatUnits(streamData.amountPerYear, priceInfo.decimals)) * priceInfo.price
-      const key = rewardTokens.find((rewardToken) => rewardToken.address.toLowerCase() === rewardAddress.toLowerCase())!.symbol
-      actualAPRs[key] = (usdPerYear * 100) / tvlTangent
+      if (priceInfo) {
+        const usdPerYear = Number(formatUnits(streamData.amountPerYear, priceInfo.decimals)) * priceInfo.price
+        const key = rewardTokens.find((rewardToken) => rewardToken.address.toLowerCase() === rewardAddress.toLowerCase())!.symbol
+        actualAPRs[key] = (usdPerYear * 100) / tvlTangent
+      } else {
+        console.error(`No priceInfo for ${rewardAddress}`)
+      }
     })
     return actualAPRs
   }
@@ -170,8 +195,10 @@ export class GlobalMarketDataService {
     marketData: TVLAprs[],
     formattedPrices: Prices,
     curveAPIData: CurveApiReturn,
+    curveStableSwapData: CurveFactoryStableNGApiReturn,
     convexFXNAPIData: ConvexFxnApiReturn,
     pendleAPIData: PendleApiReturn,
+    stakeDaoAPIData: StakeDaoApiReturn,
     now: Date
   ) {
     // Iterates over all markets and hydrate them with data previously fetched through a reduce
@@ -182,19 +209,27 @@ export class GlobalMarketDataService {
       const currentAPR = this.computeCurrentStreamedAPR(aprTvlData, formattedPrices)
       const projectedAPR: NumMap = {}
 
-      if (market.contract_type === APR_TYPE["Convex CRV"] || market.contract_type === APR_TYPE["Convex FXN"]) {
-        // Get the APY fees of curve LP
-        let item = curveAPIData.data.poolList.find((pool: { address: string }) => pool.address.toLowerCase() === market.collateral_address)
-        if (!item) {
-          const mappingRes = curveLpMapping.LPS[market.collateral_address]
-          if (mappingRes) {
-            const curvePool = mappingRes.curve_pool
-            item = curveAPIData.data.poolList.find((pool: { address: string }) => pool.address.toLowerCase() === curvePool?.toLowerCase())
-          }
-        }
+      const marketType = market.contract_type
+      const collateralAddress = market.collateral_address.toLowerCase()
 
-        currentAPR.APY = item!.latestWeeklyApy
-        projectedAPR.APY = item!.latestWeeklyApy
+      // Convex CRV & FXN / StakeDao Vault / Curve Gauge
+      if ([APR_TYPE["Convex CRV"], APR_TYPE["Convex FXN"], APR_TYPE["StakeDao Vault"], APR_TYPE["Curve Gauge"]].includes(marketType)) {
+        if (curveAPIData?.data) {
+          // Get the APY fees of curve LP
+          let item = curveAPIData.data.poolList.find((pool: { address: string }) => pool.address.toLowerCase() === collateralAddress)
+          if (!item) {
+            const mappingRes = curveLpMapping.LPS[collateralAddress]
+            // Maybe the LP is not the pool ( old Curve pool version), so we need to check it
+            if (mappingRes) {
+              const curvePool = mappingRes.curve_pool
+              item = curveAPIData.data.poolList.find((pool: { address: string }) => pool.address.toLowerCase() === curvePool?.toLowerCase())
+            }
+          }
+          currentAPR.APY = item!.latestWeeklyApy
+          projectedAPR.APY = item!.latestWeeklyApy
+        } else {
+          console.error("No Curve API data for pool APY")
+        }
 
         // Projected APR
 
@@ -202,40 +237,87 @@ export class GlobalMarketDataService {
 
         // Convex CRV
         if (market.contract_type === APR_TYPE["Convex CRV"]) {
-          // TODO Treat the no CvxRewardToken type
+          const crvPriceInfo = formattedPrices[COMMON_ERC20S?.CRV.toLocaleLowerCase()]
 
-          const priceInfo = getPriceInfos(formattedPrices, commonERC20.CRV)
-          const usdPerYear = Number(formatUnits(aprTvlData.projectedAPR.streamingData[0].amountPerYear, priceInfo!.decimals)) * priceInfo!.price
+          const usdPerYear = Number(formatUnits(aprTvlData.projectedAPR.streamingData[0].amountPerYear, crvPriceInfo.decimals)) * crvPriceInfo.price
 
           projectedAPR.CRV = (usdPerYear * 100) / underlyingTvl
           projectedAPR.CVX = projectedAPR.CRV / ratioCrvToConvex
         }
-
         // Convex FXN
-        else {
-          const data = convexFXNAPIData.pools.augmentedPoolData.find((cvxFxnPool: any) => {
-            if (!cvxFxnPool?.curvePoolData) {
-              return false
-            }
-            return cvxFxnPool?.curvePoolData?.address.toLowerCase() === market.collateral_address.toLowerCase()
-          })!
+        else if (market.contract_type === APR_TYPE["Convex FXN"]) {
+          if (convexFXNAPIData?.pools) {
+            const fxnData = convexFXNAPIData.pools.augmentedPoolData.find((cvxFxnPool: any) => {
+              if (!cvxFxnPool?.curvePoolData) {
+                return false
+              }
+              return cvxFxnPool?.curvePoolData?.address.toLowerCase() === market.collateral_address.toLowerCase()
+            })!
 
-          data.rewardCoins.forEach((rewardCoin, i) => {
-            const key = rewardTokens.find((rewardToken) => rewardToken.address.toLowerCase() === rewardCoin.address.toLowerCase())!.symbol
-            projectedAPR[key] = data.rewardAprs[i]
-          })
+            fxnData.rewardCoins.forEach((rewardCoin, i) => {
+              const key = rewardTokens.find((rewardToken) => rewardToken.address.toLowerCase() === rewardCoin.address.toLowerCase())!.symbol
+              projectedAPR[key] = fxnData.rewardAprs[i]
+            })
+          } else {
+            console.error("No ConvexFXN API data ")
+          }
+        }
+
+        // StakeDaoVault Gauge
+        else if (market.contract_type === APR_TYPE["StakeDao Vault"]) {
+          if (stakeDaoAPIData?.Vault) {
+            const vaultData = stakeDaoAPIData?.Vault.find((data) => {
+              const lpAddress = data.asset.address.toLowerCase()
+              return lpAddress === collateralAddress
+            })
+            if (vaultData) {
+              vaultData.gauge.aprDetails.forEach((rewards) => {
+                const symbol = rewards.asset.symbol
+                // If the symbol length is more than 7, we consider it's the LP itself, that we already saved in the projectedAPR object under the "APY" key
+                // It's a dirty hack but an honnest working hack :D
+                if (symbol.length < 7) {
+                  projectedAPR[rewards.asset.symbol] = Number(rewards.apr) * 100
+                }
+              })
+            } else {
+              console.error(`Reward data for StakeDao vault ${collateralAddress} not found`)
+            }
+          } else {
+            console.error(`Error in graphQL call to StakeDao`)
+          }
+        }
+
+        // Curve Gauge
+        else if (market.contract_type === APR_TYPE["Curve Gauge"]) {
+          if (curveStableSwapData?.data) {
+            const stableSwapData = curveStableSwapData.data.poolData.find((data) => data.address.toLowerCase() === collateralAddress)
+            if (stableSwapData) {
+              stableSwapData.gaugeRewards.forEach((rewards) => {
+                projectedAPR[rewards.symbol] = rewards.apy
+              })
+            } else {
+              console.error(`Reward data for Curve gauge not found`)
+            }
+          } else {
+            console.error("Call to CurveStableSwapNG API failed")
+          }
         }
       }
-      // PENDLE PT
-      else if (market.contract_type === APR_TYPE["PENDLE PT"]) {
-        const item = pendleAPIData.markets.find((pendleMarket) => {
-          const ptAddress = pendleMarket.pt.split("-")[1]
-          return ptAddress.toLowerCase() === market.collateral_address.toLowerCase()
-        })!
 
-        const impliedApy = item?.details?.impliedApy * 100
-        currentAPR["PT APY"] = impliedApy
-        projectedAPR["PT APY"] = impliedApy
+      // PENDLE PT
+      else if (market.contract_type === APR_TYPE["Pendle PT"]) {
+        if (pendleAPIData?.markets) {
+          const item = pendleAPIData.markets.find((pendleMarket) => {
+            const ptAddress = pendleMarket.pt.split("-")[1]
+            return ptAddress.toLowerCase() === market.collateral_address.toLowerCase()
+          })!
+
+          const impliedApy = item?.details?.impliedApy * 100
+          currentAPR.APY = impliedApy
+          projectedAPR.APY = impliedApy
+        } else {
+          console.error("No PendleAPI data ")
+        }
       }
 
       return {
