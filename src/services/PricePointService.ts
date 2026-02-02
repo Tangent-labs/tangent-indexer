@@ -66,7 +66,7 @@ export class PricePointService {
     const priceSourcePerAddress: { [address: string]: bigint } = priceSource.reduce((acc, current) => {
       return {
         ...acc,
-        [current.address.toLowerCase()]: current.id,
+        [current.address]: current.id,
       }
     }, {})
 

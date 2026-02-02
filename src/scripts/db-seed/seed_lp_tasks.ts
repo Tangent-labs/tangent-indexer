@@ -7,16 +7,6 @@ import { PENDLE_POOLS } from "@tangent/defi-resources"
 import { Prisma } from "@prisma/client"
 import { LP_TASKS } from "./config/config_lp_tasks.js"
 
-const ONE_HOUR = 3600
-export const PTS_PER_HOUR_TO_SECONDS_RATE = {
-  5: 5 / ONE_HOUR,
-  10: 10 / ONE_HOUR,
-  15: 15 / ONE_HOUR,
-  20: 20 / ONE_HOUR,
-  30: 30 / ONE_HOUR,
-  40: 40 / ONE_HOUR,
-}
-
 export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addresses: AddressesJson, priceSources: Prisma.price_sourceCreateManyInput[]) {
   const lpTasks = LP_TASKS(addresses, priceSources)
   await prisma.tracked_erc20.createMany({
@@ -47,6 +37,8 @@ export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addr
 
     // Remove Pendle Market because it holds PT
     PENDLE_POOLS["sUSDe 27/11/25"].MARKET.toLowerCase(),
+    PENDLE_POOLS["sUSDe 27/11/25"].PT.toLowerCase(),
+    PENDLE_POOLS["sUSDe 27/11/25"].SY.toLowerCase(),
   ].map((uE) => ({ user: uE }))
 
   await prisma.lp_points_users_excluded.createMany({
