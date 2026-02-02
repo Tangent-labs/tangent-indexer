@@ -26,6 +26,7 @@ export class MarketCreationService {
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
     // Fetch logs from MarketCreator
     let marketsCreated = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, this.marketCreatorAddress)
+    console.log("marketsCreated  => ", marketsCreated?.length || 0)
     // If some logs are coming from MarketCreator, we insert them in db
     if (marketsCreated.length) {
       marketsCreated = marketsCreated.map((m) => {
@@ -35,6 +36,7 @@ export class MarketCreationService {
           contract_address: m.contract_address.toLocaleLowerCase(),
         }
       })
+      console.log("marketsCreated after mapping  => ", marketsCreated)
       await this.marketContractsRepository.insertContracts(marketsCreated)
 
       // This part is for points program only

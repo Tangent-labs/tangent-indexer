@@ -350,6 +350,7 @@ export class RouterService {
     const quotes: QuotePTToTokenOut[] = quotesRaw.map((quote: any) => ({
       ...(quote as unknown as WithToObject<QuotePTToTokenOut>).toObject(),
     }))
+    console.log("quotes  => ", quotes || 0)
 
     // Find the best quote
     const optimizedIndex = quotes.reduce((maxIdx, cur, idx, arr) => (cur.quote > (arr[maxIdx]?.quote ?? 0n) ? idx : maxIdx), 0)

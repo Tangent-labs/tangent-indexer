@@ -29,6 +29,7 @@ import { parseEthersError } from "../utils/errorParser.js"
 import { indexerConfig } from "src/config/indexer_config.js"
 import { getBestRpcProvider } from "../utils/getBestRpcProvider.js"
 import { RouterService } from "./RouterService.js"
+import { getAddressesJson } from "src/utils/jsonReader.js"
 
 const DENOMINATOR = 100_000n
 
@@ -128,6 +129,7 @@ export class LiquidationService {
   async getLiquidationParamsFromDb(): Promise<{ markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }> {
     if (this.context.isDbAlive) {
       const borrowersRawList = await this.activeBorrowersRepository.getAll()
+      console.log("borrowersRawList  => ", borrowersRawList?.length || 0)
 
       const markets = new Set<AddressLike>()
       const borrowers = borrowersRawList.map((borrower) => {
@@ -167,16 +169,23 @@ export class LiquidationService {
       )
     )
 
-    const results = await Promise.all(calls)
+    // Don't let a single failing RPC interrupt the whole process.
+    // We keep successful results and log failures for observability.
+    const results = await Promise.allSettled(calls)
     const datas = results.map((result, callIndex) => {
-      const d = result?.at(0)
-      if (d) {
-        return {
-          markets: d.markets.map((m) => (m as unknown as WithToObject<LiquidationMarketOutInfo>).toObject()),
-          accounts: d.accounts.map((a, index) => ({ ...(a as unknown as WithToObject<LiquidationAccountOutInfo>).toObject(), callIndex, index })),
-        }
+      if (result.status !== "fulfilled") {
+        const message = (result.reason as Error | undefined)?.message ?? String(result.reason)
+        console.warn(`⚠️ getOnchainData: provider call failed (rpcIndex=${callIndex}): ${message}`)
+        return undefined
       }
-      return undefined
+
+      const d = result.value?.at(0)
+      if (!d) return undefined
+
+      return {
+        markets: d.markets.map((m) => (m as unknown as WithToObject<LiquidationMarketOutInfo>).toObject()),
+        accounts: d.accounts.map((a, index) => ({ ...(a as unknown as WithToObject<LiquidationAccountOutInfo>).toObject(), callIndex, index })),
+      }
     })
 
     // remove duplicates in markets
@@ -187,7 +196,7 @@ export class LiquidationService {
 
     // remove duplicates in accounts and keep the one with the highest healthRatio
     const finalAccounts = []
-    const accountLength = datas?.at(0)?.accounts?.length || 0
+    const accountLength = datas.find((d) => (d?.accounts?.length || 0) > 0)?.accounts?.length || 0
     const accountsFlat = datas.map((d) => d?.accounts || []).flat()
 
     if (accountLength !== borrowers.length) {
@@ -231,16 +240,18 @@ export class LiquidationService {
       throw new Error(errorMessage)
     }
 
-    const hydratedAccounts = datas.accounts.map((accountData, index) => {
-      const account = accounts[index]
-      const market = datas.markets.find((m) => (m.market as string).toLowerCase() === (accountData.market as string).toLowerCase())
-      return {
-        ...accountData,
-        ...account,
-        ...market,
-        ltv: accountData.positionValue === 0n ? 0n : (accountData.userDebt * DENOMINATOR) / accountData.positionValue,
-      }
-    })
+    const hydratedAccounts = datas.accounts
+      .filter((accountData) => accountData.userDebt > 0n)
+      .map((accountData, index) => {
+        const account = accounts[index]
+        const market = datas.markets.find((m) => (m.market as string).toLowerCase() === (accountData.market as string).toLowerCase())
+        return {
+          ...accountData,
+          ...account,
+          ...market,
+          ltv: accountData.positionValue === 0n ? 0n : (accountData.userDebt * DENOMINATOR) / accountData.positionValue,
+        }
+      })
 
     let seizingList: LiquidationUserFullInfo[] = [] // borrower with positionvalue < debt
     let liquidationList: LiquidationUserFullInfo[] = [] // borrower with ltv > liquidationThreshold
@@ -352,7 +363,7 @@ export class LiquidationService {
       return tx
     } catch (error) {
       this.errors.push({ action: "liquidation_bad_debt_execution", message: (error as Error)?.message.slice(0, 100), market: account.market as string })
-      await this.liquidationBotService?.logError("liquidation_bad_debt_execution", error as Error, loggedContext, { account }, true)
+      await this.liquidationBotService?.logError("liquidation_bad_debt_execution", error as Error, loggedContext, { account }, false)
       // Re-throw the error so the job is retried by the queue
       throw error
     }
@@ -450,7 +461,7 @@ export class LiquidationService {
           error: errorData,
           step: "estimateLiquidation",
         },
-        true
+        false
       )
       // Re-throw the error so the job is retried by the queue
       throw enhancedError
@@ -465,7 +476,13 @@ export class LiquidationService {
         message: `No route found for collateral: ${normalizedAccount.collatToken}`,
         market: normalizedAccount.market as string,
       })
-      await this.liquidationBotService?.logError("liquidation_execution", error as Error, loggedContext, { account: normalizedAccount, step: "no_route" }, true)
+      await this.liquidationBotService?.logError(
+        "liquidation_execution",
+        error as Error,
+        loggedContext,
+        { account: normalizedAccount, step: "no_route" },
+        false
+      )
       // Don't throw - route not found is a permanent failure that won't succeed on retry
       return
     }
@@ -684,6 +701,7 @@ export class LiquidationService {
       throw new Error(`No route found for collateral: ${account.collatToken}`)
     }
 
+    console.log("amount  => ", amount)
     // Validate that the route quote is positive (non-zero)
     if (!amount || amount <= 0n) {
       throw new Error(`Invalid route quote: ${amount.toString()}. Route found but quote is zero or negative for collateral: ${account.collatToken}`)
@@ -754,6 +772,8 @@ export class LiquidationService {
   ): Promise<void> {
     // Deserialize the job data (convert string BigInt values back to BigInt)
     const action = this.deserializeLiquidationAction(job.data)
+    const addresses = await getAddressesJson()
+    const collateralName = addresses.markets.find((market) => market.marketAddress === action.market)?.collatName || "Unknown"
 
     // Use provided rpcIndex or fallback to context.currentRpcIndex
     const providerIndex = rpcIndex ?? this.context.currentRpcIndex
@@ -774,7 +794,15 @@ export class LiquidationService {
       }
 
       if (action.type === "seizing") {
-        await this.executeSeizing(signer, action, logContext)
+        try {
+          await this.executeSeizing(signer, action, logContext)
+          console.log(`Seizing successful : ${collateralName} (${formatEther(action.userDebt)})`)
+          await telegramNotifierService.sendMessage(`Seizing successful : ${collateralName.replace("-", "_")} (${formatEther(action.userDebt)})`)
+        } catch (error) {
+          await telegramNotifierService.sendError(
+            `Seizing error : ${collateralName.replace("-", "_")} (${formatEther(action.userDebt)}) : ${(error as Error).message.slice(0, 100)}...`
+          )
+        }
       } else if (action.type === "liquidation") {
         // Find wallet index for executeLiquidation (it still uses pkIndex)
         const walletIndex = this.context.walletsPks.findIndex((pk) => pk === walletsPk)
@@ -793,19 +821,22 @@ export class LiquidationService {
 
         if (attemptsMade > 0) {
           // Calculate the final slippage that will be used
-          const finalSlippageBps = 50n + (10n * slippageModifierBps) / 10000n
-          const finalSlippagePercent = (Number(finalSlippageBps) / 100).toFixed(2)
-          const logMessage = `Retry attempt ${attemptsMade + 1} for job ${job.id} (account: ${action.account}, market: ${action.market}): Increasing slippage to ${finalSlippagePercent}% (${finalSlippageBps} bps)`
-          await telegramNotifierService.sendError(logMessage)
+          // const finalSlippageBps = 50n + (10n * slippageModifierBps) / 10000n
+          // const finalSlippagePercent = (Number(finalSlippageBps) / 100).toFixed(2)
+          // const logMessage = `Retry attempt ${attemptsMade + 1} for job ${job.id} (account: ${action.account}, market: ${action.market}): Increasing slippage to ${finalSlippagePercent}% (${finalSlippageBps} bps)`
+          // await telegramNotifierService.sendError(logMessage)
         }
 
         await this.executeLiquidation(walletIndex, action, slippageModifierBps, attemptsMade, providerIndex, logContext)
+        console.log(`Liquidation successful : ${collateralName} (${action.positionValue})`)
+        await telegramNotifierService.sendMessage(`Liquidation successful : ${collateralName.replace("-", "_")} (${formatEther(action.userDebt)})`)
       } else {
         throw new Error(`Unknown action type: ${(action as any).type}`)
       }
     } catch (error) {
+      console.log(`Liquidation error : ${collateralName} (${formatEther(action.userDebt)}) : ${(error as Error).message}`)
       await telegramNotifierService.sendError(
-        `Liquidation Process Error: Failed to execute ${action.type} for account ${action.account} on market ${action.market}: ${(error as Error).message}`
+        `Liquidation error : ${collateralName.replace("-", "_")} (${formatEther(action.userDebt)}) : ${(error as Error).message.slice(0, 100)}...`
       )
       // Re-throw to mark job as failed in Bull
       throw error

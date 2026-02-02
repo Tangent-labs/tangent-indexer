@@ -39,24 +39,39 @@ interface AccountData {
   collateralBalance: bigint
 }
 
-function parseCSV<T>(csv: string): T[] {
+function parseCSV<T>(
+  csv: string,
+  opts?: {
+    /**
+     * Force these columns to be parsed as bigint, even when the value is small
+     * (e.g. "0"). This prevents mixing number/bigint later in calculations.
+     */
+    bigintHeaders?: ReadonlySet<string>
+  }
+): T[] {
   const lines = csv.trim().split("\n")
   const headers = lines[0].split(",")
   const data: T[] = []
+  const bigintHeaders = opts?.bigintHeaders ?? new Set<string>()
 
   for (let i = 1; i < lines.length; i++) {
     const values = lines[i].split(",")
     const row: Record<string, string | number | bigint> = {}
 
     headers.forEach((header, index) => {
-      const value = values[index]
-      // Detect if it's a large number (likely bigint)
-      if (/^\d{10,}$/.test(value)) {
-        row[header] = BigInt(value)
+      const headerKey = header.trim()
+      const value = (values[index] ?? "").trim()
+
+      if (bigintHeaders.has(headerKey)) {
+        // Always parse as bigint (including "0")
+        row[headerKey] = BigInt(value || "0")
+      } else if (/^\d{10,}$/.test(value)) {
+        // Detect if it's a large number (likely bigint)
+        row[headerKey] = BigInt(value)
       } else if (/^\d+$/.test(value)) {
-        row[header] = parseInt(value, 10)
+        row[headerKey] = parseInt(value, 10)
       } else {
-        row[header] = value
+        row[headerKey] = value
       }
     })
 
@@ -122,8 +137,12 @@ function analyzeOnchainData(jsonData: OnchainData): void {
   console.log("=".repeat(120))
 
   // Parse data
-  const markets = parseCSV<MarketData>(jsonData.data.markets)
-  const accounts = parseCSV<AccountData>(jsonData.data.accounts)
+  const markets = parseCSV<MarketData>(jsonData.data.markets, {
+    bigintHeaders: new Set(["collateralUSDPrice"]),
+  })
+  const accounts = parseCSV<AccountData>(jsonData.data.accounts, {
+    bigintHeaders: new Set(["healthRatio", "userDebt", "positionValue", "collateralBalance"]),
+  })
 
   // Load market to collatName mapping
   const marketCollatNameMap = loadMarketCollatNameMap()
@@ -340,6 +359,7 @@ async function loadOnchainDataFromDb(logId: number): Promise<OnchainData | null>
     const log = await prisma.liquidation_bot_log.findUnique({
       where: { id: BigInt(logId) },
     })
+    console.log(log)
 
     if (!log) {
       console.error(`No log found with ID ${logId}`)
@@ -347,7 +367,7 @@ async function loadOnchainDataFromDb(logId: number): Promise<OnchainData | null>
     }
 
     if (log.action !== "on_chain_data") {
-      console.error(`Log ${logId} is not an on_chain_data log (action: ${log.action})`)
+      console.error(`Log ${logId} =>  action!=="on_chain_data"  ( current action: ${log.action})`)
       console.log(`Looking for on_chain_data log with same execution_key...`)
 
       // Try to find on_chain_data log with same execution_key
@@ -380,8 +400,8 @@ async function main() {
   const logId = parseInt(process.argv[2], 10)
 
   if (isNaN(logId)) {
-    console.error("Usage: npx tsx src/scripts/analyze_onchain_data.ts <log_id>")
-    console.error("Example: npx tsx src/scripts/analyze_onchain_data.ts 29280")
+    console.error("Usage: npm run dev:liquidation:analyse <log_id>")
+    console.error("Example:npm run dev:liquidation:analyse 29280")
     process.exit(1)
   }
 

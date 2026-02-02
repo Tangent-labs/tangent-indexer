@@ -65,6 +65,8 @@ export class CheckLiquidationService {
       const params = await this.liquidationService.getLiquidationParams()
       markets = params.markets
       borrowers = params.borrowers
+      console.log("markets  => ", markets?.length || 0)
+      console.log("borrowers  => ", borrowers?.length || 0)
 
       await this.liquidationBotService.logLiquidationParams({ markets, borrowers }, this.context)
       if (!borrowers.length) {

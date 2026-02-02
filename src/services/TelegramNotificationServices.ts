@@ -39,7 +39,7 @@ export class TelegramNotifierService {
         `${this.baseUrl}/sendMessage`,
         {
           chat_id: this.chatId,
-          text: cleanedText,
+          text: this.escapeMarkdownV2(cleanedText),
           parse_mode: "MarkdownV2",
           disableWebPagePreview: true,
           disableNotification: false,
@@ -74,5 +74,9 @@ export class TelegramNotifierService {
    */
   async sendError(message: string): Promise<boolean> {
     return this.sendMessage(`${message}`)
+  }
+
+  escapeMarkdownV2(message: string): string {
+    return message.replace(/([_*[\]()~`>#+\-=|{}.!\\{}])/g, "\\$1")
   }
 }
