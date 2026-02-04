@@ -14,7 +14,7 @@ import { setUpIndexer } from "../../config/indexer_setup.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { routers } from "@tangent/defi-resources"
 import { getAddressesJson } from "../../utils/jsonReader.js"
-import { RouterService } from "src/services/RouterService.js"
+import { RouterService } from "../../services/RouterService.js"
 
 dotenv.config()
 const { providers, walletsPks, handleError } = setUpIndexer()
