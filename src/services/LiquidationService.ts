@@ -26,10 +26,10 @@ import { BlockRepository } from "../db/BlockRepository.js"
 import { LiquidationBotLogService } from "./LiquidationBotLogService.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 import { parseEthersError } from "../utils/errorParser.js"
-import { indexerConfig } from "src/config/indexer_config.js"
+import { indexerConfig } from "../config/indexer_config.js"
 import { getBestRpcProvider } from "../utils/getBestRpcProvider.js"
 import { RouterService } from "./RouterService.js"
-import { getAddressesJson } from "src/utils/jsonReader.js"
+import { getAddressesJson } from "../utils/jsonReader.js"
 
 const DENOMINATOR = 100_000n
 
@@ -240,18 +240,18 @@ export class LiquidationService {
       throw new Error(errorMessage)
     }
 
-    const hydratedAccounts = datas.accounts
-      .filter((accountData) => accountData.userDebt > 0n)
-      .map((accountData, index) => {
-        const account = accounts[index]
-        const market = datas.markets.find((m) => (m.market as string).toLowerCase() === (accountData.market as string).toLowerCase())
-        return {
-          ...accountData,
-          ...account,
-          ...market,
-          ltv: accountData.positionValue === 0n ? 0n : (accountData.userDebt * DENOMINATOR) / accountData.positionValue,
-        }
-      })
+    let hydratedAccounts = datas.accounts.map((accountData, index) => {
+      const account = accounts[index]
+      const market = datas.markets.find((m) => (m.market as string).toLowerCase() === (accountData.market as string).toLowerCase())
+      return {
+        ...accountData,
+        ...account,
+        ...market,
+        ltv: accountData.positionValue === 0n ? 0n : (accountData.userDebt * DENOMINATOR) / accountData.positionValue,
+      }
+    })
+
+    hydratedAccounts = hydratedAccounts.filter((a) => a.userDebt > 0n)
 
     let seizingList: LiquidationUserFullInfo[] = [] // borrower with positionvalue < debt
     let liquidationList: LiquidationUserFullInfo[] = [] // borrower with ltv > liquidationThreshold
@@ -382,7 +382,6 @@ export class LiquidationService {
     pkIndex: number,
     account: LiquidationUserFullInfo,
     slippageModifierBps: bigint = 0n,
-    nbAttempt?: number,
     rpcIndex?: number,
     logContext?: LiquidationExecutionContext
   ) {
@@ -402,10 +401,10 @@ export class LiquidationService {
     // Ensure BigInt values are properly converted (account may come from JSON with string values)
     const normalizedAccount: LiquidationUserFullInfo = {
       ...account,
-      collateralBalance: BigInt(account.collateralBalance),
-      positionValue: BigInt(account.positionValue),
-      userDebt: BigInt(account.userDebt),
-      healthRatio: BigInt(account.healthRatio),
+      collateralBalance: BigInt(account.collateralBalance || "0"),
+      positionValue: BigInt(account.positionValue || "0"),
+      userDebt: BigInt(account.userDebt || "0"),
+      healthRatio: BigInt(account.healthRatio || "0"),
     }
 
     let estimations: LiquidationEstimateInfo[] = []
@@ -423,48 +422,18 @@ export class LiquidationService {
         market: normalizedAccount.market as string,
       })
 
-      // Create an enhanced error object with parsed information
-      const enhancedError = new Error(errorMessage)
-      enhancedError.name = parsedError.errorName || (error as Error)?.name || "EstimateLiquidationError"
-      ;(enhancedError as any).code = parsedError.code
-
-      // Only include originalError if it has useful information
-      const errorData: any = {
-        ...parsedError,
-      }
-
-      // Check if original error has useful information before including it
-      if (error && typeof error === "object") {
-        const hasUsefulInfo =
-          (error as any).message ||
-          (error as any).name ||
-          (error as any).code ||
-          (error as any).stack ||
-          (Object.keys(error).length > 0 && Object.keys(error).some((k) => k !== "constructor"))
-
-        if (hasUsefulInfo) {
-          errorData.originalError = {
-            message: (error as any).message,
-            name: (error as any).name,
-            code: (error as any).code,
-            stack: (error as any).stack,
-          }
-        }
-      }
-
       await this.liquidationBotService?.logError(
         "liquidation_execution",
-        enhancedError,
+        error as Error,
         loggedContext,
         {
           account,
-          error: errorData,
           step: "estimateLiquidation",
         },
         false
       )
       // Re-throw the error so the job is retried by the queue
-      throw enhancedError
+      throw error
     }
 
     if (!estimations?.length) {
@@ -563,7 +532,7 @@ export class LiquidationService {
     // If all transactions failed, throw an error so the job is retried
     if (successCount === 0 && errors.length > 0) {
       const lastError = errors[errors.length - 1]
-      const errorMessage = `All ${errors.length} liquidation transaction(s) failed. Last error: ${lastError.message}`
+      const errorMessage = `All ${errors.length} liquidation transaction(s) failed. Last error: ${lastError.message.toString().slice(0, 100)}`
       const aggregatedError = new Error(errorMessage)
       aggregatedError.name = lastError.name || "LiquidationError"
       ;(aggregatedError as any).code = (lastError as any).code
@@ -802,6 +771,7 @@ export class LiquidationService {
           await telegramNotifierService.sendError(
             `Seizing error : ${collateralName.replace("-", "_")} (${formatEther(action.userDebt)}) : ${(error as Error).message.slice(0, 100)}...`
           )
+          throw error
         }
       } else if (action.type === "liquidation") {
         // Find wallet index for executeLiquidation (it still uses pkIndex)
@@ -827,7 +797,7 @@ export class LiquidationService {
           // await telegramNotifierService.sendError(logMessage)
         }
 
-        await this.executeLiquidation(walletIndex, action, slippageModifierBps, attemptsMade, providerIndex, logContext)
+        await this.executeLiquidation(walletIndex, action, slippageModifierBps, providerIndex, logContext)
         console.log(`Liquidation successful : ${collateralName} (${action.positionValue})`)
         await telegramNotifierService.sendMessage(`Liquidation successful : ${collateralName.replace("-", "_")} (${formatEther(action.userDebt)})`)
       } else {

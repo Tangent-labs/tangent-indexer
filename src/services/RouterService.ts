@@ -21,7 +21,6 @@ import {
   RouterType,
   SuccessRoutes,
 } from "../type/data.js"
-import { console } from "inspector"
 
 const successRoutes = successRoutesJson as unknown as SuccessRoutes
 

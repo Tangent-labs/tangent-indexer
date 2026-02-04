@@ -276,51 +276,16 @@ async function main() {
   }
 
   // Handle worker events (attach to all workers)
-  // for (const [address, worker] of walletWorkers.entries()) {
-  //   worker.on("failed", async (job: Job<SerializedLiquidationUserFullInfo> | undefined, error: Error) => {
-  //     if (!job) {
-  //       return
-  //     }
-
-  //     const attemptsMade = job.attemptsMade || 0
-  //     const maxAttempts = job.opts?.attempts || indexerConfig.liquidationQueue.attempts
-
-  //     // Check if job will be retried
-  //     if (attemptsMade < maxAttempts) {
-  //       const nextAttempt = attemptsMade + 1
-
-  //       await telegramNotifierService.sendError(
-  //         `Liquidation Process: Job ${job.id} failed and will be retried (attempt ${nextAttempt}/${maxAttempts}). Error: ${error.message}`
-  //       )
-  //     } else {
-  //       // Job has exhausted all retry attempts
-
-  //       await telegramNotifierService.sendError(
-  //         `Liquidation Process: Job ${job.id} has permanently failed after ${maxAttempts} attempts. Error: ${error.message}`
-  //       )
-  //     }
-  //   })
-
-  //   // worker.on("error", (error: Error) => {
-  //   //   console.error(`Worker error for wallet ${address}:`, error)
-  //   //   telegramNotifierService.sendError(`Liquidation Process Worker Error (${address}): ${error.message}`)
-  //   // })
-
-  //   // Handle lock renewal failures - cancel jobs when lock is lost
-  //   // This allows graceful cleanup and lets BullMQ's stalled job checker retry the job
-  //   worker.on("lockRenewalFailed", (jobIds: string[]) => {
-  //     console.warn(`Lock renewal failed for ${jobIds.length} job(s) on wallet ${address}:`, jobIds)
-  //     jobIds.forEach((jobId) => {
-  //       worker.cancelJob(jobId, "Lock renewal failed - will be retried by stalled job checker")
-  //     })
-  //   })
-  // }
-
-  // // Handle queue events
-  // liquidatorQueue.on("error", (error: Error) => {
-  //   console.error("Queue error:", error)
-  //   telegramNotifierService.sendError(`Liquidation Process Queue Error: ${error.message}`)
-  // })
+  for (const [address, worker] of walletWorkers.entries()) {
+    // Handle lock renewal failures - cancel jobs when lock is lost
+    // This allows graceful cleanup and lets BullMQ's stalled job checker retry the job
+    worker.on("lockRenewalFailed", (jobIds: string[]) => {
+      console.warn(`Lock renewal failed for ${jobIds.length} job(s) on wallet ${address}:`, jobIds)
+      jobIds.forEach((jobId) => {
+        worker.cancelJob(jobId, "Lock renewal failed - will be retried by stalled job checker")
+      })
+    })
+  }
 
   // Auto-resume interval: check paused wallets every 5 minutes
   const AUTO_RESUME_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes

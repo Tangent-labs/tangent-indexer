@@ -249,7 +249,7 @@ export class PredepositCampaignService {
         // Retrieve user from the input of the chainview
         const onChainAddress = users[i].toLowerCase()
         // Find in the database the data containing the merged balance from the database
-        const databaseBal = dbData.find((databaseValue) => databaseValue.user_address === onChainAddress)
+        const databaseBal = dbData.find((databaseValue) => databaseValue.user_address.toLowerCase() === onChainAddress)
         // If the onchain snapshot of balances is smaller that what we have in db
         // it means the user has less LP compare to what he had through `AddLiquidity` events.
         if (databaseBal) {

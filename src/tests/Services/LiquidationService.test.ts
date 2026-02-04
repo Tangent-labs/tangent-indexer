@@ -15,7 +15,7 @@ import {
 import { BlockRepository } from "../../../src/db/BlockRepository.js"
 import { LiquidationExecutionContext } from "../../../src/services/LiquidationExecutionContext.js"
 import * as getBestRpcProviderModule from "../../../src/utils/getBestRpcProvider.js"
-import { RouterService } from "src/services/RouterService.js"
+import { RouterService } from "../../services/RouterService.js"
 import { indexerConfig } from "../../config/indexer_config.js"
 
 // Mock ethers module - this needs to be before any imports that use it
@@ -406,7 +406,7 @@ describe("LiquidationService - analyzeLiquidation", () => {
     const accounts: LiquidationUserInInfo[] = [
       { account: "0xUser1", market: "0xMarket1" }, // Hard Liquidation
       { account: "0xUser2", market: "0xMarket2" }, // Soft Liquidation
-      { account: "0xUser3", market: "0xMarket3" }, // Not a debtor (zero debt)
+      { account: "0xUser3", market: "0xMarket3" }, // 0 debt
       { account: "0xUser4", market: "0xMarket4" }, // Healthy account (no liquidation)
       { account: "0xUser5", market: "0xMarket5" }, // Soft Liquidation
       { account: "0xUser6", market: "0xMarket6" }, // Hard Liquidation
@@ -422,7 +422,7 @@ describe("LiquidationService - analyzeLiquidation", () => {
       markets: [
         { ...defaultMarket, market: "0xMarket1" },
         { ...baseMarketValues, market: "0xMarket2", liquidationThreshold: 75000n },
-        { ...defaultMarket, market: "0xMarket3" },
+        { ...defaultMarket, ...{ userDebt: 0n }, market: "0xMarket3" },
         { ...defaultMarket, market: "0xMarket4" },
         { ...baseMarketValues, market: "0xMarket5", liquidationThreshold: 75000n },
         { ...defaultMarket, market: "0xMarket6" },
@@ -441,7 +441,7 @@ describe("LiquidationService - analyzeLiquidation", () => {
           market: "0xMarket2",
         },
         {
-          healthRatio: 2000000000000000000n, // No debt 0xUser3
+          healthRatio: 2000000000000000000n, // Small debt, healthy 0xUser3
           userDebt: 0n,
           positionValue: 500n * DECIMALS,
           market: "0xMarket3",
@@ -767,7 +767,7 @@ describe("LiquidationService - executeLiquidation", () => {
     // Reset mock calls before execution
     mockMarketContract.liquidate.mockClear()
 
-    await liquidationService.executeLiquidation(0, account)
+    await liquidationService.executeLiquidation(0, account, 0n)
 
     // Verify slippage calculation: 50n + (10n * 0n) / 10000n = 50n
     expect(estimateSpy).toHaveBeenCalled()
@@ -881,7 +881,7 @@ describe("LiquidationService - executeLiquidation", () => {
     mockMarketContract.liquidate.mockClear()
     mockLiquidationBotService.logLiquidationExecution.mockClear()
 
-    await liquidationService.executeLiquidation(0, account)
+    await liquidationService.executeLiquidation(0, account, 0n)
 
     // Should execute 2 transactions for split routes
     expect(estimateSpy).toHaveBeenCalled()
@@ -963,8 +963,7 @@ describe("LiquidationService - executeLiquidation", () => {
 
     // Reset mock calls before execution
     mockMarketContract.liquidate.mockClear()
-
-    await liquidationService.executeLiquidation(0, account)
+    await liquidationService.executeLiquidation(0, account, 0n, 0)
 
     // Verify both transactions were executed
     expect(estimateSpy).toHaveBeenCalled()
@@ -1033,7 +1032,7 @@ describe("LiquidationService - executeLiquidation", () => {
     // Reset mock calls before execution
     mockMarketContract.liquidate.mockClear()
 
-    await liquidationService.executeLiquidation(0, account)
+    await liquidationService.executeLiquidation(0, account, 0n)
 
     // Verify both transactions were executed
     expect(estimateSpy).toHaveBeenCalled()
@@ -1055,7 +1054,7 @@ describe("LiquidationService - executeLiquidation", () => {
 
     vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue([])
 
-    await liquidationService.executeLiquidation(0, account)
+    await liquidationService.executeLiquidation(0, account, 0n)
 
     expect(liquidationService.errors).toHaveLength(1)
     expect(liquidationService.errors[0].action).toBe("liquidation_execution")
@@ -1129,7 +1128,7 @@ describe("LiquidationService - executeLiquidation", () => {
     // Reset mock calls before execution
     mockMarketContract.liquidate.mockClear()
 
-    await liquidationService.executeLiquidation(0, account)
+    await liquidationService.executeLiquidation(0, account, 0n)
 
     // Verify both transactions were executed
     expect(estimateSpy).toHaveBeenCalled()
@@ -1205,7 +1204,7 @@ describe("LiquidationService - executeLiquidation", () => {
       })
       .mockRejectedValueOnce(new Error("Transaction failed"))
 
-    await liquidationService.executeLiquidation(0, account)
+    await liquidationService.executeLiquidation(0, account, 0n)
 
     // Should attempt both transactions
     expect(mockMarketContract.liquidate).toHaveBeenCalledTimes(2)
@@ -1327,6 +1326,7 @@ describe("LiquidationService - Best RPC Provider", () => {
 
       const mockTelegramNotifier = {
         sendError: vi.fn().mockResolvedValue(undefined),
+        sendMessage: vi.fn().mockResolvedValue(undefined),
       }
 
       // Call processJob with rpcIndex = 1 (should use provider[1] instead of provider[0])
@@ -1337,7 +1337,6 @@ describe("LiquidationService - Best RPC Provider", () => {
         0, // walletIndex
         expect.any(Object), // account
         0n, // slippageModifierBps
-        0, // nbAttempt
         1, // rpcIndex - should be 1, not 0
         expect.objectContaining({
           currentRpcIndex: 1, // logContext should have rpcIndex = 1
@@ -1387,6 +1386,7 @@ describe("LiquidationService - Best RPC Provider", () => {
 
       const mockTelegramNotifier = {
         sendError: vi.fn().mockResolvedValue(undefined),
+        sendMessage: vi.fn().mockResolvedValue(undefined),
       }
 
       // Call processJob without rpcIndex (should use context.currentRpcIndex = 2)
@@ -1397,7 +1397,6 @@ describe("LiquidationService - Best RPC Provider", () => {
         0, // walletIndex
         expect.any(Object), // account
         0n, // slippageModifierBps
-        0, // nbAttempt
         2, // rpcIndex - should be 2 from context
         expect.objectContaining({
           currentRpcIndex: 2, // logContext should have rpcIndex = 2
@@ -1441,6 +1440,7 @@ describe("LiquidationService - Best RPC Provider", () => {
 
       const mockTelegramNotifier = {
         sendError: vi.fn().mockResolvedValue(undefined),
+        sendMessage: vi.fn().mockResolvedValue(undefined),
       }
 
       const customRpcIndex = 1
@@ -1450,7 +1450,7 @@ describe("LiquidationService - Best RPC Provider", () => {
 
       // Verify that executeLiquidation received logContext with correct values
       const executeLiquidationCall = (liquidationService.executeLiquidation as any).mock.calls[0]
-      const logContext = executeLiquidationCall[5] // 6th parameter is logContext
+      const logContext = executeLiquidationCall[4] // 5th parameter is logContext
 
       expect(logContext.currentRpcIndex).toBe(customRpcIndex)
       expect(logContext.currentBlock).toBe(customCurrentBlock)
@@ -1513,7 +1513,7 @@ describe("LiquidationService - Best RPC Provider", () => {
 
       const estimateSpy = vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue(mockEstimate)
 
-      await liquidationService.executeLiquidation(0, account, 0n, undefined, customRpcIndex, logContext)
+      await liquidationService.executeLiquidation(0, account, 0n, customRpcIndex, logContext)
 
       // Verify that estimateLiquidation was called with the custom rpcIndex
       expect(estimateSpy).toHaveBeenCalledWith(

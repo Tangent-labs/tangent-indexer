@@ -268,11 +268,10 @@ describe("liquidation_process", () => {
         executionKey: TEST_EXECUTION_KEY,
       })
       expect(executeLiquidationCall[2]).toBe(0n) // slippageModifierBps when attemptsMade is 0
-      expect(executeLiquidationCall[3]).toBe(0) // nbAttempt (attemptsMade from job)
-      // rpcIndex (optional, can be undefined or a number)
-      expect(typeof executeLiquidationCall[4] === "undefined" || typeof executeLiquidationCall[4] === "number").toBe(true)
-      // logContext (optional)
-      expect(executeLiquidationCall[5]).toMatchObject({
+      // rpcIndex (position 3)
+      expect(typeof executeLiquidationCall[3] === "undefined" || typeof executeLiquidationCall[3] === "number").toBe(true)
+      // logContext (position 4)
+      expect(executeLiquidationCall[4]).toMatchObject({
         currentRpcIndex: expect.any(Number),
         currentBlock: expect.any(Number),
       })
@@ -324,21 +323,16 @@ describe("liquidation_process", () => {
           type: "liquidation",
         })
         expect(executeLiquidationCall[2]).toEqual(testCase.expectedSlippageModifier) // slippageModifierBps
-        expect(executeLiquidationCall[3]).toBe(testCase.attemptsMade) // nbAttempt
-        // rpcIndex (optional, can be undefined or a number)
-        expect(typeof executeLiquidationCall[4] === "undefined" || typeof executeLiquidationCall[4] === "number").toBe(true)
-        // logContext (optional)
-        expect(executeLiquidationCall[5]).toMatchObject({
+        // rpcIndex (position 3)
+        expect(typeof executeLiquidationCall[3] === "undefined" || typeof executeLiquidationCall[3] === "number").toBe(true)
+        // logContext (position 4)
+        expect(executeLiquidationCall[4]).toMatchObject({
           currentRpcIndex: expect.any(Number),
           currentBlock: expect.any(Number),
         })
 
-        // Verify telegram notification was sent for retries (attemptsMade > 0)
-        if (testCase.attemptsMade > 0) {
-          expect(mockTelegramNotifierService.sendError).toHaveBeenCalledWith(expect.stringContaining(`Retry attempt ${testCase.attemptsMade + 1}`))
-        } else {
-          expect(mockTelegramNotifierService.sendError).not.toHaveBeenCalled()
-        }
+        // Note: Retry telegram notification is currently disabled in the service
+        // The slippage modifier is still applied, but no notification is sent
       }
     })
 
@@ -400,7 +394,7 @@ describe("liquidation_process", () => {
       await expect(mockLiquidationService.processJob(seizingJob, mockTelegramNotifierService, walletPk)).rejects.toThrow("Execution failed")
 
       expect(mockLiquidationService.executeSeizing).toHaveBeenCalled()
-      expect(mockTelegramNotifierService.sendError).toHaveBeenCalledWith(expect.stringContaining("Liquidation Process Error: Failed to execute seizing"))
+      expect(mockTelegramNotifierService.sendError).toHaveBeenCalledWith(expect.stringContaining("Seizing error"))
     })
 
     it("should handle unknown job types", async () => {

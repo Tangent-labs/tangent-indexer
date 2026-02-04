@@ -65,8 +65,8 @@ export class LiquidationBotLogService {
   ) {
     // Send Telegram notification by default (unless explicitly disabled)
     if (sendTelegramNotification) {
-      // const fullMessage = `Liquidation Error in action ${action}: ${error.message.slice(0, 100)}`
-      // await this.telegramNotifierService.sendError(escapeMarkdownV2(fullMessage))
+      const fullMessage = `Liquidation Error in action ${action}: ${error.message.slice(0, 100)}`
+      await this.telegramNotifierService.sendError(fullMessage)
     }
 
     // Extract error information, including any custom properties

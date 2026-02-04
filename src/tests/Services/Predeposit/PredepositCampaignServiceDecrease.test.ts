@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { PredepositCampaignRepository } from "../../../db/PredepositCampaignRepository.js"
 import { BlockRepository } from "../../../db/BlockRepository.js"
@@ -36,6 +36,13 @@ describe("PredepositCampaignServiceDecrease - Decrease amounts part", () => {
   const totalUSG_USDC = { id: 1n, cap_lp: FIVE_M, total_lp: parseEther("4000000").toString(), usg_lp_id: 1n, usg_lp: { lp_name: "USG-USDC" } }
   const totalUSG_frxUSD = { id: 2n, cap_lp: ONE_500_M, total_lp: ONE_500_M, usg_lp_id: 2n, usg_lp: { lp_name: "USG-frxUSD" } }
 
+  const blockRepository = {
+    getLastEventBlock: vi.fn(),
+  } as any as BlockRepository
+
+  const provider = {} as any as JsonRpcProvider
+
+  const predepositService = new PredepositCampaignService(predepositCampaignRepository, blockRepository, provider)
   vi.spyOn(predepositCampaignRepository, "getAllUsers").mockResolvedValue(PUBLIC_USERS)
   vi.spyOn(predepositCampaignRepository, "getAllAccountedBalances").mockResolvedValue([
     { id: 1n, user_address: "USER0".toLowerCase(), usg_lp: { lp_name: "USG-USDC" }, balance_lp: parseEther("3000000").toString(), usg_lp_id: 1n },
@@ -45,13 +52,6 @@ describe("PredepositCampaignServiceDecrease - Decrease amounts part", () => {
   ])
   vi.spyOn(predepositCampaignRepository, "getAccountedTotal").mockResolvedValue([totalUSG_USDC, totalUSG_frxUSD])
 
-  const blockRepository = {
-    getLastEventBlock: vi.fn(),
-  } as any as BlockRepository
-
-  const provider = {} as any as JsonRpcProvider
-
-  const predepositService = new PredepositCampaignService(predepositCampaignRepository, blockRepository, provider)
   vi.spyOn(predepositService as any, "getAccountedUsers")
   vi.spyOn(predepositService as any, "updateDbState")
   vi.spyOn(predepositService as any, "getOnchainSnapshot")
@@ -59,11 +59,6 @@ describe("PredepositCampaignServiceDecrease - Decrease amounts part", () => {
   // Mock .env
   vi.stubEnv("INDEXING_BLOCK_RANGE", "100")
   vi.stubEnv("STARTING_BLOCK", "100")
-
-  beforeEach(() => {
-    // Reset all mocks
-    vi.clearAllMocks()
-  })
 
   it("Complete test where some accounted_balances should be replaced and some not", async () => {
     ;(chainModule.chainView as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
