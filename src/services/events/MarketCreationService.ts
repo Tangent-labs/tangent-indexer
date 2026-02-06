@@ -3,7 +3,8 @@ import { MarketContractsRepository } from "../../db/MarketContractsRepository.js
 import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher.js"
 import { UserPointsLPRepository } from "../../db/Points/UserPointsLPRepository.js"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
-import { PTS_PER_HOUR_TO_SECONDS_RATE } from "../../scripts/db-seed/config/config_lp_tasks.js"
+import { PTS_PER_HOUR_TO_SECONDS_RATE } from "../../scripts/db/config/config_lp_tasks.js"
+import { BlockService } from "../BlockService.js"
 
 export class MarketCreationService {
   marketContractsRepository: MarketContractsRepository
@@ -23,9 +24,9 @@ export class MarketCreationService {
     this.erc20Repository = erc20Repository
   }
 
-  async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
+  async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number, blockService: BlockService) {
     // Fetch logs from MarketCreator
-    let marketsCreated = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, this.marketCreatorAddress)
+    let marketsCreated = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, this.marketCreatorAddress, blockService)
 
     // If some logs are coming from MarketCreator, we insert them in db
     if (marketsCreated.length) {
@@ -67,7 +68,8 @@ export class MarketCreationService {
             point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[5],
             protocol: "Tangent",
             token_address: market.contract_address.toLowerCase(),
-            url: "usg.tangent.finance",
+            url: process.env.DAPP_URL + "/" + market.contract_address.toLowerCase(),
+            start_date: market.create_date,
           }))
         )
       }

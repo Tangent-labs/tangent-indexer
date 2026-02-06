@@ -27,7 +27,13 @@ const addresses: AddressesJson = {
     convexFxnMarket: "0xI",
   },
   wStables: {},
-  oracles: {},
+  oracles: {
+    chainlink: {},
+    coinFromCurveLp: {},
+    duoPoolStable: {},
+    pendlePT: {},
+    USG: "",
+  },
   markets: [],
   pegKeepers: {},
   tokens: {

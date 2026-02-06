@@ -1,14 +1,19 @@
 import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext.js"
-import { AddressesJson } from "../../type/data.js"
-import { TransactionPrisma } from "../../type/prisma.js"
+import { AddressesJson } from "../../../type/data.js"
+import { TransactionPrisma } from "../../../type/prisma.js"
 import { ZeroAddress } from "ethers"
 import { CONVEX_LOCKER } from "@tangent/defi-resources/build/ressources/contracts/convex.js"
 import { PENDLE_POOLS } from "@tangent/defi-resources"
 import { Prisma } from "@prisma/client"
-import { LP_TASKS } from "./config/config_lp_tasks.js"
+import { LP_TASKS } from "../config/config_lp_tasks.js"
 
-export async function seedLPTasksAndTrackedERC20(prisma: TransactionPrisma, addresses: AddressesJson, priceSources: Prisma.price_sourceCreateManyInput[]) {
-  const lpTasks = LP_TASKS(addresses, priceSources)
+export async function seedLPTasksAndTrackedERC20(
+  prisma: TransactionPrisma,
+  addresses: AddressesJson,
+  priceSources: Prisma.price_sourceCreateManyInput[],
+  now: Date
+) {
+  const lpTasks = LP_TASKS(addresses, priceSources, now)
   await prisma.tracked_erc20.createMany({
     data: lpTasks.map((t) => {
       return {

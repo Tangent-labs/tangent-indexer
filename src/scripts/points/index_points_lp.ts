@@ -43,12 +43,10 @@ async function main() {
         async (dbTransaction: TransactionPrisma) => {
           setTransaction(dbTransaction)
           await userPointsService.retrieveUserAddressesFromTransfers(startBlock, endBlock)
+          const blockDates = await blockService.fetchBlockTimestamps([startBlock, endBlock], indexerConfig.provider.chainRpc[bestProviderIndex])
 
-          // TODO: get price
-
-          // TODO: get boost
           currentAction = POINTS_BOT_ACTIONS.POINTS_PROCESS_USER_TASK
-          await userPointsService.updateLPUserTasks(startBlock, endBlock)
+          await userPointsService.updateLPUserTasks(startBlock, endBlock, blockDates)
           await notificationService.addPointNotification(executionKey, {
             process: POINTS_BOT_ACTIONS.POINTS_PROCESS_USER_TASK,
             error: null,
@@ -59,7 +57,8 @@ async function main() {
 
           // Process points calculation for user tasks
           currentAction = POINTS_BOT_ACTIONS.POINTS_CALCULATE_POINTS
-          await userPointsService.processUserPoints(startBlock, endBlock, blockService, indexerConfig.provider.chainRpc[bestProviderIndex])
+
+          await userPointsService.computeUserPoints(startBlock, endBlock, blockDates)
           await notificationService.addPointNotification(executionKey, {
             process: POINTS_BOT_ACTIONS.POINTS_CALCULATE_POINTS,
             error: null,

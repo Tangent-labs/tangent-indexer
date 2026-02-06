@@ -28,7 +28,7 @@
 import * as dotenv from "dotenv"
 import { readFileSync } from "fs"
 import { join } from "path"
-import { TransactionPrisma } from "../../type/prisma.js"
+import { TransactionPrisma } from "../../../type/prisma.js"
 import { PrismaClient } from "@prisma/client"
 
 dotenv.config()

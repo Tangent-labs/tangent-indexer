@@ -130,16 +130,21 @@ describe("UserPointsService.updateUserTasks", () => {
 
     const startBlock = 1234567
     const endBlock = 1236567
-    await userPointsService.updateLPUserTasks(startBlock, endBlock)
+    const blockDates = new Map<number, number>()
+    blockDates.set(1234567, 1)
+    blockDates.set(1236567, 100)
+    await userPointsService.updateLPUserTasks(startBlock, endBlock, blockDates)
 
-    expect(userPointsRepository.fetchTasksEventsAndAddresses).toHaveBeenCalledWith(startBlock, endBlock)
+    expect(userPointsRepository.fetchTasksEventsAndAddresses).toHaveBeenCalledWith(startBlock, endBlock, blockDates)
   })
 
   it("Should handle empty events", async () => {
     fetchTasksEventsAndAddressesSpy.mockResolvedValue({ tasks: [], transferEvents: [] })
-
-    await userPointsService.updateLPUserTasks(9, 10)
-    expect(userPointsRepository.fetchTasksEventsAndAddresses).toHaveBeenCalledWith(9, 10)
+    const blockDates = new Map<number, number>()
+    blockDates.set(9, 1)
+    blockDates.set(10, 100)
+    await userPointsService.updateLPUserTasks(9, 10, blockDates)
+    expect(userPointsRepository.fetchTasksEventsAndAddresses).toHaveBeenCalledWith(9, 10, blockDates)
   })
 })
 
@@ -182,8 +187,10 @@ describe("UserPointsService.updateTasks", () => {
   it("Should not open any tasks", async () => {
     getOpenedTasksSpy.mockResolvedValue([])
     fetchTasksEventsAndAddressesSpy.mockResolvedValue({ tasks: [{ id: 1n, token: { address: USG } }], transferEvents: [] })
-
-    await userPointsService.updateLPUserTasks(1, 100)
+    const blockDates = new Map<number, number>()
+    blockDates.set(1, 1)
+    blockDates.set(100, 100)
+    await userPointsService.updateLPUserTasks(1, 100, blockDates)
 
     expect(userPointsRepository.getOpenedTasks).toHaveBeenCalledWith([], [1n])
 
@@ -207,8 +214,10 @@ describe("UserPointsService.updateTasks", () => {
 
     getOpenedTasksSpy.mockResolvedValue([])
     fetchTasksEventsAndAddressesSpy.mockResolvedValue({ tasks: [{ id: 1n, token: { address: USG } }], transferEvents: [newEvent] })
-
-    await userPointsService.updateLPUserTasks(1, 100)
+    const blockDates = new Map<number, number>()
+    blockDates.set(1, 1)
+    blockDates.set(100, 100)
+    await userPointsService.updateLPUserTasks(1, 100, blockDates)
 
     expect(userPointsRepository.getOpenedTasks).toHaveBeenCalledWith([USER2.toLowerCase()], [1n])
 
@@ -217,8 +226,8 @@ describe("UserPointsService.updateTasks", () => {
       [
         {
           amount: parseEther("200").toString(),
-          start: date0,
-          closed: null,
+          start_date: date0,
+          closed_date: null,
           task_id: 1n,
           user_address: USER2,
         },
@@ -243,31 +252,33 @@ describe("UserPointsService.updateTasks", () => {
       task_id: 906n,
       user_address: USER2,
       amount: parseEther("600000"),
-      start: date0,
-      closed: null,
+      start_date: date0,
+      closed_date: null,
     }
 
     getOpenedTasksSpy.mockResolvedValue([openedTask])
     fetchTasksEventsAndAddressesSpy.mockResolvedValue({ tasks: [{ id: 906n, token: { address: USG } }], transferEvents: [newEvent] })
-
-    await userPointsService.updateLPUserTasks(1, 100)
+    const blockDates = new Map<number, number>()
+    blockDates.set(1, 1)
+    blockDates.set(100, 100)
+    await userPointsService.updateLPUserTasks(1, 100, blockDates)
 
     expect(userPointsRepository.getOpenedTasks).toHaveBeenCalledWith([USER1.toLowerCase(), USER2.toLowerCase()], [openedTask.task_id])
 
     expect(userPointsRepository.updateProcessedTasks).toHaveBeenCalledWith(
-      [{ id: 2953n, closed: date1 }],
+      [{ id: 2953n, closed_date: date1 }],
       [
         {
           amount: parseEther("200").toString(),
-          start: date1,
-          closed: null,
+          start_date: date1,
+          closed_date: null,
           task_id: 906n,
           user_address: USER1,
         },
         {
           amount: parseEther((600000 + 200).toString()).toString(),
-          start: date1,
-          closed: null,
+          start_date: date1,
+          closed_date: null,
           task_id: 906n,
           user_address: USER2,
         },
@@ -292,24 +303,26 @@ describe("UserPointsService.updateTasks", () => {
       task_id: 906n,
       user_address: USER2,
       amount: parseEther("200"),
-      start: date0,
-      closed: null,
+      start_date: date0,
+      closed_date: null,
     }
 
     getOpenedTasksSpy.mockResolvedValue([openedTask])
     fetchTasksEventsAndAddressesSpy.mockResolvedValue({ tasks: [{ id: 906n, token: { address: USG } }], transferEvents: [newEvent] })
-
-    await userPointsService.updateLPUserTasks(1, 100)
+    const blockDates = new Map<number, number>()
+    blockDates.set(1, 1)
+    blockDates.set(100, 100)
+    await userPointsService.updateLPUserTasks(1, 100, blockDates)
 
     expect(userPointsRepository.getOpenedTasks).toHaveBeenCalledWith([USER2.toLowerCase(), USER1.toLowerCase()], [openedTask.task_id])
 
     expect(userPointsRepository.updateProcessedTasks).toHaveBeenCalledWith(
-      [{ id: 2953n, closed: date1 }],
+      [{ id: 2953n, closed_date: date1 }],
       [
         {
           amount: parseEther("200").toString(),
-          start: date1,
-          closed: null,
+          start_date: date1,
+          closed_date: null,
           task_id: 906n,
           user_address: USER1,
         },
@@ -323,8 +336,8 @@ describe("UserPointsService.updateTasks", () => {
       task_id: 906n,
       user_address: USER1,
       amount: parseEther("4000"),
-      start: date0,
-      closed: null,
+      start_date: date0,
+      closed_date: null,
     }
 
     const firstEvent = {
@@ -352,38 +365,42 @@ describe("UserPointsService.updateTasks", () => {
     getOpenedTasksSpy.mockResolvedValue([openedTask])
     fetchTasksEventsAndAddressesSpy.mockResolvedValue({ tasks: [{ id: 906n, token: { address: USG } }], transferEvents: [firstEvent, secondEvent] })
 
-    await userPointsService.updateLPUserTasks(1, 100)
+    const blockDates = new Map<number, number>()
+    blockDates.set(1, 1)
+    blockDates.set(100, 100)
+
+    await userPointsService.updateLPUserTasks(1, 100, blockDates)
 
     expect(userPointsRepository.getOpenedTasks).toHaveBeenCalledWith([USER1.toLowerCase(), USER2.toLowerCase()], [openedTask.task_id])
 
     expect(userPointsRepository.updateProcessedTasks).toHaveBeenCalledWith(
-      [{ id: 2953n, closed: date1 }],
+      [{ id: 2953n, closed_date: date1 }],
       [
         {
           amount: parseEther("3500").toString(),
-          start: date1,
-          closed: date2,
+          start_date: date1,
+          closed_date: date2,
           task_id: 906n,
           user_address: USER1,
         },
         {
           amount: parseEther("500").toString(),
-          start: date1,
-          closed: date2,
+          start_date: date1,
+          closed_date: date2,
           task_id: 906n,
           user_address: USER2,
         },
         {
           amount: parseEther("300").toString(),
-          start: date2,
-          closed: null,
+          start_date: date2,
+          closed_date: null,
           task_id: 906n,
           user_address: USER2,
         },
         {
           amount: parseEther("3700").toString(),
-          start: date2,
-          closed: null,
+          start_date: date2,
+          closed_date: null,
           task_id: 906n,
           user_address: USER1,
         },

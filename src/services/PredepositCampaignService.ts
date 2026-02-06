@@ -11,9 +11,9 @@ import { getAddressesJson } from "../utils/jsonReader.js"
 export class PredepositCampaignService {
   predepositRepository: PredepositCampaignRepository
   blockRepository: BlockRepository
-  provider: JsonRpcProvider
+  provider: JsonRpcProvider | undefined
 
-  constructor(predepositCampaignRepository: PredepositCampaignRepository, blockRepository: BlockRepository, provider: JsonRpcProvider) {
+  constructor(predepositCampaignRepository: PredepositCampaignRepository, blockRepository: BlockRepository, provider?: JsonRpcProvider | undefined) {
     this.predepositRepository = predepositCampaignRepository
     this.blockRepository = blockRepository
     this.provider = provider
@@ -22,6 +22,10 @@ export class PredepositCampaignService {
   /* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=
             INCREASE / DEPOSIT MANAGEMENT
   =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-= */
+
+  async getUsgLpKeys(): Promise<Prisma.usg_lp_keysCreateManyInput[]> {
+    return await this.predepositRepository.getUsgLps()
+  }
 
   /**
    * @notice  During the deposit phase, fetches between 2 blocks all the AddLiquidity events on both LP and parse them.
@@ -221,10 +225,7 @@ export class PredepositCampaignService {
     const { totalAccountedToDelete, totalAccountedToInsert, accountedBalancesToDelete, accountedBalancesToInsert } = await this.compareDbAndSnapshots(
       users,
       // TODO We need to add the addresses of Curve Gauge, StakeVault, ConvexRewardToken
-      // (await this.getOnchainSnapshot(users, [addresses.lps["USG-USDC"]], [addresses.lps["USG-frxUSD"]]))[0],
-
       (await this.getOnchainSnapshot(users, [addresses.lps["USG-USDC"]], [addresses.lps["USG-frxUSD"]]))[0],
-
       await this.predepositRepository.getAllAccountedBalances(),
       await this.predepositRepository.getAccountedTotal()
     )
@@ -288,7 +289,7 @@ export class PredepositCampaignService {
    */
   async getOnchainSnapshot(users: string[], usgUsdcPositions: string[], usgFrxUsdPositions: string[]) {
     return await chainView<[string[], string[], string[]], [bigint[][]]>(
-      this.provider,
+      this.provider!,
       PredepositCampaignSnapshot.abi,
       PredepositCampaignSnapshot.bytecode,
       // Format the params for chainview

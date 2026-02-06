@@ -228,8 +228,13 @@ export type AddressesJson = {
     convexFxnMarket: string
     basicERC20Market: string
   }
-  oracles: { [tokenName: string]: string }
-
+  oracles: {
+    chainlink: { [tokenName: string]: string }
+    coinFromCurveLp: { [tokenName: string]: string }
+    duoPoolStable: { [tokenName: string]: string }
+    pendlePT: { [tokenName: string]: string }
+    USG: string
+  }
   pegKeepers: { [poolName: string]: string }
   wStables: { [poolName: string]: string }
   markets: { marketAddress: string; collatName: string; collatAddress: string; marketType: string }[]

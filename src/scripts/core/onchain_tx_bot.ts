@@ -12,7 +12,7 @@ async function main() {
   // Prepare parameters
   const marketAddresses = addresses.markets.map((m) => m.marketAddress)
   const keeperAddresses = Object.values(addresses.pegKeepers).map((k) => k)
-  const keeperNames = Object.keys(addresses.pegKeepers).map((k) => k)
+  const keeperNames = Object.keys(addresses.pegKeepers).map((k) => k.replace("-", ""))
 
   // Retrieve the onchain data of :
   //  - Profits of the pegKeepers

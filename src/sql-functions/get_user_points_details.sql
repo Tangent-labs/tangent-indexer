@@ -58,8 +58,17 @@ AS $$
       t.token_address,
       t.point_rate,                                -- points per second per USD
       t.price_source_id,
-      GREATEST(ut.start, p.start_at)               AS seg_start,
-      LEAST(COALESCE(ut.closed, p.end_at), p.end_at) AS seg_end,
+      -- Clip to the intersection of: user participation, query window, AND task active period
+      GREATEST(
+        ut.start, 
+        p.start_at,
+        t.start_date                    
+      ) AS seg_start, -- Task must have started
+      LEAST(
+        COALESCE(ut.closed, p.end_at),
+        p.end_at,
+        COALESCE(t.end_date, p.end_at)  -- Task may have ended
+      ) AS seg_end,
       NULLIF(ut.amount, '')::numeric / POWER(10, 18) AS amount
     FROM points.lp_user_tasks ut
     JOIN points.lp_task t
@@ -68,6 +77,9 @@ AS $$
     CROSS JOIN params p
     WHERE ut.start < p.end_at
       AND COALESCE(ut.closed, p.end_at) > p.start_at
+      -- Only include tasks that overlap with the query window
+      AND t.start_date < p.end_at
+      AND COALESCE(t.end_date, p.end_at) > p.start_at
   ),
   seg_price AS (
     SELECT

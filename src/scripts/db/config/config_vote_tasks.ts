@@ -1,18 +1,12 @@
 import { CURVE_GLOBAL_CONTRACTS, FXN_GLOBAL_CONTRACTS } from "@tangent/defi-resources"
 
-//
+export const CURVE_GAUGE_URL = "https://www.curve.finance/dao/ethereum/gauges"
 export const ONCHAIN_TASKS = [
   {
     orga: "CRV",
-    url: "https://www.curve.finance/dao/ethereum/gauges",
+    url: CURVE_GAUGE_URL,
     controller: CURVE_GLOBAL_CONTRACTS.GAUGE_CONTROLLER.toLowerCase(),
     gauges: [
-      {
-        taskDescription: "frxUSD/crvUSD on veCRV gauge",
-        name: "frxUSD/crvUSD",
-        address: "0x22804b0f6be741a9fa1bbaecdd6c8d4116e96944".toLowerCase(),
-        pointRate: 5,
-      },
       {
         taskDescription: "USDC/crvUSD on veCRV gauge",
         name: "USDC/crvUSD",

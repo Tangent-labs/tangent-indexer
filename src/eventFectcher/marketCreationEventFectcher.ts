@@ -10,6 +10,7 @@ import {
 } from "../resources/eventSignatures.js"
 import { getEthLogs } from "./_baseFetcher.js"
 import { MarketType } from "../type/data.js"
+import { BlockService } from "src/services/BlockService.js"
 
 // Define Event Signatures
 
@@ -25,7 +26,8 @@ export const fetchMarketCreationLogs = async (
   provider: JsonRpcProvider,
   startingBlock: number,
   endingBlock: number,
-  marketCreator: AddressLike
+  marketCreator: AddressLike,
+  blockService: BlockService
 ): Promise<Prisma.usg_marketsCreateInput[]> => {
   const logs = await getEthLogs(
     provider,
@@ -41,10 +43,14 @@ export const fetchMarketCreationLogs = async (
     ]
   )
 
-  return await Promise.all(logs.map((log) => parseMarketEvent(log, provider)))
+  const creationDates = await blockService.fetchBlockTimestamps(
+    logs.map((l) => l.blockNumber),
+    provider._getConnection().url
+  )
+  return await Promise.all(logs.map((log) => parseMarketEvent(log, provider, log.blockNumber, new Date(creationDates.get(log.blockNumber)!))))
 }
 
-const parseMarketEvent = async (log: Log, provider: JsonRpcProvider): Promise<Prisma.usg_marketsCreateInput> => {
+const parseMarketEvent = async (log: Log, provider: JsonRpcProvider, creationBlock: number, creationDate: Date): Promise<Prisma.usg_marketsCreateInput> => {
   // all events have the same signature
   const decoded = ethers.AbiCoder.defaultAbiCoder().decode(["address", "string"], log.data)
   const name = decoded[1]
@@ -77,5 +83,7 @@ const parseMarketEvent = async (log: Log, provider: JsonRpcProvider): Promise<Pr
     contract_address: marketAddress.toLowerCase(),
     contract_type: type,
     collateral_address: await marketContract.collatToken(),
+    create_date: creationDate,
+    create_block: creationBlock,
   }
 }

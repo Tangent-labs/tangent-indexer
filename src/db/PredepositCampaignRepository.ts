@@ -20,6 +20,10 @@ export type AccountedTotal = {
   }
 }
 export class PredepositCampaignRepository extends AbstractRepository {
+  async getUsgLps() {
+    return await this.prismaClient.usg_lp_keys.findMany()
+  }
+
   /* =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=
                       BLOCK
   =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-= */

@@ -1,7 +1,7 @@
 import { Prisma, PrismaClient } from "@prisma/client"
-import { NumMap } from "../../services/boost/types.js"
-import { TransactionPrisma } from "../../type/prisma.js"
-import { ONCHAIN_TASKS, OFFCHAIN_TASKS } from "./config/config_vote_tasks.js"
+import { NumMap } from "../../../services/boost/types.js"
+import { TransactionPrisma } from "../../../type/prisma.js"
+import { ONCHAIN_TASKS, OFFCHAIN_TASKS } from "../config/config_vote_tasks.js"
 
 export async function seedVoteTasks(prisma: PrismaClient | TransactionPrisma) {
   // Map through snapshot organisation to create vote_task objects

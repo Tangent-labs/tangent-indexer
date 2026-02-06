@@ -31,23 +31,23 @@ export class UserPointsLPRepository extends AbstractRepository {
         task_id: {
           in: taskIds,
         },
-        closed: null,
+        closed_date: null,
       },
       select: {
         id: true,
         task_id: true,
         user_address: true,
         amount: true,
-        start: true,
-        closed: true,
+        start_date: true,
+        closed_date: true,
       },
-      orderBy: { start: "desc" },
+      orderBy: { start_date: "desc" },
     })
   }
 
-  updateProcessedTasks = async (tasksToClose: { id: bigint; closed: Date }[], tasksToCreate: Prisma.lp_user_tasksUncheckedCreateInput[]) => {
+  updateProcessedTasks = async (tasksToClose: { id: bigint; closed_date: Date }[], tasksToCreate: Prisma.lp_user_tasksUncheckedCreateInput[]) => {
     if (tasksToClose.length) {
-      const queryParam = tasksToClose.map((t) => `(${t.id}::bigint, '${t.closed.toISOString()}'::timestamptz AT TIME ZONE 'UTC')`)
+      const queryParam = tasksToClose.map((t) => `(${t.id}::bigint, '${t.closed_date.toISOString()}'::timestamptz AT TIME ZONE 'UTC')`)
 
       await (this.prismaClient as Prisma.TransactionClient).$executeRawUnsafe(`
         UPDATE points.lp_user_tasks ut
@@ -67,9 +67,12 @@ export class UserPointsLPRepository extends AbstractRepository {
     }
   }
 
-  fetchTasksEventsAndAddresses = async (startBlock: number, endBlock: number) => {
+  fetchTasksEventsAndAddresses = async (startBlock: number, endBlock: number, blockDates: Map<number, number>) => {
     const result = await this.prismaClient.lp_task.findMany({
-      where: { is_active: true },
+      where: {
+        start_date: { lte: new Date(blockDates.get(endBlock)! * 1000) },
+        OR: [{ end_date: { gte: new Date(blockDates.get(startBlock)! * 1000) } }, { end_date: null }],
+      },
       select: {
         id: true,
         token: {
@@ -130,10 +133,6 @@ export class UserPointsLPRepository extends AbstractRepository {
         data: events,
       })
     }
-  }
-
-  async getUsgLps() {
-    return await this.prismaClient.usg_lp_keys.findMany()
   }
 
   async insertAddLiquidity(events: Prisma.add_liquidity_eventsCreateManyInput[]) {

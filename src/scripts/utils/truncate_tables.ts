@@ -15,6 +15,7 @@ async function promptConfirmation(): Promise<boolean> {
 
     rl.question("\x1b[32m⚠️ Are you sure you want to truncate all tables? (y/n): \x1b[0m", (answer: string) => {
       rl.close()
+
       resolve(answer.trim().toLowerCase() === "y")
     })
   })
@@ -40,7 +41,8 @@ SELECT tablename AS table_name, schemaname AS schema_name FROM pg_tables WHERE s
 /**
  * Truncates all tables in the PostgreSQL database schema.
  */
-export async function truncateAllTables(): Promise<void> {
+export async function truncateTables(toNotDelete: string[]): Promise<void> {
+  const arr = toNotDelete.map((t) => t.toLowerCase())
   try {
     const confirmed = await promptConfirmation()
     if (!confirmed) {
@@ -62,10 +64,12 @@ export async function truncateAllTables(): Promise<void> {
 
     // Truncate each table
     for (const table of tables) {
-      const tableToTruncate = `"${table.schema_name}".${table.table_name}`
-      const truncateQuery = `TRUNCATE TABLE ${tableToTruncate} CASCADE`
-      await prisma.$executeRawUnsafe(truncateQuery)
-      console.log(`✅ Truncated: ${tableToTruncate}`)
+      if (!arr.includes(table.table_name)) {
+        const tableToTruncate = `"${table.schema_name}".${table.table_name}`
+        const truncateQuery = `TRUNCATE TABLE ${tableToTruncate} CASCADE`
+        await prisma.$executeRawUnsafe(truncateQuery)
+        console.log(`✅ Truncated: ${tableToTruncate}`)
+      }
     }
 
     // Re-enable foreign key constraints
@@ -80,4 +84,4 @@ export async function truncateAllTables(): Promise<void> {
 }
 
 // Execute the function
-truncateAllTables()
+truncateTables(["lp_task", "price_source", "price_feeds", "last_price_feeds"]).then()

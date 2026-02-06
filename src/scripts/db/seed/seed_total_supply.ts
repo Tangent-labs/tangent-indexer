@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client"
-import { AddressesJson } from "../../type/data.js"
+import { AddressesJson } from "../../../type/data.js"
 
 const prisma = new PrismaClient()
 
