@@ -48,11 +48,13 @@ export const fetchMarketCreationLogs = async (
     provider._getConnection().url
   )
 
-  return await Promise.all(logs.map((log) => {
-    const blockNumber = parseInt(log.blockNumber.toString(), 16)
-    const date = new Date(creationDates.get(blockNumber)! * 1000)
-    return parseMarketEvent(log, provider, log.blockNumber, date)
-  }))
+  return await Promise.all(
+    logs.map((log) => {
+      const blockNumber = parseInt(log.blockNumber.toString(), 16)
+      const date = new Date(creationDates.get(blockNumber)! * 1000)
+      return parseMarketEvent(log, provider, log.blockNumber, date)
+    })
+  )
 }
 
 const parseMarketEvent = async (log: Log, provider: JsonRpcProvider, creationBlock: number, creationDate: Date): Promise<Prisma.usg_marketsCreateInput> => {

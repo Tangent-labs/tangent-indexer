@@ -13,7 +13,6 @@ import { UserPointsVoteRepository } from "../../db/Points/UserPointsVoteReposito
 import { ERC20Repository } from "../../db/ERC20Repository.js"
 import { PredepositCampaignRepository } from "../../db/PredepositCampaignRepository.js"
 
-
 import { BlockService } from "../../services/BlockService.js"
 import { MarketCreationService } from "../../services/events/MarketCreationService.js"
 import { UserMarketService } from "../../services/events/UserMarketService.js"
