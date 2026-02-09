@@ -22,7 +22,7 @@
     "prisma:generate": "prisma generate --schema node_modules/@tangent/prisma-schema-shared/schema.prisma",
     "prisma:push": "prisma db push --schema node_modules/@tangent/prisma-schema-shared/schema.prisma",
     "prisma:push-force": "prisma db push --schema node_modules/@tangent/prisma-schema-shared/schema.prisma  --force-reset --accept-data-loss",
-    "db:truncate": "tsx src/scripts/utils/truncate_all.ts",
+    "db:truncate": "tsx src/scripts/db/reset/truncate_all.ts",
     "db:refresh-schema": "tsx src/scripts/update_tangent_shared_schema.ts",
     "db:empty-queue": "tsx src/scripts/utils/empty_liquidation_queue.ts",
     "db:read-queue": "tsx src/scripts/utils/read_queue.ts",
