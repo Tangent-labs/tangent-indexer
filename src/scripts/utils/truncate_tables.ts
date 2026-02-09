@@ -15,7 +15,6 @@ async function promptConfirmation(): Promise<boolean> {
 
     rl.question("\x1b[32m⚠️ Are you sure you want to truncate all tables? (y/n): \x1b[0m", (answer: string) => {
       rl.close()
-
       resolve(answer.trim().toLowerCase() === "y")
     })
   })
@@ -82,6 +81,3 @@ export async function truncateTables(toDelete: string[]): Promise<void> {
     await prisma.$disconnect()
   }
 }
-
-// Execute the function
-truncateTables(["lp_task", "price_source", "price_feeds", "last_price_feeds"]).then()
