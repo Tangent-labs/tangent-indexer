@@ -60,12 +60,12 @@ AS $$
       t.price_source_id,
       -- Clip to the intersection of: user participation, query window, AND task active period
       GREATEST(
-        ut.start, 
+        ut.start_date, 
         p.start_at,
         t.start_date                    
       ) AS seg_start, -- Task must have started
       LEAST(
-        COALESCE(ut.closed, p.end_at),
+        COALESCE(ut.closed_date, p.end_at),
         p.end_at,
         COALESCE(t.end_date, p.end_at)  -- Task may have ended
       ) AS seg_end,
@@ -73,10 +73,9 @@ AS $$
     FROM points.lp_user_tasks ut
     JOIN points.lp_task t
       ON t.id = ut.task_id
-     AND t.is_active IS TRUE
     CROSS JOIN params p
-    WHERE ut.start < p.end_at
-      AND COALESCE(ut.closed, p.end_at) > p.start_at
+    WHERE ut.start_date < p.end_at
+      AND COALESCE(ut.closed_date, p.end_at) > p.start_at
       -- Only include tasks that overlap with the query window
       AND t.start_date < p.end_at
       AND COALESCE(t.end_date, p.end_at) > p.start_at
@@ -194,7 +193,7 @@ AS $$
       ELSE 0
     END                                           AS godfather_points
   FROM seg_with_mult swm
-  LEFT JOIN global."user" u
+  LEFT JOIN points.user u
     ON u.address = swm.user_address
   -- choose a single referral record to avoid row multiplication:
   LEFT JOIN LATERAL (
@@ -208,7 +207,7 @@ AS $$
           EXTRACT(EPOCH FROM (swm.seg_end - ru.used_at)) / 
           EXTRACT(EPOCH FROM (swm.seg_end - swm.seg_start))
       END AS time_weight
-    FROM global.referral_usages ru
+    FROM points.referral_usages ru
     WHERE ru.godson_id = u.id
       AND ru.used_at <= swm.seg_end
     ORDER BY ru.used_at ASC

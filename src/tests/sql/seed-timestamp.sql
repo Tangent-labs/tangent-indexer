@@ -6,9 +6,9 @@ DELETE from points.user_tasks where id  in (965, 969,976);
 DELETE from points.user_points where user_address ='0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266';
 DELETE from points.task where id = 358;
 DELETE from points.price_feeds where  token ='0x6d7efb67236a2005ec704bf5dd55dd0703c4';
-DELETE from global.user where address ='0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266';
+DELETE from points.user where address ='0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266';
 
-insert into global.user (id, address, onboarded, code, referral_points)
+insert into points.user (id, address, onboarded, code, referral_points)
 values (1,'0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',True,'',0);
 INSERT INTO points.tracked_erc20 (address, name, symbol)
 VALUES ('0x6d7efb67236a2005ec704bf5dd55dd0703c4','USG','USG')

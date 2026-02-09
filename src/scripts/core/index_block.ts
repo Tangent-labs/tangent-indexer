@@ -11,6 +11,8 @@ import { UserEventsRepository } from "../../db/UserEventsRepository.js"
 import { UserPointsLPRepository } from "../../db/Points/UserPointsLPRepository.js"
 import { UserPointsVoteRepository } from "../../db/Points/UserPointsVoteRepository.js"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
+import { PredepositCampaignRepository } from "../../db/PredepositCampaignRepository.js"
+
 
 import { BlockService } from "../../services/BlockService.js"
 import { MarketCreationService } from "../../services/events/MarketCreationService.js"
@@ -28,8 +30,7 @@ import { getAddressesJson } from "../../utils/jsonReader.js"
 import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
 import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
-import { PredepositCampaignService } from "src/services/PredepositCampaignService.js"
-import { PredepositCampaignRepository } from "src/db/PredepositCampaignRepository.js"
+import { PredepositCampaignService } from "../../services/PredepositCampaignService.js"
 
 dotenv.config()
 

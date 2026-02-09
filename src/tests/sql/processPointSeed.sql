@@ -20,9 +20,9 @@ WHERE token IN ('TOKENA','TOKENB')
 DELETE FROM points.tracked_erc20
 WHERE address IN ('TOKENA', 'TOKENB', 'TOKENC');
 
-DELETE FROM global.referral_usages WHERE godfather_id IN (10,20,30,40) OR godson_id IN (10,20,30,40);
+DELETE FROM points.referral_usages WHERE godfather_id IN (10,20,30,40) OR godson_id IN (10,20,30,40);
 
-DELETE FROM global.user where address in ('0xU1','0xU2','0xU3','0xU4');
+DELETE FROM points.user where address in ('0xU1','0xU2','0xU3','0xU4');
 
 --- INSERT TEST DATA ---------------- 
 
@@ -32,7 +32,7 @@ INSERT INTO points.tracked_erc20 (id, address, name, symbol) VALUES
     (100003, 'TOKENC', 'Token C', 'TKNC');
 
 -- Create test users
-INSERT INTO global.user (id,address, onboarded, referral_points) VALUES
+INSERT INTO points.user (id,address, onboarded, referral_points) VALUES
     (10,'0xU1', FALSE, 0),
     (20,'0xU2', FALSE, 0),
     (30,'0xU3', FALSE, 0),
@@ -127,7 +127,7 @@ INSERT INTO points.user_boost (user_address, start_at, end_at, multiplier) VALUE
 
 
 -- Godfather: U2 -> U1
-INSERT INTO global.referral_usages (godfather_id, godson_id,used_at)
+INSERT INTO points.referral_usages (godfather_id, godson_id,used_at)
 VALUES (20,10,'2025-01-05 10:00+00');
 
 

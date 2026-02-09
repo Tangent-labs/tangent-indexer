@@ -16,7 +16,7 @@ BEGIN
   WHERE up.user_address = pt.user_address
     AND up.task_id      = pt.task_id;
 
-  UPDATE global."user" g
+  UPDATE points.user g
   SET lp_referral_points = g.lp_referral_points + agg.gdfp
   FROM (
     SELECT godfather_id, SUM(godfather_points) AS gdfp

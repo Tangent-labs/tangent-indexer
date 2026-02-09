@@ -51,10 +51,10 @@ export class UserPointsLPRepository extends AbstractRepository {
 
       await (this.prismaClient as Prisma.TransactionClient).$executeRawUnsafe(`
         UPDATE points.lp_user_tasks ut
-        SET closed = v.closed
+        SET closed_date = v.closed_date
         FROM (VALUES
           ${queryParam.join(",")}
-        ) AS v(id, closed)
+        ) AS v(id, closed_date)
         WHERE ut.id = v.id;
       `)
     }

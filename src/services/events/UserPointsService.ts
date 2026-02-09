@@ -169,7 +169,7 @@ export class UserPointsService {
 
   replaceDates<T extends { block_date: string | Date; block_id: number }>(events: T[], blockInfos: Map<number, number>): T[] {
     events.forEach((event) => {
-      ;(event as any).block_date = new Date(blockInfos.get(event.block_id)! * 1_000)
+      ; (event as any).block_date = new Date(blockInfos.get(event.block_id)! * 1_000)
     })
     return events as Array<T>
   }
@@ -198,8 +198,10 @@ export class UserPointsService {
             transferEvent = parseTransferEvent(log)
             break
         }
-        transferEvents.push(transferEvent)
-        uniqueBlockId.add(log.blockNumber)
+        if (transferEvent.amount !== "0") {
+          transferEvents.push(transferEvent)
+          uniqueBlockId.add(log.blockNumber)
+        }
       }
     })
 
