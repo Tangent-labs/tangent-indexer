@@ -19,6 +19,7 @@ import { TelegramNotifierService } from "../../services/TelegramNotificationServ
 import { NotificationService } from "../../services/NotificationService.js"
 import { PointsBotLogRepository } from "../../db/Points/PointsBotLogRepository.js"
 import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
+import { fetchBlockTimestamps } from "../../utils/getLastBlock.js"
 
 dotenv.config()
 
@@ -43,7 +44,7 @@ async function main() {
         async (dbTransaction: TransactionPrisma) => {
           setTransaction(dbTransaction)
           await userPointsService.retrieveUserAddressesFromTransfers(startBlock, endBlock)
-          const blockDates = await blockService.fetchBlockTimestamps([startBlock, endBlock], indexerConfig.provider.chainRpc[bestProviderIndex])
+          const blockDates = await fetchBlockTimestamps([startBlock, endBlock], indexerConfig.provider.chainRpc[bestProviderIndex])
 
           currentAction = POINTS_BOT_ACTIONS.POINTS_PROCESS_USER_TASK
           await userPointsService.updateLPUserTasks(startBlock, endBlock, blockDates)

@@ -30,6 +30,7 @@ import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
 import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { PredepositCampaignService } from "../../services/PredepositCampaignService.js"
+import { fetchBlockTimestamps } from "../../utils/getLastBlock.js"
 
 dotenv.config()
 
@@ -66,10 +67,9 @@ async function main() {
         async (dbTransaction: TransactionPrisma) => {
           // Set the database transaction to the repositories
           setTransaction(dbTransaction)
-          console.log("ICI", blockService)
 
           // Detect new markets
-          await marketCreationService.runDetection(bestProvider, startBlock, endBlock, blockService)
+          await marketCreationService.runDetection(bestProvider, startBlock, endBlock)
 
           const { marketAddresses, mapMarketIdAddresses } = await marketCreationService.getMarketsAddressesAndMap()
 
@@ -107,7 +107,7 @@ async function main() {
           ]
 
           // Find block timestamps of the unique blockIDs in ONE RPC call
-          const blocks = await blockService.fetchBlockTimestamps(uniqueBlockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
+          const blocks = await fetchBlockTimestamps(uniqueBlockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
 
           const hydratedWithCorrectDates = userMarketService.replaceRightDates(sortedAndParsedEvents, activeBorrowActions, blocks)
 

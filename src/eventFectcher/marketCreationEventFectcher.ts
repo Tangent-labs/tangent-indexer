@@ -10,7 +10,7 @@ import {
 } from "../resources/eventSignatures.js"
 import { getEthLogs } from "./_baseFetcher.js"
 import { MarketType } from "../type/data.js"
-import { BlockService } from "src/services/BlockService.js"
+import { fetchBlockTimestamps } from "../utils/getLastBlock.js"
 
 // Define Event Signatures
 
@@ -26,8 +26,7 @@ export const fetchMarketCreationLogs = async (
   provider: JsonRpcProvider,
   startingBlock: number,
   endingBlock: number,
-  marketCreator: AddressLike,
-  blockService: BlockService
+  marketCreator: AddressLike
 ): Promise<Prisma.usg_marketsCreateInput[]> => {
   const logs = await getEthLogs(
     provider,
@@ -43,7 +42,7 @@ export const fetchMarketCreationLogs = async (
     ]
   )
 
-  const creationDates = await blockService.fetchBlockTimestamps(
+  const creationDates = await fetchBlockTimestamps(
     logs.map((l) => l.blockNumber),
     provider._getConnection().url
   )

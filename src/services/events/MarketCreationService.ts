@@ -24,10 +24,9 @@ export class MarketCreationService {
     this.erc20Repository = erc20Repository
   }
 
-  async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number, blockService: BlockService) {
-    console.log("LA", blockService)
+  async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number) {
     // Fetch logs from MarketCreator
-    let marketsCreated = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, this.marketCreatorAddress, blockService)
+    let marketsCreated = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, this.marketCreatorAddress)
 
     // If some logs are coming from MarketCreator, we insert them in db
     if (marketsCreated.length) {
