@@ -25,6 +25,7 @@ export class MarketCreationService {
   }
 
   async runDetection(provider: JsonRpcProvider, startingBlock: number, endingBlock: number, blockService: BlockService) {
+    console.log("LA", blockService)
     // Fetch logs from MarketCreator
     let marketsCreated = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, this.marketCreatorAddress, blockService)
 

@@ -66,6 +66,7 @@ async function main() {
         async (dbTransaction: TransactionPrisma) => {
           // Set the database transaction to the repositories
           setTransaction(dbTransaction)
+          console.log("ICI", blockService)
 
           // Detect new markets
           await marketCreationService.runDetection(bestProvider, startBlock, endBlock, blockService)
