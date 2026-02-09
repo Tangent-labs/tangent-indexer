@@ -19,3 +19,7 @@ prisma/migrations
 .local
 .claude
 .cursor
+
+/run
+/--version
+/--help

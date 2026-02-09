@@ -196,71 +196,21 @@ function analyzeOnchainData(jsonData: OnchainData): void {
     )
   }
 
-  // Accounts table (deduplicated by market since there are duplicates)
-  const uniqueAccounts = new Map<string, AccountData>()
-  for (const account of accounts) {
-    const key = `${account.market}-${account.healthRatio}`
-    if (!uniqueAccounts.has(key)) {
-      uniqueAccounts.set(key, account)
-    }
-  }
-
   // Create a map of market -> liquidationThreshold from markets data
   const marketThresholds = new Map<string, number>()
   for (const market of markets) {
     marketThresholds.set(market.market, market.liquidationThreshold)
   }
 
-  console.log("\n\n👤 COMPTES / POSITIONS (" + uniqueAccounts.size + " positions uniques)")
-  console.log("-".repeat(180))
-  console.log(
-    "| " +
-      "Market".padEnd(14) +
-      " | " +
-      "Collat Name".padEnd(20) +
-      " | " +
-      "LTV".padEnd(10) +
-      " | " +
-      "Liq Thresh".padEnd(10) +
-      " | " +
-      "Status".padEnd(14) +
-      " | " +
-      "User Debt".padEnd(16) +
-      " | " +
-      "Position Value".padEnd(16) +
-      " | " +
-      "Collateral Bal".padEnd(16) +
-      " |"
-  )
-  console.log(
-    "|" +
-      "-".repeat(16) +
-      "|" +
-      "-".repeat(22) +
-      "|" +
-      "-".repeat(12) +
-      "|" +
-      "-".repeat(12) +
-      "|" +
-      "-".repeat(16) +
-      "|" +
-      "-".repeat(18) +
-      "|" +
-      "-".repeat(18) +
-      "|" +
-      "-".repeat(18) +
-      "|"
-  )
+  console.log("\n\n👤 COMPTES / POSITIONS (" + accounts.length + " positions)")
+  console.log("-".repeat(120))
 
-  for (const [, account] of uniqueAccounts) {
-    // Calculate LTV: (userDebt * DENOMINATOR) / positionValue
+  // Build table data for console.table
+  const tableData = accounts.map((account) => {
     const ltv = account.positionValue === 0n ? 0n : (account.userDebt * DENOMINATOR) / account.positionValue
     const liquidationThreshold = BigInt(marketThresholds.get(account.market) || 0)
     const collatName = marketCollatNameMap.get(account.market.toLowerCase()) || "N/A"
 
-    // Status logic from LiquidationService.ts:
-    // - Seizable: userDebt >= positionValue (bad debt)
-    // - Liquidable: ltv > liquidationThreshold
     let status = "🟢 Safe"
     if (account.userDebt >= account.positionValue) {
       status = "🔴 Seizable"
@@ -268,33 +218,26 @@ function analyzeOnchainData(jsonData: OnchainData): void {
       status = "🟠 Liquidable"
     }
 
-    console.log(
-      "| " +
-        formatAddress(account.market).padEnd(14) +
-        " | " +
-        collatName.padEnd(20) +
-        " | " +
-        formatLTV(ltv).padEnd(10) +
-        " | " +
-        formatLTV(liquidationThreshold).padEnd(10) +
-        " | " +
-        status.padEnd(14) +
-        " | " +
-        formatBigNumber(account.userDebt).padEnd(16) +
-        " | " +
-        formatBigNumber(account.positionValue).padEnd(16) +
-        " | " +
-        formatBigNumber(account.collateralBalance).padEnd(16) +
-        " |"
-    )
-  }
+    return {
+      Market: formatAddress(account.market),
+      "Collat Name": collatName,
+      LTV: formatLTV(ltv),
+      "Liq Thresh": formatLTV(liquidationThreshold),
+      Status: status,
+      "User Debt": formatBigNumber(account.userDebt),
+      "Position Value": formatBigNumber(account.positionValue),
+      "Collateral Bal": formatBigNumber(account.collateralBalance),
+    }
+  })
+
+  console.table(tableData)
 
   // Summary statistics
   console.log("\n\n📈 STATISTIQUES RÉSUMÉES")
   console.log("-".repeat(60))
 
-  const totalDebt = Array.from(uniqueAccounts.values()).reduce((sum, a) => sum + a.userDebt, 0n)
-  const totalPositionValue = Array.from(uniqueAccounts.values()).reduce((sum, a) => sum + a.positionValue, 0n)
+  const totalDebt = accounts.reduce((sum, a) => sum + a.userDebt, 0n)
+  const totalPositionValue = accounts.reduce((sum, a) => sum + a.positionValue, 0n)
 
   // Calculate status counts using correct logic
   let seizableCount = 0
@@ -303,7 +246,7 @@ function analyzeOnchainData(jsonData: OnchainData): void {
 
   const ltvValues: number[] = []
 
-  for (const [, account] of uniqueAccounts) {
+  for (const account of accounts) {
     const ltv = account.positionValue === 0n ? 0n : (account.userDebt * DENOMINATOR) / account.positionValue
     const liquidationThreshold = BigInt(marketThresholds.get(account.market) || 0)
     ltvValues.push(Number(ltv) / 1000) // Convert to percentage
@@ -321,7 +264,7 @@ function analyzeOnchainData(jsonData: OnchainData): void {
   const maxLTV = Math.max(...ltvValues)
   const avgLTV = ltvValues.reduce((a, b) => a + b, 0) / ltvValues.length
 
-  console.log(`  Total Positions: ${uniqueAccounts.size}`)
+  console.log(`  Total Positions: ${accounts.length}`)
   console.log(`  Total Debt: ${formatBigNumber(totalDebt)}`)
   console.log(`  Total Position Value: ${formatBigNumber(totalPositionValue)}`)
   console.log(`  LTV - Min: ${minLTV.toFixed(2)}% | Max: ${maxLTV.toFixed(2)}% | Avg: ${avgLTV.toFixed(2)}%`)
@@ -394,20 +337,52 @@ async function loadOnchainDataFromDb(logId: number): Promise<OnchainData | null>
 }
 
 /**
+ * Load the most recent on_chain_data entry from the database
+ */
+async function loadLatestOnchainDataFromDb(): Promise<OnchainData | null> {
+  const prisma = new PrismaClient()
+
+  try {
+    const log = await prisma.liquidation_bot_log.findFirst({
+      where: { action: "on_chain_data" },
+      orderBy: { id: "desc" },
+    })
+
+    if (!log) {
+      console.error("No on_chain_data log found in database")
+      return null
+    }
+
+    console.log(`Found latest on_chain_data log with ID ${log.id} (date: ${log.date})`)
+    return log.data as unknown as OnchainData
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+
+/**
  * Main entry point
  */
 async function main() {
-  const logId = parseInt(process.argv[2], 10)
+  const arg = process.argv[2]
+  const logId = arg ? parseInt(arg, 10) : NaN
 
-  if (isNaN(logId)) {
-    console.error("Usage: npm run dev:liquidation:analyse <log_id>")
-    console.error("Example:npm run dev:liquidation:analyse 29280")
-    process.exit(1)
+  let data: OnchainData | null
+
+  if (!arg) {
+    console.log("No log_id provided, fetching latest on_chain_data from database...")
+    data = await loadLatestOnchainDataFromDb()
+  } else {
+    if (isNaN(logId)) {
+      console.error("Usage: npm run dev:liquidation:analyse [log_id]")
+      console.error("  If no log_id is provided, the latest on_chain_data will be used.")
+      console.error("Example: npm run dev:liquidation:analyse 29280")
+      process.exit(1)
+    }
+
+    console.log(`Loading onchain data from liquidation_bot_log ID: ${logId}...`)
+    data = await loadOnchainDataFromDb(logId)
   }
-
-  console.log(`Loading onchain data from liquidation_bot_log ID: ${logId}...`)
-
-  const data = await loadOnchainDataFromDb(logId)
 
   if (!data) {
     process.exit(1)
@@ -423,4 +398,4 @@ main().catch((error) => {
 })
 
 // Export for use as module
-export { analyzeOnchainData, loadOnchainDataFromDb, OnchainData }
+export { analyzeOnchainData, loadOnchainDataFromDb, loadLatestOnchainDataFromDb, OnchainData }

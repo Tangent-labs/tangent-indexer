@@ -1,5 +1,12 @@
 import { LiquidationBotLogRepository } from "../db/LiquidationBotLogRepository.js"
-import { LiquidationAnalyseInfo, LiquidationBotLogAction, LiquidationMarketAccountOutInfo, LiquidationUserInfo, LiquidationUserInInfo } from "../type/data.js"
+import {
+  LiquidationAnalyseInfo,
+  LiquidationBotLogAction,
+  LiquidationExecutionResult,
+  LiquidationMarketAccountOutInfo,
+  LiquidationUserInfo,
+  LiquidationUserInInfo,
+} from "../type/data.js"
 import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
 import { prepareSerialize } from "../utils/jsonSerializer.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"
@@ -144,9 +151,10 @@ export class LiquidationBotLogService {
     await this._logAction(action, context, data)
   }
 
-  async logLiquidationExecution(data: LiquidationUserInInfo | null, context: LiquidationExecutionContext) {
+  async logLiquidationExecution(data: LiquidationUserInInfo | null, context: LiquidationExecutionContext, executionResult?: LiquidationExecutionResult) {
     const action: LiquidationBotLogAction = "liquidation_execution"
-    await this._logAction(action, context, data)
+    const logData = executionResult ? { ...data, executionResult } : data
+    await this._logAction(action, context, logData)
   }
 
   async logEndExecution(context: LiquidationExecutionContext) {

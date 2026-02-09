@@ -78,6 +78,20 @@ export type LiquidationEstimateInfo = {
   routerType: RouterType
 }
 
+/**
+ * Data extracted from Liquidate event after successful liquidation
+ */
+export type LiquidationExecutionResult = {
+  repaidAmount: bigint
+  debtShares: bigint
+  fee: bigint
+  collateralLiquidated: bigint
+  liquidator: string
+  transactionHash: string
+  /** Profit from liquidation: repaidAmount - userDebt (can be negative) */
+  liquidationProfit: bigint
+}
+
 export type LiquidationBotLogAction =
   | "liquidation_preparation"
   | "check_context"

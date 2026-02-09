@@ -3,7 +3,7 @@ import fs from "fs"
 import MarketExternalActionsAbi from "../abis/MarketExternalActions.json" with { type: "json" }
 import MarketAccountLiquidationBotInfoAbi from "../abis/MarketAccountLiquidationBotInfo.json" with { type: "json" }
 
-import { Addressable, AddressLike, Contract, JsonRpcProvider, MaxUint256, Wallet, formatEther } from "ethers"
+import { Addressable, AddressLike, Contract, Interface, JsonRpcProvider, MaxUint256, Wallet, formatEther } from "ethers"
 import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository.js"
 import { type Job } from "bullmq"
 
@@ -11,6 +11,7 @@ import {
   LiquidationAccountOutInfo,
   LiquidationAnalyseInfo,
   LiquidationEstimateInfo,
+  LiquidationExecutionResult,
   LiquidationMarketAccountOutInfo,
   LiquidationMarketOutInfo,
   LiquidationRoute,
@@ -58,6 +59,38 @@ export class LiquidationService {
     this.context = context
     this.routerService = routerService
     this.liquidationBotService = LiquidationBotService
+  }
+
+  /**
+   * Parse Liquidate event from transaction receipt and calculate profit
+   */
+  private parseLiquidateEvent(receipt: any, marketAddress: string, userDebt: bigint): LiquidationExecutionResult | null {
+    try {
+      const iface = new Interface(MarketExternalActionsAbi.abi)
+      for (const log of receipt.logs) {
+        if (log.address.toLowerCase() !== marketAddress.toLowerCase()) continue
+        try {
+          const parsed = iface.parseLog({ topics: log.topics, data: log.data })
+          if (parsed?.name === "Liquidate") {
+            const repaidAmount = parsed.args.repaidAmount as bigint
+            return {
+              repaidAmount,
+              debtShares: parsed.args.debtShares,
+              fee: parsed.args.fee,
+              collateralLiquidated: parsed.args.collateralLiquidated,
+              liquidator: parsed.args.liquidator,
+              transactionHash: receipt.hash,
+              liquidationProfit: repaidAmount - userDebt,
+            }
+          }
+        } catch {
+          // Not a Liquidate event, continue
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to parse Liquidate event:", error)
+    }
+    return null
   }
 
   async checkContext() {
@@ -512,8 +545,9 @@ export class LiquidationService {
             nonce: currentNonce,
           }
         )
-        await tx.wait() // Wait for the transaction to be mined
-        await this.liquidationBotService?.logLiquidationExecution(normalizedAccount, loggedContext)
+        const receipt = await tx.wait() // Wait for the transaction to be mined
+        const executionResult = this.parseLiquidateEvent(receipt, normalizedAccount.market as string, normalizedAccount.userDebt)
+        await this.liquidationBotService?.logLiquidationExecution(normalizedAccount, loggedContext, executionResult ?? undefined)
         successCount++
       } catch (error) {
         this.errors.push({ action: "liquidation_execution", message: (error as Error)?.message.slice(0, 100), market: normalizedAccount.market as string })
