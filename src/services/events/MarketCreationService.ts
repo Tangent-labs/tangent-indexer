@@ -4,7 +4,6 @@ import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEvent
 import { UserPointsLPRepository } from "../../db/Points/UserPointsLPRepository.js"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
 import { PTS_PER_HOUR_TO_SECONDS_RATE } from "../../scripts/db/config/config_lp_tasks.js"
-import { BlockService } from "../BlockService.js"
 
 export class MarketCreationService {
   marketContractsRepository: MarketContractsRepository

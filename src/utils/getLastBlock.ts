@@ -12,8 +12,6 @@ export async function getLastBlock(provider: JsonRpcProvider) {
   return { blockNumber: lastBlock.number, blockDate: new Date(lastBlock.timestamp * 1_000) }
 }
 
-
-
 export async function fetchBlockTimestamps(blockNumbers: (number | string)[], providerURL: string) {
   const requests = blockNumbers.map((blockNumber, index) => {
     // This kind of black magic is mandatory because of Log from ethers returns sometimes a string

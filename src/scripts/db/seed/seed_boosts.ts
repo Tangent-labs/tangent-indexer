@@ -8,6 +8,23 @@ import { TransactionPrisma } from "src/type/prisma.js"
 // TURTLE_CLUB: 0.5,
 // ONBOARDED: 0.1,
 export async function seedBoosts(prisma: TransactionPrisma) {
+  await prisma.user.createMany({
+    data: [
+      {
+        address: user0,
+      },
+      {
+        address: user1,
+      },
+      {
+        address: user2,
+      },
+      {
+        address: user3,
+      },
+    ],
+  })
+
   await prisma.offchain_boost_user.createMany({
     data: [
       {

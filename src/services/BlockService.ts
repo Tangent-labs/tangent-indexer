@@ -1,5 +1,4 @@
 import { JsonRpcProvider } from "ethers"
-import axios from "axios"
 import { indexerConfig } from "../config/indexer_config.js"
 import { BlockRepository } from "../db/BlockRepository.js"
 
@@ -79,6 +78,4 @@ export class BlockService {
     }
     return { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex }
   }
-
-
 }
