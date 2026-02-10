@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv"
 import { getAddressesJson } from "../../utils/jsonReader.js"
-import { seedTotalSupply } from "../db-seed/seed_total_supply.js"
+import { seedTotalSupply } from "../db/seed/seed_total_supply.js"
 
 dotenv.config()
 

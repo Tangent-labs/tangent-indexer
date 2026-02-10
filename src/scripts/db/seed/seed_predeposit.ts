@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client"
-import { AddressesJson } from "../../type/data.js"
-import { TransactionPrisma } from "../../type/prisma.js"
+import { AddressesJson } from "../../../type/data.js"
+import { TransactionPrisma } from "../../../type/prisma.js"
 import { parseEther } from "ethers"
 
 export const user0 = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266".toLowerCase()

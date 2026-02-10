@@ -1,236 +1,216 @@
 {
   "utilities": {
-    "controlTower": "0x4B131D8f1A6172C1D022B825fCae375122AC207e",
-    "rewardAccumulator": "0x178fc2B403Bb6F88dBa7A40003838C24e5dEeFC6",
-    "zappingProxy": "0x1b53D58fFC6e69e6589a1A42eDf363584c0760f7",
-    "marketCreator": "0x86D76fA82b9e739745fc7e4866181E56E8d1dF07",
-    "irCalculator": "0x6B6Fb44085B625EA09DE25468140E1e3A76D22c9",
-    "pegKeeperRegulator": "0xb156644716c8d99d9e22FaBcb2AF09E306688fA1",
-    "pendlePTRouter": "0x686d777EF7c22932CB8C7aACEC458F8de2788b88",
-    "marketViewer": "0xB7b8738297d4a91F08d9Ff18E4bA5eEDB21522C2"
+    "controlTower": "0xBE7650D3661f3f3a317D5Fb5e09a49fd9233bFe5",
+    "rewardAccumulator": "0x71dcB27DD14fd4Dde5Ab60829Eb1aB38D84194f8",
+    "zappingProxy": "0x0c5e0677b555FF8c46a49B77357Dfe0b482C9f80",
+    "marketCreator": "0xC12905b187686F757E03EcaA85cEBb83a418A240",
+    "irCalculator": "0x4D54a6d9960789eDe5e4BEc04A9Ae614a674A34a",
+    "pegKeeperRegulator": "0xF9151CC7E8c70cFc255f660E8e3E1C31291B11E5",
+    "pendlePTRouter": "0x1c481C590D3c179b65555a7108964BD2C6B5804f",
+    "marketViewer": "0xb8d60DF5d358D3E3d73bc46e3ED35B8B18138b36"
   },
   "tokens": {
-    "USG": "0xcdb2dd3D8b1C8f2b5f8ef735edd6F3eC53E896D3",
-    "sUSG": "0xe117571f573bf64525141ce30ad3c28a9b6f197c",
-    "TAN": "0x71498Ed008E4C968551e26eB4B803631241B5D26",
-    "sTAN": "0x805a00c26ee8c07be72057149d319f3b8addbcad",
-    "vsTAN": "0xaA668d30672538Ce82A0Aaa795F491980Ba6575C"
+    "USG": "0xe39B5D5e21E32571058c8380582782C9E684fA81",
+    "sUSG": "0xc8576e537666056a09d5529b0abab75fe069140d",
+    "TAN": "0xf98888216f8e19AE54d27026D3541997F1c72911",
+    "sTAN": "0xa37a09bddd991197ab41443d02e98a3b9512fe13",
+    "vsTAN": "0xb0818199961d531a72c80105D78ACCc386008492"
   },
   "implementations": {
-    "convexCrvMarket": "0x0be43FA2FB20662D0a086c7596679dd8CCac65f9",
-    "convexFxnMarket": "0x01A80d1FE6682F2f967e22b1bCB80aD27f418B45",
-    "basicERC20Market": "0x06d220c7391878d281452D82d13b1DC15c6c74e6"
+    "convexCrvMarket": "0xCb5958f87F840FbF015e4b838677FBcD70f02D95",
+    "convexFxnMarket": "0xDB544459EeBf51Ee30D45C278D0b1a8C628C7947",
+    "basicERC20Market": "0xa3A1ca39416cffE0536700F1B497bFf66362109D"
   },
   "markets": [
     {
-      "marketAddress": "0x2dFE9D9C72ff7d1724F1437Dd0CC4fC5f08d7286",
+      "marketAddress": "0xf5678F1c94fAd4842e335136e1a6d1f2DB947498",
       "collatName": "crvUSD_USDC",
       "collatAddress": "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
       "marketType": "Convex_CRV"
     },
     {
-      "marketAddress": "0xF439e6c1058c332Ef59cc6B39aeDb2Ec32bBb195",
+      "marketAddress": "0xfeE95861Bd69fe2Cf79D72Cf267773635BA32130",
       "collatName": "crvUSD_USDT",
       "collatAddress": "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
       "marketType": "Convex_CRV"
     },
     {
-      "marketAddress": "0x5573Fb3385e9228cd0bCE7F8DCDe1fcBc90d5524",
+      "marketAddress": "0x1E5D85Fa8217cc40Ed6cc4C970af181f3CCb9b43",
       "collatName": "USDC_USDT",
       "collatAddress": "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
       "marketType": "Convex_CRV"
     },
     {
-      "marketAddress": "0x5cc8A4f51b5a3B69922305baE6f5b17557A6A7b9",
-      "collatName": "frxUSD_USDe",
-      "collatAddress": "0xdbb1d219d84eacefb850ee04cacf2f1830934580",
-      "marketType": "Convex_CRV"
-    },
-    {
-      "marketAddress": "0x22B4bcB7fBd29827847c21c4a2D90c6f941aEE49",
+      "marketAddress": "0xbCDc05e56660cd5a36B7d3590Aa522CCa0B22746",
       "collatName": "frxETH_WETH",
       "collatAddress": "0x9c3b46c0ceb5b9e304fcd6d88fc50f7dd24b31bc",
       "marketType": "Convex_CRV"
     },
     {
-      "marketAddress": "0xaD161649Af74273445547dfabFBEd373De46927D",
-      "collatName": "pxETH_WETH",
-      "collatAddress": "0xC8Eb2Cf2f792F77AF0Cd9e203305a585E588179D",
-      "marketType": "Convex_CRV"
-    },
-    {
-      "marketAddress": "0x37F79262F2b5eDBFc6619dD4c4a2656B63450a3e",
-      "collatName": "pxETH_stETH",
-      "collatAddress": "0x6951bdc4734b9f7f3e1b74afebc670c736a0edb6",
-      "marketType": "Convex_CRV"
-    },
-    {
-      "marketAddress": "0xE755fd9661706ea5D9541F827e638154514e36A0",
+      "marketAddress": "0x73ae3b57cf9da6F7A6Eb73685cEa9Bff0fFBc8DF",
       "collatName": "USDC_fxUSD",
       "collatAddress": "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
       "marketType": "Convex_FXN"
     },
     {
-      "marketAddress": "0x4dD0C430c7bD5e8E16F6B2D3a2C421d1B07f6A6e",
-      "collatName": "USDC_fxUSD",
+      "marketAddress": "0x2473A4e5e0D02E8EFD353d5C503Bd8A8a9f904Bb",
+      "collatName": "fxUSD_reUSD",
       "collatAddress": "0xb0ef04ACE97d350E24Efa5139d2590D26a61A8Dc",
       "marketType": "Convex_FXN"
     },
     {
-      "marketAddress": "0xEa19Fe35F7676EB23F29a9460061e28f7E627DA4",
-      "collatName": "USDC_fxUSD",
-      "collatAddress": "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
+      "marketAddress": "0x146b05dBD5BB41FEADd466F02879316ddbc2E274",
+      "collatName": "GHO_fxUSD",
+      "collatAddress": "0x74345504Eaea3D9408fC69Ae7EB2d14095643c5b",
       "marketType": "Convex_FXN"
     },
     {
-      "marketAddress": "0x7041dd330a2B6dEb779220419c833D7FA98e1E2E",
+      "marketAddress": "0x882E26Af5fAABe140Bb58a458d36892563809fE0",
       "collatName": "msUSD_fxUSD",
       "collatAddress": "0x138Bb0f3208bd729a561F3786DDb97BBc69e6628",
       "marketType": "Convex_FXN"
     },
     {
-      "marketAddress": "0x105d0942d5E0EfE729d1F0e4Cdb09D2a81d3AD4a",
+      "marketAddress": "0xE781547cD811036263919EE52b08f1dB38aA0200",
       "collatName": "PYUSD_USDC",
       "collatAddress": "0x383e6b4437b59fff47b619cba855ca29342a8559",
       "marketType": "CRV_Gauge"
     },
     {
-      "marketAddress": "0x281B01f794f8c92361923Fe75e3e27737f79a005",
+      "marketAddress": "0x3089aE1f5F64E9Bcbca5710451F065080F484452",
       "collatName": "RLUSD_USDC",
       "collatAddress": "0xD001aE433f254283FeCE51d4ACcE8c53263aa186",
       "marketType": "CRV_Gauge"
     },
     {
-      "marketAddress": "0xa397505Cdc79497e91301a4456a54943d1E45f1d",
+      "marketAddress": "0x26905277285a0dc994eD8b401BEB2Fe07cDc42C0",
       "collatName": "stUSDS_USDS",
       "collatAddress": "0x2C7C98A3b1582D83c43987202aEFf638312478aE",
       "marketType": "CRV_Gauge"
     },
     {
-      "marketAddress": "0xCc021cdD3d79112e85e7678e96cC574B49768211",
+      "marketAddress": "0xf5fdF469dd43c39A608c2f3dee87b4EAc562c32a",
       "collatName": "crvUSD_USDC",
       "collatAddress": "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
       "marketType": "STAKEDAO_CRV_Vault"
     },
     {
-      "marketAddress": "0x30c52C51439962F1932038C15BB69b50256F89A9",
+      "marketAddress": "0x568fEcf80816733130Ad5610a4f701e5F57B25E4",
       "collatName": "crvUSD_USDT",
       "collatAddress": "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
       "marketType": "STAKEDAO_CRV_Vault"
     },
     {
-      "marketAddress": "0x92F5D9e3D7E8919978d68421c7dce67129e2C366",
+      "marketAddress": "0x89e0218c7E6B7C3Fd40f79Aa25e279a97eCdF44e",
       "collatName": "GHO_crvUSD",
       "collatAddress": "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
       "marketType": "STAKEDAO_CRV_Vault"
     },
     {
-      "marketAddress": "0xF543205C81909eC4FB62003134edA5242CFDFe13",
+      "marketAddress": "0x3A6fd224e3975Bff4F1a4BF97c27d9420cC27328",
       "collatName": "frxUSD_msUSD",
       "collatAddress": "0x9A9e2e70919c75D80aAaA1D483c46CdBb8ac4d1b",
       "marketType": "STAKEDAO_CRV_Vault"
     },
     {
-      "marketAddress": "0xDA6D4f2279d728233448a23eB36487FbeA027063",
+      "marketAddress": "0x9479859d47f641b3e69ed4405a8cA13D32E7800A",
       "collatName": "msETH_OETH",
       "collatAddress": "0xB5b93dde9D87563184d31F3b7f85dd58404E2ee0",
       "marketType": "STAKEDAO_CRV_Vault"
     },
     {
-      "marketAddress": "0x01f5debBfD10F32591311982Be8d28eeBa7451D5",
+      "marketAddress": "0x9e5a9FB8469918FAB0b9cF2cD69d9b6036551603",
       "collatName": "ETH+_WETH",
       "collatAddress": "0x2c683fAd51da2cd17793219CC86439C1875c353e",
       "marketType": "STAKEDAO_CRV_Vault"
     },
     {
-      "marketAddress": "0x5543D8985a3B1e0374CDAf9eF553129274FDe09e",
+      "marketAddress": "0xfb453B0479C8803a80947622567e94C3BF9bdA97",
       "collatName": "tBTC_cbBTC",
       "collatAddress": "0xAE6Ee608b297305AbF3EB609B81FEBbb8F6A0bb3",
       "marketType": "STAKEDAO_CRV_Vault"
     },
     {
-      "marketAddress": "0x1B2F763d8c88b4705Ab90dB8e5Ff782eB9Ce64Ba",
-      "collatName": "reUSD 25/06/26",
-      "collatAddress": "0x3eaa0f0f0a5d3d595ae4e4b0d27f439d01c3e7b2",
-      "marketType": "Pendle_PT"
-    },
-    {
-      "marketAddress": "0x9EF461E28837D261Ce2dd0d186C145e188F7D340",
-      "collatName": "wstUSR 29/01/26",
-      "collatAddress": "0xfceeb7586bab730fa400a5bf3fcf298d0db4c7e7",
-      "marketType": "Pendle_PT"
-    },
-    {
-      "marketAddress": "0x14C5C03cB4AC96d7D9B144a8E1f034F08c8aC749",
+      "marketAddress": "0x5F9B580291CfeD27Ee3a04d7e0ABEb17DdCfA07E",
       "collatName": "sUSDe 05/02/26",
       "collatAddress": "0xe8483517077afa11a9b07f849cee2552f040d7b2",
       "marketType": "Pendle_PT"
     }
   ],
   "oracles": {
-    "crvUSD": "0x79C29972195808E156674B1407D6D0d8516a72bD",
-    "USDC": "0xFe6543D91309b23f73EdB59f0dc98BF6f012D03F",
-    "FRAX": "0xdD0AEF74980C0d8Ac8b547c80E93895E11fE9Cbe",
-    "USDT": "0xbC373a3a2A2cb66772b6d3e1E8714a631a1F6670",
-    "USR": "0x1578E659cA3dB0568141E28b39866Bd291bf0626",
-    "GHO": "0xec02e0a135409f7Bc1718fA52925B02B0884aE6C",
-    "USDe": "0xB45885969EAFf3dF56C43E5BEBCE40CDd932FC43",
-    "PYUSD": "0x6EbEAd7C5bc68c80d63B31fC815761aB3BeCd75A",
-    "RLUSD": "0x7d299A65180413f1bE93fd810272c09a0F5DF6b4",
-    "WETH": "0x68e79dAe32faEfad3F2ac8fD07a5fb9F58B78299",
-    "stETH": "0x87F9c1164f7f5C68ce9220078B4d2F9fd2C4aB44",
-    "cbBTC": "0x90C465E6893e34AEDa250a174408EFdA93b4A905",
-    "tBTC": "0x1c4FAb98628EddcFB5733083D2445CDFec45A749",
-    "frxUSD": "0x44b0cbb3D27318d07d07e4E8b423eA7d09638aD4",
-    "fxUSD": "0x312FE7eE216A8184839e281e53342C07eF1fFA60",
-    "msUSD": "0xBFeCCEF5a16F68aB05c159157256C5510d4018b6",
-    "reUSD": "0x882AA2Cc4400A232e612B6204a84caa2591AB4B9",
-    "USDS": "0x4Eb3ED3eC8fdeBa3d8b4dFe16654A2b877836Ce2",
-    "stUSDS": "0x2298d5c26daBB9C7Bb634d5BDe9Aaef5b6436b03",
-    "ETH+": "0x62C24f09074AaFb80cd0B58563f0E779E8A0de00",
-    "OETH": "0x21ff94fB478420982CC91F6a7236864EE1939a51",
-    "frxETH": "0xF4F2485A50e62C706deBec4E94b298Ee959CEAED",
-    "pxETH": "0x5DaAced60F47CF16d01761b3f5B04C9676c33DE1",
-    "msETH": "0x9BBeED34EcF593C261a4f4A0963787630A6b9EeE",
-    "crvUSD_USDC": "0xF730249A5428A775A99a3b425Ef6Dce7cdc69a3c",
-    "crvUSD_USDT": "0x8c33b08E2c25c4e6439B5525b3f4F2BCc3332Fb7",
-    "USDC_fxUSD": "0x7EdC83645dCEdeE7b1b5D8138B6F5B111E1a928C",
-    "USDC_USDT": "0x0defc29DA52800F541Bb07ad264D7eD5735e4CfA",
-    "frxUSD_USDe": "0x85D4426A63AF30E77Fe09c50672F7134f0841Eb3",
-    "RLUSD_USDC": "0xAFffd1005ae53F65ea8941e1193DD7989EbC8770",
-    "PYUSD_USDC": "0x2d039454090e7D8BD55f9e5dC8A52b73C13D988b",
-    "GHO_crvUSD": "0x940Dc92F951B109520237686e4C4021C011024f6",
-    "frxUSD_msUSD": "0xc8Cfa1a751B29803e9dd39f860f9Fbe0330bA1c5",
-    "GHO_fxUSD": "0x341804B0b998C95974A6966068324E75B833d7Fd",
-    "fxUSD_reUSD": "0xBE1f196001D58586Aa78eFdeC47a44f107b70AbC",
-    "msUSD_fxUSD": "0x598A4AAB90823eE903737DcA76f750D7da2ab9FD",
-    "stUSDS_USDS": "0x81026094AE0285642720d8d4aAc3Ee6BFa362D4f",
-    "frxETH_WETH": "0x5A160E15602ac655D4802CCd7a47944004A1bFAe",
-    "pxETH_WETH": "0xb5Da641FAAFEfEE40F83262029B61190A6eda18F",
-    "pxETH_stETH": "0x353bbe46d23fa5DcCdc6E95574375DdA23903a7a",
-    "ETH+_WETH": "0xFaCBAd7F68D51631614E2C5516a88c767D68683e",
-    "msETH_OETH": "0x6d246480181D9894a328135113A1FFa3D1465c4F",
-    "tBTC_cbBTC": "0x446FDffDB90C8fF2d3571361007892F583c1A842",
-    "sUSDe": "0x4b63bc2048a9Ab02955525DE4550528d42D56ebF",
-    "wstUSR": "0x7310553F1c221E6F41c1Bb473DbD72e890659352",
-    "sUSDe 05/02/26": "0x9dFb522A44edf319Fa8bA92829428335ddEe1bd6",
-    "reUSD 25/06/26": "0x4661508eE9ec329E6874F3b26023f18D0F356a28",
-    "wstUSR 29/01/26": "0xF58bDbD727B0248F00Fe8E3119B66B13C29B777B",
-    "USG": "0xa89879D07E52E268AbCad0b9f35a1e44C00Ca7C9"
+    "chainlink": {
+      "crvUSD": "0x644E04CFe4d23F7513918dfC0DA89479969ED368",
+      "USDC": "0x737E629bc90E7F24689697f1236D0630939D9894",
+      "FRAX": "0x3BeB986348B434777cbA9CEB40939b21044B1938",
+      "USDT": "0x3C69C3F44FE21bf8504572D83a95f655DEe36b58",
+      "USR": "0x403709aDa4156151afD928baB7Cc0A3799339261",
+      "GHO": "0x5133692c175Ec15Fc6a73887EDf095B336A9a41A",
+      "USDe": "0xFBdA75FFd67b5203357e5712a21067DC562BCa6d",
+      "PYUSD": "0xffFCc316D3eEb64BD6cE0aa63d5B95635fc0e1e8",
+      "RLUSD": "0xBe92739624e2A371A11A8EC3F943cf4E3FC3670D",
+      "WETH": "0xAC94f9228c21F4ab10e4D25a72511Fd80A8a7b0e",
+      "stETH": "0xe94E9371B0bA49403d25106fFF95E810592959BC",
+      "cbBTC": "0x16dEd546eb5627B22Bc5e8C1DC8eA05598a01Cb0",
+      "tBTC": "0xd74E0F266FD894ce219Ca3aE86A3F854Ba15d758"
+    },
+    "erc4626s": {
+      "sUSDe": "0x1483801ed608979f6c1640ECE216c2B9E394cbeA",
+      "wstUSR": "0xadF06766e5789fbf2FfA69F53229c44dA99030c0"
+    },
+    "coinFromCurveLp": {
+      "frxUSD": "0xddA081A2Bb9a74256A6a07c6385103570339b2D8",
+      "fxUSD": "0x7b2f9A9F55035caDB75331EbA31c403F00Ad7701",
+      "msUSD": "0x2a11D78619B896f5c637f7c5563c12B2FAfBed6A",
+      "reUSD": "0x80C6e16eb08290824cb2850e549A7319c5b590C6",
+      "USDS": "0x5b9372Bffc1aAE14cDE8F921F0FD53DFB0A0F825",
+      "stUSDS": "0x023E63D0015697eA6EBf0f064f09E508527D1928",
+      "ETH+": "0x4105E358e01060DD37c222Dea5b2B6892B0623a1",
+      "OETH": "0xb466dc29C6fB407b13c190C1B5cD137684921BDA",
+      "frxETH": "0x8A2296D2c4189231338824FFd7E316485A682311",
+      "pxETH": "0x2a75a9AfF7d909002fc458b765CB92F47350464B",
+      "msETH": "0x0753ba18e716B0B4fA42aD0e66FdbBCcA0392A20"
+    },
+    "duoPoolStable": {
+      "crvUSD_USDC": "0x2b761D3d44b48Be4Fec0C4aF895EB549f9e255A3",
+      "crvUSD_USDT": "0x06049D835BAC69e7751CaD2C9Ab1aA88808fc1B3",
+      "USDC_fxUSD": "0x5C8D5D0BfA77e7d1481Fa51C5cD22a6f8D9C08A4",
+      "USDC_USDT": "0x81dcf22C4Ee4bD8EB3BDcb042fEb2Cc824379E0C",
+      "frxUSD_USDe": "0x56d4d6aEe0278c5Df2FA23Ecb32eC146C9446FDf",
+      "RLUSD_USDC": "0x28Ed3FC0df885ab756b3aB00cd74F5DfF74c3266",
+      "PYUSD_USDC": "0xF10685a7b083BA60D1467b15Cb83E8bFc28b5961",
+      "GHO_crvUSD": "0x67D62C82dcBAa5f0b71B217eB9b68e2dbE7629Ca",
+      "frxUSD_msUSD": "0x0Cc60CAE6Db663824eb49AfD43a9871E6e8ed885",
+      "GHO_fxUSD": "0x86F55c9967575F1AaE5Ce961058EB902C023171b",
+      "fxUSD_reUSD": "0xD7b78cc0F21093f1EDE3519e8Dc7754011B1b732",
+      "msUSD_fxUSD": "0x183eD2F3D8708a06aFF02960369f9DD912c0383B",
+      "stUSDS_USDS": "0x1B2B5E3a3448d3fbda478B28806b4A62aBD4fD36",
+      "frxETH_WETH": "0x87425aaD3882860855f0F7ece4576359792ef341",
+      "pxETH_WETH": "0x49ce8087368E36723106D9e39D99AaBF8E36a428",
+      "pxETH_stETH": "0xDd4d6323fc108c8449D10682B115f65Df5aD5A56",
+      "ETH+_WETH": "0x92e8113438A46A88F2Efb23B6A67B438ADd11639",
+      "msETH_OETH": "0xcd154d0d095E52e0A18d782AC8F143c5E084f706",
+      "tBTC_cbBTC": "0xf34df077fE67cE616074EB91326a453F8BF3Ce08"
+    },
+    "pendlePT": {
+      "sUSDe 05/02/26": "0x8c688777c2043A054F4CF2E278939CCA5712FC7E",
+      "reUSD 25/06/26": "0xc3Ee0A87e6526e2120698710bAb650B33504d950",
+      "wstUSR 29/01/26": "0x09a1a08B34385AaA8b8595A11Da5b921FE5F3f1D"
+    },
+    "USG": "0xbc5482BD2DD8d79Ae25d458fb952BbC19f3548eb"
   },
   "lps": {
-    "USG-USDC": "0x458e273312D2692ACf12C7A1bE67D1e9ebCbe7C0",
-    "USG-frxUSD": "0xD9E3a6f3C3b5b3BFF1A0B8883B2da6c79C60008F",
-    "TAN-WETH": "0x6e5492F8ea2370844EE098A56DD88e1717e4A9C2"
+    "USG-USDC": "0xE47E8Ced9D94AA43C922627782E29b41a93202AF",
+    "USG-frxUSD": "0x8273Cb2cF9AF3228fD14AF25B5B1De2A9676C372",
+    "TAN-WETH": "0x8018853bfb18a5F391C55709b8D892eE35b4846C"
   },
   "wStables": {
-    "wcrvUSD": "0x2bF192Ec303b1b5d9F5D2887e337E9e8401EF471",
-    "wUSDe": "0x845AE1770Bc28d8468e03BE4b4520564467CcC3E",
-    "wDOLA": "0xe4C19783231316a3a25eE17c730b9AB7890Aee65",
-    "wUSR": "0xB8Ca94446a00A9F6e769aF2a41F4b3BD5961E20A"
+    "wcrvUSD": "0xD72Cc216266bcE7865589e45bc256353Af823301",
+    "wUSDe": "0x46c79C0FC12eb4E464FeaF771182f2Dd86db79b2",
+    "wDOLA": "0xeEF4aF1a818D6c5f904ED4D33Cc8249cdb9723E0",
+    "wUSR": "0xe3f8B9c5C43191FC65927e02d0ff6ac067Ded663"
   },
   "pegKeepers": {
-    "USG-USDC": "0x3bAACe002B7fA0De8ff77b4d8796812C0478bdb2",
-    "USG-wcrvUSD": "0x62524304ADf1656A83d00e0284ccDBb45e8F8955"
+    "USG-USDC": "0xe3e3891F613454257f2e2f12fA6be49c2c0e95f5",
+    "USG-frxUSD": "0x90bc3473d0efD0CC204A34DA2989832AF881012A"
   }
 }

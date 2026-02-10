@@ -37,13 +37,13 @@ RETURNS TABLE (
   amount           numeric,
   point_rate       numeric,
   avg_price_usd    numeric,
-  base_points      int,
+  base_points      bigint,
   boost_factor     double precision,
-  booster_points   int,
-  total_points     int,
+  booster_points   bigint,
+  total_points     bigint,
   godfather_id     bigint,
   time_weight      double precision,
-  godfather_points int
+  godfather_points bigint
 )
 LANGUAGE sql
 AS $$
@@ -58,16 +58,27 @@ AS $$
       t.token_address,
       t.point_rate,                                -- points per second per USD
       t.price_source_id,
-      GREATEST(ut.start, p.start_at)               AS seg_start,
-      LEAST(COALESCE(ut.closed, p.end_at), p.end_at) AS seg_end,
+      -- Clip to the intersection of: user participation, query window, AND task active period
+      GREATEST(
+        ut.start_date, 
+        p.start_at,
+        t.start_date                    
+      ) AS seg_start, -- Task must have started
+      LEAST(
+        COALESCE(ut.closed_date, p.end_at),
+        p.end_at,
+        COALESCE(t.end_date, p.end_at)  -- Task may have ended
+      ) AS seg_end,
       NULLIF(ut.amount, '')::numeric / POWER(10, 18) AS amount
     FROM points.lp_user_tasks ut
     JOIN points.lp_task t
       ON t.id = ut.task_id
-     AND t.is_active IS TRUE
     CROSS JOIN params p
-    WHERE ut.start < p.end_at
-      AND COALESCE(ut.closed, p.end_at) > p.start_at
+    WHERE ut.start_date < p.end_at
+      AND COALESCE(ut.closed_date, p.end_at) > p.start_at
+      -- Only include tasks that overlap with the query window
+      AND t.start_date < p.end_at
+      AND COALESCE(t.end_date, p.end_at) > p.start_at
   ),
   seg_price AS (
     SELECT
@@ -147,7 +158,7 @@ AS $$
       * swm.seg_seconds
       * COALESCE(swm.amount, 0)
       * COALESCE(swm.avg_price_usd, 0)
-    )::int                                        AS base_points,
+    )::bigint                                        AS base_points,
     swm.boost_factor,
     -- booster points
     ROUND(
@@ -157,7 +168,7 @@ AS $$
         * COALESCE(swm.amount, 0)
         * COALESCE(swm.avg_price_usd, 0)
       ) * swm.boost_factor
-    )::int                                        AS booster_points,
+    )::bigint                                        AS booster_points,
     -- total points
     ROUND(
       (
@@ -166,7 +177,7 @@ AS $$
         * COALESCE(swm.amount, 0)
         * COALESCE(swm.avg_price_usd, 0)
       ) * (1 + swm.boost_factor)
-    )::int                                        AS total_points,
+    )::bigint                                        AS total_points,
     gf.godfather_id,
     COALESCE(gf.time_weight, 0.0)                 AS time_weight,
     CASE
@@ -178,11 +189,11 @@ AS $$
             * COALESCE(swm.amount, 0)
             * COALESCE(swm.avg_price_usd, 0)
           ) * (1 + swm.boost_factor) * 0.10 * COALESCE(gf.time_weight, 0.0)
-        )::int
+        )::bigint
       ELSE 0
     END                                           AS godfather_points
   FROM seg_with_mult swm
-  LEFT JOIN global."user" u
+  LEFT JOIN points.user u
     ON u.address = swm.user_address
   -- choose a single referral record to avoid row multiplication:
   LEFT JOIN LATERAL (
@@ -196,7 +207,7 @@ AS $$
           EXTRACT(EPOCH FROM (swm.seg_end - ru.used_at)) / 
           EXTRACT(EPOCH FROM (swm.seg_end - swm.seg_start))
       END AS time_weight
-    FROM global.referral_usages ru
+    FROM points.referral_usages ru
     WHERE ru.godson_id = u.id
       AND ru.used_at <= swm.seg_end
     ORDER BY ru.used_at ASC

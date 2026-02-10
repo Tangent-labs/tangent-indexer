@@ -11,7 +11,6 @@ import {
   parseTransferEvent,
   parseWithdrawConvexEvent,
 } from "../../eventFectcher/marketUserEvents.parsers.js"
-import { BlockService } from "../BlockService.js"
 import { TRANSFER_TOPICS } from "../../eventFectcher/erc20TransferEventFetcher.js"
 import { DebtSharesCheckpointStruct } from "./UserMarketService.js"
 import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
@@ -24,9 +23,9 @@ type LpUserTaskPoolItem = {
   id: bigint
   task_id: bigint
   user_address: string
-  start: Date
+  start_date: Date
   amount: string
-  closed: Date | null
+  closed_date: Date | null
 }
 
 export class UserPointsService {
@@ -45,44 +44,9 @@ export class UserPointsService {
     await this.userPointsRepository.insertAddresses(uniqueAddresses)
   }
 
-  // Helper to create and track new tasks in-memory
-  createAndTrack = (
-    userAddress: string,
-    taskId: bigint,
-    start: Date,
-    amount: string,
-    createdIndexByKey: Map<string, number>,
-    taskPool: LpUserTaskPoolItem[],
-    openTaskMap: Map<
-      string,
-      {
-        id: bigint
-        task_id: bigint
-        user_address: string
-        start: Date
-        amount: string
-        closed: Date | null
-      }
-    >
-  ) => {
-    const newTask: LpUserTaskPoolItem = {
-      id: 0n, // synthetic
-      task_id: taskId,
-      user_address: userAddress,
-      start,
-      amount,
-      closed: null,
-    }
-
-    const idx = taskPool.push(newTask) - 1
-    createdIndexByKey.set(`${userAddress}_${taskId}_${start.getTime()}`, idx)
-
-    openTaskMap.set(`${userAddress}_${taskId}`, newTask)
-  }
-
-  async updateLPUserTasks(startBlock: number, endBlock: number) {
+  async updateLPUserTasks(startBlock: number, endBlock: number, blockDates: Map<number, number>) {
     // Retrieve transfer events
-    const { tasks, transferEvents } = await this.userPointsRepository.fetchTasksEventsAndAddresses(startBlock, endBlock)
+    const { tasks, transferEvents } = await this.userPointsRepository.fetchTasksEventsAndAddresses(startBlock, endBlock, blockDates)
     const toExclude = (await this.userPointsRepository.getAddressesExcludedFromLpPoints()).map((u) => u.user)
     transferEvents.sort((a, b) => {
       if (a.block_id !== b.block_id) return a.block_id - b.block_id
@@ -96,11 +60,14 @@ export class UserPointsService {
       allUserAddresses.add(event.to.toLowerCase())
     })
 
+    // Remove addresses to exclude
     toExclude.forEach((u) => {
       if (allUserAddresses.has(u)) {
         allUserAddresses.delete(u)
       }
     })
+
+    // Retrieve all the opened tasks for all concerned users
     const openUserTasks = await this.userPointsRepository.getOpenedTasks(
       Array.from(allUserAddresses),
       tasks.map((task) => task.id)
@@ -113,6 +80,7 @@ export class UserPointsService {
       taskPool.push(openUserTask as LpUserTaskPoolItem)
     }
 
+    // Iterate over all transfer events
     for (const event of transferEvents) {
       const task = tasks.find((t) => t.token.address.toLowerCase() === event.token_address?.toLowerCase())
 
@@ -121,29 +89,33 @@ export class UserPointsService {
         break
       }
 
+      // Iterate over address from and to of transfer event
       for (const userAddressRaw of [event.from, event.to]) {
         const userAddress = userAddressRaw.toLowerCase()
+
+        // Don't consider addresses that are in toExclude array
         if (!toExclude.includes(userAddress)) {
           const isSender = userAddress === event.from?.toLowerCase()
 
-          // Find open task in taskPool
-          const openTask = taskPool.find((t) => t.user_address.toLowerCase() === userAddress && t.task_id === task.id && t.closed === null)
+          // Find open task of the user in taskPool
+          const openTask = taskPool.find((t) => t.user_address.toLowerCase() === userAddress && t.task_id === task.id && t.closed_date === null)
 
+          // There is no open task for this specific task/user, so we have to create one
           if (!openTask) {
             taskPool.push({
               id: 0n, // synthetic
               task_id: task.id,
               user_address: userAddress,
-              start: event.block_date,
+              start_date: event.block_date,
               amount: event.amount,
-              closed: null,
+              closed_date: null,
             })
           }
-
-          if (openTask) {
+          // An open task exists for these specific task/user, we need to close it
+          else {
             const closedAt = new Date(event.block_date)
             // Close the existing task
-            openTask.closed = closedAt
+            openTask.closed_date = closedAt
 
             // Calculate new amount and create a new task if needed
             const currentAmount = BigInt(openTask.amount)
@@ -156,9 +128,9 @@ export class UserPointsService {
                 id: 0n, // synthetic
                 task_id: task.id,
                 user_address: userAddress,
-                start: event.block_date,
+                start_date: event.block_date,
                 amount: newAmount.toString(),
-                closed: null,
+                closed_date: null,
               })
             }
           }
@@ -168,31 +140,27 @@ export class UserPointsService {
     // const taskToclose= openTaskMap.values().filter((t) => t.closed !== null && id!==Bigint(0))
     // const tasksToCreate= openTaskMap.values().filter((t) => id===Bigint(0))
 
-    const tasksToClose = taskPool.filter((t) => t.id !== 0n && t.closed !== null).map((t) => ({ id: t.id, closed: t.closed as Date }))
+    const userTasksToClose = taskPool.filter((t) => t.id !== 0n && t.closed_date !== null).map((t) => ({ id: t.id, closed_date: t.closed_date as Date }))
 
-    // Remove "ids=0n" for prisma not to push them
-    const tasksToCreate = taskPool
+    // Tasks to create are the task
+    const userTasksToCreate = taskPool
       .filter((t) => t.id === 0n)
       .map((el) => {
         return {
           task_id: el.task_id,
           user_address: el.user_address,
-          start: el.start,
-          closed: el.closed,
+          start_date: el.start_date,
+          closed_date: el.closed_date,
           amount: el.amount.toString(),
         }
       })
 
-    await this.userPointsRepository.updateProcessedTasks(tasksToClose, tasksToCreate)
+    await this.userPointsRepository.updateProcessedTasks(userTasksToClose, userTasksToCreate)
   }
 
-  processUserPoints = async (startBlock: number, endBlock: number, blockService: BlockService, providerURL: string) => {
-    const blockDates = await blockService.fetchBlockTimestamps([startBlock, endBlock], providerURL)
+  computeUserPoints = async (startBlock: number, endBlock: number, blockDates: Map<number, number>) => {
+    console.log(blockDates.get(startBlock)!, blockDates.get(endBlock)!)
     await this.userPointsRepository.computeUserPoints(blockDates.get(startBlock)!, blockDates.get(endBlock)!)
-  }
-
-  async getUsgLpKeys(): Promise<Prisma.usg_lp_keysCreateManyInput[]> {
-    return await this.userPointsRepository.getUsgLps()
   }
 
   insertEvents = async (transferEvents: Prisma.transfer_eventsCreateManyInput[], addLiquidityEvents: Prisma.add_liquidity_eventsCreateManyInput[]) => {
@@ -202,7 +170,7 @@ export class UserPointsService {
 
   replaceDates<T extends { block_date: string | Date; block_id: number }>(events: T[], blockInfos: Map<number, number>): T[] {
     events.forEach((event) => {
-      ;(event as any).block_date = new Date(blockInfos.get(event.block_id)! * 1_000)
+      ; (event as any).block_date = new Date(blockInfos.get(event.block_id)! * 1_000)
     })
     return events as Array<T>
   }
@@ -231,8 +199,10 @@ export class UserPointsService {
             transferEvent = parseTransferEvent(log)
             break
         }
-        transferEvents.push(transferEvent)
-        uniqueBlockId.add(log.blockNumber)
+        if (transferEvent.amount !== "0") {
+          transferEvents.push(transferEvent)
+          uniqueBlockId.add(log.blockNumber)
+        }
       }
     })
 

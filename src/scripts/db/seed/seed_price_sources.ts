@@ -1,6 +1,6 @@
 import { COMMON_ERC20S, PENDLE_POOLS } from "@tangent/defi-resources"
-import { AddressesJson, PriceSourceCreate } from "../../type/data.js"
-import { TransactionPrisma } from "../../type/prisma.js"
+import { AddressesJson, PriceSourceCreate } from "../../../type/data.js"
+import { TransactionPrisma } from "../../../type/prisma.js"
 
 import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext.js"
 

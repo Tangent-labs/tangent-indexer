@@ -68,7 +68,7 @@ export class OnchainTxBotService {
         } catch (e: any) {
           const isNormalError = this.isContainsNormalError(e)
           if (!isNormalError) {
-            await this.telegramNotifierService.sendError(`Estimation of 'update' on ${currentKeeper} pegkeeper has failed : \`\`\` ${e} \`\`\` `)
+            await this.telegramNotifierService.sendError(`Estimation of 'update' on ${currentKeeper} pegkeeper has failed : \`\`\` ${e.message} \`\`\` `)
           }
         }
         if (gasfeeEstimation) {
@@ -96,18 +96,19 @@ export class OnchainTxBotService {
             if (usecase === "deposit") {
               const dumpedUSG = parsedLog?.args[1][1]
               await this.telegramNotifierService.sendMessage(`
-                        ${currentKeeper} keeper 'update' function has been triggered. ${Number(formatEther(dumpedUSG)).toFixed()} USG have been added to the LP`)
+                        ${currentKeeper} keeper 'update' function has been triggered 
+                        ${Number(formatEther(dumpedUSG)).toFixed()} USG have been added to the LP`)
             } else {
               const boughtUSG = parsedLog?.args[1][1]
               await this.telegramNotifierService.sendMessage(`
-                        ${currentKeeper} keeper 'update' function has been triggered. 
-                        ${formatEther(Number(formatEther(boughtUSG)).toFixed())} USG have been removed from the LP`)
+                        ${currentKeeper} keeper 'update' function has been triggered
+                        ${Number(formatEther(boughtUSG)).toFixed()} USG have been removed from the LP`)
             }
           } catch (e: any) {
             const isNormalError = this.isContainsNormalError(e)
 
             if (!isNormalError) {
-              await this.telegramNotifierService.sendError(`Trigger of 'update' on ${currentKeeper} pegkeeper has failed : \`\`\` ${e} \`\`\` `)
+              await this.telegramNotifierService.sendError(`Trigger of 'update' on ${currentKeeper} pegkeeper has failed : \`\`\` ${e.message} \`\`\` `)
             }
             throw e
           }

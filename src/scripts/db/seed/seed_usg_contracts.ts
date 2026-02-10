@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client"
-import { TransactionPrisma } from "../../type/prisma.js"
+import { TransactionPrisma } from "../../../type/prisma.js"
 import { COMMON_ERC20S } from "@tangent/defi-resources"
-import { AddressesJson } from "../../type/data.js"
+import { AddressesJson } from "../../../type/data.js"
 
 export async function seedUSGContracts(prisma: PrismaClient | TransactionPrisma, addr: AddressesJson) {
   const now = new Date()

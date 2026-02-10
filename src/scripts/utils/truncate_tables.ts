@@ -40,7 +40,8 @@ SELECT tablename AS table_name, schemaname AS schema_name FROM pg_tables WHERE s
 /**
  * Truncates all tables in the PostgreSQL database schema.
  */
-export async function truncateAllTables(): Promise<void> {
+export async function truncateTables(toDelete: string[]): Promise<void> {
+  const arr = toDelete.map((t) => t.toLowerCase())
   try {
     const confirmed = await promptConfirmation()
     if (!confirmed) {
@@ -62,10 +63,12 @@ export async function truncateAllTables(): Promise<void> {
 
     // Truncate each table
     for (const table of tables) {
-      const tableToTruncate = `"${table.schema_name}".${table.table_name}`
-      const truncateQuery = `TRUNCATE TABLE ${tableToTruncate} CASCADE`
-      await prisma.$executeRawUnsafe(truncateQuery)
-      console.log(`✅ Truncated: ${tableToTruncate}`)
+      if (arr.length === 0 || arr.includes(table.table_name)) {
+        const tableToTruncate = `"${table.schema_name}".${table.table_name}`
+        const truncateQuery = `TRUNCATE TABLE ${tableToTruncate} CASCADE`
+        await prisma.$executeRawUnsafe(truncateQuery)
+        console.log(`✅ Truncated: ${tableToTruncate}`)
+      }
     }
 
     // Re-enable foreign key constraints
@@ -78,6 +81,3 @@ export async function truncateAllTables(): Promise<void> {
     await prisma.$disconnect()
   }
 }
-
-// Execute the function
-truncateAllTables()

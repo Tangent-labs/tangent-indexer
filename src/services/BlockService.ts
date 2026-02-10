@@ -1,5 +1,4 @@
 import { JsonRpcProvider } from "ethers"
-import axios from "axios"
 import { indexerConfig } from "../config/indexer_config.js"
 import { BlockRepository } from "../db/BlockRepository.js"
 
@@ -78,37 +77,5 @@ export class BlockService {
       endBlock = startBlock + blockRange
     }
     return { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex }
-  }
-
-  async fetchBlockTimestamps(blockNumbers: (number | string)[], providerURL: string) {
-    const requests = blockNumbers.map((blockNumber, index) => {
-      // This kind of black magic is mandatory because of Log from ethers returns sometimes a string
-      if (typeof blockNumber === "number") {
-        blockNumber = "0x" + blockNumber.toString(16)
-      }
-      return {
-        jsonrpc: "2.0",
-        id: index + 1,
-        method: "eth_getBlockByNumber",
-        params: [
-          blockNumber, // format hex
-          false,
-        ],
-      }
-    })
-
-    const res = await axios.post(providerURL, requests, {
-      headers: { "Content-Type": "application/json" },
-    })
-
-    const responses = res.data as BlockInfo[]
-
-    const timestampPerBlockId: Map<number, number> = new Map()
-
-    responses.forEach((resp: BlockInfo) => {
-      timestampPerBlockId.set(parseInt(resp.result.number, 16), parseInt(resp.result.timestamp, 16))
-    })
-
-    return timestampPerBlockId
   }
 }

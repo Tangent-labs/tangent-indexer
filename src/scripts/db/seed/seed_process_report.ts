@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client"
 
-import { getAddressesJson } from "../../utils/jsonReader.js"
+import { getAddressesJson } from "../../../utils/jsonReader.js"
 
 const prisma = new PrismaClient()
 
