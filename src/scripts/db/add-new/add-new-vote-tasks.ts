@@ -1,7 +1,6 @@
-import { Prisma } from "@prisma/client"
+import { Prisma, PrismaClient } from "@prisma/client"
 import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext.js"
 import { TransactionPrisma } from "../../../type/prisma.js"
-import { PrismaClient } from "@prisma/client/extension"
 import { CURVE_GLOBAL_CONTRACTS } from "@tangent/defi-resources"
 import { CURVE_GAUGE_URL } from "../config/config_vote_tasks.js"
 
@@ -13,15 +12,15 @@ async function main() {
       {
         taskDescription: "crvUSD/frxUSD on veCRV gauge",
         name: "crvUSD/frxUSD",
-        address: CURVE_CONTEXT.frxUSD_crvUSD.curveLp.toLowerCase(),
+        address: CURVE_CONTEXT.frxUSD_crvUSD.curveGauge.toLowerCase(),
         pointRate: 7.5,
       },
-      {
-        taskDescription: "DOLA/sUSDS on veCRV gauge",
-        name: "DOLA/sUSDS",
-        address: CURVE_CONTEXT.DOLA_sUSDS.curveLp.toLowerCase(),
-        pointRate: 10,
-      },
+      // {
+      //   taskDescription: "DOLA/sUSDS on veCRV gauge",
+      //   name: "DOLA/sUSDS",
+      //   address: CURVE_CONTEXT.DOLA_sUSDS.curveGauge.toLowerCase(),
+      //   pointRate: 10,
+      // },
     ])
   })
 }
