@@ -37,13 +37,13 @@ RETURNS TABLE (
   amount           numeric,
   point_rate       numeric,
   avg_price_usd    numeric,
-  base_points      int,
+  base_points      bigint,
   boost_factor     double precision,
-  booster_points   int,
-  total_points     int,
+  booster_points   bigint,
+  total_points     bigint,
   godfather_id     bigint,
   time_weight      double precision,
-  godfather_points int
+  godfather_points bigint
 )
 LANGUAGE sql
 AS $$

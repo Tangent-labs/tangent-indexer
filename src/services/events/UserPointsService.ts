@@ -159,6 +159,7 @@ export class UserPointsService {
   }
 
   computeUserPoints = async (startBlock: number, endBlock: number, blockDates: Map<number, number>) => {
+    console.log(blockDates.get(startBlock)!, blockDates.get(endBlock)!)
     await this.userPointsRepository.computeUserPoints(blockDates.get(startBlock)!, blockDates.get(endBlock)!)
   }
 
@@ -169,7 +170,7 @@ export class UserPointsService {
 
   replaceDates<T extends { block_date: string | Date; block_id: number }>(events: T[], blockInfos: Map<number, number>): T[] {
     events.forEach((event) => {
-      ;(event as any).block_date = new Date(blockInfos.get(event.block_id)! * 1_000)
+      ; (event as any).block_date = new Date(blockInfos.get(event.block_id)! * 1_000)
     })
     return events as Array<T>
   }
