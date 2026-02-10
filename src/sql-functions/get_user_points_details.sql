@@ -158,7 +158,7 @@ AS $$
       * swm.seg_seconds
       * COALESCE(swm.amount, 0)
       * COALESCE(swm.avg_price_usd, 0)
-    )::int                                        AS base_points,
+    )::bigint                                        AS base_points,
     swm.boost_factor,
     -- booster points
     ROUND(
@@ -168,7 +168,7 @@ AS $$
         * COALESCE(swm.amount, 0)
         * COALESCE(swm.avg_price_usd, 0)
       ) * swm.boost_factor
-    )::int                                        AS booster_points,
+    )::bigint                                        AS booster_points,
     -- total points
     ROUND(
       (
@@ -177,7 +177,7 @@ AS $$
         * COALESCE(swm.amount, 0)
         * COALESCE(swm.avg_price_usd, 0)
       ) * (1 + swm.boost_factor)
-    )::int                                        AS total_points,
+    )::bigint                                        AS total_points,
     gf.godfather_id,
     COALESCE(gf.time_weight, 0.0)                 AS time_weight,
     CASE
@@ -189,7 +189,7 @@ AS $$
             * COALESCE(swm.amount, 0)
             * COALESCE(swm.avg_price_usd, 0)
           ) * (1 + swm.boost_factor) * 0.10 * COALESCE(gf.time_weight, 0.0)
-        )::int
+        )::bigint
       ELSE 0
     END                                           AS godfather_points
   FROM seg_with_mult swm
