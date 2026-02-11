@@ -56,9 +56,9 @@ describe("MarketCreationService", () => {
 
     ;(fetchMarketCreationLogs as any).mockResolvedValue(mockLogs)
 
-    await marketCreationService.runDetection(mockProvider, startingBlock, endingBlock, blockService)
+    await marketCreationService.runDetection(mockProvider, startingBlock, endingBlock)
 
-    expect(fetchMarketCreationLogs).toHaveBeenCalledWith(mockProvider, startingBlock, endingBlock, "COUCOU", blockService)
+    expect(fetchMarketCreationLogs).toHaveBeenCalledWith(mockProvider, startingBlock, endingBlock, "COUCOU")
     expect(mockMarketContractsRepository.insertContracts).toHaveBeenCalledWith([
       { contract_address: "0xmarket1", collateral_address: "0xcollat1", contract_type: "ConvexCrv" },
       { contract_address: "0xmarket2", collateral_address: "0xcollat2", contract_type: "ConvexFxn" },
@@ -98,7 +98,7 @@ describe("MarketCreationService", () => {
 
     ;(fetchMarketCreationLogs as any).mockResolvedValue([])
 
-    await marketCreationService.runDetection(mockProvider, startingBlock, endingBlock, blockService)
+    await marketCreationService.runDetection(mockProvider, startingBlock, endingBlock)
 
     expect(mockMarketContractsRepository.getContractsInList).not.toHaveBeenCalled()
     expect(mockMarketContractsRepository.insertContracts).not.toHaveBeenCalled()
