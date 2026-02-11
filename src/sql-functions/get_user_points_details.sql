@@ -91,25 +91,28 @@ AS $$
     FROM clip c
     -- time-weighted average over overlapping price intervals
     LEFT JOIN LATERAL (
-      SELECT
-        SUM(
-          EXTRACT(EPOCH FROM (LEAST(ps.next_ts, c.seg_end) - GREATEST(ps.ts, c.seg_start)))
-          * NULLIF(ps.price_usd, 0)::double precision
-        ) / NULLIF(EXTRACT(EPOCH FROM (c.seg_end - c.seg_start)), 0)
-        AS avg_price_usd
-      FROM (
-        SELECT
-          pf.timestamp AS ts,
-          LEAD(pf.timestamp) OVER (PARTITION BY pf.price_source_id ORDER BY pf.timestamp) AS next_ts,
-          pf.price_usd
-        FROM points.price_feeds pf
-        WHERE pf.price_source_id = c.price_source_id
-          AND pf.timestamp < c.seg_end              -- pre-filter for efficiency
-      ) ps
-      WHERE ps.next_ts IS NOT NULL
-        AND ps.ts < c.seg_end
-        AND ps.next_ts > c.seg_start
-    ) AS price_agg ON true
+  SELECT
+    SUM(
+      EXTRACT(EPOCH FROM (LEAST(ps.next_ts, c.seg_end) - GREATEST(ps.ts, c.seg_start)))
+      * ps.price_usd::double precision
+    ) / NULLIF(
+      -- Dénominateur = durée avec des prix, pas durée totale du segment
+      SUM(EXTRACT(EPOCH FROM (LEAST(ps.next_ts, c.seg_end) - GREATEST(ps.ts, c.seg_start)))),
+      0
+    ) AS avg_price_usd
+  FROM (
+    SELECT
+      pf.timestamp AS ts,
+      LEAD(pf.timestamp) OVER (PARTITION BY pf.price_source_id ORDER BY pf.timestamp) AS next_ts,
+      pf.price_usd
+    FROM points.price_feeds pf
+    WHERE pf.price_source_id = c.price_source_id
+      AND pf.timestamp < c.seg_end
+  ) ps
+  WHERE ps.next_ts IS NOT NULL
+    AND ps.ts < c.seg_end
+    AND ps.next_ts > c.seg_start
+) AS price_agg ON true
     -- fast single-row probe for last price before seg_start (uses your covering index)
     LEFT JOIN LATERAL (
       SELECT NULLIF(pf2.price_usd, 0)::double precision AS price_usd
