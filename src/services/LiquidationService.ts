@@ -162,7 +162,6 @@ export class LiquidationService {
   async getLiquidationParamsFromDb(): Promise<{ markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }> {
     if (this.context.isDbAlive) {
       const borrowersRawList = await this.activeBorrowersRepository.getAll()
-      console.log("borrowersRawList  => ", borrowersRawList?.length || 0)
 
       const markets = new Set<AddressLike>()
       const borrowers = borrowersRawList.map((borrower) => {
@@ -704,7 +703,6 @@ export class LiquidationService {
       throw new Error(`No route found for collateral: ${account.collatToken}`)
     }
 
-    console.log("amount  => ", amount)
     // Validate that the route quote is positive (non-zero)
     if (!amount || amount <= 0n) {
       throw new Error(`Invalid route quote: ${amount.toString()}. Route found but quote is zero or negative for collateral: ${account.collatToken}`)
@@ -799,7 +797,6 @@ export class LiquidationService {
       if (action.type === "seizing") {
         try {
           await this.executeSeizing(signer, action, logContext)
-          console.log(`Seizing successful : ${collateralName} (${formatEther(action.userDebt)})`)
           await telegramNotifierService.sendMessage(`Seizing successful : ${collateralName.replace("-", "_")} (${formatEther(action.userDebt)})`)
         } catch (error) {
           await telegramNotifierService.sendError(
@@ -823,22 +820,12 @@ export class LiquidationService {
         // Calculate modifier needed to achieve target slippage
         const slippageModifierBps = attemptsMade > 0 ? (targetSlippageBps - slippageStep) * 1000n : 0n
 
-        if (attemptsMade > 0) {
-          // Calculate the final slippage that will be used
-          // const finalSlippageBps = 50n + (10n * slippageModifierBps) / 10000n
-          // const finalSlippagePercent = (Number(finalSlippageBps) / 100).toFixed(2)
-          // const logMessage = `Retry attempt ${attemptsMade + 1} for job ${job.id} (account: ${action.account}, market: ${action.market}): Increasing slippage to ${finalSlippagePercent}% (${finalSlippageBps} bps)`
-          // await telegramNotifierService.sendError(logMessage)
-        }
-
         await this.executeLiquidation(walletIndex, action, slippageModifierBps, providerIndex, logContext)
-        console.log(`Liquidation successful : ${collateralName} (${action.positionValue})`)
         await telegramNotifierService.sendMessage(`Liquidation successful : ${collateralName.replace("-", "_")} (${formatEther(action.userDebt)})`)
       } else {
         throw new Error(`Unknown action type: ${(action as any).type}`)
       }
     } catch (error) {
-      console.log(`Liquidation error : ${collateralName} (${formatEther(action.userDebt)}) : ${(error as Error).message}`)
       await telegramNotifierService.sendError(
         `Liquidation error : ${collateralName.replace("-", "_")} (${formatEther(action.userDebt)}) : ${(error as Error).message.slice(0, 100)}...`
       )
