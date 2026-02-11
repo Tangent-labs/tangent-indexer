@@ -1,20 +1,20 @@
-import { PriceSourceType, Prisma } from "@prisma/client"
+import { PriceSourceType, Prisma, PrismaClient } from "@prisma/client"
 import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext.js"
 import { TransactionPrisma } from "../../../type/prisma.js"
 import { PTS_PER_HOUR_TO_SECONDS_RATE } from "../config/config_lp_tasks.js"
-import { PrismaClient } from "@prisma/client/extension"
 import { PENDLE_POOLS } from "@tangent/defi-resources"
 import { JsonRpcProvider } from "ethers"
 
 const prisma = new PrismaClient()
 
 async function main() {
+
   const provider = new JsonRpcProvider(process.env.CHAIN_RPCS!.split(",")[0])
   const now = new Date((await provider.getBlock("latest"))!.timestamp * 1000)
 
   await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     await addCurve_LPTasks(tx, "DOLA_sUSDS", "curveApi", "factory-crvUSD", now)
-    await addPendle_LP_PT_YTTasks(tx, "USDe 09/25/25", now)
+    // await addPendle_LP_PT_YTTasks(tx, "USDe 09/25/25", now)
   })
 }
 
@@ -170,7 +170,7 @@ async function addCurve_LPTasks(prisma: TransactionPrisma, key: keyof typeof CUR
 
 async function addPendle_LP_PT_YTTasks(prisma: TransactionPrisma, key: keyof typeof PENDLE_POOLS, date: Date) {
   const ctx = PENDLE_POOLS[key]
-  const priceSources = await prisma.price_source.createManyAndReturn({
+  await prisma.price_source.createMany({
     data: [
       {
         name: `MARKET ${key}`,
@@ -181,14 +181,11 @@ async function addPendle_LP_PT_YTTasks(prisma: TransactionPrisma, key: keyof typ
         name: `PT ${key}`,
         type: "pendleApi",
         address: ctx.PT,
-      },
-      {
-        name: `YT ${key}`,
-        type: "pendleApi",
-        address: ctx.YT,
-      },
+      }
     ],
   })
+
+  const priceSources = await prisma.price_source.findMany()
 
   const lpTasks: Prisma.lp_taskCreateManyInput[] = [
     {
@@ -221,7 +218,7 @@ async function addPendle_LP_PT_YTTasks(prisma: TransactionPrisma, key: keyof typ
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[30],
       description: `Hold ${key} YT tokens`,
       url: "https://www.stakedao.org/yield",
-      price_source_id: priceSources.find((p) => p.name.includes(`YT ${key}`))!.id!,
+      price_source_id: priceSources.find((p) => p.name === "USG")!.id!,
       start_date: date,
     },
   ]

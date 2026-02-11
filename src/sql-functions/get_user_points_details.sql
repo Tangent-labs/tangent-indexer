@@ -113,11 +113,8 @@ AS $$
     -- fast single-row probe for last price before seg_start (uses your covering index)
     LEFT JOIN LATERAL (
       SELECT NULLIF(pf2.price_usd, 0)::double precision AS price_usd
-      FROM points.price_feeds pf2
+      FROM points.last_price_feeds pf2
       WHERE pf2.price_source_id = c.price_source_id
-        AND pf2.timestamp <= c.seg_start
-      ORDER BY pf2.timestamp DESC
-      LIMIT 1
     ) AS last_before ON true
     WHERE c.seg_end > c.seg_start
   ),
