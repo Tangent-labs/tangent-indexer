@@ -1,0 +1,14 @@
+{
+  "totalErrors": 190,
+  "contextsParsed": 190,
+  "uniqueMarketsCount": 6,
+  "markets": [
+    "0x1285bd27f55e2ff71d24b199e640ef64c83e6dac",
+    "0x2cae9e89ae4989cf1da94ec092a0cb60f0a06d96",
+    "0x4a8be4de7696c9fbd5ef78f16bfd352178f0b390",
+    "0x8df208e71fc8fc607be07aa799014957e32598f6",
+    "0xd77a4d91b62d25129d372a05d8f87df0f7f63a9d",
+    "0xec160a2f8d38d8e44da4f030e47e26c65548880e"
+  ],
+  "extractedAt": "2025-12-17T16:00:01.554Z"
+}

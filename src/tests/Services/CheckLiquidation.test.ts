@@ -11,6 +11,7 @@ import { LiquidationExecutionContext } from "../../services/LiquidationExecution
 import { LiquidationUserFullInfo } from "../../type/data.js"
 import { CheckLiquidationService } from "../../services/LiquidationCheckService.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
+import { RouterService } from "src/services/RouterService.js"
 
 const DECIMALS = BigInt(10 ** 18)
 
@@ -36,17 +37,31 @@ vi.mock("config/indexer_setup", () => ({
     handleError: vi.fn(),
   })),
 }))
+vi.mock("config/indexer_config", () => ({
+  indexerConfig: {
+    liquidationQueueRedis: "redis://localhost:6379",
+    liquidationQueue: {
+      attempts: 10,
+      backoff: {
+        type: "exponential",
+        delay: 5000,
+      },
+    },
+  },
+}))
 
 // Mock BullMQ
 const mocks = vi.hoisted(() => ({
   add: vi.fn().mockResolvedValue({}),
   close: vi.fn().mockResolvedValue(undefined),
+  getJob: vi.fn().mockResolvedValue(null), // Return null to indicate job doesn't exist
 }))
 
 vi.mock("bullmq", () => {
   class MockQueue {
     add = mocks.add
     close = mocks.close
+    getJob = mocks.getJob
   }
   return {
     Queue: MockQueue,
@@ -68,6 +83,8 @@ describe("CheckLiquidationService", () => {
     vi.resetAllMocks()
     mocks.add.mockReset()
     mocks.close.mockReset()
+    mocks.getJob.mockReset()
+    mocks.getJob.mockResolvedValue(null) // Default: job doesn't exist
 
     // Setup mock context
     mockContext = new LiquidationExecutionContext()
@@ -80,9 +97,16 @@ describe("CheckLiquidationService", () => {
       botToken: "process.env.TELEGRAM_BOT_TOKEN!",
       chatId: "process.env.TELEGRAM_CHAT_ID!",
     })
+    const mockRouterService = {} // Provide a dummy object since we don't need its implementation here
     // Setup mock services
     mockLiquidationBotLogService = new LiquidationBotLogService(mockLiquidationBotLogRepository, mockTelegramNotifierService)
-    mockLiquidationService = new LiquidationService(activeBorrowersRepository, mockContext, mockLiquidationBotLogService)
+
+    mockLiquidationService = new LiquidationService(
+      activeBorrowersRepository,
+      mockContext,
+      mockRouterService as unknown as RouterService,
+      mockLiquidationBotLogService
+    )
     mockProviders = [{} as JsonRpcProvider]
 
     // Mock service methods
@@ -122,12 +146,23 @@ describe("CheckLiquidationService", () => {
   })
 
   it("should execute the full liquidation process successfully", async () => {
+    // Mock analyzeLiquidation to return non-empty lists so prioritizeActions gets called
+    vi.spyOn(mockLiquidationService, "analyzeLiquidation").mockResolvedValue({
+      seizingList: [{ account: "0xUser1" as AddressLike, market: "0xMarket1" as AddressLike } as LiquidationUserFullInfo],
+      liquidationList: [],
+    })
+
     await checkLiquidationService.run()
 
     // Verify the sequence of operations
     expect(mockLiquidationService.checkContext).toHaveBeenCalled()
     expect(mockLiquidationService.getLiquidationParams).toHaveBeenCalled()
-    expect(mockLiquidationService.getOnchainData).toHaveBeenCalledWith(mockProviders, ["0xMarket1"], [{ account: "0xUser1", market: "0xMarket1" }])
+    expect(mockLiquidationService.getOnchainData).toHaveBeenCalled()
+    const getOnchainDataCall = vi.mocked(mockLiquidationService.getOnchainData).mock.calls[0]
+    expect(getOnchainDataCall[0]).toEqual(mockProviders)
+    expect(getOnchainDataCall[1]).toEqual(["0xMarket1"])
+    expect(getOnchainDataCall[2]).toEqual([{ account: "0xUser1", market: "0xMarket1" }])
+    expect(getOnchainDataCall[3]).toBeUndefined()
     expect(mockLiquidationService.analyzeLiquidation).toHaveBeenCalled()
     expect(mockLiquidationService.prioritizeActions).toHaveBeenCalled()
   })
@@ -153,6 +188,11 @@ describe("CheckLiquidationService", () => {
       type: "seizing",
     }
 
+    // Mock analyzeLiquidation to return non-empty lists so the code doesn't return early
+    vi.spyOn(mockLiquidationService, "analyzeLiquidation").mockResolvedValue({
+      seizingList: [{ account: "0xUser1" as AddressLike, market: "0xMarket1" as AddressLike } as LiquidationUserFullInfo],
+      liquidationList: [],
+    })
     vi.spyOn(mockLiquidationService, "prioritizeActions").mockReturnValue([{ ...seizing }])
 
     await checkLiquidationService.run()
@@ -160,7 +200,7 @@ describe("CheckLiquidationService", () => {
     // The action is passed through prepareSerialize (which is mocked to return data as-is in tests)
     // BullMQ add signature: add(name, data, options)
     expect(mocks.add).toHaveBeenCalledWith(
-      "0xMarket1-0xUser1-seizing", // jobId (first parameter)
+      "liquidation", // job name (first parameter)
       expect.objectContaining({
         account: "0xUser1",
         market: "0xMarket1",
@@ -172,6 +212,7 @@ describe("CheckLiquidationService", () => {
         type: "seizing",
       }),
       expect.objectContaining({
+        jobId: "0xMarket1-0xUser1-seizing", // jobId in options per BullMQ docs
         priority: 3, // seizing has priority 3
         attempts: expect.any(Number),
         backoff: expect.any(Object),
@@ -194,14 +235,19 @@ describe("CheckLiquidationService", () => {
       type: "liquidation",
     }
 
+    // Mock analyzeLiquidation to return non-empty lists so the code doesn't return early
+    vi.spyOn(mockLiquidationService, "analyzeLiquidation").mockResolvedValue({
+      seizingList: [],
+      liquidationList: [{ account: "0xUser1" as AddressLike, market: "0xMarket1" as AddressLike } as LiquidationUserFullInfo],
+    })
     vi.spyOn(mockLiquidationService, "prioritizeActions").mockReturnValue([{ ...liquidation }])
 
     await checkLiquidationService.run()
 
     // The action is passed through prepareSerialize (which is mocked to return data as-is in tests)
-    // BullMQ add signature: add(name, data, options)
+    // BullMQ add signature: add(name, data, options) with jobId in options
     expect(mocks.add).toHaveBeenCalledWith(
-      "0xMarket1-0xUser1-liquidation", // jobId (first parameter)
+      "liquidation", // job name (first parameter)
       expect.objectContaining({
         account: "0xUser1",
         market: "0xMarket1",
@@ -213,6 +259,7 @@ describe("CheckLiquidationService", () => {
         type: "liquidation",
       }),
       expect.objectContaining({
+        jobId: "0xMarket1-0xUser1-liquidation", // jobId in options per BullMQ docs
         priority: 2, // liquidation has priority 2 (processed before seizing)
         attempts: expect.any(Number),
         backoff: expect.any(Object),
@@ -238,6 +285,11 @@ describe("CheckLiquidationService", () => {
       })
     }
 
+    // Mock analyzeLiquidation to return non-empty lists so the code doesn't return early
+    vi.spyOn(mockLiquidationService, "analyzeLiquidation").mockResolvedValue({
+      seizingList: actions.filter((a) => a.type === "seizing").map((a) => ({ account: a.account, market: a.market }) as LiquidationUserFullInfo),
+      liquidationList: actions.filter((a) => a.type === "liquidation").map((a) => ({ account: a.account, market: a.market }) as LiquidationUserFullInfo),
+    })
     vi.spyOn(mockLiquidationService, "prioritizeActions").mockReturnValue(actions)
 
     await checkLiquidationService.run()
@@ -246,9 +298,9 @@ describe("CheckLiquidationService", () => {
     actions.forEach((action) => {
       const expectedPriority = action.type === "liquidation" ? 2 : 3
       const jobId = `${action.market}-${action.account}-${action.type}`
-      // BullMQ add signature: add(name, data, options)
+      // BullMQ add signature: add(name, data, options) with jobId in options
       expect(mocks.add).toHaveBeenCalledWith(
-        jobId, // jobId (first parameter)
+        "liquidation", // job name (first parameter)
         expect.objectContaining({
           account: action.account,
           market: action.market,
@@ -261,6 +313,7 @@ describe("CheckLiquidationService", () => {
           collatToken: action.collatToken,
         }),
         expect.objectContaining({
+          jobId, // jobId in options per BullMQ docs
           priority: expectedPriority,
           attempts: expect.any(Number),
           backoff: expect.any(Object),

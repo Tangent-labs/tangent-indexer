@@ -68,7 +68,7 @@ export class OnchainTxBotService {
         } catch (e: any) {
           const isNormalError = this.isContainsNormalError(e)
           if (!isNormalError) {
-            await this.telegramNotifierService.sendError(`Estimation of 'update' on ${currentKeeper} pegkeeper has failed : \`\`\` ${e.message} \`\`\` `)
+            await this.telegramNotifierService.sendError(`Estimation of 'update' on ${currentKeeper} pegkeeper has failed : \`\`\` ${e} \`\`\` `)
           }
         }
         if (gasfeeEstimation) {
@@ -108,7 +108,7 @@ export class OnchainTxBotService {
             const isNormalError = this.isContainsNormalError(e)
 
             if (!isNormalError) {
-              await this.telegramNotifierService.sendError(`Trigger of 'update' on ${currentKeeper} pegkeeper has failed : \`\`\` ${e.message} \`\`\` `)
+              await this.telegramNotifierService.sendError(`Trigger of 'update' on ${currentKeeper} pegkeeper has failed : \`\`\` ${e} \`\`\` `)
             }
             throw e
           }
