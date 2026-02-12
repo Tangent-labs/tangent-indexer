@@ -29,7 +29,14 @@ export type LiquidationMarketAccountOutInfo = {
 }
 
 export type LiquidationUserInfo = LiquidationAccountOutInfo & LiquidationUserInInfo
-export type LiquidationUserFullInfo = LiquidationUserInfo & { collatToken: AddressLike }
+export type LiquidationUserFullInfo = LiquidationUserInfo & {
+  collatToken: AddressLike
+  // Market info from LiquidationMarketOutInfo
+  maxLTV?: bigint
+  liquidationThreshold?: bigint
+  collateralUSDPrice?: bigint
+  oracleDecimals?: bigint
+}
 
 /**
  * Serialized version of LiquidationUserFullInfo for queue storage (BigInt as strings)
@@ -39,12 +46,17 @@ export type SerializedLiquidationUserFullInfo = Omit<LiquidationUserFullInfo, "h
   userDebt: string
   positionValue: string
   collateralBalance: string
-} & { type: "seizing" | "liquidation" }
+} & { type: "seizing" | "liquidation"; executionKey: string }
 
 export type LiquidationAnalyseInfo = {
   seizingList?: LiquidationUserFullInfo[]
   liquidationList?: LiquidationUserFullInfo[]
 }
+
+/**
+ * Router type used for liquidation
+ */
+export type RouterType = "curve" | "pendle"
 
 export type LiquidationEstimateInfo = {
   // Swap info needed to call liquidate on the contract
@@ -53,6 +65,7 @@ export type LiquidationEstimateInfo = {
   minTgUSDOut: bigint
   liquidationCall: {
     routerCall: string // bytes encoded as hex string
+    routerAddress: string // address of the router to use (Curve or Pendle)
   }
   // Additional estimate information
   expectedOutput: bigint
@@ -62,9 +75,25 @@ export type LiquidationEstimateInfo = {
     eth: number
   }
   grossProfit: bigint
+  routerType: RouterType
+}
+
+/**
+ * Data extracted from Liquidate event after successful liquidation
+ */
+export type LiquidationExecutionResult = {
+  repaidAmount: bigint
+  debtShares: bigint
+  fee: bigint
+  collateralLiquidated: bigint
+  liquidator: string
+  transactionHash: string
+  /** Profit from liquidation: repaidAmount - userDebt (can be negative) */
+  liquidationProfit: bigint
 }
 
 export type LiquidationBotLogAction =
+  | "liquidation_preparation"
   | "check_context"
   | "liquidation_params"
   | "liquidation_bad_debt_execution"
@@ -214,6 +243,7 @@ export type AddressesJson = {
     marketCreator: string
     irCalculator: string
     pegKeeperRegulator: string
+    pendlePTRouter: string
     marketViewer: string
   }
   tokens: {
@@ -266,4 +296,90 @@ export type NotificationMessage = {
   level?: NotificationErrorLevel
   message?: string
   action: NotificationBotAction
+}
+
+// ============================================
+// Pendle Routing Types
+// ============================================
+
+/**
+ * Configuration for a Pendle pool used in routing
+ */
+export type PendlePoolConfig = {
+  MARKET: string // Pendle market address
+  PT: string // Principal Token address
+  SY: string // Standardized Yield token address
+  YT: string // Yield Token address
+  UNDERLYING_IN: string[] // Tokens that can be swapped into this PT
+  UNDERLYING_OUT: string[] // Tokens that can be received when redeeming PT
+}
+
+/**
+ * Quote data for swapping SY to PT (token → PT direction)
+ */
+export type PendleSYToPTQuote = {
+  market: string
+  pt: string
+  sy: string
+  underlyingIn: string
+  tokenInAmount: bigint
+}
+
+/**
+ * Quote data for swapping PT to SY (PT → token direction)
+ */
+export type PendlePTToSYQuote = {
+  market: string
+  pt: string
+  sy: string
+  underlyingOut: string
+  ptAmount: bigint
+}
+
+/**
+ * Parameters for quoting Token to PT swap via chainview
+ */
+export type QuoteTokenToPTParams = {
+  curveRouterData: CurveQuote
+  syToPTData: PendleSYToPTQuote
+}
+
+/**
+ * Parameters for quoting PT to Token swap via chainview
+ * Note: CurveRouteParamsOnly doesn't include _amount as it's derived from PT redemption
+ */
+export type QuotePTToTokenParams = {
+  ptToSYData: PendlePTToSYQuote
+  curveRouterData: {
+    _route: string[]
+    _swap_params: number[][]
+    _pools: string[]
+  }
+}
+
+/**
+ * Output from PT to Token quote with price impact
+ */
+export type QuotePTToTokenOut = {
+  quote: bigint
+  priceImpact: bigint
+}
+
+/**
+ * Result of a route evaluation with quote and price impact
+ */
+export type RouteEvaluationResult = {
+  route: LiquidationRoute | null
+  amount: bigint
+  priceImpact: number
+}
+
+/**
+ * Result of a Pendle route evaluation
+ */
+export type PendleRouteResult = {
+  route: LiquidationRoute | null
+  pendleData: PendlePTToSYQuote
+  amount: bigint
+  priceImpact: number
 }

@@ -1,0 +1,328 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "PendlePTRouter",
+  "sourceName": "src/USG/Routers/PendlePTRouter.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        }
+      ],
+      "name": "SafeERC20FailedOperation",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "curveRouter",
+      "outputs": [
+        {
+          "internalType": "contract ICurveRouter",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "pendleRouter",
+      "outputs": [
+        {
+          "internalType": "contract IPendleRouterV4",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IPendleMarketV3",
+              "name": "market",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IPendlePTToken",
+              "name": "pt",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IPendleSYToken",
+              "name": "sy",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IPendleYTToken",
+              "name": "yt",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "underlyingOut",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "ptAmount",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct PendlePTToSY",
+          "name": "PTToSY",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "address[11]",
+              "name": "_route",
+              "type": "address[11]"
+            },
+            {
+              "internalType": "uint256[5][5]",
+              "name": "_swap_params",
+              "type": "uint256[5][5]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_min_dy",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address[5]",
+              "name": "_pools",
+              "type": "address[5]"
+            },
+            {
+              "internalType": "address",
+              "name": "_receiver",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct CurveRouterSwapNoAmount",
+          "name": "crvRouterData",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "contract IPendleMarketV3",
+              "name": "market",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IPendlePTToken",
+              "name": "pt",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IPendleSYToken",
+              "name": "sy",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "underlyingIn",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "receiver",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "minPTOut",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct PendleSYToPT",
+          "name": "SYToPT",
+          "type": "tuple"
+        }
+      ],
+      "name": "swapPTForPT",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IPendleMarketV3",
+              "name": "market",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IPendlePTToken",
+              "name": "pt",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IPendleSYToken",
+              "name": "sy",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IPendleYTToken",
+              "name": "yt",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "underlyingOut",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "ptAmount",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct PendlePTToSY",
+          "name": "PTToSY",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "address[11]",
+              "name": "_route",
+              "type": "address[11]"
+            },
+            {
+              "internalType": "uint256[5][5]",
+              "name": "_swap_params",
+              "type": "uint256[5][5]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_min_dy",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address[5]",
+              "name": "_pools",
+              "type": "address[5]"
+            },
+            {
+              "internalType": "address",
+              "name": "_receiver",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct CurveRouterSwapNoAmount",
+          "name": "crvRouterData",
+          "type": "tuple"
+        }
+      ],
+      "name": "swapPTForToken",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address[11]",
+              "name": "_route",
+              "type": "address[11]"
+            },
+            {
+              "internalType": "uint256[5][5]",
+              "name": "_swap_params",
+              "type": "uint256[5][5]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_amount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address[5]",
+              "name": "_pools",
+              "type": "address[5]"
+            }
+          ],
+          "internalType": "struct CurveRouterSwapNoReceiver",
+          "name": "crvRouterData",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "contract IPendleMarketV3",
+              "name": "market",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IPendlePTToken",
+              "name": "pt",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IPendleSYToken",
+              "name": "sy",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "underlyingIn",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "receiver",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "minPTOut",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct PendleSYToPT",
+          "name": "SYToPT",
+          "type": "tuple"
+        }
+      ],
+      "name": "swapTokenForPT",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600e575f5ffd5b506113908061001c5f395ff3fe608060405260043610610058575f3560e01c8063c41f7ac311610041578063c41f7ac3146100da578063cda90b88146100ed578063e4ca70a014610114575f5ffd5b8063206aeab31461005c5780637dd2d9e5146100ad575b5f5ffd5b348015610067575f5ffd5b5061008373888888888889758f76e7103c6cbf23abbf58f94681565b60405173ffffffffffffffffffffffffffffffffffffffff90911681526020015b60405180910390f35b3480156100b8575f5ffd5b506100cc6100c7366004610d99565b610127565b6040519081526020016100a4565b6100cc6100e8366004610dcd565b6105ac565b3480156100f8575f5ffd5b506100837345312ea0eff7e09c83cbe249fa1d7598c4c8cd4e81565b6100cc610122366004610e00565b6105ff565b5f806101366020850185610e69565b73ffffffffffffffffffffffffffffffffffffffff16632f13b60c6040518163ffffffff1660e01b8152600401602060405180830381865afa15801561017e573d5f5f3e3d5ffd5b505050506040513d601f19601f820116820180604052508101906101a29190610e8b565b1561027b576101d56101ba6040860160208701610e69565b336101cb6080880160608901610e69565b8760a00135610617565b6101e56080850160608601610e69565b6040517fbcb7ea5d00000000000000000000000000000000000000000000000000000000815230600482015273ffffffffffffffffffffffffffffffffffffffff919091169063bcb7ea5d906024016020604051808303815f875af1158015610250573d5f5f3e3d5ffd5b505050506040513d601f19601f820116820180604052508101906102749190610eaa565b9050610360565b61029a61028e6040860160208701610e69565b33308760a00135610617565b6102c76102ad6040860160208701610e69565b73888888888889758f76e7103c6cbf23abbf58f946610670565b73888888888889758f76e7103c6cbf23abbf58f946633346d3a3306102ef6020880188610e69565b8760a001355f6102fd6107a9565b6040518663ffffffff1660e01b815260040161031d959493929190611150565b60408051808303815f875af1158015610338573d5f5f3e3d5ffd5b505050506040513d601f19601f8201168201806040525081019061035c91906111a6565b5090505b5f61036e6020850185610e69565b73ffffffffffffffffffffffffffffffffffffffff16146104a7575f61039a6060860160408701610e69565b73ffffffffffffffffffffffffffffffffffffffff1663769f8e5d30846103c760a08a0160808b01610e69565b60405160e085901b7fffffffff0000000000000000000000000000000000000000000000000000000016815273ffffffffffffffffffffffffffffffffffffffff9384166004820152602481019290925290911660448201525f60648201819052608482015260a4016020604051808303815f875af115801561044c573d5f5f3e3d5ffd5b505050506040513d601f19601f820116820180604052508101906104709190610eaa565b905061049e846101608101836104808301356104a0840161049961056086016105408701610e69565b6107f2565b925050506105a6565b6104b76060850160408601610e69565b73ffffffffffffffffffffffffffffffffffffffff1663769f8e5d6104e461056086016105408701610e69565b836104f560a0890160808a01610e69565b60405160e085901b7fffffffff0000000000000000000000000000000000000000000000000000000016815273ffffffffffffffffffffffffffffffffffffffff93841660048201526024810192909252909116604482015261048086013560648201525f608482015260a4016020604051808303815f875af115801561057e573d5f5f3e3d5ffd5b505050506040513d601f19601f820116820180604052508101906105a29190610eaa565b9150505b92915050565b5f806105bb6020850185610e69565b90506105ce813330876104800135610617565b5f6105ea856101608101610480820135846104a08401306107f2565b90506105f681856108c5565b95945050505050565b5f5f61060b8585610127565b90506105f681846108c5565b73eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee73ffffffffffffffffffffffffffffffffffffffff85161461066a5761066a73ffffffffffffffffffffffffffffffffffffffff8516848484610a98565b50505050565b73eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee73ffffffffffffffffffffffffffffffffffffffff83161480159061075f57506040517fdd62ed3e00000000000000000000000000000000000000000000000000000000815230600482015273ffffffffffffffffffffffffffffffffffffffff82811660248301527fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff919084169063dd62ed3e90604401602060405180830381865afa158015610738573d5f5f3e3d5ffd5b505050506040513d601f19601f8201168201806040525081019061075c9190610eaa565b14155b156107a5576107a573ffffffffffffffffffffffffffffffffffffffff8316827fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff610b21565b5050565b6107ef6040518060a001604052805f73ffffffffffffffffffffffffffffffffffffffff1681526020015f81526020016060815260200160608152602001606081525090565b90565b5f61081d6108036020890189610e69565b7345312ea0eff7e09c83cbe249fa1d7598c4c8cd4e610670565b6040517fc872a3c50000000000000000000000000000000000000000000000000000000081527345312ea0eff7e09c83cbe249fa1d7598c4c8cd4e9063c872a3c5903490610879908b908b908b908b908b908b9060040161120a565b60206040518083038185885af1158015610895573d5f5f3e3d5ffd5b50505050506040513d601f19601f820116820180604052508101906108ba9190610eaa565b979650505050505050565b5f6108ee6108d96080840160608501610e69565b6108e96060850160408601610e69565b610670565b5f6108ff6060840160408501610e69565b73ffffffffffffffffffffffffffffffffffffffff166320e8c5653061092b6080870160608801610e69565b6040517fffffffff0000000000000000000000000000000000000000000000000000000060e085901b16815273ffffffffffffffffffffffffffffffffffffffff928316600482015291166024820152604481018790525f60648201526084016020604051808303815f875af11580156109a7573d5f5f3e3d5ffd5b505050506040513d601f19601f820116820180604052508101906109cb9190610eaa565b90506109e06102ad6060850160408601610e69565b5f73888888888889758f76e7103c6cbf23abbf58f946632a50917c610a0b60a0870160808801610e69565b610a186020880188610e69565b858860a00135610a26610bf8565b610a2e6107a9565b6040518763ffffffff1660e01b8152600401610a4f969594939291906112c5565b60408051808303815f875af1158015610a6a573d5f5f3e3d5ffd5b505050506040513d601f19601f82011682018060405250810190610a8e91906111a6565b5095945050505050565b60405173ffffffffffffffffffffffffffffffffffffffff848116602483015283811660448301526064820183905261066a9186918216906323b872dd906084015b604051602081830303815290604052915060e01b6020820180517bffffffffffffffffffffffffffffffffffffffffffffffffffffffff8381831617835250505050610c79565b6040805173ffffffffffffffffffffffffffffffffffffffff8416602482015260448082018490528251808303909101815260649091019091526020810180517bffffffffffffffffffffffffffffffffffffffffffffffffffffffff167f095ea7b300000000000000000000000000000000000000000000000000000000179052610bad8482610d1c565b61066a5760405173ffffffffffffffffffffffffffffffffffffffff84811660248301525f6044830152610bee91869182169063095ea7b390606401610ada565b61066a8482610c79565b610c256040518060a001604052805f81526020015f81526020015f81526020015f81526020015f81525090565b6040518060a001604052805f81526020017fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff81526020015f81526020016101008152602001655af3107a4000815250905090565b5f5f60205f8451602086015f885af180610c98576040513d5f823e3d81fd5b50505f513d91508115610caf578060011415610cc9565b73ffffffffffffffffffffffffffffffffffffffff84163b155b1561066a576040517f5274afe700000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff8516600482015260240160405180910390fd5b5f5f5f5f60205f8651602088015f8a5af192503d91505f519050828015610d6857508115610d4d5780600114610d68565b5f8673ffffffffffffffffffffffffffffffffffffffff163b115b9695505050505050565b5f60c08284031215610d82575f5ffd5b50919050565b5f6105608284031215610d82575f5ffd5b5f5f6106208385031215610dab575f5ffd5b610db58484610d72565b9150610dc48460c08501610d88565b90509250929050565b5f5f828403610600811215610de0575f5ffd5b610540811215610dee575f5ffd5b50829150610dc4846105408501610d72565b5f5f5f6106e08486031215610e13575f5ffd5b610e1d8585610d72565b9250610e2c8560c08601610d88565b9150610e3c856106208601610d72565b90509250925092565b73ffffffffffffffffffffffffffffffffffffffff81168114610e66575f5ffd5b50565b5f60208284031215610e79575f5ffd5b8135610e8481610e45565b9392505050565b5f60208284031215610e9b575f5ffd5b81518015158114610e84575f5ffd5b5f60208284031215610eba575f5ffd5b5051919050565b60028110610ef6577f4e487b71000000000000000000000000000000000000000000000000000000005f52602160045260245ffd5b9052565b5f81518084528060208401602086015e5f6020828601015260207fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0601f83011685010191505092915050565b5f82825180855260208501945060208160051b830101602085015f5b838110156110d3577fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe085840301885281518051606085528051606086015260208101516080860152604081015160a08601526060810151610fc660c0870182610ec1565b50608081015173ffffffffffffffffffffffffffffffffffffffff811660e08701525060a081015173ffffffffffffffffffffffffffffffffffffffff81166101008701525060c081015173ffffffffffffffffffffffffffffffffffffffff81166101208701525060e081015173ffffffffffffffffffffffffffffffffffffffff8116610140870152506101008101516101608601526101208101516101808601526101408101516101a086015261016081015190506101806101c08601526110956101e0860182610efa565b9050602082015185820360208701526110ae8282610efa565b6040938401519690930195909552506020988901989093509190910190600101610f62565b50909695505050505050565b73ffffffffffffffffffffffffffffffffffffffff8151168252602081015160208301525f604082015160a0604085015261111d60a0850182610f46565b9050606083015184820360608601526111368282610f46565b915050608083015184820360808601526105f68282610efa565b73ffffffffffffffffffffffffffffffffffffffff8616815273ffffffffffffffffffffffffffffffffffffffff8516602082015283604082015282606082015260a060808201525f6108ba60a08301846110df565b5f5f604083850312156111b7575f5ffd5b505080516020909101519092909150565b805f5b600581101561066a5781356111df81610e45565b73ffffffffffffffffffffffffffffffffffffffff16845260209384019391909101906001016111cb565b610580810181885f5b600b81101561125257813561122781610e45565b73ffffffffffffffffffffffffffffffffffffffff1683526020928301929190910190600101611213565b5050506101608201875f5b600581101561127e5760a082843760a092830192919091019060010161125d565b50505085610480830152846104a083015261129d6104c08301856111c8565b73ffffffffffffffffffffffffffffffffffffffff8316610560830152979650505050505050565b73ffffffffffffffffffffffffffffffffffffffff8716815273ffffffffffffffffffffffffffffffffffffffff8616602082015284604082015283606082015282516080820152602083015160a0820152604083015160c0820152606083015160e082015260808301516101008201526101406101208201525f61134e6101408301846110df565b9897505050505050505056fea26469706673582212204345fe606059c78be055fce2f431f6d6106287ed7b78f4cafdc27602a552febc64736f6c634300081c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

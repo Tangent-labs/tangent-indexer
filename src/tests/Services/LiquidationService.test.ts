@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import fs from "fs"
 import { AddressLike, JsonRpcProvider } from "ethers"
 import { LiquidationService } from "../..//services/LiquidationService.js"
@@ -11,8 +11,12 @@ import {
   LiquidationUserInInfo,
   LiquidationUserFullInfo,
   LiquidationEstimateInfo,
-} from "../../type/data.js"
-import { BlockRepository } from "../../db/BlockRepository.js"
+} from "../../../src/type/data.js"
+import { BlockRepository } from "../../../src/db/BlockRepository.js"
+import { LiquidationExecutionContext } from "../../../src/services/LiquidationExecutionContext.js"
+import * as getBestRpcProviderModule from "../../../src/utils/getBestRpcProvider.js"
+import { RouterService } from "../../services/RouterService.js"
+import { indexerConfig } from "../../config/indexer_config.js"
 
 // Mock ethers module - this needs to be before any imports that use it
 // We need to mock Wallet and Contract constructors
@@ -27,6 +31,22 @@ vi.mock("ethers", async () => {
     Wallet: mockWallet,
     Contract: mockContract,
   }
+})
+
+// Create mock RouterService factory
+const createMockRouterService = () => ({
+  getBestRoute: vi.fn().mockResolvedValue({
+    route: { display: "mock-route", params: { routeAddresses: [], swapParamsFull: [] } },
+    amount: 1000n * BigInt(10 ** 18),
+    priceImpact: 0.001,
+    routerType: "curve" as const,
+    routerAddress: "0xCurveRouter",
+  }),
+  getBestSplitCurveRoutes: vi.fn().mockResolvedValue(undefined),
+  buildRouterCallData: vi.fn().mockReturnValue("0xMockRouterCallData"),
+  isPendleCollateral: vi.fn().mockReturnValue(false),
+  getRouterType: vi.fn().mockReturnValue("curve"),
+  getRouterAddress: vi.fn().mockReturnValue("0xCurveRouter"),
 })
 
 const DECIMALS = BigInt(10 ** 18)
@@ -52,10 +72,12 @@ describe("LiquidationService", () => {
   let liquidationService: LiquidationService
   let marketBorrowerRepository: ActiveBorrowersRepository
   let mockBlockRepository: any
+  let mockRouterService: ReturnType<typeof createMockRouterService>
 
   beforeEach(() => {
     marketBorrowerRepository = new ActiveBorrowersRepository({} as any) // Mock Prisma client
-    liquidationService = new LiquidationService(marketBorrowerRepository, nominalContext)
+    mockRouterService = createMockRouterService()
+    liquidationService = new LiquidationService(marketBorrowerRepository, nominalContext, mockRouterService as unknown as RouterService)
 
     // Mock BlockRepository
     mockBlockRepository = {
@@ -67,19 +89,39 @@ describe("LiquidationService", () => {
   })
 
   describe("checkContext", () => {
-    it("should handle RPC errors and select the working RPC with highest block", async () => {
+    it("should handle RPC errors and select the working RPC with highest block for balance checks", async () => {
       // Mock providers with different block numbers and one failing RPC
+      const mockProvider2 = {
+        getBlockNumber: vi.fn().mockResolvedValue(1000),
+        getBalance: vi.fn().mockResolvedValue(BigInt("200000000000000000")), // 0.2 ETH
+      }
+      const mockProvider3 = {
+        getBlockNumber: vi.fn().mockResolvedValue(2000),
+        getBalance: vi.fn().mockResolvedValue(BigInt("200000000000000000")), // 0.2 ETH
+      }
+
       liquidationService.context.providers = [
         { getBlockNumber: vi.fn().mockRejectedValue(new Error("RPC 1 failed")) },
-        { getBlockNumber: vi.fn().mockResolvedValue(1000) },
-        { getBlockNumber: vi.fn().mockResolvedValue(2000) },
+        mockProvider2,
+        mockProvider3,
       ] as unknown as JsonRpcProvider[]
+
+      liquidationService.context.walletsPks = ["pk1"]
+      liquidationService.minEthBalance = 0.01
+
+      // Mock Wallet
+      mockWallet.mockImplementation(() => ({
+        getAddress: vi.fn().mockResolvedValue("0xAddress1"),
+      }))
+
+      const initialRpcIndex = liquidationService.context.currentRpcIndex
 
       await liquidationService.checkContext()
 
-      // Verify context was updated correctly
-      expect(liquidationService.context.currentRpcIndex).toBe(2) // Should select the RPC with block 2000
-      expect(liquidationService.context.currentBlock).toBe(2000)
+      // Verify that context.currentRpcIndex was NOT updated (we don't update it anymore)
+      // The best RPC is used locally for balance checks but not stored in context
+      // The initial value should remain unchanged
+      expect(liquidationService.context.currentRpcIndex).toBe(initialRpcIndex) // Should remain at initial value
     })
 
     it("should throw error when no working RPCs are available", async () => {
@@ -93,7 +135,20 @@ describe("LiquidationService", () => {
     })
 
     it("should handle database connectivity check", async () => {
-      liquidationService.context.providers = [{ getBlockNumber: vi.fn().mockResolvedValue(1000) }] as unknown as JsonRpcProvider[]
+      liquidationService.context.providers = [
+        {
+          getBlockNumber: vi.fn().mockResolvedValue(1000),
+          getBalance: vi.fn().mockResolvedValue(BigInt("200000000000000000")), // 0.2 ETH
+        },
+      ] as unknown as JsonRpcProvider[]
+
+      liquidationService.context.walletsPks = ["pk1"]
+      liquidationService.minEthBalance = 0.01
+
+      // Mock Wallet
+      mockWallet.mockImplementation(() => ({
+        getAddress: vi.fn().mockResolvedValue("0xAddress1"),
+      }))
 
       // Test when database check fails
       mockBlockRepository.getLastBlockIndexed.mockRejectedValueOnce(new Error("DB connection failed"))
@@ -154,7 +209,11 @@ describe("LiquidationService", () => {
       getAll: vi.fn().mockResolvedValue(mockBorrowers),
     }
 
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as ActiveBorrowersRepository, nominalContext)
+    liquidationService = new LiquidationService(
+      mockMarketBorrowerRepository as any as ActiveBorrowersRepository,
+      nominalContext,
+      mockRouterService as unknown as RouterService
+    )
 
     const { markets, borrowers } = await liquidationService.getLiquidationParams()
 
@@ -203,7 +262,11 @@ describe("LiquidationService", () => {
     }
 
     const context = { ...nominalContext, isDbAlive: true, currentBlock: 0, providers: [], walletsPks: [] }
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as ActiveBorrowersRepository, context)
+    liquidationService = new LiquidationService(
+      mockMarketBorrowerRepository as any as ActiveBorrowersRepository,
+      context,
+      mockRouterService as unknown as RouterService
+    )
 
     const { markets, borrowers } = await liquidationService.getLiquidationParams()
 
@@ -230,7 +293,11 @@ describe("LiquidationService", () => {
     }
 
     const context = { ...nominalContext, isDbAlive: false, currentBlock: 0, providers: [], walletsPks: [] }
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository as any as ActiveBorrowersRepository, context)
+    liquidationService = new LiquidationService(
+      mockMarketBorrowerRepository as any as ActiveBorrowersRepository,
+      context,
+      mockRouterService as unknown as RouterService
+    )
 
     // Mock fs.readFileSync
     const mockFileData = {
@@ -260,6 +327,7 @@ describe("LiquidationService", () => {
 describe("LiquidationService - analyzeLiquidation", () => {
   let liquidationService: LiquidationService
   let mockMarketBorrowerRepository: ActiveBorrowersRepository
+  let mockRouterService: ReturnType<typeof createMockRouterService>
 
   beforeEach(() => {
     // Mock repository
@@ -268,8 +336,10 @@ describe("LiquidationService - analyzeLiquidation", () => {
       deleteMarketBorrowers: vi.fn(),
     } as unknown as ActiveBorrowersRepository
 
+    mockRouterService = createMockRouterService()
+
     // Create service instance
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext)
+    liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext, mockRouterService as unknown as RouterService)
   })
 
   it("should correctly classify accounts into hard, soft, and non-debtor categories", async () => {})
@@ -336,7 +406,7 @@ describe("LiquidationService - analyzeLiquidation", () => {
     const accounts: LiquidationUserInInfo[] = [
       { account: "0xUser1", market: "0xMarket1" }, // Hard Liquidation
       { account: "0xUser2", market: "0xMarket2" }, // Soft Liquidation
-      { account: "0xUser3", market: "0xMarket3" }, // Not a debtor (zero debt)
+      { account: "0xUser3", market: "0xMarket3" }, // 0 debt
       { account: "0xUser4", market: "0xMarket4" }, // Healthy account (no liquidation)
       { account: "0xUser5", market: "0xMarket5" }, // Soft Liquidation
       { account: "0xUser6", market: "0xMarket6" }, // Hard Liquidation
@@ -352,7 +422,7 @@ describe("LiquidationService - analyzeLiquidation", () => {
       markets: [
         { ...defaultMarket, market: "0xMarket1" },
         { ...baseMarketValues, market: "0xMarket2", liquidationThreshold: 75000n },
-        { ...defaultMarket, market: "0xMarket3" },
+        { ...defaultMarket, ...{ userDebt: 0n }, market: "0xMarket3" },
         { ...defaultMarket, market: "0xMarket4" },
         { ...baseMarketValues, market: "0xMarket5", liquidationThreshold: 75000n },
         { ...defaultMarket, market: "0xMarket6" },
@@ -371,7 +441,7 @@ describe("LiquidationService - analyzeLiquidation", () => {
           market: "0xMarket2",
         },
         {
-          healthRatio: 2000000000000000000n, // No debt 0xUser3
+          healthRatio: 2000000000000000000n, // Small debt, healthy 0xUser3
           userDebt: 0n,
           positionValue: 500n * DECIMALS,
           market: "0xMarket3",
@@ -417,9 +487,12 @@ describe("LiquidationService - prioritizeActions", () => {
   let liquidationService: LiquidationService
   let mockMarketBorrowerRepository: ActiveBorrowersRepository
 
+  let mockRouterService: Partial<RouterService>
+
   beforeEach(() => {
     mockMarketBorrowerRepository = new ActiveBorrowersRepository({} as any)
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext)
+    mockRouterService = {} // Provide a dummy object since we don't need its implementation here
+    liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext, mockRouterService as unknown as RouterService)
   })
 
   it("should prioritize actions based on position value and return all actions", () => {
@@ -604,6 +677,7 @@ describe("LiquidationService - executeLiquidation", () => {
   let mockMarketContract: any
   let mockLiquidationBotService: any
   let mockTx: any
+  let mockRouterService: ReturnType<typeof createMockRouterService>
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -644,8 +718,13 @@ describe("LiquidationService - executeLiquidation", () => {
     mockWallet.mockImplementation(() => mockSigner)
     mockContract.mockImplementation(() => mockMarketContract)
 
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository, mockContext, mockLiquidationBotService)
-    liquidationService.curveRouterAddress = "0xCurveRouter" as AddressLike
+    mockRouterService = createMockRouterService()
+    liquidationService = new LiquidationService(
+      mockMarketBorrowerRepository,
+      mockContext,
+      mockRouterService as unknown as RouterService,
+      mockLiquidationBotService
+    )
   })
 
   it("should execute liquidation with default slippageModifierBps (0n)", async () => {
@@ -657,6 +736,8 @@ describe("LiquidationService - executeLiquidation", () => {
       positionValue: 1000n * DECIMALS,
       collateralBalance: 1500n * DECIMALS,
       collatToken: "0xToken1" as AddressLike,
+      collateralUSDPrice: 1n * DECIMALS,
+      oracleDecimals: 18n,
     }
 
     const mockEstimate: LiquidationEstimateInfo[] = [
@@ -666,6 +747,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 900n * DECIMALS,
         liquidationCall: {
           routerCall: "0x1234",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 1000n * DECIMALS,
         slippageBps: 10n,
@@ -674,6 +756,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
     ]
 
@@ -684,12 +767,12 @@ describe("LiquidationService - executeLiquidation", () => {
     // Reset mock calls before execution
     mockMarketContract.liquidate.mockClear()
 
-    await liquidationService.executeLiquidation(0, account)
+    await liquidationService.executeLiquidation(0, account, 0n)
 
-    // Verify slippage calculation: 10n + (10n * 0n) / 10000n = 10n
+    // Verify slippage calculation: 50n + (10n * 0n) / 10000n = 50n
     expect(estimateSpy).toHaveBeenCalled()
     const callArgs = estimateSpy.mock.calls[0]
-    expect(callArgs[2]).toBe(10n) // Default slippage when slippageModifierBps is 0n
+    expect(callArgs[2]).toBe(50n) // Default slippage when slippageModifierBps is 0n
     expect(mockMarketContract.liquidate).toHaveBeenCalledTimes(1)
   })
 
@@ -702,10 +785,12 @@ describe("LiquidationService - executeLiquidation", () => {
       positionValue: 1000n * DECIMALS,
       collateralBalance: 1500n * DECIMALS,
       collatToken: "0xToken1" as AddressLike,
+      collateralUSDPrice: 1n * DECIMALS,
+      oracleDecimals: 18n,
     }
 
     const slippageModifierBps = 500n // 5% modifier
-    const expectedSlippage = 10n + (10n * slippageModifierBps) / 10000n // 10n + 0.5n = 10.5n
+    const expectedSlippage = 50n + (10n * slippageModifierBps) / 10000n // 50n + 0.5n = 50.5n
 
     const mockEstimate: LiquidationEstimateInfo[] = [
       {
@@ -714,6 +799,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 900n * DECIMALS,
         liquidationCall: {
           routerCall: "0x1234",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 1000n * DECIMALS,
         slippageBps: expectedSlippage,
@@ -722,6 +808,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
     ]
 
@@ -747,6 +834,8 @@ describe("LiquidationService - executeLiquidation", () => {
       positionValue: 1000n * DECIMALS,
       collateralBalance: 2000n * DECIMALS, // Even number for clean split
       collatToken: "0xToken1" as AddressLike,
+      collateralUSDPrice: 1n * DECIMALS,
+      oracleDecimals: 18n,
     }
 
     const mockEstimate: LiquidationEstimateInfo[] = [
@@ -756,6 +845,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x1234",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 500n * DECIMALS,
         slippageBps: 10n,
@@ -764,6 +854,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
       {
         account: account.account,
@@ -771,6 +862,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x5678",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 500n * DECIMALS,
         slippageBps: 10n,
@@ -779,6 +871,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
     ]
 
@@ -788,7 +881,7 @@ describe("LiquidationService - executeLiquidation", () => {
     mockMarketContract.liquidate.mockClear()
     mockLiquidationBotService.logLiquidationExecution.mockClear()
 
-    await liquidationService.executeLiquidation(0, account)
+    await liquidationService.executeLiquidation(0, account, 0n)
 
     // Should execute 2 transactions for split routes
     expect(estimateSpy).toHaveBeenCalled()
@@ -805,6 +898,8 @@ describe("LiquidationService - executeLiquidation", () => {
       positionValue: 1000n * DECIMALS,
       collateralBalance: 2001n * DECIMALS, // Odd number to test rounding
       collatToken: "0xToken1" as AddressLike,
+      collateralUSDPrice: 1n * DECIMALS,
+      oracleDecimals: 18n,
     }
 
     // Calculate split: account1 gets half (truncated), account2 gets remainder
@@ -834,6 +929,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x1234",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 500n * DECIMALS,
         slippageBps: 10n,
@@ -842,6 +938,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
       {
         account: account.account,
@@ -849,6 +946,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 451n * DECIMALS, // Slightly more due to larger balance
         liquidationCall: {
           routerCall: "0x5678",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 501n * DECIMALS,
         slippageBps: 10n,
@@ -857,6 +955,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 241n * DECIMALS,
+        routerType: "curve" as const,
       },
     ]
 
@@ -864,8 +963,7 @@ describe("LiquidationService - executeLiquidation", () => {
 
     // Reset mock calls before execution
     mockMarketContract.liquidate.mockClear()
-
-    await liquidationService.executeLiquidation(0, account)
+    await liquidationService.executeLiquidation(0, account, 0n, 0)
 
     // Verify both transactions were executed
     expect(estimateSpy).toHaveBeenCalled()
@@ -881,6 +979,8 @@ describe("LiquidationService - executeLiquidation", () => {
       positionValue: 1000n * DECIMALS,
       collateralBalance: 2000n * DECIMALS, // Exactly divisible by 2
       collatToken: "0xToken1" as AddressLike,
+      collateralUSDPrice: 1n * DECIMALS,
+      oracleDecimals: 18n,
     }
 
     const account1Balance = account.collateralBalance / 2n // 1000n * DECIMALS
@@ -897,6 +997,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x1234",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 500n * DECIMALS,
         slippageBps: 10n,
@@ -905,6 +1006,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
       {
         account: account.account,
@@ -912,6 +1014,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x5678",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 500n * DECIMALS,
         slippageBps: 10n,
@@ -920,6 +1023,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
     ]
 
@@ -928,7 +1032,7 @@ describe("LiquidationService - executeLiquidation", () => {
     // Reset mock calls before execution
     mockMarketContract.liquidate.mockClear()
 
-    await liquidationService.executeLiquidation(0, account)
+    await liquidationService.executeLiquidation(0, account, 0n)
 
     // Verify both transactions were executed
     expect(estimateSpy).toHaveBeenCalled()
@@ -944,11 +1048,13 @@ describe("LiquidationService - executeLiquidation", () => {
       positionValue: 1000n * DECIMALS,
       collateralBalance: 1500n * DECIMALS,
       collatToken: "0xToken1" as AddressLike,
+      collateralUSDPrice: 1n * DECIMALS,
+      oracleDecimals: 18n,
     }
 
     vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue([])
 
-    await liquidationService.executeLiquidation(0, account)
+    await liquidationService.executeLiquidation(0, account, 0n)
 
     expect(liquidationService.errors).toHaveLength(1)
     expect(liquidationService.errors[0].action).toBe("liquidation_execution")
@@ -966,6 +1072,8 @@ describe("LiquidationService - executeLiquidation", () => {
       positionValue: 1000n * DECIMALS,
       collateralBalance: 2000n * DECIMALS,
       collatToken: "0xToken1" as AddressLike,
+      collateralUSDPrice: 1n * DECIMALS,
+      oracleDecimals: 18n,
     }
 
     // Simulate split routes with specific amounts
@@ -980,6 +1088,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x1234",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: amount1,
         slippageBps: 10n,
@@ -988,6 +1097,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
       {
         account: account.account,
@@ -995,6 +1105,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x5678",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: amount2,
         slippageBps: 10n,
@@ -1003,6 +1114,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
     ]
 
@@ -1016,7 +1128,7 @@ describe("LiquidationService - executeLiquidation", () => {
     // Reset mock calls before execution
     mockMarketContract.liquidate.mockClear()
 
-    await liquidationService.executeLiquidation(0, account)
+    await liquidationService.executeLiquidation(0, account, 0n)
 
     // Verify both transactions were executed
     expect(estimateSpy).toHaveBeenCalled()
@@ -1042,6 +1154,8 @@ describe("LiquidationService - executeLiquidation", () => {
       positionValue: 1000n * DECIMALS,
       collateralBalance: 2000n * DECIMALS,
       collatToken: "0xToken1" as AddressLike,
+      collateralUSDPrice: 1n * DECIMALS,
+      oracleDecimals: 18n,
     }
 
     const mockEstimate: LiquidationEstimateInfo[] = [
@@ -1051,6 +1165,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x1234",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 500n * DECIMALS,
         slippageBps: 10n,
@@ -1059,6 +1174,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
       {
         account: account.account,
@@ -1066,6 +1182,7 @@ describe("LiquidationService - executeLiquidation", () => {
         minTgUSDOut: 450n * DECIMALS,
         liquidationCall: {
           routerCall: "0x5678",
+          routerAddress: "0xCurveRouter",
         },
         expectedOutput: 500n * DECIMALS,
         slippageBps: 10n,
@@ -1074,6 +1191,7 @@ describe("LiquidationService - executeLiquidation", () => {
           eth: 0.0002,
         },
         grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
       },
     ]
 
@@ -1086,7 +1204,7 @@ describe("LiquidationService - executeLiquidation", () => {
       })
       .mockRejectedValueOnce(new Error("Transaction failed"))
 
-    await liquidationService.executeLiquidation(0, account)
+    await liquidationService.executeLiquidation(0, account, 0n)
 
     // Should attempt both transactions
     expect(mockMarketContract.liquidate).toHaveBeenCalledTimes(2)
@@ -1096,5 +1214,606 @@ describe("LiquidationService - executeLiquidation", () => {
     expect(mockLiquidationBotService.logLiquidationExecution).toHaveBeenCalledTimes(1)
     // Should have error recorded
     expect(liquidationService.errors.length).toBeGreaterThan(0)
+  })
+})
+
+describe("LiquidationService - Best RPC Provider", () => {
+  let liquidationService: LiquidationService
+  let mockMarketBorrowerRepository: ActiveBorrowersRepository
+  let mockContext: any
+  let mockProviders: any[]
+  let mockLiquidationBotService: any
+  let mockJob: any
+  let mockRouterService: ReturnType<typeof createMockRouterService>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+
+    mockMarketBorrowerRepository = new ActiveBorrowersRepository({} as any)
+    mockContext = {
+      ...nominalContext,
+      currentRpcIndex: 0,
+      currentBlock: 1000,
+      providers: [],
+      walletsPks: ["0xPrivateKey1"],
+    }
+
+    // Create multiple mock providers
+    mockProviders = [
+      {
+        getBlockNumber: vi.fn().mockResolvedValue(1000),
+        getBalance: vi.fn().mockResolvedValue(BigInt("1000000000000000000")), // 1 ETH
+        getTransactionCount: vi.fn().mockResolvedValue(0),
+        getFeeData: vi.fn().mockResolvedValue({ gasPrice: 1000000000n }),
+      },
+      {
+        getBlockNumber: vi.fn().mockResolvedValue(2000),
+        getBalance: vi.fn().mockResolvedValue(BigInt("1000000000000000000")), // 1 ETH
+        getTransactionCount: vi.fn().mockResolvedValue(0),
+        getFeeData: vi.fn().mockResolvedValue({ gasPrice: 1000000000n }),
+      },
+      {
+        getBlockNumber: vi.fn().mockResolvedValue(1500),
+        getBalance: vi.fn().mockResolvedValue(BigInt("1000000000000000000")), // 1 ETH
+        getTransactionCount: vi.fn().mockResolvedValue(0),
+        getFeeData: vi.fn().mockResolvedValue({ gasPrice: 1000000000n }),
+      },
+    ]
+
+    mockContext.providers = mockProviders
+
+    mockLiquidationBotService = {
+      logLiquidationExecution: vi.fn().mockResolvedValue(undefined),
+      logError: vi.fn().mockResolvedValue(undefined),
+      logLiquidationBadDebtExecution: vi.fn().mockResolvedValue(undefined),
+    }
+
+    mockJob = {
+      id: "test-job-1",
+      data: {
+        account: "0xUser1",
+        market: "0xMarket1",
+        type: "liquidation",
+        healthRatio: "2000000000000000000",
+        userDebt: "760000000000000000000",
+        positionValue: "1000000000000000000000",
+        collateralBalance: "1500000000000000000000",
+        collatToken: "0xToken1",
+      },
+      attemptsMade: 0,
+    }
+
+    mockRouterService = createMockRouterService()
+    liquidationService = new LiquidationService(
+      mockMarketBorrowerRepository,
+      mockContext,
+      mockRouterService as unknown as RouterService,
+      mockLiquidationBotService
+    )
+  })
+
+  describe("processJob with rpcIndex", () => {
+    it("should use the provided rpcIndex instead of context.currentRpcIndex", async () => {
+      const mockSigner = {
+        getAddress: vi.fn().mockResolvedValue("0xSignerAddress"),
+        provider: mockProviders[1], // Provider at index 1
+      }
+
+      mockWallet.mockImplementation(() => mockSigner)
+
+      const mockEstimate: LiquidationEstimateInfo[] = [
+        {
+          account: "0xUser1" as AddressLike,
+          collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+          minTgUSDOut: 900n * DECIMALS,
+          liquidationCall: {
+            routerCall: "0x1234",
+            routerAddress: "0xCurveRouter",
+          },
+          expectedOutput: 1000n * DECIMALS,
+          slippageBps: 50n,
+          gasEstimate: {
+            gasLimit: 200000n,
+            eth: 0.0002,
+          },
+          grossProfit: 240n * DECIMALS,
+          routerType: "curve" as const,
+        },
+      ]
+
+      vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue(mockEstimate)
+      vi.spyOn(liquidationService, "executeLiquidation").mockResolvedValue(undefined)
+
+      const mockTelegramNotifier = {
+        sendError: vi.fn().mockResolvedValue(undefined),
+        sendMessage: vi.fn().mockResolvedValue(undefined),
+      }
+
+      // Call processJob with rpcIndex = 1 (should use provider[1] instead of provider[0])
+      await liquidationService.processJob(mockJob as any, mockTelegramNotifier as any, "0xPrivateKey1", undefined, 1, 2000)
+
+      // Verify that executeLiquidation was called with rpcIndex = 1
+      expect(liquidationService.executeLiquidation).toHaveBeenCalledWith(
+        0, // walletIndex
+        expect.any(Object), // account
+        0n, // slippageModifierBps
+        1, // rpcIndex - should be 1, not 0
+        expect.objectContaining({
+          currentRpcIndex: 1, // logContext should have rpcIndex = 1
+          currentBlock: 2000,
+        })
+      )
+
+      // Note: estimateLiquidation is called inside executeLiquidation, but since executeLiquidation is mocked,
+      // we can't verify the call to estimateLiquidation here. The rpcIndex is verified above in executeLiquidation call.
+
+      // Verify that Wallet was created with provider[1]
+      expect(mockWallet).toHaveBeenCalledWith("0xPrivateKey1", mockProviders[1])
+    })
+
+    it("should use context.currentRpcIndex as fallback when rpcIndex is not provided", async () => {
+      mockContext.currentRpcIndex = 2
+
+      const mockSigner = {
+        getAddress: vi.fn().mockResolvedValue("0xSignerAddress"),
+        provider: mockProviders[2], // Provider at index 2
+      }
+
+      mockWallet.mockImplementation(() => mockSigner)
+
+      const mockEstimate: LiquidationEstimateInfo[] = [
+        {
+          account: "0xUser1" as AddressLike,
+          collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+          minTgUSDOut: 900n * DECIMALS,
+          liquidationCall: {
+            routerCall: "0x1234",
+            routerAddress: "0xCurveRouter",
+          },
+          expectedOutput: 1000n * DECIMALS,
+          slippageBps: 50n,
+          gasEstimate: {
+            gasLimit: 200000n,
+            eth: 0.0002,
+          },
+          grossProfit: 240n * DECIMALS,
+          routerType: "curve" as const,
+        },
+      ]
+
+      vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue(mockEstimate)
+      vi.spyOn(liquidationService, "executeLiquidation").mockResolvedValue(undefined)
+
+      const mockTelegramNotifier = {
+        sendError: vi.fn().mockResolvedValue(undefined),
+        sendMessage: vi.fn().mockResolvedValue(undefined),
+      }
+
+      // Call processJob without rpcIndex (should use context.currentRpcIndex = 2)
+      await liquidationService.processJob(mockJob as any, mockTelegramNotifier as any, "0xPrivateKey1")
+
+      // Verify that executeLiquidation was called with rpcIndex = 2 (from context)
+      expect(liquidationService.executeLiquidation).toHaveBeenCalledWith(
+        0, // walletIndex
+        expect.any(Object), // account
+        0n, // slippageModifierBps
+        2, // rpcIndex - should be 2 from context
+        expect.objectContaining({
+          currentRpcIndex: 2, // logContext should have rpcIndex = 2
+        })
+      )
+
+      // Verify that Wallet was created with provider[2]
+      expect(mockWallet).toHaveBeenCalledWith("0xPrivateKey1", mockProviders[2])
+    })
+
+    it("should create logContext with correct rpcIndex and currentBlock for logs", async () => {
+      const mockSigner = {
+        getAddress: vi.fn().mockResolvedValue("0xSignerAddress"),
+        provider: mockProviders[1],
+      }
+
+      mockWallet.mockImplementation(() => mockSigner)
+
+      const mockEstimate: LiquidationEstimateInfo[] = [
+        {
+          account: "0xUser1" as AddressLike,
+          collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+          minTgUSDOut: 900n * DECIMALS,
+          liquidationCall: {
+            routerCall: "0x1234",
+            routerAddress: "0xCurveRouter",
+          },
+          expectedOutput: 1000n * DECIMALS,
+          slippageBps: 50n,
+          gasEstimate: {
+            gasLimit: 200000n,
+            eth: 0.0002,
+          },
+          grossProfit: 240n * DECIMALS,
+          routerType: "curve" as const,
+        },
+      ]
+
+      vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue(mockEstimate)
+      vi.spyOn(liquidationService, "executeLiquidation").mockResolvedValue(undefined)
+
+      const mockTelegramNotifier = {
+        sendError: vi.fn().mockResolvedValue(undefined),
+        sendMessage: vi.fn().mockResolvedValue(undefined),
+      }
+
+      const customRpcIndex = 1
+      const customCurrentBlock = 2500
+
+      await liquidationService.processJob(mockJob as any, mockTelegramNotifier as any, "0xPrivateKey1", undefined, customRpcIndex, customCurrentBlock)
+
+      // Verify that executeLiquidation received logContext with correct values
+      const executeLiquidationCall = (liquidationService.executeLiquidation as any).mock.calls[0]
+      const logContext = executeLiquidationCall[4] // 5th parameter is logContext
+
+      expect(logContext.currentRpcIndex).toBe(customRpcIndex)
+      expect(logContext.currentBlock).toBe(customCurrentBlock)
+      expect(logContext.executionKey).toBe(mockContext.executionKey)
+      expect(logContext.walletsPks).toEqual(mockContext.walletsPks)
+    })
+  })
+
+  describe("executeLiquidation with rpcIndex", () => {
+    it("should use provided rpcIndex instead of context.currentRpcIndex", async () => {
+      mockContext.currentRpcIndex = 0 // Context has index 0
+      const customRpcIndex = 2 // But we want to use index 2
+
+      const mockSigner = {
+        getAddress: vi.fn().mockResolvedValue("0xSignerAddress"),
+        provider: mockProviders[customRpcIndex],
+      }
+
+      mockWallet.mockImplementation(() => mockSigner)
+
+      const account: LiquidationUserFullInfo = {
+        account: "0xUser1" as AddressLike,
+        market: "0xMarket1" as AddressLike,
+        healthRatio: 2000000000000000000n,
+        userDebt: 760n * DECIMALS,
+        positionValue: 1000n * DECIMALS,
+        collateralBalance: 1500n * DECIMALS,
+        collatToken: "0xToken1" as AddressLike,
+        collateralUSDPrice: 1n * DECIMALS,
+        oracleDecimals: 18n,
+      }
+
+      const mockEstimate: LiquidationEstimateInfo[] = [
+        {
+          account: account.account,
+          collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+          minTgUSDOut: 900n * DECIMALS,
+          liquidationCall: {
+            routerCall: "0x1234",
+            routerAddress: "0xPendlePTRouter",
+          },
+          routerType: "pendle" as const,
+          expectedOutput: 1000n * DECIMALS,
+          slippageBps: 50n,
+          gasEstimate: {
+            gasLimit: 200000n,
+            eth: 0.0002,
+          },
+          grossProfit: 240n * DECIMALS,
+        },
+      ]
+
+      vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue(mockEstimate)
+
+      const logContext: LiquidationExecutionContext = {
+        ...mockContext,
+        currentRpcIndex: customRpcIndex,
+        currentBlock: 2000,
+      }
+
+      const estimateSpy = vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue(mockEstimate)
+
+      await liquidationService.executeLiquidation(0, account, 0n, customRpcIndex, logContext)
+
+      // Verify that estimateLiquidation was called with the custom rpcIndex
+      expect(estimateSpy).toHaveBeenCalledWith(
+        expect.any(Object), // signer
+        account,
+        50n, // slippage
+        customRpcIndex // rpcIndex - should be 2, not 0
+      )
+
+      // Verify that Wallet was created with provider[2]
+      expect(mockWallet).toHaveBeenCalledWith("0xPrivateKey1", mockProviders[customRpcIndex])
+    })
+  })
+
+  describe("checkContext - parallelized wallet balance check", () => {
+    it("should check wallet balances in parallel using best RPC provider", async () => {
+      // Setup multiple wallets
+      mockContext.walletsPks = ["pk1", "pk2", "pk3"]
+
+      // Mock getBestRpcProvider to return index 1
+      vi.spyOn(getBestRpcProviderModule, "getBestRpcProvider").mockResolvedValue({
+        index: 1,
+        blockNumber: 2000,
+        responseTime: 50,
+      })
+
+      // Mock Wallet.getAddress for each wallet
+      const mockGetAddress = vi.fn().mockResolvedValueOnce("0xAddress1").mockResolvedValueOnce("0xAddress2").mockResolvedValueOnce("0xAddress3")
+
+      mockWallet.mockImplementation(() => ({
+        getAddress: mockGetAddress,
+      }))
+
+      // Setup balances: pk1 and pk2 have sufficient balance, pk3 doesn't
+      const sufficientBalance = BigInt("200000000000000000") // 0.2 ETH (above minEthBalance)
+      const insufficientBalance = BigInt("5000000000000000") // 0.005 ETH (below minEthBalance)
+
+      mockProviders[1].getBalance
+        .mockResolvedValueOnce(sufficientBalance) // pk1
+        .mockResolvedValueOnce(sufficientBalance) // pk2
+        .mockResolvedValueOnce(insufficientBalance) // pk3
+
+      liquidationService.minEthBalance = 0.01 // 0.01 ETH minimum
+
+      await liquidationService.checkContext()
+
+      // Verify that only wallets with sufficient balance remain
+      expect(mockContext.walletsPks).toHaveLength(2)
+      expect(mockContext.walletsPks).toContain("pk1")
+      expect(mockContext.walletsPks).toContain("pk2")
+      expect(mockContext.walletsPks).not.toContain("pk3")
+
+      // Verify that getBalance was called for all wallets
+      expect(mockProviders[1].getBalance).toHaveBeenCalledTimes(3)
+      expect(mockProviders[1].getBalance).toHaveBeenCalledWith("0xAddress1")
+      expect(mockProviders[1].getBalance).toHaveBeenCalledWith("0xAddress2")
+      expect(mockProviders[1].getBalance).toHaveBeenCalledWith("0xAddress3")
+    })
+
+    it("should not update context.currentRpcIndex in checkContext", async () => {
+      const initialRpcIndex = mockContext.currentRpcIndex
+      const initialBlock = mockContext.currentBlock
+
+      // Mock getBestRpcProvider to return a different index
+      vi.spyOn(getBestRpcProviderModule, "getBestRpcProvider").mockResolvedValue({
+        index: 2,
+        blockNumber: 3000,
+        responseTime: 50,
+      })
+
+      mockContext.walletsPks = ["pk1"]
+      mockWallet.mockImplementation(() => ({
+        getAddress: vi.fn().mockResolvedValue("0xAddress1"),
+      }))
+      mockProviders[2].getBalance.mockResolvedValue(BigInt("200000000000000000"))
+
+      await liquidationService.checkContext()
+
+      // Verify that context.currentRpcIndex was NOT updated (should remain at initial value)
+      expect(mockContext.currentRpcIndex).toBe(initialRpcIndex)
+      expect(mockContext.currentBlock).toBe(initialBlock)
+    })
+  })
+
+  describe("calculateMinCollatValueToLiquidate", () => {
+    let liquidationService: LiquidationService
+    let mockMarketBorrowerRepository: ActiveBorrowersRepository
+    let mockRouterService: ReturnType<typeof createMockRouterService>
+    let originalProtectionBps: number
+
+    beforeEach(() => {
+      mockMarketBorrowerRepository = new ActiveBorrowersRepository({} as any)
+      mockRouterService = createMockRouterService()
+      liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext, mockRouterService as unknown as RouterService)
+
+      // Store original protection BPS
+      originalProtectionBps = indexerConfig.liquidationLimits.oraclePriceProtectionBps
+    })
+
+    afterEach(() => {
+      // Restore original protection BPS
+      indexerConfig.liquidationLimits.oraclePriceProtectionBps = originalProtectionBps
+      vi.restoreAllMocks()
+    })
+
+    it("should calculate minCollatValueToLiquidate with 1.5% protection (150 bps)", () => {
+      // Set config with 1.5% protection
+      indexerConfig.liquidationLimits.oraclePriceProtectionBps = 150
+
+      const account: LiquidationUserFullInfo = {
+        account: "0xUser1" as AddressLike,
+        market: "0xMarket1" as AddressLike,
+        healthRatio: 2000000000000000000n,
+        userDebt: 760n * DECIMALS,
+        positionValue: 1000n * DECIMALS,
+        collateralBalance: 100n * DECIMALS, // 100 tokens
+        collatToken: "0xToken1" as AddressLike,
+        collateralUSDPrice: 1n * DECIMALS, // $1 per token (18 decimals)
+        oracleDecimals: 18n,
+      }
+
+      // Calculate expected: (100 * 10^18 * 1 * 10^18 * 9850) / (10^18 * 10000)
+      // = (100 * 1 * 9850) * (10^18 * 10^18) / (10^18 * 10000)
+      // = 985000 * 10^18 / 10000
+      // = 98.5 * 10^18
+      const expected = (100n * 9850n * DECIMALS) / 10000n
+
+      const result = (liquidationService as any).calculateMinCollatValueToLiquidate(account)
+      expect(result).toBe(expected)
+    })
+
+    it("should calculate minCollatValueToLiquidate with different oracle decimals (8 decimals)", () => {
+      // Set config with 1.5% protection
+      indexerConfig.liquidationLimits.oraclePriceProtectionBps = 150
+
+      const oracleDecimals = 8n
+      const oraclePrice = 1n * 10n ** oracleDecimals // $1 with 8 decimals
+
+      const account: LiquidationUserFullInfo = {
+        account: "0xUser1" as AddressLike,
+        market: "0xMarket1" as AddressLike,
+        healthRatio: 2000000000000000000n,
+        userDebt: 760n * DECIMALS,
+        positionValue: 1000n * DECIMALS,
+        collateralBalance: 100n * DECIMALS, // 100 tokens (18 decimals)
+        collatToken: "0xToken1" as AddressLike,
+        collateralUSDPrice: oraclePrice,
+        oracleDecimals,
+      }
+
+      // Calculate expected: (100 * 10^18 * 1 * 10^8 * 9850) / (10^8 * 10000)
+      // = (100 * 1 * 9850) * (10^18 * 10^8) / (10^8 * 10000)
+      // = 985000 * 10^18 / 10000
+      // = 98.5 * 10^18
+      const expected = (985000n * DECIMALS) / 10000n
+
+      const result = (liquidationService as any).calculateMinCollatValueToLiquidate(account)
+      expect(result).toBe(expected)
+    })
+
+    it("should calculate minCollatValueToLiquidate with high collateral balance and price", () => {
+      // Set config with 1.5% protection
+      indexerConfig.liquidationLimits.oraclePriceProtectionBps = 150
+
+      const account: LiquidationUserFullInfo = {
+        account: "0xUser1" as AddressLike,
+        market: "0xMarket1" as AddressLike,
+        healthRatio: 2000000000000000000n,
+        userDebt: 760n * DECIMALS,
+        positionValue: 1000n * DECIMALS,
+        collateralBalance: 10000n * DECIMALS, // 10,000 tokens
+        collatToken: "0xToken1" as AddressLike,
+        collateralUSDPrice: 5n * DECIMALS, // $5 per token
+        oracleDecimals: 18n,
+      }
+
+      // Calculate expected: (10000 * 10^18 * 5 * 10^18 * 9850) / (10^18 * 10000)
+      // = (10000 * 5 * 9850) * 10^18 / 10000
+      // = 49250000 * 10^18 / 10000
+      // = 4925 * 10^18
+      const expected = (10000n * 5n * 9850n * DECIMALS) / 10000n
+
+      const result = (liquidationService as any).calculateMinCollatValueToLiquidate(account)
+      expect(result).toBe(expected)
+    })
+
+    it("should throw error when collateralUSDPrice is missing", () => {
+      const account: LiquidationUserFullInfo = {
+        account: "0xUser1" as AddressLike,
+        market: "0xMarket1" as AddressLike,
+        healthRatio: 2000000000000000000n,
+        userDebt: 760n * DECIMALS,
+        positionValue: 1000n * DECIMALS,
+        collateralBalance: 100n * DECIMALS,
+        collatToken: "0xToken1" as AddressLike,
+        collateralUSDPrice: undefined,
+        oracleDecimals: 18n,
+      }
+
+      expect(() => {
+        ;(liquidationService as any).calculateMinCollatValueToLiquidate(account)
+      }).toThrow("collateralUSDPrice or oracleDecimals is missing")
+    })
+
+    it("should throw error when oracleDecimals is missing", () => {
+      const account: LiquidationUserFullInfo = {
+        account: "0xUser1" as AddressLike,
+        market: "0xMarket1" as AddressLike,
+        healthRatio: 2000000000000000000n,
+        userDebt: 760n * DECIMALS,
+        positionValue: 1000n * DECIMALS,
+        collateralBalance: 100n * DECIMALS,
+        collatToken: "0xToken1" as AddressLike,
+        collateralUSDPrice: 1n * DECIMALS,
+        oracleDecimals: undefined,
+      }
+
+      expect(() => {
+        ;(liquidationService as any).calculateMinCollatValueToLiquidate(account)
+      }).toThrow("collateralUSDPrice or oracleDecimals is missing")
+    })
+
+    it("should use minCollatValueToLiquidate in executeLiquidation", async () => {
+      // Set config with 1.5% protection
+      indexerConfig.liquidationLimits.oraclePriceProtectionBps = 150
+
+      const account: LiquidationUserFullInfo = {
+        account: "0xUser1" as AddressLike,
+        market: "0xMarket1" as AddressLike,
+        healthRatio: 2000000000000000000n,
+        userDebt: 760n * DECIMALS,
+        positionValue: 1000n * DECIMALS,
+        collateralBalance: 100n * DECIMALS,
+        collatToken: "0xToken1" as AddressLike,
+        collateralUSDPrice: 1n * DECIMALS,
+        oracleDecimals: 18n,
+      }
+
+      const mockEstimate: LiquidationEstimateInfo[] = [
+        {
+          account: account.account,
+          collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+          minTgUSDOut: 900n * DECIMALS,
+          liquidationCall: {
+            routerCall: "0x1234",
+            routerAddress: "0xCurveRouter",
+          },
+          expectedOutput: 1000n * DECIMALS,
+          slippageBps: 50n,
+          gasEstimate: {
+            gasLimit: 200000n,
+            eth: 0.0002,
+          },
+          grossProfit: 240n * DECIMALS,
+          routerType: "curve" as const,
+        },
+      ]
+
+      const mockProvider = {
+        getFeeData: vi.fn().mockResolvedValue({ gasPrice: 1000000000n }),
+        getTransactionCount: vi.fn().mockResolvedValue(0),
+      }
+
+      const mockSigner = {
+        getAddress: vi.fn().mockResolvedValue("0xSignerAddress"),
+        provider: mockProvider,
+      }
+
+      const mockTx = {
+        wait: vi.fn().mockResolvedValue({}),
+      }
+
+      const mockMarketContract = {
+        liquidate: vi.fn().mockResolvedValue(mockTx),
+      }
+
+      mockWallet.mockImplementation(() => mockSigner)
+      mockContract.mockImplementation(() => mockMarketContract)
+
+      const mockContext = {
+        ...nominalContext,
+        currentRpcIndex: 0,
+        providers: [mockProvider] as any,
+        walletsPks: ["0xPrivateKey1"],
+      } as any
+
+      const liquidationServiceWithContext = new LiquidationService(mockMarketBorrowerRepository, mockContext, mockRouterService as unknown as RouterService)
+
+      vi.spyOn(liquidationServiceWithContext, "estimateLiquidation").mockResolvedValue(mockEstimate)
+
+      await liquidationServiceWithContext.executeLiquidation(0, account)
+
+      // Verify that liquidate was called with the calculated minCollatValueToLiquidate
+      expect(mockMarketContract.liquidate).toHaveBeenCalledTimes(1)
+      const liquidateCall = mockMarketContract.liquidate.mock.calls[0]
+      const liquidateParams = liquidateCall[0]
+
+      // Expected: (100 * 10^18 * 1 * 10^18 * 9850) / (10^18 * 10000) = 98.5 * 10^18
+      const expectedMinCollatValue = (100n * 9850n * DECIMALS) / 10000n
+      expect(liquidateParams.minCollatValueToLiquidate).toBe(expectedMinCollatValue)
+    })
   })
 })

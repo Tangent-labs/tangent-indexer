@@ -25,6 +25,7 @@ export type IndexerConfig = {
     liquidatorProxyAddress: AddressLike
     liquidatorAddress: AddressLike
     curveRouterAddress: AddressLike
+    pendleRouterAddress: AddressLike
   }
   enso: {
     baseUrl: string
@@ -39,6 +40,7 @@ export type IndexerConfig = {
   }
   liquidationLimits: {
     maxPriceImpact: number
+    oraclePriceProtectionBps: number // Protection percentage in basis points (e.g., 150 = 1.5%)
   }
 }
 
@@ -74,7 +76,8 @@ export const indexerConfig = {
     },
   },
   liquidationLimits: {
-    maxPriceImpact: Number(process.env.MAX_PRICE_IMPACT) || 1,
+    maxPriceImpact: Number(process.env.MAX_PRICE_IMPACT) || 0.01,
+    oraclePriceProtectionBps: Number(process.env.ORACLE_PRICE_PROTECTION_BPS) || 200, // Default 2% protection
   },
 } as IndexerConfig
 
@@ -100,7 +103,7 @@ function _initEnv() {
   }
 
   const startingBlock = process.env.STARTING_BLOCK
-  if (!blockRangeEnv) {
+  if (!startingBlock) {
     throw new Error("STARTING_BLOCK_NOT_SET")
   }
 
