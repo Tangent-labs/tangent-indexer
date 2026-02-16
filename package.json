@@ -29,7 +29,7 @@
     "db:seed-db": "tsx src/scripts/db/seed/_index.ts",
     "db:mock-db-data": "tsx src/scripts/db-mock/_index.ts",
     "db:actualize-views": "tsx src/scripts/actualize-views.ts",
-    "dev:liquidation:reset": "npm run db:truncate & npm run db:empty-queue & npm run db:seed-db &  npm run tangent:indexer-block  & npm run tangent:indexer-block & npm run tangent:indexer-block & npm run tangent:indexer-block",
+    "dev:liquidation:reset": "npm run db:truncate & npm run db:empty-queue & npm run db:seed-db & npm run db:mock-db-data &  npm run tangent:indexer-block  & npm run tangent:indexer-block & npm run tangent:indexer-block & npm run tangent:indexer-block",
     "dev:liquidation:analyse": "tsx src/scripts/analyze_onchain_data.ts",
     "build": "node src/utils/build.js",
     "test": "vitest",

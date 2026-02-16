@@ -356,6 +356,7 @@ describe("LiquidationService - analyzeLiquidation", () => {
           ...baseMarketValues,
           market: "0xMarket1",
           collatToken: "0x0000000000000000000000000000000000000000" as AddressLike,
+          maxMarketDebt: 10000000000n,
         },
       ], // 50% LTV threshold
       accounts: [
@@ -384,6 +385,7 @@ describe("LiquidationService - analyzeLiquidation", () => {
           ...baseMarketValues,
           market: "0xMarket1",
           collatToken: "0x0000000000000000000000000000000000000000" as AddressLike,
+          maxMarketDebt: 10000000000n,
         },
       ], // 50% LTV threshold
       accounts: [
@@ -417,6 +419,7 @@ describe("LiquidationService - analyzeLiquidation", () => {
       ...baseMarketValues,
       market: "0xMarket1",
       collatToken: "0x0000000000000000000000000000000000000000" as AddressLike,
+      maxMarketDebt: 10000000000n,
     }
     const liquidationData: LiquidationMarketAccountOutInfo = {
       markets: [
@@ -709,6 +712,7 @@ describe("LiquidationService - executeLiquidation", () => {
 
     mockLiquidationBotService = {
       logLiquidationExecution: vi.fn().mockResolvedValue(undefined),
+      logLiquidationExecutionError: vi.fn().mockResolvedValue(undefined),
       logError: vi.fn().mockResolvedValue(undefined),
     }
 
@@ -1060,6 +1064,7 @@ describe("LiquidationService - executeLiquidation", () => {
     expect(liquidationService.errors[0].action).toBe("liquidation_execution")
     expect(liquidationService.errors[0].message).toContain("No route found")
     expect(mockLiquidationBotService.logError).toHaveBeenCalled()
+    expect(mockLiquidationBotService.logLiquidationExecutionError).toHaveBeenCalled()
     expect(mockMarketContract.liquidate).not.toHaveBeenCalled()
   })
 
@@ -1208,12 +1213,70 @@ describe("LiquidationService - executeLiquidation", () => {
 
     // Should attempt both transactions
     expect(mockMarketContract.liquidate).toHaveBeenCalledTimes(2)
-    // Should log error for the failed transaction
+    // Should log error in bot_log for the failed transaction
     expect(mockLiquidationBotService.logError).toHaveBeenCalled()
-    // Should log success for the successful transaction
+    // Should log success in liquidation_execution table for the successful transaction
     expect(mockLiquidationBotService.logLiquidationExecution).toHaveBeenCalledTimes(1)
+    // Should log error in liquidation_execution table for the failed transaction
+    expect(mockLiquidationBotService.logLiquidationExecutionError).toHaveBeenCalledTimes(1)
+    expect(mockLiquidationBotService.logLiquidationExecutionError).toHaveBeenCalledWith(
+      expect.any(Object), // context
+      expect.objectContaining({ message: "Transaction failed" }), // error
+      expect.objectContaining({ account: "0xUser1", market: "0xMarket1" }) // account
+    )
     // Should have error recorded
     expect(liquidationService.errors.length).toBeGreaterThan(0)
+  })
+
+  it("should log execution error in liquidation_execution table when no routes found", async () => {
+    const account: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 2000000000000000000n,
+      userDebt: 760n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 1500n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+      collateralUSDPrice: 1n * DECIMALS,
+      oracleDecimals: 18n,
+    }
+
+    vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue([])
+
+    await liquidationService.executeLiquidation(0, account, 0n)
+
+    // Should log error in liquidation_execution table
+    expect(mockLiquidationBotService.logLiquidationExecutionError).toHaveBeenCalledTimes(1)
+    expect(mockLiquidationBotService.logLiquidationExecutionError).toHaveBeenCalledWith(
+      expect.any(Object), // context
+      expect.objectContaining({ message: expect.stringContaining("No route found") }),
+      expect.objectContaining({ account: "0xUser1", market: "0xMarket1" })
+    )
+  })
+
+  it("should log execution error in liquidation_execution table when estimation fails", async () => {
+    const account: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 2000000000000000000n,
+      userDebt: 760n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 1500n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+      collateralUSDPrice: 1n * DECIMALS,
+      oracleDecimals: 18n,
+    }
+
+    vi.spyOn(liquidationService, "estimateLiquidation").mockRejectedValue(new Error("Estimation failed"))
+
+    await expect(liquidationService.executeLiquidation(0, account, 0n)).rejects.toThrow("Estimation failed")
+
+    expect(mockLiquidationBotService.logLiquidationExecutionError).toHaveBeenCalledTimes(1)
+    expect(mockLiquidationBotService.logLiquidationExecutionError).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ message: "Estimation failed" }),
+      expect.objectContaining({ account: "0xUser1", market: "0xMarket1" })
+    )
   })
 })
 
@@ -1264,8 +1327,10 @@ describe("LiquidationService - Best RPC Provider", () => {
 
     mockLiquidationBotService = {
       logLiquidationExecution: vi.fn().mockResolvedValue(undefined),
+      logLiquidationExecutionError: vi.fn().mockResolvedValue(undefined),
       logError: vi.fn().mockResolvedValue(undefined),
       logLiquidationBadDebtExecution: vi.fn().mockResolvedValue(undefined),
+      logLiquidationBadDebtExecutionError: vi.fn().mockResolvedValue(undefined),
     }
 
     mockJob = {

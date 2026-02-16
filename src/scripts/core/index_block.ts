@@ -64,9 +64,9 @@ async function main() {
     if (startBlock && endBlock) {
       console.log("indexing :", startBlock, "<----------------->", endBlock)
       await prismaClient.$transaction(
-        async (dbTransaction: TransactionPrisma) => {
+        async (dbTransaction) => {
           // Set the database transaction to the repositories
-          setTransaction(dbTransaction)
+          setTransaction(dbTransaction as TransactionPrisma)
 
           // Detect new markets
           await marketCreationService.runDetection(bestProvider, startBlock, endBlock)

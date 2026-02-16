@@ -14,6 +14,7 @@ export type LiquidationMarketOutInfo = {
   oracleDecimals: bigint
   collatToken: AddressLike
   market: AddressLike
+  maxMarketDebt: bigint
 }
 
 export type LiquidationAccountOutInfo = {

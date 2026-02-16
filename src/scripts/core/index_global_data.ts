@@ -26,8 +26,8 @@ async function main() {
 
   await prismaClient
     .$transaction(
-      async (dbTransaction: TransactionPrisma) => {
-        setTransaction(dbTransaction)
+      async (dbTransaction) => {
+        setTransaction(dbTransaction as TransactionPrisma)
         await globalDataService.globalDataProcess()
       },
       {
@@ -42,8 +42,8 @@ async function main() {
 
   await prismaClient
     .$transaction(
-      async (dbTransaction: TransactionPrisma) => {
-        setTransaction(dbTransaction)
+      async (dbTransaction) => {
+        setTransaction(dbTransaction as TransactionPrisma)
         const {
           tokens: { sTAN, sUSG },
         } = await getAddressesJson()

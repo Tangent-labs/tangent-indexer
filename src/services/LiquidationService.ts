@@ -391,11 +391,12 @@ export class LiquidationService {
       const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
       const tx = await marketContract.seizeCollateral(account.account, { nonce: currentNonce })
       await tx.wait() // Wait for the transaction to be mined
-      await this.liquidationBotService?.logLiquidationBadDebtExecution(account, loggedContext)
+      await this.liquidationBotService?.logLiquidationBadDebtExecution(account, loggedContext, tx.hash)
       return tx
     } catch (error) {
       this.errors.push({ action: "liquidation_bad_debt_execution", message: (error as Error)?.message.slice(0, 100), market: account.market as string })
       await this.liquidationBotService?.logError("liquidation_bad_debt_execution", error as Error, loggedContext, { account }, false)
+      await this.liquidationBotService?.logLiquidationBadDebtExecutionError(loggedContext, error as Error, account)
       // Re-throw the error so the job is retried by the queue
       throw error
     }
@@ -464,6 +465,7 @@ export class LiquidationService {
         },
         false
       )
+      await this.liquidationBotService?.logLiquidationExecutionError(loggedContext, error as Error, normalizedAccount)
       // Re-throw the error so the job is retried by the queue
       throw error
     }
@@ -484,6 +486,7 @@ export class LiquidationService {
         { account: normalizedAccount, step: "no_route" },
         false
       )
+      await this.liquidationBotService?.logLiquidationExecutionError(loggedContext, error, normalizedAccount)
       // Don't throw - route not found is a permanent failure that won't succeed on retry
       return
     }
@@ -557,6 +560,7 @@ export class LiquidationService {
           error,
           step: "liquidate",
         })
+        await this.liquidationBotService?.logLiquidationExecutionError(loggedContext, error as Error, normalizedAccount)
         // Store the error for later re-throwing if all transactions fail
         errors.push(error as Error)
       }
