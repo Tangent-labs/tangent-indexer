@@ -132,4 +132,18 @@ export class GlobalDataRepository extends AbstractRepository {
     }
     return map
   }
+
+  async insertOracleSanitySnapshots(data: Prisma.oracle_sanity_snapshotsCreateManyInput[]) {
+    if (data.length === 0) return
+    await this.prismaClient.oracle_sanity_snapshots.createMany({
+      data,
+    })
+  }
+
+  async insertPegSanitySnapshots(data: Prisma.peg_sanity_snapshotsCreateManyInput[]) {
+    if (data.length === 0) return
+    await this.prismaClient.peg_sanity_snapshots.createMany({
+      data,
+    })
+  }
 }

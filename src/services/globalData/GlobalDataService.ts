@@ -65,6 +65,7 @@ type Markets = {
   contract_name: string
   collateral_address: string
   contract_address: string
+  peg_target_value?: number | null
 }
 export class GlobalDataService {
   erc20Repository: ERC20Repository
@@ -116,14 +117,18 @@ export class GlobalDataService {
 
     const now = new Date(Number(onchainDatas.timestamp) * 1000)
 
-    // Fetch from DefiLlama prices of ERC20 tokens distributed in the underlying protocols
-    const prices = await defiLLamaFetchPrices(rewardTokens.map((a) => a.address))
+    // Fetch from DefiLlama: reward tokens + all market collateral addresses (LPs) for oracle/peg sanity
+    const tokenAddresses = [...new Set([...rewardTokens.map((a) => a.address), ...markets.map((m) => m.collateral_address)])]
+    const prices = await defiLLamaFetchPrices(tokenAddresses)
 
     const {
       formattedData: marketsData,
       marketsTotalDeposited,
       marketsTotalBorrowed,
     } = await this.fetchAndFormatMarketData(markets, onchainDatas.marketData, now, prices)
+
+    const oracleSanitySnapshots = this.buildOracleSanitySnapshots(markets, onchainDatas.marketData, prices, now)
+    const pegSanitySnapshots = this.buildPegSanitySnapshots(markets, prices, now)
 
     // Total Supplies of USG & sUSG
     const totalSupplies = await this.fetchAndFormatTotalSupplies(onchainDatas.usgInfo, now)
@@ -152,7 +157,16 @@ export class GlobalDataService {
       total_tvl: marketsTotalDeposited + tvlsUSG + keepersTVL + wStablesTVL,
     }
 
-    await this.insertOrUpdateGlobalData(marketsData, totalSupplies, keepersSnapshot, wStableSnapshot, usgGlobalInfos, now)
+    await this.insertOrUpdateGlobalData(
+      marketsData,
+      totalSupplies,
+      keepersSnapshot,
+      wStableSnapshot,
+      usgGlobalInfos,
+      oracleSanitySnapshots,
+      pegSanitySnapshots,
+      now
+    )
 
     return { marketsData, totalSupplies, keepersSnapshot, wStableSnapshot, usgGlobalInfos }
   }
@@ -163,6 +177,8 @@ export class GlobalDataService {
     keepersData: Prisma.peg_keeper_historyCreateManyInput[],
     wStablesData: Prisma.wrapped_stable_historyCreateManyInput[],
     globalData: Prisma.usg_global_historyCreateInput,
+    oracleSanitySnapshots: Prisma.oracle_sanity_snapshotsCreateManyInput[],
+    pegSanitySnapshots: Prisma.peg_sanity_snapshotsCreateManyInput[],
     now: Date
   ) {
     const NEW_ROWS_FREQUENCY = 10_000
@@ -208,6 +224,51 @@ export class GlobalDataService {
     } else {
       await this.globalHistoryDataRepository.insertNewGlobalHistory([globalData])
     }
+
+    // ORACLE SANITY SNAPSHOTS (oracle vs DefiLlama)
+    await this.globalDataRepository.insertOracleSanitySnapshots(oracleSanitySnapshots)
+
+    // PEG SANITY SNAPSHOTS (price vs peg target)
+    await this.globalDataRepository.insertPegSanitySnapshots(pegSanitySnapshots)
+  }
+
+  private buildOracleSanitySnapshots(markets: Markets[], marketData: TVLAprs[], prices: Prices, now: Date): Prisma.oracle_sanity_snapshotsCreateManyInput[] {
+    const rows: Prisma.oracle_sanity_snapshotsCreateManyInput[] = []
+    for (const market of markets) {
+      const onChain = marketData.find((md) => md.globalData.marketAddress.toLowerCase() === market.contract_address.toLowerCase())
+      const offchainInfo = prices[market.collateral_address.toLowerCase()]
+      if (!onChain || offchainInfo == null) continue
+      const oraclePrice = bigIntToNumber(onChain.globalData.oraclePrice, 18)
+      const offchainPrice = offchainInfo.price
+      if (offchainPrice <= 0) continue
+      const deviation_pct = (Math.abs(oraclePrice - offchainPrice) / offchainPrice) * 100
+      rows.push({
+        market_id: market.id,
+        oracle_price: oraclePrice,
+        offchain_price: offchainPrice,
+        deviation_pct,
+        timestamp: now,
+      })
+    }
+    return rows
+  }
+
+  private buildPegSanitySnapshots(markets: Markets[], prices: Prices, now: Date): Prisma.peg_sanity_snapshotsCreateManyInput[] {
+    const rows: Prisma.peg_sanity_snapshotsCreateManyInput[] = []
+    for (const market of markets) {
+      if (market.peg_target_value == null) continue
+      const priceInfo = prices[market.collateral_address.toLowerCase()]
+      if (priceInfo == null) continue
+      const price = priceInfo.price
+      const deviation = price - market.peg_target_value
+      rows.push({
+        market_id: market.id,
+        price,
+        deviation,
+        timestamp: now,
+      })
+    }
+    return rows
   }
 
   private computationTVLWStables(wStablesData: WStableData[], wStables: Prisma.wrapped_stableCreateManyInput[], now: Date, prices: Prices) {

@@ -56,6 +56,16 @@ export const fetchMarketCreationLogs = async (
   )
 }
 
+/** peg_target_value = 1 by default when the name does NOT contain "ETH" or "BTC" (stable-like). */
+function isStableLikeName(symbolOrName: string): boolean {
+  const upper = symbolOrName.toUpperCase()
+  return !upper.includes("ETH") && !upper.includes("BTC")
+}
+
+const DEFAULT_PEG_TARGET_VALUE = 1
+const DEFAULT_ALERT_THRESHOLD_WARNING_PCT = 0.5
+const DEFAULT_ALERT_THRESHOLD_CRITICAL_PCT = 1
+
 const parseMarketEvent = async (log: Log, provider: JsonRpcProvider, creationBlock: number, creationDate: Date): Promise<Prisma.usg_marketsCreateInput> => {
   // all events have the same signature
   const decoded = ethers.AbiCoder.defaultAbiCoder().decode(["address", "string"], log.data)
@@ -83,6 +93,20 @@ const parseMarketEvent = async (log: Log, provider: JsonRpcProvider, creationBlo
     provider
   )
 
+  // Stables (no ETH/BTC in name): peg_target_value = 1 → ils apparaissent dans peg_sanity_snapshots.
+  // Non-stables: peg null → n'apparaissent pas dans le tableau des peg.
+  const pegFields: Partial<Prisma.usg_marketsCreateInput> = isStableLikeName(name)
+    ? {
+        peg_target_value: DEFAULT_PEG_TARGET_VALUE,
+        alert_threshold_warning_pct: DEFAULT_ALERT_THRESHOLD_WARNING_PCT,
+        alert_threshold_critical_pct: DEFAULT_ALERT_THRESHOLD_CRITICAL_PCT,
+      }
+    : {
+        peg_target_value: null,
+        alert_threshold_warning_pct: null,
+        alert_threshold_critical_pct: null,
+      }
+
   return {
     contract_name: name,
     is_active: true,
@@ -91,5 +115,6 @@ const parseMarketEvent = async (log: Log, provider: JsonRpcProvider, creationBlo
     collateral_address: await marketContract.collatToken(),
     create_date: creationDate,
     create_block: parseInt(creationBlock.toString(), 16),
+    ...pegFields,
   }
 }
