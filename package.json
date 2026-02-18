@@ -62,7 +62,7 @@
   "devDependencies": {
     "@eslint/js": "^9.20.0",
     "@tangent/defi-resources": "github:Tangent-labs/defi-resources#main",
-    "@tangent/prisma-schema-shared": "github:Tangent-labs/prisma-schema-shared#dfc2de6f5eabfa190e6a51d0be2c7b983093e389",
+    "@tangent/prisma-schema-shared": "github:Tangent-labs/prisma-schema-shared",
     "@types/node": "^22.18.8",
     "@types/node-fetch": "^2.6.13",
     "@typescript-eslint/eslint-plugin": "^8.24.0",
