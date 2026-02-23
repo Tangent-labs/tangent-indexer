@@ -40,14 +40,15 @@ vi.mock("config/indexer_setup", () => ({
     handleError: vi.fn(),
   })),
 }))
-vi.mock("config/indexer_config", () => ({
-  indexerConfig: {
-    liquidationQueueRedis: "redis://localhost:6379",
-    liquidationQueue: {
+vi.mock("config/liquidation_config", () => ({
+  liquidationConfig: {
+    snapshotTolerance: 0.001,
+    queueRedis: "redis://localhost:6379",
+    queue: {
       attempts: 10,
       backoff: {
-        type: "exponential",
-        delay: 5000,
+        type: "fixed",
+        delay: 12_000,
       },
     },
   },
@@ -124,6 +125,8 @@ describe("CheckLiquidationService", () => {
     vi.spyOn(mockLiquidationService, "getOnchainData").mockResolvedValue({
       markets: [],
       accounts: [],
+      blockNumber: 0n,
+      blockTimestamp: 0n,
     })
     vi.spyOn(mockLiquidationService, "analyzeLiquidation").mockResolvedValue({
       seizingList: [],
@@ -146,6 +149,7 @@ describe("CheckLiquidationService", () => {
     mockMarketConfigRepository = new MarketConfigRepository({} as PrismaClient)
     mockMarketContractsRepository = new MarketContractsRepository({} as PrismaClient)
     vi.spyOn(mockPositionSnapshotRepository, "saveSnapshots").mockResolvedValue(undefined)
+    vi.spyOn(mockPositionSnapshotRepository, "getLatestSnapshotsWithin24h").mockResolvedValue([])
     vi.spyOn(mockMarketConfigRepository, "saveMarketConfigs").mockResolvedValue(undefined)
     vi.spyOn(mockMarketConfigRepository, "getLastUpdateDate").mockResolvedValue(null)
     vi.spyOn(mockMarketContractsRepository, "getContracts").mockResolvedValue([])
@@ -440,6 +444,64 @@ describe("CheckLiquidationService", () => {
       await checkLiquidationService.run()
 
       expect(mockLiquidationService.analyzeLiquidation).toHaveBeenCalled()
+    })
+
+    it("should deduplicate snapshots when values change less than tolerance", async () => {
+      setupOnChainMocks()
+      vi.mocked(mockPositionSnapshotRepository.getLatestSnapshotsWithin24h).mockResolvedValue([
+        {
+          market_id: MARKET_ID,
+          borrower_address: "0xuser1",
+          user_debt: 400,
+          position_value_usd: 1000,
+        } as any,
+      ])
+
+      await checkLiquidationService.run()
+
+      // Same values → filtered out by dedup
+      expect(mockPositionSnapshotRepository.saveSnapshots).toHaveBeenCalledWith([])
+    })
+
+    it("should persist snapshot when user_debt changes beyond tolerance", async () => {
+      setupOnChainMocks()
+      vi.mocked(mockPositionSnapshotRepository.getLatestSnapshotsWithin24h).mockResolvedValue([
+        {
+          market_id: MARKET_ID,
+          borrower_address: "0xuser1",
+          user_debt: 399, // diff = 1, well above tolerance of 0.001
+          position_value_usd: 1000,
+        } as any,
+      ])
+
+      await checkLiquidationService.run()
+
+      expect(mockPositionSnapshotRepository.saveSnapshots).toHaveBeenCalledWith([expect.objectContaining({ user_debt: 400 })])
+    })
+
+    it("should persist snapshot when position_value_usd changes beyond tolerance", async () => {
+      setupOnChainMocks()
+      vi.mocked(mockPositionSnapshotRepository.getLatestSnapshotsWithin24h).mockResolvedValue([
+        {
+          market_id: MARKET_ID,
+          borrower_address: "0xuser1",
+          user_debt: 400,
+          position_value_usd: 998, // diff = 2, above tolerance
+        } as any,
+      ])
+
+      await checkLiquidationService.run()
+
+      expect(mockPositionSnapshotRepository.saveSnapshots).toHaveBeenCalledWith([expect.objectContaining({ position_value_usd: 1000 })])
+    })
+
+    it("should persist snapshot when no previous snapshot exists (first time)", async () => {
+      setupOnChainMocks()
+      vi.mocked(mockPositionSnapshotRepository.getLatestSnapshotsWithin24h).mockResolvedValue([])
+
+      await checkLiquidationService.run()
+
+      expect(mockPositionSnapshotRepository.saveSnapshots).toHaveBeenCalledWith([expect.objectContaining({ borrower_address: "0xuser1" })])
     })
 
     it("should handle zero debt positions gracefully", async () => {

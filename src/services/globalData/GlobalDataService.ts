@@ -1,5 +1,5 @@
 import { formatEther, formatUnits, JsonRpcProvider } from "ethers"
-import { Prisma } from "@prisma/client"
+import { Prisma, peg_monitored_tokens } from "@prisma/client"
 import { COMMON_ERC20S, curveLpMapping } from "@tangent/defi-resources"
 
 import { ERC20Repository } from "../../db/ERC20Repository.js"
@@ -36,6 +36,7 @@ import { TotalSupplyRepository } from "../../db/TotalSupplyRepository.js"
 import { PegKeeperRepository } from "../../db/PegKeepeerRepository.js"
 import { WStableRepository } from "../../db/WStableRepository.js"
 import { GlobalHistoryDataRepository } from "src/db/GlobalHistoryDataRepository.js"
+import { PegMonitoredTokenRepository } from "../../db/PegMonitoredTokenRepository.js"
 
 // TODO This is arbitraty, need a more dynamic version
 // eslint-disable-next-line no-loss-of-precision
@@ -65,7 +66,6 @@ type Markets = {
   contract_name: string
   collateral_address: string
   contract_address: string
-  peg_target_value?: number | null
 }
 export class GlobalDataService {
   erc20Repository: ERC20Repository
@@ -75,6 +75,7 @@ export class GlobalDataService {
   pegKeeperRepository: PegKeeperRepository
   wStableRepository: WStableRepository
   globalHistoryDataRepository: GlobalHistoryDataRepository
+  pegMonitoredTokenRepository: PegMonitoredTokenRepository
   provider: JsonRpcProvider
   callApiService: CallApiService
 
@@ -87,7 +88,8 @@ export class GlobalDataService {
     pegKeeperRepository: PegKeeperRepository,
     wStableRepository: WStableRepository,
     globalHistoryDataRepository: GlobalHistoryDataRepository,
-    marketContractsRepository: MarketContractsRepository
+    marketContractsRepository: MarketContractsRepository,
+    pegMonitoredTokenRepository: PegMonitoredTokenRepository
   ) {
     this.provider = provider
     this.callApiService = callApiService
@@ -98,6 +100,7 @@ export class GlobalDataService {
     this.wStableRepository = wStableRepository
     this.globalHistoryDataRepository = globalHistoryDataRepository
     this.marketContractsRepo = marketContractsRepository
+    this.pegMonitoredTokenRepository = pegMonitoredTokenRepository
   }
 
   async globalDataProcess() {
@@ -117,8 +120,17 @@ export class GlobalDataService {
 
     const now = new Date(Number(onchainDatas.timestamp) * 1000)
 
-    // Fetch from DefiLlama: reward tokens + all market collateral addresses (LPs) for oracle/peg sanity
-    const tokenAddresses = [...new Set([...rewardTokens.map((a) => a.address), ...markets.map((m) => m.collateral_address)])]
+    // Fetch monitored tokens for peg sanity checks
+    const monitoredTokens = await this.pegMonitoredTokenRepository.getActiveTokens()
+
+    // Collect ref addresses (WETH, WBTC) needed for peg comparison
+    const refAddresses = [...new Set(monitoredTokens.filter((t) => t.ref_address != null).map((t) => t.ref_address!))]
+    const monitoredAddresses = monitoredTokens.map((t) => t.address)
+
+    // Fetch from DefiLlama: reward tokens + collateral addresses (LPs) + monitored tokens + ref tokens
+    const tokenAddresses = [
+      ...new Set([...rewardTokens.map((a) => a.address), ...markets.map((m) => m.collateral_address), ...monitoredAddresses, ...refAddresses]),
+    ]
     const prices = await defiLLamaFetchPrices(tokenAddresses)
 
     const {
@@ -128,7 +140,7 @@ export class GlobalDataService {
     } = await this.fetchAndFormatMarketData(markets, onchainDatas.marketData, now, prices)
 
     const oracleSanitySnapshots = this.buildOracleSanitySnapshots(markets, onchainDatas.marketData, prices, now)
-    const pegSanitySnapshots = this.buildPegSanitySnapshots(markets, prices, now)
+    const pegSanitySnapshots = this.buildPegSanitySnapshots(monitoredTokens, prices, now)
 
     // Total Supplies of USG & sUSG
     const totalSupplies = await this.fetchAndFormatTotalSupplies(onchainDatas.usgInfo, now)
@@ -226,10 +238,20 @@ export class GlobalDataService {
     }
 
     // ORACLE SANITY SNAPSHOTS (oracle vs DefiLlama)
-    await this.globalDataRepository.insertOracleSanitySnapshots(oracleSanitySnapshots)
+    const lastUpdateTimeOracle = await this.globalDataRepository.fetchLastOracleSanityTime()
+    if (lastUpdateTimeOracle && lastUpdateTimeOracle.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
+      await this.globalDataRepository.updateOracleSanitySnapshots(oracleSanitySnapshots, lastUpdateTimeOracle)
+    } else {
+      await this.globalDataRepository.insertOracleSanitySnapshots(oracleSanitySnapshots)
+    }
 
-    // PEG SANITY SNAPSHOTS (price vs peg target)
-    await this.globalDataRepository.insertPegSanitySnapshots(pegSanitySnapshots)
+    // PEG SANITY SNAPSHOTS (token vs peg reference)
+    const lastUpdateTimePeg = await this.globalDataRepository.fetchLastPegSanityTime()
+    if (lastUpdateTimePeg && lastUpdateTimePeg.getTime() + NEW_ROWS_FREQUENCY > now.getTime()) {
+      await this.globalDataRepository.updatePegSanitySnapshots(pegSanitySnapshots, lastUpdateTimePeg)
+    } else {
+      await this.globalDataRepository.insertPegSanitySnapshots(pegSanitySnapshots)
+    }
   }
 
   private buildOracleSanitySnapshots(markets: Markets[], marketData: TVLAprs[], prices: Prices, now: Date): Prisma.oracle_sanity_snapshotsCreateManyInput[] {
@@ -253,18 +275,40 @@ export class GlobalDataService {
     return rows
   }
 
-  private buildPegSanitySnapshots(markets: Markets[], prices: Prices, now: Date): Prisma.peg_sanity_snapshotsCreateManyInput[] {
+  private buildPegSanitySnapshots(monitoredTokens: peg_monitored_tokens[], prices: Prices, now: Date): Prisma.peg_sanity_snapshotsCreateManyInput[] {
     const rows: Prisma.peg_sanity_snapshotsCreateManyInput[] = []
-    for (const market of markets) {
-      if (market.peg_target_value == null) continue
-      const priceInfo = prices[market.collateral_address.toLowerCase()]
+
+    for (const token of monitoredTokens) {
+      const priceInfo = prices[token.address.toLowerCase()]
       if (priceInfo == null) continue
+
       const price = priceInfo.price
-      const deviation = price - market.peg_target_value
+      let refPrice: number
+
+      switch (token.peg_type) {
+        case "USD":
+          refPrice = 1.0
+          break
+        case "ETH":
+        case "BTC": {
+          if (token.ref_address == null) continue
+          const refInfo = prices[token.ref_address.toLowerCase()]
+          if (refInfo == null) continue
+          refPrice = refInfo.price
+          break
+        }
+        default:
+          continue
+      }
+
+      if (refPrice <= 0) continue
+      const deviation_pct = (Math.abs(price - refPrice) / refPrice) * 100
+
       rows.push({
-        market_id: market.id,
+        token_id: token.id,
         price,
-        deviation,
+        ref_price: refPrice,
+        deviation_pct,
         timestamp: now,
       })
     }

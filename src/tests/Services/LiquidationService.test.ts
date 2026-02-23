@@ -16,7 +16,7 @@ import { BlockRepository } from "../../../src/db/BlockRepository.js"
 import { LiquidationExecutionContext } from "../../../src/services/LiquidationExecutionContext.js"
 import * as getBestRpcProviderModule from "../../../src/utils/getBestRpcProvider.js"
 import { RouterService } from "../../services/RouterService.js"
-import { indexerConfig } from "../../config/indexer_config.js"
+import { liquidationConfig } from "../../config/liquidation_config.js"
 
 // Mock ethers module - this needs to be before any imports that use it
 // We need to mock Wallet and Contract constructors
@@ -367,6 +367,8 @@ describe("LiquidationService - analyzeLiquidation", () => {
           market: "0xMarket1",
         },
       ] as LiquidationAccountOutInfo[],
+      blockNumber: 0n,
+      blockTimestamp: 0n,
     }
 
     const result = await liquidationService.analyzeLiquidation(liquidationData, accounts)
@@ -396,6 +398,8 @@ describe("LiquidationService - analyzeLiquidation", () => {
           market: "0xMarket1",
         },
       ] as LiquidationAccountOutInfo[],
+      blockNumber: 0n,
+      blockTimestamp: 0n,
     }
 
     const result = await liquidationService.analyzeLiquidation(liquidationData, accounts)
@@ -468,6 +472,8 @@ describe("LiquidationService - analyzeLiquidation", () => {
           market: "0xMarket6",
         },
       ] as LiquidationAccountOutInfo[],
+      blockNumber: 0n,
+      blockTimestamp: 0n,
     }
 
     const result = await liquidationService.analyzeLiquidation(liquidationData, accounts)
@@ -1675,18 +1681,18 @@ describe("LiquidationService - Best RPC Provider", () => {
       liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext, mockRouterService as unknown as RouterService)
 
       // Store original protection BPS
-      originalProtectionBps = indexerConfig.liquidationLimits.oraclePriceProtectionBps
+      originalProtectionBps = liquidationConfig.limits.oraclePriceProtectionBps
     })
 
     afterEach(() => {
       // Restore original protection BPS
-      indexerConfig.liquidationLimits.oraclePriceProtectionBps = originalProtectionBps
+      liquidationConfig.limits.oraclePriceProtectionBps = originalProtectionBps
       vi.restoreAllMocks()
     })
 
     it("should calculate minCollatValueToLiquidate with 1.5% protection (150 bps)", () => {
       // Set config with 1.5% protection
-      indexerConfig.liquidationLimits.oraclePriceProtectionBps = 150
+      liquidationConfig.limits.oraclePriceProtectionBps = 150
 
       const account: LiquidationUserFullInfo = {
         account: "0xUser1" as AddressLike,
@@ -1712,7 +1718,7 @@ describe("LiquidationService - Best RPC Provider", () => {
 
     it("should calculate minCollatValueToLiquidate with different oracle decimals (8 decimals)", () => {
       // Set config with 1.5% protection
-      indexerConfig.liquidationLimits.oraclePriceProtectionBps = 150
+      liquidationConfig.limits.oraclePriceProtectionBps = 150
 
       const oracleDecimals = 8n
       const oraclePrice = 1n * 10n ** oracleDecimals // $1 with 8 decimals
@@ -1741,7 +1747,7 @@ describe("LiquidationService - Best RPC Provider", () => {
 
     it("should calculate minCollatValueToLiquidate with high collateral balance and price", () => {
       // Set config with 1.5% protection
-      indexerConfig.liquidationLimits.oraclePriceProtectionBps = 150
+      liquidationConfig.limits.oraclePriceProtectionBps = 150
 
       const account: LiquidationUserFullInfo = {
         account: "0xUser1" as AddressLike,
@@ -1803,7 +1809,7 @@ describe("LiquidationService - Best RPC Provider", () => {
 
     it("should use minCollatValueToLiquidate in executeLiquidation", async () => {
       // Set config with 1.5% protection
-      indexerConfig.liquidationLimits.oraclePriceProtectionBps = 150
+      liquidationConfig.limits.oraclePriceProtectionBps = 150
 
       const account: LiquidationUserFullInfo = {
         account: "0xUser1" as AddressLike,

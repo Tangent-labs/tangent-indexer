@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client"
 import { AbstractRepository } from "./AbstractRepository.js"
-import { TransactionPrisma } from "src/type/prisma.js"
+import { TransactionPrisma } from "../type/prisma.js"
 
 export class MarketConfigRepository extends AbstractRepository {
   async saveMarketConfigs(configs: Prisma.market_configCreateManyInput[]) {

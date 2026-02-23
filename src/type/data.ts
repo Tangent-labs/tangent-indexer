@@ -27,6 +27,8 @@ export type LiquidationAccountOutInfo = {
 export type LiquidationMarketAccountOutInfo = {
   markets: LiquidationMarketOutInfo[]
   accounts: LiquidationAccountOutInfo[]
+  blockNumber: bigint
+  blockTimestamp: bigint
 }
 
 export type LiquidationUserInfo = LiquidationAccountOutInfo & LiquidationUserInInfo

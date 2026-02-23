@@ -9,9 +9,10 @@ import { getAddressesJson } from "../../../utils/jsonReader.js"
 import { seedPriceSources } from "./seed_price_sources.js"
 import { seedPredeposit } from "./seed_predeposit.js"
 import { seedUSGContracts } from "./seed_usg_contracts.js"
+import { seedPegMonitoredTokens } from "./seed_peg_monitored_tokens.js"
 import { seedBoosts } from "./seed_boosts.js"
 import { JsonRpcProvider } from "ethers"
-import { TransactionPrisma } from "src/type/prisma.js"
+import { TransactionPrisma } from "../../../type/prisma.js"
 dotenv.config()
 
 const prisma = new PrismaClient()
@@ -33,6 +34,8 @@ async function main() {
     await seedPredeposit(tx as TransactionPrisma, addresses)
     // Seed Keepers and WStables contracts
     await seedUSGContracts(tx as TransactionPrisma, addresses)
+    // Seed peg monitored tokens (USD stables, ETH LSTs, wrapped BTC)
+    await seedPegMonitoredTokens(tx as TransactionPrisma)
   })
 }
 

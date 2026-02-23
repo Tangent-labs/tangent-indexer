@@ -1,4 +1,3 @@
-import { AddressLike } from "ethers"
 import * as dotenv from "dotenv"
 dotenv.config()
 
@@ -19,28 +18,6 @@ export type IndexerConfig = {
   }
   sentry: {
     dsn: string
-  }
-  contracts: {
-    marketCreatorAddress: AddressLike
-    liquidatorProxyAddress: AddressLike
-    liquidatorAddress: AddressLike
-    curveRouterAddress: AddressLike
-    pendleRouterAddress: AddressLike
-  }
-  enso: {
-    baseUrl: string
-  }
-  liquidationQueueRedis: string
-  liquidationQueue: {
-    attempts: number
-    backoff: {
-      type: "fixed" | "exponential"
-      delay: number
-    }
-  }
-  liquidationLimits: {
-    maxPriceImpact: number
-    oraclePriceProtectionBps: number // Protection percentage in basis points (e.g., 150 = 1.5%)
   }
 }
 
@@ -63,21 +40,6 @@ export const indexerConfig = {
   minEthBalance: Number(process.env.MIN_ETH_BALANCE) || 0.01,
   sentry: {
     dsn: process.env.SENTRY_SDN || "",
-  },
-  enso: {
-    baseUrl: "https://api.enso.finance/api/v1/shortcuts/route",
-  },
-  liquidationQueueRedis: process.env.LIQUIDATION_QUEUE_REDIS,
-  liquidationQueue: {
-    attempts: Number(process.env.LIQUIDATION_QUEUE_ATTEMPTS) || 10,
-    backoff: {
-      type: (process.env.LIQUIDATION_QUEUE_BACKOFF_TYPE as "fixed" | "exponential") || "exponential",
-      delay: Number(process.env.LIQUIDATION_QUEUE_BACKOFF_DELAY) || 5000, // 5 seconds
-    },
-  },
-  liquidationLimits: {
-    maxPriceImpact: Number(process.env.MAX_PRICE_IMPACT) || 0.01,
-    oraclePriceProtectionBps: Number(process.env.ORACLE_PRICE_PROTECTION_BPS) || 200, // Default 2% protection
   },
 } as IndexerConfig
 
