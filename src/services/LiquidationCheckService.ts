@@ -1,4 +1,4 @@
-import { AddressLike, JsonRpcProvider } from "ethers"
+import { AddressLike, formatEther, formatUnits, JsonRpcProvider, parseEther } from "ethers"
 import { Queue, type Queue as BullQueue } from "bullmq"
 import { LiquidationService } from "./LiquidationService.js"
 import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
@@ -220,31 +220,31 @@ export class CheckLiquidationService {
         const positionValue = accountData.positionValue
         const collateralBalance = accountData.collateralBalance
 
-        // LTV as ratio (e.g. 0.75)
-        const ltv = positionValue === 0n ? 0 : Number((userDebt * 10_000n) / positionValue) / 10_000
+        // LTV scaled by DENOMINATOR (100_000) for BigInt precision
+        const ltvScaled = positionValue === 0n ? 0n : (userDebt * DENOMINATOR) / positionValue
+        const ltv = Number(formatUnits(ltvScaled, 5))
 
-        // CR (collateral ratio, inverse of LTV) — cap to avoid Infinity (not serializable to DB)
-        const cr = userDebt === 0n ? 0 : Number((positionValue * 10_000n) / userDebt) / 10_000
+        // CR (collateral ratio, inverse of LTV) — when debt=0, CR is Infinity
+        const cr = userDebt === 0n ? 0 : Number(formatEther((positionValue * parseEther("1")) / userDebt))
 
         // Margin: distance from liquidation threshold (positive = safe)
-        const ltvScaled = positionValue === 0n ? 0n : (userDebt * DENOMINATOR) / positionValue
         const liquidationThreshold = market?.liquidationThreshold ?? 0n
-        const margin = Number(liquidationThreshold - ltvScaled) / Number(DENOMINATOR)
+        const margin = Number(formatUnits(liquidationThreshold - ltvScaled, 5))
 
-        const healthRatio = Math.round((Number(accountData.healthRatio) / 1e18) * 1e6) / 1e6
+        const healthRatio = Number(formatEther(accountData.healthRatio))
 
         // Liquidation price & distance
         let liquidationPrice = 0
         let distancePct = 0
 
         if (market && collateralBalance > 0n && userDebt > 0n) {
-          const oracleScale = 10n ** BigInt(Number(market.oracleDecimals))
+          const oracleScale = 10n ** market.oracleDecimals
 
           // Price at which position becomes liquidatable
           const liqPriceBigInt = (userDebt * oracleScale * DENOMINATOR) / (collateralBalance * liquidationThreshold)
-          liquidationPrice = Number(liqPriceBigInt) / Number(oracleScale)
+          liquidationPrice = Number(formatUnits(liqPriceBigInt, market.oracleDecimals))
 
-          const currentPrice = Number(market.collateralUSDPrice) / Number(oracleScale)
+          const currentPrice = Number(formatUnits(market.collateralUSDPrice, market.oracleDecimals))
           if (currentPrice > 0) {
             distancePct = ((currentPrice - liquidationPrice) / currentPrice) * 100
           }
@@ -253,9 +253,9 @@ export class CheckLiquidationService {
         return {
           market_id: marketId,
           borrower_address: (borrower.account as string).toLowerCase(),
-          collateral_balance: Number(collateralBalance) / 1e18,
-          position_value_usd: Math.round((Number(positionValue) / 1e18) * 100) / 100,
-          user_debt: Math.round((Number(userDebt) / 1e18) * 100) / 100,
+          collateral_balance: Number(formatEther(collateralBalance)),
+          position_value_usd: Number(formatEther(positionValue)),
+          user_debt: Number(formatEther(userDebt)),
           ltv,
           cr,
           margin,
@@ -298,9 +298,9 @@ export class CheckLiquidationService {
         if (!marketId) return null
         return {
           market_id: marketId,
-          max_ltv: Number(m.maxLTV) / Number(DENOMINATOR),
-          liquidation_threshold: Number(m.liquidationThreshold) / Number(DENOMINATOR),
-          max_debt: Number(m.maxMarketDebt / 10n ** 18n),
+          max_ltv: Number(formatUnits(m.maxLTV, 5)),
+          liquidation_threshold: Number(formatUnits(m.liquidationThreshold, 5)),
+          max_debt: Number(formatEther(m.maxMarketDebt)),
           last_update: now,
         }
       })
