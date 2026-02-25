@@ -3,6 +3,9 @@ import * as dotenv from "dotenv"
 
 import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
 import { LiquidationBotLogRepository } from "../../db/LiquidationBotLogRepository.js"
+import { PositionSnapshotRepository } from "../../db/PositionSnapshotRepository.js"
+import { MarketConfigRepository } from "../../db/MarketConfigRepository.js"
+import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
 
 import { LiquidationService } from "../../services/LiquidationService.js"
 import { LiquidationBotLogService } from "../../services/LiquidationBotLogService.js"
@@ -22,7 +25,19 @@ const { liquidationService, context, liquidationBotService, telegramNotifierServ
 
 // Run main function if this file is being run directly
 if (process.env.NODE_ENV !== "test") {
-  const checkLiquidationService = new CheckLiquidationService(liquidationService, context, liquidationBotService, telegramNotifierService, providers)
+  const positionSnapshotRepository = new PositionSnapshotRepository(prismaClient)
+  const marketConfigRepository = new MarketConfigRepository(prismaClient)
+  const marketContractsRepository = new MarketContractsRepository(prismaClient)
+  const checkLiquidationService = new CheckLiquidationService(
+    liquidationService,
+    context,
+    liquidationBotService,
+    telegramNotifierService,
+    providers,
+    positionSnapshotRepository,
+    marketConfigRepository,
+    marketContractsRepository
+  )
   const marketViewerAddress = (await getAddressesJson()).utilities.marketViewer
   checkLiquidationService.marketViewerAddress = marketViewerAddress
   let exitCode = 0

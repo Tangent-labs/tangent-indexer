@@ -41,8 +41,8 @@ async function main() {
     if (startBlock && endBlock) {
       console.log("indexing :", startBlock, "<----------------->", endBlock)
       await prismaClient.$transaction(
-        async (dbTransaction: TransactionPrisma) => {
-          setTransaction(dbTransaction)
+        async (dbTransaction) => {
+          setTransaction(dbTransaction as TransactionPrisma)
           await userPointsService.retrieveUserAddressesFromTransfers(startBlock, endBlock)
           const blockDates = await fetchBlockTimestamps([startBlock, endBlock], indexerConfig.provider.chainRpc[bestProviderIndex])
 

@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv"
 import { Queue } from "bullmq"
-import { indexerConfig } from "../../config/indexer_config.js"
+import { liquidationConfig } from "../../config/liquidation_config.js"
 import { SerializedLiquidationUserFullInfo } from "../../type/data.js"
 
 dotenv.config()
@@ -10,7 +10,7 @@ dotenv.config()
  */
 async function main() {
   // Validate liquidation queue Redis configuration
-  if (!indexerConfig.liquidationQueueRedis || indexerConfig.liquidationQueueRedis.trim() === "") {
+  if (!liquidationConfig.queueRedis || liquidationConfig.queueRedis.trim() === "") {
     console.error("❌ Error: LIQUIDATION_QUEUE_REDIS is not configured.")
     console.error("Please set the LIQUIDATION_QUEUE_REDIS environment variable.")
     process.exit(1)
@@ -18,7 +18,7 @@ async function main() {
 
   // Create queue connection
   const queue = new Queue<SerializedLiquidationUserFullInfo>("liquidatorQueue", {
-    connection: indexerConfig.liquidationQueueRedis as any, // BullMQ accepts connection string
+    connection: liquidationConfig.queueRedis as any, // BullMQ accepts connection string
   })
 
   try {

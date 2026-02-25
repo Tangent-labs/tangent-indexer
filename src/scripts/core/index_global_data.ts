@@ -15,6 +15,7 @@ import { getAddressesJson } from "../../utils/jsonReader.js"
 import { PegKeeperRepository } from "../../db/PegKeepeerRepository.js"
 import { WStableRepository } from "../../db/WStableRepository.js"
 import { GlobalHistoryDataRepository } from "../../db/GlobalHistoryDataRepository.js"
+import { PegMonitoredTokenRepository } from "../../db/PegMonitoredTokenRepository.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 
 dotenv.config()
@@ -26,8 +27,8 @@ async function main() {
 
   await prismaClient
     .$transaction(
-      async (dbTransaction: TransactionPrisma) => {
-        setTransaction(dbTransaction)
+      async (dbTransaction) => {
+        setTransaction(dbTransaction as TransactionPrisma)
         await globalDataService.globalDataProcess()
       },
       {
@@ -42,8 +43,8 @@ async function main() {
 
   await prismaClient
     .$transaction(
-      async (dbTransaction: TransactionPrisma) => {
-        setTransaction(dbTransaction)
+      async (dbTransaction) => {
+        setTransaction(dbTransaction as TransactionPrisma)
         const {
           tokens: { sTAN, sUSG },
         } = await getAddressesJson()
@@ -81,6 +82,7 @@ function setUpIndexerGlobalData() {
   const wStableRepository = new WStableRepository(prismaClient)
   const totalSupplyRepository = new TotalSupplyRepository(prismaClient)
   const globalHistoryDataRepository = new GlobalHistoryDataRepository(prismaClient)
+  const pegMonitoredTokenRepository = new PegMonitoredTokenRepository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
     erc20Repository.setClient(dbTransaction)
@@ -91,6 +93,7 @@ function setUpIndexerGlobalData() {
     wStableRepository.setClient(dbTransaction)
     totalSupplyRepository.setClient(dbTransaction)
     globalHistoryDataRepository.setClient(dbTransaction)
+    pegMonitoredTokenRepository.setClient(dbTransaction)
   }
 
   const globalDataService = new GlobalDataService(
@@ -102,7 +105,8 @@ function setUpIndexerGlobalData() {
     keeperRepository,
     wStableRepository,
     globalHistoryDataRepository,
-    marketContractsRepository
+    marketContractsRepository,
+    pegMonitoredTokenRepository
   )
   const totalSupplyRepo = new TotalSupplyRepository(prismaClient)
   const savingAccountService = new SavingAccountServices(savingAccountRepository)

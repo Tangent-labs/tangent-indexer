@@ -17,8 +17,8 @@ async function main() {
 
   try {
     await prismaClient.$transaction(
-      async (dbTransaction: TransactionPrisma) => {
-        setTransaction(dbTransaction)
+      async (dbTransaction) => {
+        setTransaction(dbTransaction as TransactionPrisma)
 
         const { blockNumber, blockDate } = await getLastBlock(providers[0])
         const state = await predepositCampaignService.getPredepositState()

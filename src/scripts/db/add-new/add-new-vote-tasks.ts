@@ -7,8 +7,8 @@ import { CURVE_GAUGE_URL } from "../config/config_vote_tasks.js"
 const prisma = new PrismaClient()
 
 async function main() {
-  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    await addCurveGaugeVoteTask(tx, [
+  await prisma.$transaction(async (tx) => {
+    await addCurveGaugeVoteTask(tx as TransactionPrisma, [
       {
         taskDescription: "crvUSD/frxUSD on veCRV gauge",
         name: "crvUSD/frxUSD",

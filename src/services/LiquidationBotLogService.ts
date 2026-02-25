@@ -152,9 +152,31 @@ export class LiquidationBotLogService {
   }
 
   async logLiquidationExecution(data: LiquidationUserInInfo | null, context: LiquidationExecutionContext, executionResult?: LiquidationExecutionResult) {
-    const action: LiquidationBotLogAction = "liquidation_execution"
-    const logData = executionResult ? { ...data, executionResult } : data
-    await this._logAction(action, context, logData)
+    await this.liquidationBotLogRepository.insertLiquidationExecution({
+      execution_key: context.executionKey,
+      market: (data?.market as string) ?? "",
+      borrower: (data?.account as string) ?? "",
+      type: "liquidation",
+      success: true,
+      repaid_amount: executionResult?.repaidAmount?.toString() ?? null,
+      fee: executionResult?.fee?.toString() ?? null,
+      collateral_liquidated: executionResult?.collateralLiquidated?.toString() ?? null,
+      debt_shares: executionResult?.debtShares?.toString() ?? null,
+      liquidator: executionResult?.liquidator ?? null,
+      profit: executionResult?.liquidationProfit?.toString() ?? null,
+      tx_hash: executionResult?.transactionHash ?? null,
+    })
+  }
+
+  async logLiquidationExecutionError(context: LiquidationExecutionContext, error: Error, account?: { account?: AddressLike; market?: AddressLike }) {
+    await this.liquidationBotLogRepository.insertLiquidationExecution({
+      execution_key: context.executionKey,
+      market: (account?.market as string) ?? "",
+      borrower: (account?.account as string) ?? "",
+      type: "liquidation",
+      success: false,
+      error_message: error.message?.slice(0, 500) ?? null,
+    })
   }
 
   async logEndExecution(context: LiquidationExecutionContext) {
@@ -162,8 +184,25 @@ export class LiquidationBotLogService {
     await this._logAction(action, context, null)
   }
 
-  async logLiquidationBadDebtExecution(data: LiquidationUserInfo | null, context: LiquidationExecutionContext) {
-    const action: LiquidationBotLogAction = "liquidation_bad_debt_execution"
-    await this._logAction(action, context, data)
+  async logLiquidationBadDebtExecution(data: LiquidationUserInfo | null, context: LiquidationExecutionContext, txHash?: string) {
+    await this.liquidationBotLogRepository.insertLiquidationExecution({
+      execution_key: context.executionKey,
+      market: (data?.market as string) ?? "",
+      borrower: (data?.account as string) ?? "",
+      type: "seizing",
+      success: true,
+      tx_hash: txHash ?? null,
+    })
+  }
+
+  async logLiquidationBadDebtExecutionError(context: LiquidationExecutionContext, error: Error, account?: { account?: AddressLike; market?: AddressLike }) {
+    await this.liquidationBotLogRepository.insertLiquidationExecution({
+      execution_key: context.executionKey,
+      market: (account?.market as string) ?? "",
+      borrower: (account?.account as string) ?? "",
+      type: "seizing",
+      success: false,
+      error_message: error.message?.slice(0, 500) ?? null,
+    })
   }
 }

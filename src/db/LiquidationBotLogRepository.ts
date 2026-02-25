@@ -7,4 +7,10 @@ export class LiquidationBotLogRepository extends AbstractRepository {
       data,
     })
   }
+
+  async insertLiquidationExecution(data: Prisma.liquidation_executionCreateInput) {
+    await this.prismaClient.liquidation_execution.create({
+      data,
+    })
+  }
 }

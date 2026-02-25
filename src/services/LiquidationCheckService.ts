@@ -1,12 +1,18 @@
-import { AddressLike, JsonRpcProvider } from "ethers"
+import { AddressLike, formatEther, formatUnits, JsonRpcProvider, parseEther } from "ethers"
 import { Queue, type Queue as BullQueue } from "bullmq"
 import { LiquidationService } from "./LiquidationService.js"
 import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
 import { LiquidationBotLogService } from "./LiquidationBotLogService.js"
-import { LiquidationBotLogAction, LiquidationUserInInfo, SerializedLiquidationUserFullInfo } from "../type/data.js"
+import { LiquidationBotLogAction, LiquidationMarketAccountOutInfo, LiquidationUserInInfo, SerializedLiquidationUserFullInfo } from "../type/data.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 import { prepareSerialize } from "../utils/jsonSerializer.js"
-import { indexerConfig } from "../config/indexer_config.js"
+import { liquidationConfig } from "../config/liquidation_config.js"
+import { PositionSnapshotRepository } from "../db/PositionSnapshotRepository.js"
+import { MarketConfigRepository } from "../db/MarketConfigRepository.js"
+import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
+
+const DENOMINATOR = 100_000n
+const ONE_DAY_IN_MSECONDS = 24 * 60 * 60 * 1000
 
 export class CheckLiquidationService {
   private liquidationService: LiquidationService
@@ -15,6 +21,9 @@ export class CheckLiquidationService {
   private telegramNotifierService: TelegramNotifierService
   private providers: JsonRpcProvider[]
   private liquidatorQueue: BullQueue<SerializedLiquidationUserFullInfo>
+  private positionSnapshotRepository: PositionSnapshotRepository
+  private marketConfigRepository: MarketConfigRepository
+  private marketContractsRepository: MarketContractsRepository
   public marketViewerAddress?: string
 
   constructor(
@@ -22,26 +31,32 @@ export class CheckLiquidationService {
     context: LiquidationExecutionContext,
     liquidationBotService: LiquidationBotLogService,
     telegramNotifierService: TelegramNotifierService,
-    providers: JsonRpcProvider[]
+    providers: JsonRpcProvider[],
+    positionSnapshotRepository: PositionSnapshotRepository,
+    marketConfigRepository: MarketConfigRepository,
+    marketContractsRepository: MarketContractsRepository
   ) {
     this.liquidationService = liquidationService
     this.context = context
     this.liquidationBotService = liquidationBotService
     this.telegramNotifierService = telegramNotifierService
     this.providers = providers
+    this.positionSnapshotRepository = positionSnapshotRepository
+    this.marketConfigRepository = marketConfigRepository
+    this.marketContractsRepository = marketContractsRepository
 
     // Validate liquidation queue Redis configuration before creating the queue
-    if (!indexerConfig?.liquidationQueueRedis?.trim()) {
+    if (!liquidationConfig?.queueRedis?.trim()) {
       throw new Error("LIQUIDATION_QUEUE_REDIS is not configured. Please set the LIQUIDATION_QUEUE_REDIS environment variable.")
     }
 
     this.liquidatorQueue = new Queue<SerializedLiquidationUserFullInfo>("liquidatorQueue", {
-      connection: indexerConfig.liquidationQueueRedis as any, // BullMQ accepts connection string
+      connection: liquidationConfig.queueRedis as any, // BullMQ accepts connection string
       defaultJobOptions: {
-        attempts: indexerConfig.liquidationQueue.attempts,
+        attempts: liquidationConfig.queue.attempts,
         backoff: {
-          type: indexerConfig.liquidationQueue.backoff.type,
-          delay: indexerConfig.liquidationQueue.backoff.delay,
+          type: "fixed",
+          delay: liquidationConfig.queue.backoff.delay,
         },
         removeOnComplete: true, // Remove completed jobs
         removeOnFail: false, // Keep failed jobs for inspection
@@ -83,7 +98,15 @@ export class CheckLiquidationService {
         return
       }
 
-      // Count accounts with debt
+      // Save position snapshots and market config (non-blocking for liquidation flow)
+      if (this.context.isDbAlive) {
+        try {
+          await this.saveSnapshotsAndConfig(onChainData, borrowers)
+        } catch (e) {
+          await this.liquidationBotService.logError(currentAction, e as Error, this.context, {}, false)
+          console.warn("Failed to save position snapshots/market config:", (e as Error).message)
+        }
+      }
 
       currentAction = "liquidation_analysis"
       const { seizingList, liquidationList } = await this.liquidationService.analyzeLiquidation(onChainData, borrowers)
@@ -145,10 +168,10 @@ export class CheckLiquidationService {
         await this.liquidatorQueue.add("liquidation", serializedAction, {
           jobId,
           priority,
-          attempts: indexerConfig.liquidationQueue.attempts,
+          attempts: liquidationConfig.queue.attempts,
           backoff: {
-            type: indexerConfig.liquidationQueue.backoff.type,
-            delay: indexerConfig.liquidationQueue.backoff.delay,
+            type: "fixed",
+            delay: liquidationConfig.queue.backoff.delay,
           },
           removeOnComplete: true, // Remove completed jobs
           removeOnFail: false, // Keep failed jobs for inspection
@@ -166,6 +189,124 @@ export class CheckLiquidationService {
       // Close the queue connection to allow the process to exit
       await this.liquidatorQueue.close()
     }
+  }
+
+  private async saveSnapshotsAndConfig(onChainData: LiquidationMarketAccountOutInfo, borrowers: LiquidationUserInInfo[]) {
+    const dbMarkets = await this.marketContractsRepository.getContracts()
+    const marketAddressToId = new Map(dbMarkets.map((m) => [m.contract_address.toLowerCase(), m.id]))
+    const now = new Date(Number(onChainData.blockTimestamp) * 1000)
+
+    const snapshots = this.computePositionSnapshots(onChainData, borrowers, marketAddressToId, now)
+    if (snapshots) await this.saveSnapshotsWithDedup(snapshots)
+    await this.saveMarketConfigIfStale(onChainData, marketAddressToId, now)
+  }
+
+  private computePositionSnapshots(
+    onChainData: LiquidationMarketAccountOutInfo,
+    borrowers: LiquidationUserInInfo[],
+    marketAddressToId: Map<string, bigint>,
+    now: Date
+  ) {
+    return onChainData.accounts
+      .map((accountData, index) => {
+        const borrower = borrowers[index]
+        if (!borrower) return null
+        const marketId = marketAddressToId.get((accountData.market as string).toLowerCase())
+        if (!marketId) return null
+
+        const market = onChainData.markets.find((m) => (m.market as string).toLowerCase() === (accountData.market as string).toLowerCase())
+
+        const userDebt = accountData.userDebt
+        const positionValue = accountData.positionValue
+        const collateralBalance = accountData.collateralBalance
+
+        // LTV scaled by DENOMINATOR (100_000) for BigInt precision
+        const ltvScaled = positionValue === 0n ? 0n : (userDebt * DENOMINATOR) / positionValue
+        const ltv = Number(formatUnits(ltvScaled, 5))
+
+        // CR (collateral ratio, inverse of LTV) — when debt=0, CR is Infinity
+        const cr = userDebt === 0n ? 0 : Number(formatEther((positionValue * parseEther("1")) / userDebt))
+
+        // Margin: distance from liquidation threshold (positive = safe)
+        const liquidationThreshold = market?.liquidationThreshold ?? 0n
+        const margin = Number(formatUnits(liquidationThreshold - ltvScaled, 5))
+
+        const healthRatio = Number(formatEther(accountData.healthRatio))
+
+        // Liquidation price & distance
+        let liquidationPrice = 0
+        let distancePct = 0
+
+        if (market && collateralBalance > 0n && userDebt > 0n) {
+          const oracleScale = 10n ** market.oracleDecimals
+
+          // Price at which position becomes liquidatable
+          const liqPriceBigInt = (userDebt * oracleScale * DENOMINATOR) / (collateralBalance * liquidationThreshold)
+          liquidationPrice = Number(formatUnits(liqPriceBigInt, market.oracleDecimals))
+
+          const currentPrice = Number(formatUnits(market.collateralUSDPrice, market.oracleDecimals))
+          if (currentPrice > 0) {
+            distancePct = ((currentPrice - liquidationPrice) / currentPrice) * 100
+          }
+        }
+
+        return {
+          market_id: marketId,
+          borrower_address: (borrower.account as string).toLowerCase(),
+          collateral_balance: Number(formatEther(collateralBalance)),
+          position_value_usd: Number(formatEther(positionValue)),
+          user_debt: Number(formatEther(userDebt)),
+          ltv,
+          cr,
+          margin,
+          health_ratio: healthRatio,
+          liquidation_price: liquidationPrice,
+          distance_pct: distancePct,
+          snapshot_timestamp: now,
+        }
+      })
+      .filter((s) => s !== null)
+  }
+
+  private async saveSnapshotsWithDedup(snapshots: ReturnType<typeof this.computePositionSnapshots>) {
+    const latestSnapshots = await this.positionSnapshotRepository.getLatestSnapshotsWithin24h()
+    const latestMap = new Map(latestSnapshots.map((s) => [`${s.market_id}-${s.borrower_address}`, s]))
+
+    const changedSnapshots = snapshots.filter((s) => {
+      const key = `${s.market_id}-${s.borrower_address}`
+      const prev = latestMap.get(key)
+      if (!prev) return true
+      return (
+        Math.abs(prev.user_debt - (s.user_debt as number)) > liquidationConfig.snapshotTolerance ||
+        Math.abs(prev.position_value_usd - (s.position_value_usd as number)) > liquidationConfig.snapshotTolerance
+      )
+    })
+
+    await this.positionSnapshotRepository.saveSnapshots(changedSnapshots)
+  }
+
+  // Save market config at most once per 24 hours
+  private async saveMarketConfigIfStale(onChainData: LiquidationMarketAccountOutInfo, marketAddressToId: Map<string, bigint>, now: Date) {
+    const lastUpdate = await this.marketConfigRepository.getLastUpdateDate()
+    if (lastUpdate?.last_update && !(now.getTime() - lastUpdate.last_update.getTime() > ONE_DAY_IN_MSECONDS)) {
+      return
+    }
+
+    const marketConfigs = onChainData.markets
+      .map((m) => {
+        const marketId = marketAddressToId.get((m.market as string).toLowerCase())
+        if (!marketId) return null
+        return {
+          market_id: marketId,
+          max_ltv: Number(formatUnits(m.maxLTV, 5)),
+          liquidation_threshold: Number(formatUnits(m.liquidationThreshold, 5)),
+          max_debt: Number(formatEther(m.maxMarketDebt)),
+          last_update: now,
+        }
+      })
+      .filter((c) => c !== null)
+
+    await this.marketConfigRepository.saveMarketConfigs(marketConfigs)
   }
 
   /**

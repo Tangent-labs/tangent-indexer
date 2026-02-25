@@ -39,35 +39,35 @@ const mockProposals: Proposal[] = [
     excludedVoters: excludedVoters2,
   },
 ]
-
+const date = new Date()
 const mockVotes: ValidatedVotes[] = [
   {
     taskId: 2n,
     voterAddress: usr1,
     votingPower: 1234,
     proposalId: "proposalIdOne",
-    date: new Date(),
+    date,
   },
   {
     taskId: 3n,
     voterAddress: usr2,
     votingPower: 4567,
     proposalId: "proposalIdOne",
-    date: new Date(),
+    date,
   },
   {
     taskId: 3n,
     voterAddress: usr3,
     votingPower: 4567,
     proposalId: "proposalIdOne",
-    date: new Date(),
+    date,
   },
   {
     taskId: 4n,
     voterAddress: usr4,
     votingPower: 300000,
     proposalId: "proposalIdTwo",
-    date: new Date(),
+    date,
   },
 ]
 

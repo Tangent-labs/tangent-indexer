@@ -132,4 +132,92 @@ export class GlobalDataRepository extends AbstractRepository {
     }
     return map
   }
+
+  // ---- ORACLE SANITY SNAPSHOTS ----
+
+  async fetchLastOracleSanityTime() {
+    const last = await this.prismaClient.oracle_sanity_snapshots.findFirst({
+      orderBy: { timestamp: "desc" },
+    })
+    return last?.timestamp
+  }
+
+  async insertOracleSanitySnapshots(data: Prisma.oracle_sanity_snapshotsCreateManyInput[]) {
+    if (data.length === 0) return
+    await this.prismaClient.oracle_sanity_snapshots.createMany({
+      data,
+    })
+  }
+
+  async updateOracleSanitySnapshots(rows: Prisma.oracle_sanity_snapshotsCreateManyInput[], previousDate: Date) {
+    if (rows.length === 0) return
+    const columns = ["timestamp", "market_id", "oracle_price", "offchain_price", "deviation_pct"]
+    const values = rows.map((_, i) => `(${columns.map((_, j) => `$${i * columns.length + j + 1}`).join(", ")})`).join(", ")
+    const params = rows.flatMap((row) => [previousDate, row.market_id, row.oracle_price, row.offchain_price, row.deviation_pct])
+
+    await this.prismaClient.$executeRawUnsafe(
+      `
+    UPDATE global."oracle_sanity_snapshots" AS m SET
+      oracle_price = v.oracle_price,
+      offchain_price = v.offchain_price,
+      deviation_pct = v.deviation_pct
+    FROM (VALUES
+      ${values}
+    ) AS v(
+      timestamp,
+      market_id,
+      oracle_price,
+      offchain_price,
+      deviation_pct
+    )
+    WHERE m.market_id = v.market_id
+      AND m.timestamp = v.timestamp
+    `,
+      ...params
+    )
+  }
+
+  // ---- PEG SANITY SNAPSHOTS ----
+
+  async fetchLastPegSanityTime() {
+    const last = await this.prismaClient.peg_sanity_snapshots.findFirst({
+      orderBy: { timestamp: "desc" },
+    })
+    return last?.timestamp
+  }
+
+  async insertPegSanitySnapshots(data: Prisma.peg_sanity_snapshotsCreateManyInput[]) {
+    if (data.length === 0) return
+    await this.prismaClient.peg_sanity_snapshots.createMany({
+      data,
+    })
+  }
+
+  async updatePegSanitySnapshots(rows: Prisma.peg_sanity_snapshotsCreateManyInput[], previousDate: Date) {
+    if (rows.length === 0) return
+    const columns = ["timestamp", "token_id", "price", "ref_price", "deviation_pct"]
+    const values = rows.map((_, i) => `(${columns.map((_, j) => `$${i * columns.length + j + 1}`).join(", ")})`).join(", ")
+    const params = rows.flatMap((row) => [previousDate, row.token_id, row.price, row.ref_price, row.deviation_pct])
+
+    await this.prismaClient.$executeRawUnsafe(
+      `
+    UPDATE global."peg_sanity_snapshots" AS m SET
+      price = v.price,
+      ref_price = v.ref_price,
+      deviation_pct = v.deviation_pct
+    FROM (VALUES
+      ${values}
+    ) AS v(
+      timestamp,
+      token_id,
+      price,
+      ref_price,
+      deviation_pct
+    )
+    WHERE m.token_id = v.token_id
+      AND m.timestamp = v.timestamp
+    `,
+      ...params
+    )
+  }
 }

@@ -4,6 +4,9 @@ import { AddressLike, JsonRpcProvider } from "ethers"
 import { PrismaClient } from "@prisma/client"
 import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
 import { LiquidationBotLogRepository } from "../../db/LiquidationBotLogRepository.js"
+import { PositionSnapshotRepository } from "../../db/PositionSnapshotRepository.js"
+import { MarketConfigRepository } from "../../db/MarketConfigRepository.js"
+import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
 import { LiquidationBotLogService } from "../../services/LiquidationBotLogService.js"
 import { LiquidationService } from "../../services/LiquidationService.js"
 import { LiquidationExecutionContext } from "../../services/LiquidationExecutionContext.js"
@@ -37,14 +40,15 @@ vi.mock("config/indexer_setup", () => ({
     handleError: vi.fn(),
   })),
 }))
-vi.mock("config/indexer_config", () => ({
-  indexerConfig: {
-    liquidationQueueRedis: "redis://localhost:6379",
-    liquidationQueue: {
+vi.mock("config/liquidation_config", () => ({
+  liquidationConfig: {
+    snapshotTolerance: 0.001,
+    queueRedis: "redis://localhost:6379",
+    queue: {
       attempts: 10,
       backoff: {
-        type: "exponential",
-        delay: 5000,
+        type: "fixed",
+        delay: 12_000,
       },
     },
   },
@@ -77,6 +81,9 @@ describe("CheckLiquidationService", () => {
   let mockProviders: JsonRpcProvider[]
   let checkLiquidationService: CheckLiquidationService
   let mockTelegramNotifierService: TelegramNotifierService
+  let mockPositionSnapshotRepository: PositionSnapshotRepository
+  let mockMarketConfigRepository: MarketConfigRepository
+  let mockMarketContractsRepository: MarketContractsRepository
 
   beforeEach(() => {
     // Reset all mocks
@@ -118,6 +125,8 @@ describe("CheckLiquidationService", () => {
     vi.spyOn(mockLiquidationService, "getOnchainData").mockResolvedValue({
       markets: [],
       accounts: [],
+      blockNumber: 0n,
+      blockTimestamp: 0n,
     })
     vi.spyOn(mockLiquidationService, "analyzeLiquidation").mockResolvedValue({
       seizingList: [],
@@ -136,12 +145,24 @@ describe("CheckLiquidationService", () => {
     vi.spyOn(mockTelegramNotifierService, "sendMessage").mockResolvedValue(true)
 
     // Create service instance
+    mockPositionSnapshotRepository = new PositionSnapshotRepository({} as PrismaClient)
+    mockMarketConfigRepository = new MarketConfigRepository({} as PrismaClient)
+    mockMarketContractsRepository = new MarketContractsRepository({} as PrismaClient)
+    vi.spyOn(mockPositionSnapshotRepository, "saveSnapshots").mockResolvedValue(undefined)
+    vi.spyOn(mockPositionSnapshotRepository, "getLatestSnapshotsWithin24h").mockResolvedValue([])
+    vi.spyOn(mockMarketConfigRepository, "saveMarketConfigs").mockResolvedValue(undefined)
+    vi.spyOn(mockMarketConfigRepository, "getLastUpdateDate").mockResolvedValue(null)
+    vi.spyOn(mockMarketContractsRepository, "getContracts").mockResolvedValue([])
+
     checkLiquidationService = new CheckLiquidationService(
       mockLiquidationService,
       mockContext,
       mockLiquidationBotLogService,
       mockTelegramNotifierService,
-      mockProviders
+      mockProviders,
+      mockPositionSnapshotRepository,
+      mockMarketConfigRepository,
+      mockMarketContractsRepository
     )
   })
 
@@ -321,6 +342,198 @@ describe("CheckLiquidationService", () => {
           removeOnFail: false,
         })
       )
+    })
+  })
+
+  describe("saveSnapshotsAndConfig", () => {
+    const MARKET_ADDRESS = "0xMarket1"
+    const MARKET_ID = 1n
+
+    const onChainData = {
+      markets: [
+        {
+          market: MARKET_ADDRESS,
+          maxLTV: 75_000n,
+          liquidationThreshold: 80_000n,
+          collateralUSDPrice: 1000n * DECIMALS,
+          oracleDecimals: 18n,
+          collatToken: "0xCollat1",
+          maxMarketDebt: 500_000n * DECIMALS,
+        },
+      ],
+      accounts: [
+        {
+          market: MARKET_ADDRESS,
+          healthRatio: 2n * 10n ** 18n,
+          userDebt: 400n * DECIMALS,
+          positionValue: 1000n * DECIMALS,
+          collateralBalance: 1n * DECIMALS,
+        },
+      ],
+    }
+
+    const borrowers = [{ account: "0xUser1", market: MARKET_ADDRESS }]
+
+    function setupOnChainMocks() {
+      vi.mocked(mockMarketContractsRepository.getContracts).mockResolvedValue([{ id: MARKET_ID, contract_address: MARKET_ADDRESS } as any])
+      vi.mocked(mockLiquidationService.getOnchainData).mockResolvedValue(onChainData as any)
+      vi.mocked(mockLiquidationService.getLiquidationParams).mockResolvedValue({
+        markets: [MARKET_ADDRESS],
+        borrowers,
+      })
+    }
+
+    it("should compute and save position snapshots correctly", async () => {
+      setupOnChainMocks()
+
+      await checkLiquidationService.run()
+
+      expect(mockPositionSnapshotRepository.saveSnapshots).toHaveBeenCalledWith([
+        expect.objectContaining({
+          market_id: MARKET_ID,
+          borrower_address: "0xuser1",
+          collateral_balance: 1,
+          position_value_usd: 1000,
+          user_debt: 400,
+          ltv: 0.4,
+          cr: 2.5,
+          margin: 0.4,
+          health_ratio: 2,
+          liquidation_price: 500,
+          distance_pct: 50,
+        }),
+      ])
+    })
+
+    it("should save market config when no previous update exists", async () => {
+      setupOnChainMocks()
+      vi.mocked(mockMarketConfigRepository.getLastUpdateDate).mockResolvedValue(null)
+
+      await checkLiquidationService.run()
+
+      expect(mockMarketConfigRepository.saveMarketConfigs).toHaveBeenCalledWith([
+        expect.objectContaining({
+          market_id: MARKET_ID,
+          max_ltv: 0.75,
+          liquidation_threshold: 0.8,
+          max_debt: 500_000,
+        }),
+      ])
+    })
+
+    it("should skip market config save when last update is recent", async () => {
+      setupOnChainMocks()
+      vi.mocked(mockMarketConfigRepository.getLastUpdateDate).mockResolvedValue({
+        last_update: new Date(),
+      })
+
+      await checkLiquidationService.run()
+
+      expect(mockPositionSnapshotRepository.saveSnapshots).toHaveBeenCalled()
+      expect(mockMarketConfigRepository.saveMarketConfigs).not.toHaveBeenCalled()
+    })
+
+    it("should not block liquidation flow on snapshot save failure", async () => {
+      vi.mocked(mockMarketContractsRepository.getContracts).mockRejectedValue(new Error("DB error"))
+      vi.mocked(mockLiquidationService.getOnchainData).mockResolvedValue(onChainData as any)
+      vi.mocked(mockLiquidationService.getLiquidationParams).mockResolvedValue({
+        markets: [MARKET_ADDRESS],
+        borrowers,
+      })
+
+      await checkLiquidationService.run()
+
+      expect(mockLiquidationService.analyzeLiquidation).toHaveBeenCalled()
+    })
+
+    it("should deduplicate snapshots when values change less than tolerance", async () => {
+      setupOnChainMocks()
+      vi.mocked(mockPositionSnapshotRepository.getLatestSnapshotsWithin24h).mockResolvedValue([
+        {
+          market_id: MARKET_ID,
+          borrower_address: "0xuser1",
+          user_debt: 400,
+          position_value_usd: 1000,
+        } as any,
+      ])
+
+      await checkLiquidationService.run()
+
+      // Same values → filtered out by dedup
+      expect(mockPositionSnapshotRepository.saveSnapshots).toHaveBeenCalledWith([])
+    })
+
+    it("should persist snapshot when user_debt changes beyond tolerance", async () => {
+      setupOnChainMocks()
+      vi.mocked(mockPositionSnapshotRepository.getLatestSnapshotsWithin24h).mockResolvedValue([
+        {
+          market_id: MARKET_ID,
+          borrower_address: "0xuser1",
+          user_debt: 399, // diff = 1, well above tolerance of 0.001
+          position_value_usd: 1000,
+        } as any,
+      ])
+
+      await checkLiquidationService.run()
+
+      expect(mockPositionSnapshotRepository.saveSnapshots).toHaveBeenCalledWith([expect.objectContaining({ user_debt: 400 })])
+    })
+
+    it("should persist snapshot when position_value_usd changes beyond tolerance", async () => {
+      setupOnChainMocks()
+      vi.mocked(mockPositionSnapshotRepository.getLatestSnapshotsWithin24h).mockResolvedValue([
+        {
+          market_id: MARKET_ID,
+          borrower_address: "0xuser1",
+          user_debt: 400,
+          position_value_usd: 998, // diff = 2, above tolerance
+        } as any,
+      ])
+
+      await checkLiquidationService.run()
+
+      expect(mockPositionSnapshotRepository.saveSnapshots).toHaveBeenCalledWith([expect.objectContaining({ position_value_usd: 1000 })])
+    })
+
+    it("should persist snapshot when no previous snapshot exists (first time)", async () => {
+      setupOnChainMocks()
+      vi.mocked(mockPositionSnapshotRepository.getLatestSnapshotsWithin24h).mockResolvedValue([])
+
+      await checkLiquidationService.run()
+
+      expect(mockPositionSnapshotRepository.saveSnapshots).toHaveBeenCalledWith([expect.objectContaining({ borrower_address: "0xuser1" })])
+    })
+
+    it("should handle zero debt positions gracefully", async () => {
+      vi.mocked(mockMarketContractsRepository.getContracts).mockResolvedValue([{ id: MARKET_ID, contract_address: MARKET_ADDRESS } as any])
+      vi.mocked(mockLiquidationService.getOnchainData).mockResolvedValue({
+        markets: onChainData.markets,
+        accounts: [
+          {
+            market: MARKET_ADDRESS,
+            healthRatio: 0n,
+            userDebt: 0n,
+            positionValue: 1000n * DECIMALS,
+            collateralBalance: 1n * DECIMALS,
+          },
+        ],
+      } as any)
+      vi.mocked(mockLiquidationService.getLiquidationParams).mockResolvedValue({
+        markets: [MARKET_ADDRESS],
+        borrowers,
+      })
+
+      await checkLiquidationService.run()
+
+      expect(mockPositionSnapshotRepository.saveSnapshots).toHaveBeenCalledWith([
+        expect.objectContaining({
+          ltv: 0,
+          cr: 0,
+          health_ratio: 0,
+          liquidation_price: 0,
+          distance_pct: 0,
+        }),
+      ])
     })
   })
 })

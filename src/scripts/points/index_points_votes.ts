@@ -26,8 +26,8 @@ async function main() {
 
     const { bestProvider, lastEpochDate } = blockInfo
     await prismaClient.$transaction(
-      async (dbTransaction: TransactionPrisma) => {
-        setTransaction(dbTransaction)
+      async (dbTransaction) => {
+        setTransaction(dbTransaction as TransactionPrisma)
         // Retrieve the last block
         const now = await onChainVoteService.computeUserVoteTasks(bestProvider)
         const newEpochDate = onChainVoteService.verifyEpochFullyFinished(now, lastEpochDate)

@@ -12,9 +12,9 @@ async function main() {
   const provider = new JsonRpcProvider(process.env.CHAIN_RPCS!.split(",")[0])
   const now = new Date((await provider.getBlock("latest"))!.timestamp * 1000)
 
-  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    await addCurve_LPTasks(tx, "DOLA_sUSDS", "curveApi", "factory-crvUSD", now)
-    await addPendle_LP_PT_YTTasks(tx, "USDe 09/25/25", now)
+  await prisma.$transaction(async (tx: TransactionPrisma) => {
+    await addCurve_LPTasks(tx as TransactionPrisma, "DOLA_sUSDS", "curveApi", "factory-crvUSD", now)
+    await addPendle_LP_PT_YTTasks(tx as TransactionPrisma, "USDe 09/25/25", now)
   })
 }
 

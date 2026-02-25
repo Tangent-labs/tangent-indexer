@@ -27,7 +27,7 @@ import { BlockRepository } from "../db/BlockRepository.js"
 import { LiquidationBotLogService } from "./LiquidationBotLogService.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 import { parseEthersError } from "../utils/errorParser.js"
-import { indexerConfig } from "../config/indexer_config.js"
+import { liquidationConfig } from "../config/liquidation_config.js"
 import { getBestRpcProvider } from "../utils/getBestRpcProvider.js"
 import { RouterService } from "./RouterService.js"
 import { getAddressesJson } from "../utils/jsonReader.js"
@@ -217,6 +217,8 @@ export class LiquidationService {
       return {
         markets: d.markets.map((m) => (m as unknown as WithToObject<LiquidationMarketOutInfo>).toObject()),
         accounts: d.accounts.map((a, index) => ({ ...(a as unknown as WithToObject<LiquidationAccountOutInfo>).toObject(), callIndex, index })),
+        blockNumber: d.blockNumber,
+        blockTimestamp: d.blockTimestamp,
       }
     })
 
@@ -255,7 +257,11 @@ export class LiquidationService {
       return undefined
     }
 
-    return { markets: marketsResult, accounts: finalAccountsResult as LiquidationAccountOutInfo[] }
+    const validDatas = datas.filter((d) => d !== undefined)
+    const blockNumber = validDatas.reduce<bigint>((max, d) => (d.blockNumber > max ? d.blockNumber : max), 0n)
+    const blockTimestamp = validDatas.find((d) => d.blockNumber === blockNumber)?.blockTimestamp ?? 0n
+
+    return { markets: marketsResult, accounts: finalAccountsResult as LiquidationAccountOutInfo[], blockNumber, blockTimestamp }
   }
 
   /**
@@ -352,7 +358,7 @@ export class LiquidationService {
    */
   private calculateMinCollatValueToLiquidate(account: LiquidationUserFullInfo): bigint {
     const bpsDenominator = 10_000n
-    const protectionBps = BigInt(indexerConfig.liquidationLimits.oraclePriceProtectionBps)
+    const protectionBps = BigInt(liquidationConfig.limits.oraclePriceProtectionBps)
     const protectionMultiplier = bpsDenominator - protectionBps // e.g., 10000 - 150 = 9850 for 1.5% protection
 
     // Get collateral USD price (required for calculation)
@@ -391,11 +397,12 @@ export class LiquidationService {
       const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
       const tx = await marketContract.seizeCollateral(account.account, { nonce: currentNonce })
       await tx.wait() // Wait for the transaction to be mined
-      await this.liquidationBotService?.logLiquidationBadDebtExecution(account, loggedContext)
+      await this.liquidationBotService?.logLiquidationBadDebtExecution(account, loggedContext, tx.hash)
       return tx
     } catch (error) {
       this.errors.push({ action: "liquidation_bad_debt_execution", message: (error as Error)?.message.slice(0, 100), market: account.market as string })
       await this.liquidationBotService?.logError("liquidation_bad_debt_execution", error as Error, loggedContext, { account }, false)
+      await this.liquidationBotService?.logLiquidationBadDebtExecutionError(loggedContext, error as Error, account)
       // Re-throw the error so the job is retried by the queue
       throw error
     }
@@ -464,6 +471,7 @@ export class LiquidationService {
         },
         false
       )
+      await this.liquidationBotService?.logLiquidationExecutionError(loggedContext, error as Error, normalizedAccount)
       // Re-throw the error so the job is retried by the queue
       throw error
     }
@@ -484,6 +492,7 @@ export class LiquidationService {
         { account: normalizedAccount, step: "no_route" },
         false
       )
+      await this.liquidationBotService?.logLiquidationExecutionError(loggedContext, error, normalizedAccount)
       // Don't throw - route not found is a permanent failure that won't succeed on retry
       return
     }
@@ -557,6 +566,7 @@ export class LiquidationService {
           error,
           step: "liquidate",
         })
+        await this.liquidationBotService?.logLiquidationExecutionError(loggedContext, error as Error, normalizedAccount)
         // Store the error for later re-throwing if all transactions fail
         errors.push(error as Error)
       }
@@ -710,7 +720,7 @@ export class LiquidationService {
 
     // For Curve routes with high price impact, try to split the liquidation
     // Note: Split routes are only supported for Curve, not Pendle
-    if (routerType === "curve" && priceImpact > indexerConfig.liquidationLimits.maxPriceImpact) {
+    if (routerType === "curve" && priceImpact > liquidationConfig.limits.maxPriceImpact) {
       const splittedRoutes = await this.routerService.getBestSplitCurveRoutes(account, providerIndex)
       if (splittedRoutes) {
         const {

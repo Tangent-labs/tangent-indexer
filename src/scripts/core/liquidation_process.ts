@@ -10,6 +10,7 @@ import { LiquidationService } from "../../services/LiquidationService.js"
 import { LiquidationBotLogService } from "../../services/LiquidationBotLogService.js"
 
 import { indexerConfig } from "../../config/indexer_config.js"
+import { liquidationConfig } from "../../config/liquidation_config.js"
 import { LiquidationExecutionContext } from "../../services/LiquidationExecutionContext.js"
 import { setUpIndexer } from "../../config/indexer_setup.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
@@ -20,6 +21,18 @@ import { RouterService } from "../../services/RouterService.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
 
 dotenv.config()
+
+const BLOCK_TIME = 12_000
+
+/**
+ * Custom backoff strategy aligned with block times.
+ * Retries at increasing block multiples: 1, 1, 2, 2, 3, 4, 5, 8, 10, 15 blocks.
+ */
+function blockAlignedBackoff(attemptsMade: number): number {
+  const blockMultipliers = [1, 1, 2, 2, 3, 4, 5, 8, 10, 15]
+  const blocks = blockMultipliers[attemptsMade - 1] ?? 15
+  return blocks * BLOCK_TIME
+}
 
 const { providers, walletsPks, handleError } = setUpIndexer()
 const { liquidationService, context, telegramNotifierService } = await setUpLiquidationProcessServices()
@@ -129,7 +142,7 @@ async function main() {
   console.log("Starting liquidation process queue worker...")
 
   // Validate liquidation queue Redis configuration
-  if (!indexerConfig.liquidationQueueRedis || indexerConfig.liquidationQueueRedis.trim() === "") {
+  if (!liquidationConfig.queueRedis || liquidationConfig.queueRedis.trim() === "") {
     const error = new Error("LIQUIDATION_QUEUE_REDIS is not configured. Please set the LIQUIDATION_QUEUE_REDIS environment variable.")
     console.error(error.message)
     await telegramNotifierService.sendError(`Liquidation Process Error: ${error.message}`)
@@ -137,13 +150,13 @@ async function main() {
   }
 
   const liquidatorQueue = new Queue<SerializedLiquidationUserFullInfo>("liquidatorQueue", {
-    connection: indexerConfig.liquidationQueueRedis as any, // BullMQ accepts connection string
+    connection: liquidationConfig.queueRedis as any, // BullMQ accepts connection string
     defaultJobOptions: {
       // Removed invalid lockDuration and lockRenewTime properties
-      attempts: indexerConfig.liquidationQueue.attempts,
+      attempts: liquidationConfig.queue.attempts,
       backoff: {
-        type: indexerConfig.liquidationQueue.backoff.type,
-        delay: indexerConfig.liquidationQueue.backoff.delay,
+        type: liquidationConfig.queue.backoff.type,
+        delay: liquidationConfig.queue.backoff.delay,
       },
       removeOnComplete: true, // Remove completed jobs
       removeOnFail: false, // Keep failed jobs for inspection
@@ -265,10 +278,13 @@ async function main() {
         })
       },
       {
-        connection: indexerConfig.liquidationQueueRedis as any, // BullMQ accepts connection string
+        connection: liquidationConfig.queueRedis as any, // BullMQ accepts connection string
         concurrency: 1, // 1 job at a time per worker
         lockDuration: 10 * 60 * 1000, // 10 minutes lock duration (liquidations can take time)
         lockRenewTime: 30 * 1000, // Renew lock every 30 seconds to prevent expiration
+        settings: {
+          backoffStrategy: blockAlignedBackoff,
+        },
       }
     )
 
