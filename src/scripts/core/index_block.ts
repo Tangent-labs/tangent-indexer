@@ -86,7 +86,10 @@ async function main() {
           }
           const transferLogs = await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch)
 
-          const savingAccountsLogs = await getSavingAccountLogs(bestProvider, startBlock, endBlock, [addresses.tokens.sUSG, addresses.tokens.sTAN])
+          const savingAccountsLogs = await getSavingAccountLogs(bestProvider, startBlock, endBlock, [
+            addresses.tokens.sUSG,
+            // addresses.tokens.sTAN
+          ])
           const savingAccountsBlockIds = savingAccountsLogs.map((log) => log.block_id)
           // Parse events with their proper topics and group all user events to update active borrowers
           const { activeBorrowActions, sortedAndParsedEvents, blockIds, users, debtSharesCheckpoints } = userMarketService.sortUserMarketLogs(
