@@ -163,7 +163,7 @@ describe("SavingAccountServices", () => {
 
       // Act
       const nowBC = new Date()
-      await savingAccountService.processSavingAccountApy(mockGlobalRepo, nowBC, "0xTAN", "0xUSG")
+      await savingAccountService.processSavingAccountApy(mockGlobalRepo, nowBC, "0xTAN")
 
       // Assert
       expect(mockSavingAccountRepository.findEventsAfterDate).toHaveBeenCalledTimes(1)
@@ -200,7 +200,7 @@ describe("SavingAccountServices", () => {
       } as any
 
       // Act
-      await savingAccountService.processSavingAccountApy(mockGlobalRepo, nowBC, tanAddress, usgAddress)
+      await savingAccountService.processSavingAccountApy(mockGlobalRepo, nowBC, tanAddress)
 
       // Assert
       expect(mockSavingAccountRepository.findEventsAfterDate).toHaveBeenCalledTimes(1)
@@ -251,7 +251,7 @@ describe("SavingAccountServices", () => {
       } as any
 
       // Act
-      await savingAccountService.processSavingAccountApy(mockGlobalRepo, nowBC, tanAddress, usgAddress)
+      await savingAccountService.processSavingAccountApy(mockGlobalRepo, nowBC, tanAddress)
 
       // Assert
       expect(mockGlobalRepo.getGlobalIndicatorIds).toHaveBeenCalledTimes(1)
@@ -266,7 +266,6 @@ describe("SavingAccountServices", () => {
       const within7Days = new Date(nowBC.getTime() - 2 * 24 * 60 * 60 * 1000)
 
       const tanAddress = "0xTAN"
-      const usgAddress = "0xUSG"
 
       const events = [
         // Test with mixed case tokens
@@ -288,7 +287,7 @@ describe("SavingAccountServices", () => {
       } as any
 
       // Act
-      await savingAccountService.processSavingAccountApy(mockGlobalRepo, nowBC, tanAddress, usgAddress)
+      await savingAccountService.processSavingAccountApy(mockGlobalRepo, nowBC, tanAddress)
 
       // Assert
       expect(mockGlobalRepo.insertGlobalIndicatorValue).toHaveBeenCalledTimes(1)

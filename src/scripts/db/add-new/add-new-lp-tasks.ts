@@ -101,7 +101,7 @@ async function addCurve_LPTasks(prisma: TransactionPrisma, key: keyof typeof CUR
       protocol: "StakeDAO",
       token_address: ctx.stakeDaoVault.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
-      description: `Stake ${key} LP in StakeDAO gauge`,
+      description: `Stake ${key} LP in Stake DAO gauge`,
       url: "https://www.stakedao.org/yield",
       price_source_id: priceSources.find((p) => p.name.includes(key))!.id!,
       start_date: now,

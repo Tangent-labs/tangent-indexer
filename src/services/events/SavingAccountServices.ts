@@ -55,8 +55,9 @@ export class SavingAccountServices {
     const sUsgId = indicators.get("SAVING_APY_USG")
     // Check if all is ok
     if (
-      // !sTanId || 
-      !sUsgId) {
+      // !sTanId ||
+      !sUsgId
+    ) {
       throw new Error("SavingAccount: Missing indicator in  global_indicators")
     }
     // get the last APY date  or an old date if no data .
@@ -68,10 +69,11 @@ export class SavingAccountServices {
     // Only consider configured tokens (case-insensitive)
     const targetAddresses = [
       // sTanAddress.toLowerCase(),
-      sUSGAddress.toLowerCase()
+      sUSGAddress.toLowerCase(),
     ]
 
     const apys = new Map<string, number>()
+
     for (const target of targetAddresses) {
       const tokenEvents = processReportEvents.filter((ev) => ev.token.toLowerCase() === target)
       if (tokenEvents.length === 0) {
