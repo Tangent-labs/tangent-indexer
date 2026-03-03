@@ -31,7 +31,7 @@ export class SavingAccountServices {
     await this.savingAccountRepository.saveEvents(processReportEvents)
   }
 
-  async processSavingAccountApy(globalDataRepository: GlobalDataRepository, nowBC: Date, sTanAddress: string, sUSGAddress: string): Promise<void> {
+  async processSavingAccountApy(globalDataRepository: GlobalDataRepository, nowBC: Date, sUSGAddress: string): Promise<void> {
     if (!globalDataRepository) {
       throw new Error("SavingAccount: Missing globalDataRepository")
     }
@@ -42,7 +42,7 @@ export class SavingAccountServices {
         key: "SAVING_APY_USG",
         args: sUSGAddress,
       },
-      { key: "SAVING_APY_TAN", args: sTanAddress },
+      // { key: "SAVING_APY_TAN", args: sTanAddress },
     ]
 
     let indicators = await globalDataRepository.getGlobalIndicatorIds(globalIndicatorData)
@@ -51,10 +51,12 @@ export class SavingAccountServices {
       const newIndicators = await globalDataRepository.insertGlobalIndicator(notInsertedIndicators)
       indicators = new Map([...indicators, ...newIndicators])
     }
-    const sTanId = indicators.get("SAVING_APY_TAN")
+    // const sTanId = indicators.get("SAVING_APY_TAN")
     const sUsgId = indicators.get("SAVING_APY_USG")
     // Check if all is ok
-    if (!sTanId || !sUsgId) {
+    if (
+      // !sTanId || 
+      !sUsgId) {
       throw new Error("SavingAccount: Missing indicator in  global_indicators")
     }
     // get the last APY date  or an old date if no data .
@@ -64,7 +66,10 @@ export class SavingAccountServices {
     const processReportEvents = await this.savingAccountRepository.findEventsAfterDate(sevenDaysAgo)
 
     // Only consider configured tokens (case-insensitive)
-    const targetAddresses = [sTanAddress.toLowerCase(), sUSGAddress.toLowerCase()]
+    const targetAddresses = [
+      // sTanAddress.toLowerCase(),
+      sUSGAddress.toLowerCase()
+    ]
 
     const apys = new Map<string, number>()
     for (const target of targetAddresses) {
@@ -84,7 +89,7 @@ export class SavingAccountServices {
     // insert the DATA
 
     const addressToIndicatorId = new Map<string, bigint>([
-      [sTanAddress.toLowerCase(), sTanId as bigint],
+      // [sTanAddress.toLowerCase(), sTanId as bigint],
       [sUSGAddress.toLowerCase(), sUsgId as bigint],
     ])
 
