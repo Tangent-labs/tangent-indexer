@@ -5,24 +5,24 @@ import { AddressesJson } from "../../../type/data.js"
 
 export async function seedUSGContracts(prisma: PrismaClient | TransactionPrisma, addr: AddressesJson) {
   const now = new Date()
-  await prisma.wrapped_stable.createMany({
-    data: [
-      {
-        stable_name: "crvUSD",
-        creation_date: now,
-        is_active: true,
-        stable_address: COMMON_ERC20S.crvUSD.toLowerCase(),
-        address: addr.wStables.wcrvUSD.toLowerCase(),
-      },
-      {
-        stable_name: "USDe",
-        creation_date: now,
-        is_active: true,
-        stable_address: COMMON_ERC20S.USDe.toLowerCase(),
-        address: addr.wStables.wUSDe.toLowerCase(),
-      },
-    ],
-  })
+  // await prisma.wrapped_stable.createMany({
+  //   data: [
+  //     {
+  //       stable_name: "crvUSD",
+  //       creation_date: now,
+  //       is_active: true,
+  //       stable_address: COMMON_ERC20S.crvUSD.toLowerCase(),
+  //       address: addr.wStables.wcrvUSD.toLowerCase(),
+  //     },
+  //     {
+  //       stable_name: "USDe",
+  //       creation_date: now,
+  //       is_active: true,
+  //       stable_address: COMMON_ERC20S.USDe.toLowerCase(),
+  //       address: addr.wStables.wUSDe.toLowerCase(),
+  //     },
+  //   ],
+  // })
 
   await prisma.peg_keeper.createMany({
     data: [
