@@ -32,7 +32,7 @@ main()
  * 2. Creates four LP tasks:
  *    - Hold Curve LP tokens
  *    - Stake LP tokens in Curve gauge
- *    - Stake LP tokens in StakeDAO gauge
+ *    - Stake LP tokens in Stake DAO gauge
  *    - Stake LP tokens in Convex
  * 3. Adds tracked ERC-20 entries for all LP task tokens.
  * 4. Inserts an exclusion entry for the pool's Curve gauge into `lp_points_users_excluded`.
@@ -98,7 +98,7 @@ async function addCurve_LPTasks(prisma: TransactionPrisma, key: keyof typeof CUR
       protocol: "StakeDAO",
       token_address: ctx.stakeDaoVault.toLowerCase(),
       point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
-      description: `Stake ${key} LP in StakeDAO gauge`,
+      description: `Stake ${key} LP in Stake DAO gauge`,
       url: "https://www.stakedao.org/yield",
       price_source_id: priceSources.find((p) => p.name.includes(key))!.id!,
       start_date: now,
