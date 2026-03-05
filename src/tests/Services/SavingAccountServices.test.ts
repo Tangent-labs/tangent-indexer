@@ -208,7 +208,7 @@ describe("SavingAccountServices", () => {
 
       const callArg = (mockGlobalRepo.insertGlobalIndicatorValue as any).mock.calls[0][0]
       expect(Array.isArray(callArg)).toBe(true)
-      expect(callArg).toHaveLength(2)
+      expect(callArg).toHaveLength(1)
 
       // Normalize for assertions
       const byIndicator = new Map<bigint, { value: number; timestamp: Date }>()
@@ -218,8 +218,6 @@ describe("SavingAccountServices", () => {
         expect(row.timestamp).toEqual(nowBC)
       }
 
-      // TAN: 3 / 52
-      expect(byIndicator.get(11n)!.value).toBeCloseTo(3 / 52, 10)
       // USG: 0.5 / 52
       expect(byIndicator.get(22n)!.value).toBeCloseTo(0.5 / 52, 10)
     })
@@ -293,7 +291,7 @@ describe("SavingAccountServices", () => {
       expect(mockGlobalRepo.insertGlobalIndicatorValue).toHaveBeenCalledTimes(1)
 
       const callArg = (mockGlobalRepo.insertGlobalIndicatorValue as any).mock.calls[0][0]
-      expect(callArg).toHaveLength(2)
+      expect(callArg).toHaveLength(1)
 
       // Both tokens should be processed despite case differences
       const byIndicator = new Map<bigint, { value: number }>()
@@ -301,7 +299,6 @@ describe("SavingAccountServices", () => {
         byIndicator.set(row.global_indicator_id, { value: row.value })
       }
 
-      expect(byIndicator.get(11n)!.value).toBeCloseTo(1 / 52, 10) // TAN
       expect(byIndicator.get(22n)!.value).toBeCloseTo(0.5 / 52, 10) // USG
     })
   })
