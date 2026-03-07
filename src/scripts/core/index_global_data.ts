@@ -35,7 +35,7 @@ async function main() {
         timeout: 10_000_000,
       }
     )
-    .then((_) => { })
+    .then((_) => {})
     .catch(async (e) => {
       await telegramNotifierService.sendError(`Error on GLOBAL DATA PROCESS  \`\`\` ${e.toString()} \`\`\``)
       console.error(e)
@@ -54,7 +54,7 @@ async function main() {
         timeout: 10_000_000,
       }
     )
-    .then((_) => { })
+    .then((_) => {})
     .catch(async (e) => {
       await telegramNotifierService.sendError(`Error on SAVING ACCOUNT APY  \`\`\` ${e.toString()} \`\`\``)
 
