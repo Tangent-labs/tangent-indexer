@@ -210,8 +210,8 @@ describe("SavingAccountServices", () => {
         expect(row.timestamp).toEqual(nowBC)
       }
 
-      // USG: 0.5 / 52
-      expect(byIndicator.get(22n)!.value).toBeCloseTo(0.5 / 52, 10)
+      // USG: 3 / 52
+      expect(byIndicator.get(22n)!.value).toBeCloseTo(3 / 52, 10)
     })
 
     it("should insert missing indicators when they don't exist", async () => {
