@@ -28,6 +28,7 @@ import { LiquidationBotLogService } from "./LiquidationBotLogService.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 import { parseEthersError } from "../utils/errorParser.js"
 import { liquidationConfig } from "../config/liquidation_config.js"
+import { indexerConfig } from "../config/indexer_config.js"
 import { getBestRpcProvider } from "../utils/getBestRpcProvider.js"
 import { RouterService } from "./RouterService.js"
 import { getAddressesJson } from "../utils/jsonReader.js"
@@ -43,8 +44,7 @@ export class LiquidationService {
   activeBorrowersRepository: ActiveBorrowersRepository
   context: LiquidationExecutionContext
   liquidationBotService?: LiquidationBotLogService
-  marketBorrowerFilePath: string = "./src/data/market_borrowers.json"
-  transactionFilePath: string = "./src/data/transactions.json"
+  marketBorrowerFilePath: string = `${indexerConfig.sharedDataDir}/market_borrowers.json`
   minEthBalance: number = 0.1
   routerService: RouterService
   // Map to track pending transactions per wallet for sequential processing
@@ -747,6 +747,7 @@ export class LiquidationService {
    * @param data The markets and borrowers to be saved.
    */
   saveFiles(data: { markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }) {
+    fs.mkdirSync(indexerConfig.sharedDataDir, { recursive: true })
     fs.writeFileSync(this.marketBorrowerFilePath, JSON.stringify(data, null, 2))
   }
 

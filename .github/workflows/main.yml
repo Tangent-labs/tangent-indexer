@@ -20,6 +20,7 @@ jobs:
       CHAIN_RPCS: http://127.0.0.1:8545
       WALLET_PKS: 0x0000
       LIQUIDATION_QUEUE_REDIS: redis://localhost:6379
+      SHARED_DATA_DIR: ./src/data/
 
     steps:
       - uses: actions/checkout@v3
