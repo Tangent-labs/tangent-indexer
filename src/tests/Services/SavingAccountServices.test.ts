@@ -163,7 +163,7 @@ describe("SavingAccountServices", () => {
 
       // Act
       const nowBC = new Date()
-      await savingAccountService.processSavingAccountApy(mockGlobalRepo, nowBC, "0xUSG")
+      await savingAccountService.processSavingAccountApy(mockGlobalRepo, nowBC, "0xsUSG")
 
       // Assert
       expect(mockSavingAccountRepository.findEventsAfterDate).toHaveBeenCalledTimes(1)
@@ -175,26 +175,18 @@ describe("SavingAccountServices", () => {
       const nowBC = new Date()
       const within7Days = new Date(nowBC.getTime() - 2 * 24 * 60 * 60 * 1000)
 
-      const tanAddress = "0xTAN"
       const usgAddress = "0xUSG"
 
       const events = [
-        // TAN token: 1e18 + 2e18 = 3e18 → 3 / 52
-        { token: tanAddress, gain: "1000000000000000000", block_date: within7Days },
-        { token: tanAddress, gain: "2000000000000000000", block_date: within7Days },
-        // USG token: 5e17 → 0.5 / 52
-        { token: usgAddress, gain: "500000000000000000", block_date: within7Days },
+        // USG token: 1e18 + 2e18 = 3e18 → 3 / 52
+        { token: usgAddress, gain: "1000000000000000000", block_date: within7Days },
+        { token: usgAddress, gain: "2000000000000000000", block_date: within7Days },
       ]
 
       ;(mockSavingAccountRepository.findEventsAfterDate as any).mockResolvedValue(events)
 
       const mockGlobalRepo = {
-        getGlobalIndicatorIds: vi.fn().mockResolvedValue(
-          new Map<string, bigint>([
-            ["SAVING_APY_TAN", 11n],
-            ["SAVING_APY_USG", 22n],
-          ])
-        ),
+        getGlobalIndicatorIds: vi.fn().mockResolvedValue(new Map<string, bigint>([["SAVING_APY_USG", 22n]])),
         insertGlobalIndicator: vi.fn(),
         insertGlobalIndicatorValue: vi.fn(),
       } as any
@@ -266,20 +258,14 @@ describe("SavingAccountServices", () => {
       const usgAddress = "0xUSG"
 
       const events = [
-        // Test with mixed case tokens
-        { token: "0xtan", gain: "1000000000000000000", block_date: within7Days },
+        // Test with lowercase token that should match uppercase address
         { token: "0xusg", gain: "500000000000000000", block_date: within7Days },
       ]
 
       ;(mockSavingAccountRepository.findEventsAfterDate as any).mockResolvedValue(events)
 
       const mockGlobalRepo = {
-        getGlobalIndicatorIds: vi.fn().mockResolvedValue(
-          new Map<string, bigint>([
-            ["SAVING_APY_TAN", 11n],
-            ["SAVING_APY_USG", 22n],
-          ])
-        ),
+        getGlobalIndicatorIds: vi.fn().mockResolvedValue(new Map<string, bigint>([["SAVING_APY_USG", 22n]])),
         insertGlobalIndicator: vi.fn(),
         insertGlobalIndicatorValue: vi.fn(),
       } as any
@@ -293,7 +279,6 @@ describe("SavingAccountServices", () => {
       const callArg = (mockGlobalRepo.insertGlobalIndicatorValue as any).mock.calls[0][0]
       expect(callArg).toHaveLength(1)
 
-      // Both tokens should be processed despite case differences
       const byIndicator = new Map<bigint, { value: number }>()
       for (const row of callArg) {
         byIndicator.set(row.global_indicator_id, { value: row.value })
