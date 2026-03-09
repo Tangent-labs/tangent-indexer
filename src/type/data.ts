@@ -252,9 +252,9 @@ export type AddressesJson = {
   tokens: {
     USG: string
     sUSG: string
-    TAN: string
-    sTAN: string
-    vsTAN: string
+    TAN?: string
+    sTAN?: string
+    vsTAN?: string
   }
   implementations: {
     convexCrvMarket: string

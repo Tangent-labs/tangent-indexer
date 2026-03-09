@@ -35,10 +35,8 @@ export async function seedLPTasksAndTrackedERC20(
     // TODO add addresses of StakeDao and StakeDao staking on Convex
 
     // Remove curve gauge
-    CURVE_CONTEXT.USDC_crvUSD.curveGauge.toLowerCase(),
-    CURVE_CONTEXT.USDT_crvUSD.curveGauge.toLowerCase(),
-    CURVE_CONTEXT.DOLA_sUSDS.curveGauge.toLowerCase(),
-    CURVE_CONTEXT.LLAMALEND_sDOLA_crvUSD.curveGauge.toLowerCase(),
+    CURVE_CONTEXT.USG_USDC.curveGauge.toLowerCase(),
+    CURVE_CONTEXT.USG_frxUSD.curveGauge.toLowerCase(),
 
     // Remove Pendle Market because it holds PT
     PENDLE_POOLS["sUSDe 27/11/25"].MARKET.toLowerCase(),

@@ -6,7 +6,6 @@ const prisma = new PrismaClient()
 
 async function seed() {
   const addresses = await getAddressesJson()
-  const sTAN = addresses.tokens.sTAN
   const sUSG = addresses.tokens.sUSG
 
   const now = new Date()
@@ -25,7 +24,6 @@ async function seed() {
   }[] = []
 
   const perToken: Record<string, number[]> = {
-    [sTAN]: [1.0, 2.0, 0.5], // ETH units for readability
     [sUSG]: [0.25, 0.15],
   }
 
