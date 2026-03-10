@@ -1,4 +1,4 @@
-import { CURVE_GLOBAL_CONTRACTS } from "@tangent/defi-resources"
+import { CURVE_GAUGES, CURVE_GLOBAL_CONTRACTS } from "@tangent/defi-resources"
 
 export const CURVE_GAUGE_URL = "https://www.curve.finance/dao/ethereum/gauges"
 export const ONCHAIN_TASKS = [
@@ -8,16 +8,16 @@ export const ONCHAIN_TASKS = [
     controller: CURVE_GLOBAL_CONTRACTS.GAUGE_CONTROLLER.toLowerCase(),
     gauges: [
       {
-        taskDescription: "USG/USDC on veCRV gauge",
+        taskDescription: "Vote for USG/USDC pool",
         name: "USG/USDC",
-        address: "0x52cd58c160a51c2207504a6d28975c8f981ea8e8".toLowerCase(),
-        pointRate: 7.5,
+        address: CURVE_GAUGES.USG_USDC.toLowerCase(),
+        pointRate: 1,
       },
       {
-        taskDescription: "USG/frxUSD on veCRV gauge",
+        taskDescription: "Vote for USG/frxUSD pool",
         name: "USG/frxUSD",
-        address: "0x39b1df92f9485a73cadf4846abde59eac0901a94".toLowerCase(),
-        pointRate: 10,
+        address: CURVE_GAUGES.USG_frxUSD.toLowerCase(),
+        pointRate: 1,
       },
     ],
     votersToExclude: [
@@ -50,12 +50,18 @@ export const ONCHAIN_TASKS = [
   //   ],
   // },
 ]
+
+// TODO REPLACE THE SNAPSHOT KEYS WITH THE RIGHT ONES
+// COULDNT DO BEFORE BECAUSE TOO RECENT, SHOULD BE GOOD IN FEW DAYS !!!!!
 export const OFFCHAIN_TASKS = [
   {
     orga: "sdcrv.eth",
     url: "https://snapshot.box/#/s:sdcrv.eth",
     title: "Gauge vote CRV",
-    scoringChoices: [{ taskDescription: "frxUSD+crvUSD on sdCRV snapshot", name: "frxUSD+crvUSD", pointRate: 5 }],
+    scoringChoices: [
+      { taskDescription: "usg+usdc on sdCRV snapshot", name: "usg+usdc", pointRate: 2 },
+      { taskDescription: "usg+frxUSD on sdCRV snapshot", name: "usg+frxUSD", pointRate: 2 },
+    ],
     excludedVoters: [{ name: "Stake DAO delegation", user_address: "0x52ea58f4FC3CEd48fa18E909226c1f8A0EF887DC".toLowerCase() }],
   },
   {
@@ -63,8 +69,8 @@ export const OFFCHAIN_TASKS = [
     url: "https://vote.convexfinance.com/",
     title: "Gauge Weight for Week",
     scoringChoices: [
-      { taskDescription: "pmUSD+crvUSD on CVX snapshot", name: "pmUSD+crvUSD", pointRate: 20 },
-      { taskDescription: "pmUSD+frxUSD on CVX snapshot", name: "pmUSD+frxUSD", pointRate: 15 },
+      { taskDescription: "usg+usdc on CVX snapshot", name: "usg+usdc", pointRate: 20 },
+      { taskDescription: "usg+frxUSD on CVX snapshot", name: "usg+frxUSD", pointRate: 20 },
     ],
     excludedVoters: [
       { name: "Votium delegation", user_address: "0xde1E6A7ED0ad3F61D531a8a78E83CcDdbd6E0c49".toLowerCase() },
@@ -73,18 +79,18 @@ export const OFFCHAIN_TASKS = [
       { name: "Pirex delegation", user_address: "0x97CE0101A307a79eC9959D82DB1D8ADBa9FbEE4D".toLowerCase() },
     ],
   },
-  {
-    orga: "sdfxn.eth",
-    url: "https://snapshot.box/#/s:sdFXN.eth",
-    title: "Gauge vote FXN",
-    scoringChoices: [{ taskDescription: "FXN_sdFXN on sdFXN snapshot", name: "FXN+sdFXN", pointRate: 100 }],
-    excludedVoters: [{ name: "Stake DAO delegation", user_address: "0x52ea58f4FC3CEd48fa18E909226c1f8A0EF887DC".toLowerCase() }],
-  },
-  {
-    orga: "sdpendle.eth",
-    url: "https://snapshot.box/#/s:sdpendle.eth",
-    title: "Gauge vote PENDLE",
-    scoringChoices: [{ taskDescription: "asdPENDLE-26MAR2026 on sdPENDLE snapshot", name: "asdPENDLE-26MAR2026 - 1", pointRate: 10 }],
-    excludedVoters: [{ name: "Stake DAO delegation", user_address: "0x52ea58f4FC3CEd48fa18E909226c1f8A0EF887DC".toLowerCase() }],
-  },
+  // {
+  //   orga: "sdfxn.eth",
+  //   url: "https://snapshot.box/#/s:sdFXN.eth",
+  //   title: "Gauge vote FXN",
+  //   scoringChoices: [{ taskDescription: "FXN_sdFXN on sdFXN snapshot", name: "FXN+sdFXN", pointRate: 100 }],
+  //   excludedVoters: [{ name: "Stake DAO delegation", user_address: "0x52ea58f4FC3CEd48fa18E909226c1f8A0EF887DC".toLowerCase() }],
+  // },
+  // {
+  //   orga: "sdpendle.eth",
+  //   url: "https://snapshot.box/#/s:sdpendle.eth",
+  //   title: "Gauge vote PENDLE",
+  //   scoringChoices: [{ taskDescription: "asdPENDLE-26MAR2026 on sdPENDLE snapshot", name: "asdPENDLE-26MAR2026 - 1", pointRate: 10 }],
+  //   excludedVoters: [{ name: "Stake DAO delegation", user_address: "0x52ea58f4FC3CEd48fa18E909226c1f8A0EF887DC".toLowerCase() }],
+  // },
 ]
