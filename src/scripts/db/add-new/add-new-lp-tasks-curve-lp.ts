@@ -1,8 +1,8 @@
 import { PriceSourceType, Prisma, PrismaClient } from "@prisma/client"
 import { CURVE_CONTEXT } from "@tangent/defi-resources/build/ressources/mappings/curveContext.js"
 import { TransactionPrisma } from "../../../type/prisma.js"
-import { PTS_PER_HOUR_TO_SECONDS_RATE } from "../config/config_lp_tasks.js"
 import { JsonRpcProvider } from "ethers"
+import { PTS_PER_DAY_TO_SECONDS_RATE } from "../config/config_lp_tasks.js"
 
 const prisma = new PrismaClient()
 
@@ -38,7 +38,7 @@ main()
  * 4. Inserts an exclusion entry for the pool's Curve gauge into `lp_points_users_excluded`.
  *
  * Each LP task references the price source created in step 1.
- * Point rates are derived from `PTS_PER_HOUR_TO_SECONDS_RATE`.
+ * Point rates are derived from `PTS_PER_DAY_TO_SECONDS_RATE`.
  *
  * @param prisma Prisma transactional client for executing database operations atomically.
  * @param key Key identifying the Curve pool in `CURVE_CONTEXT`.
@@ -75,7 +75,7 @@ async function addCurve_LPTasks(prisma: TransactionPrisma, key: keyof typeof CUR
       action_type: "LP",
       protocol: "Curve",
       token_address: ctx.curveLp.toLowerCase(),
-      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[40],
+      point_rate: PTS_PER_DAY_TO_SECONDS_RATE[45],
       description: `Hold Curve ${key} LP tokens`,
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-0/deposit",
       price_source_id: priceSources.find((p) => p.name.includes(key))!.id!,
@@ -86,7 +86,7 @@ async function addCurve_LPTasks(prisma: TransactionPrisma, key: keyof typeof CUR
       action_type: "LP",
       protocol: "Curve",
       token_address: ctx.curveGauge.toLowerCase(),
-      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
+      point_rate: PTS_PER_DAY_TO_SECONDS_RATE[15],
       description: `Stake ${key} LP in Curve gauge`,
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-1/deposit",
       price_source_id: priceSources.find((p) => p.name.includes(key))!.id!,
@@ -97,7 +97,7 @@ async function addCurve_LPTasks(prisma: TransactionPrisma, key: keyof typeof CUR
       action_type: "LP",
       protocol: "StakeDAO",
       token_address: ctx.stakeDaoVault.toLowerCase(),
-      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
+      point_rate: PTS_PER_DAY_TO_SECONDS_RATE[15],
       description: `Stake ${key} LP in Stake DAO gauge`,
       url: "https://www.stakedao.org/yield",
       price_source_id: priceSources.find((p) => p.name.includes(key))!.id!,
@@ -108,7 +108,7 @@ async function addCurve_LPTasks(prisma: TransactionPrisma, key: keyof typeof CUR
       action_type: "LP",
       protocol: "Convex",
       token_address: ctx.convexRewardToken.toLowerCase(),
-      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[20],
+      point_rate: PTS_PER_DAY_TO_SECONDS_RATE[15],
       description: `Stake ${key} LP in Convex`,
       url: "http://mossad.com",
       price_source_id: priceSources.find((p) => p.name.includes(key))!.id!,
