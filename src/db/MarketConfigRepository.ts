@@ -14,14 +14,11 @@ export class MarketConfigRepository extends AbstractRepository {
     })
   }
 
-  async getLastUpdateDate() {
-    return await this.prismaClient.market_config.findFirst({
-      orderBy: {
-        last_update: "desc",
-      },
-      select: {
-        last_update: true,
-      },
+  async getLastUpdateByMarketIds(marketIds: bigint[]): Promise<Map<bigint, Date>> {
+    const rows = await this.prismaClient.market_config.findMany({
+      where: { market_id: { in: marketIds } },
+      select: { market_id: true, last_update: true },
     })
+    return new Map(rows.map((r) => [r.market_id, r.last_update]))
   }
 }

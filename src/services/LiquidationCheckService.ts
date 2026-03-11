@@ -285,14 +285,9 @@ export class CheckLiquidationService {
     await this.positionSnapshotRepository.saveSnapshots(changedSnapshots)
   }
 
-  // Save market config at most once per 24 hours
+  // Save market config at most once per 24 hours per market
   private async saveMarketConfigIfStale(onChainData: LiquidationMarketAccountOutInfo, marketAddressToId: Map<string, bigint>, now: Date) {
-    const lastUpdate = await this.marketConfigRepository.getLastUpdateDate()
-    if (lastUpdate?.last_update && !(now.getTime() - lastUpdate.last_update.getTime() > ONE_DAY_IN_MSECONDS)) {
-      return
-    }
-
-    const marketConfigs = onChainData.markets
+    const allConfigs = onChainData.markets
       .map((m) => {
         const marketId = marketAddressToId.get((m.market as string).toLowerCase())
         if (!marketId) return null
@@ -306,7 +301,19 @@ export class CheckLiquidationService {
       })
       .filter((c) => c !== null)
 
-    await this.marketConfigRepository.saveMarketConfigs(marketConfigs)
+    if (!allConfigs.length) return
+
+    const marketIds = allConfigs.map((c) => c.market_id)
+    const lastUpdates = await this.marketConfigRepository.getLastUpdateByMarketIds(marketIds)
+
+    const staleConfigs = allConfigs.filter((c) => {
+      const lastUpdate = lastUpdates.get(c.market_id)
+      return !lastUpdate || now.getTime() - lastUpdate.getTime() > ONE_DAY_IN_MSECONDS
+    })
+
+    if (staleConfigs.length) {
+      await this.marketConfigRepository.saveMarketConfigs(staleConfigs)
+    }
   }
 
   /**
