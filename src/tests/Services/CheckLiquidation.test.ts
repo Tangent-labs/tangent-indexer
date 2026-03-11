@@ -151,7 +151,7 @@ describe("CheckLiquidationService", () => {
     vi.spyOn(mockPositionSnapshotRepository, "saveSnapshots").mockResolvedValue(undefined)
     vi.spyOn(mockPositionSnapshotRepository, "getLatestSnapshotsWithin24h").mockResolvedValue([])
     vi.spyOn(mockMarketConfigRepository, "saveMarketConfigs").mockResolvedValue(undefined)
-    vi.spyOn(mockMarketConfigRepository, "getLastUpdateDate").mockResolvedValue(null)
+    vi.spyOn(mockMarketConfigRepository, "getLastUpdateByMarketIds").mockResolvedValue(new Map())
     vi.spyOn(mockMarketContractsRepository, "getContracts").mockResolvedValue([])
 
     checkLiquidationService = new CheckLiquidationService(
@@ -407,7 +407,7 @@ describe("CheckLiquidationService", () => {
 
     it("should save market config when no previous update exists", async () => {
       setupOnChainMocks()
-      vi.mocked(mockMarketConfigRepository.getLastUpdateDate).mockResolvedValue(null)
+      vi.mocked(mockMarketConfigRepository.getLastUpdateByMarketIds).mockResolvedValue(new Map())
 
       await checkLiquidationService.run()
 
@@ -423,9 +423,7 @@ describe("CheckLiquidationService", () => {
 
     it("should skip market config save when last update is recent", async () => {
       setupOnChainMocks()
-      vi.mocked(mockMarketConfigRepository.getLastUpdateDate).mockResolvedValue({
-        last_update: new Date(),
-      })
+      vi.mocked(mockMarketConfigRepository.getLastUpdateByMarketIds).mockResolvedValue(new Map([[MARKET_ID, new Date()]]))
 
       await checkLiquidationService.run()
 
