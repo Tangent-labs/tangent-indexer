@@ -6,7 +6,7 @@ SELECT
     + COALESCE(SUM(up.booster_points), 0)
     + COALESCE(u.lp_referral_points, 0)
   )::bigint AS pts
-FROM "global"."user" AS u
+FROM "points"."user" AS u
 LEFT JOIN points.lp_user_points AS up
   ON up.user_address = u.address
 GROUP BY u.address, u.lp_referral_points;
@@ -21,7 +21,7 @@ SELECT
     COALESCE(SUM(vt.points), 0)
     + COALESCE(u.vote_referral_points, 0)
   )::bigint AS pts
-FROM "global"."user" AS u
+FROM "points"."user" AS u
 LEFT JOIN points.vote_user_tasks AS vt
   ON vt.user_address = u.address
 GROUP BY u.address, u.vote_referral_points;
