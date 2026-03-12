@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client"
 import { TransactionPrisma } from "../../../type/prisma.js"
-import { PTS_PER_HOUR_TO_SECONDS_RATE } from "../config/config_lp_tasks.js"
+import { PTS_PER_DAY_TO_SECONDS_RATE } from "../config/config_lp_tasks.js"
 import { PENDLE_POOLS } from "@tangent/defi-resources"
 import { JsonRpcProvider } from "ethers"
 
@@ -79,7 +79,7 @@ async function addPendle_LP_PT_YTTasks(prisma: TransactionPrisma, key: keyof typ
       action_type: "LP",
       protocol: "Pendle",
       token_address: ctx.MARKET.toLowerCase(),
-      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[40],
+      point_rate: PTS_PER_DAY_TO_SECONDS_RATE[15],
       description: `Hold ${key} LP tokens`,
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-0/deposit",
       price_source_id: priceSources.find((p) => p.name.includes(`MARKET ${key}`))!.id!,
@@ -90,7 +90,7 @@ async function addPendle_LP_PT_YTTasks(prisma: TransactionPrisma, key: keyof typ
       action_type: "PT",
       protocol: "Pendle",
       token_address: ctx.PT.toLowerCase(),
-      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[10],
+      point_rate: PTS_PER_DAY_TO_SECONDS_RATE[10],
       description: `Hold ${key} PT tokens`,
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-1/deposit",
       price_source_id: priceSources.find((p) => p.name.includes(`PT ${key}`))!.id!,
@@ -101,7 +101,7 @@ async function addPendle_LP_PT_YTTasks(prisma: TransactionPrisma, key: keyof typ
       action_type: "YT",
       protocol: "Pendle",
       token_address: ctx.YT.toLowerCase(),
-      point_rate: PTS_PER_HOUR_TO_SECONDS_RATE[30],
+      point_rate: PTS_PER_DAY_TO_SECONDS_RATE[45],
       description: `Hold ${key} YT tokens`,
       url: "https://www.stakedao.org/yield",
       price_source_id: priceSources.find((p) => p.name === "USG")!.id!,

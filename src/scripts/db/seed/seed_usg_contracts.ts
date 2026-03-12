@@ -27,7 +27,7 @@ export async function seedUSGContracts(prisma: PrismaClient | TransactionPrisma,
   await prisma.peg_keeper.createMany({
     data: [
       {
-        address: addr.lps["USG-USDC"].toLowerCase(),
+        address: addr.pegKeepers["USG-USDC"].toLowerCase(),
         stable_name: "USDC",
         stable_address: COMMON_ERC20S.USDC.toLowerCase(),
         lp_name: "USG-USDC",
@@ -36,7 +36,7 @@ export async function seedUSGContracts(prisma: PrismaClient | TransactionPrisma,
         is_active: true,
       },
       {
-        address: addr.lps["USG-frxUSD"].toLowerCase(),
+        address: addr.pegKeepers["USG-frxUSD"].toLowerCase(),
         stable_name: "frxUSD",
         stable_address: COMMON_ERC20S.frxUSD.toLowerCase(),
         lp_name: "USG-frxUSD",
