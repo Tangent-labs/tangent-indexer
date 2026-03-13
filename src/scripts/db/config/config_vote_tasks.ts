@@ -8,13 +8,13 @@ export const ONCHAIN_TASKS = [
     controller: CURVE_GLOBAL_CONTRACTS.GAUGE_CONTROLLER.toLowerCase(),
     gauges: [
       {
-        taskDescription: "Vote for USG/USDC pool",
+        taskDescription: "Vote for USG/USDC Curve gauge (on-chain)",
         name: "USG/USDC",
         address: CURVE_GAUGES.USG_USDC.toLowerCase(),
         pointRate: 1,
       },
       {
-        taskDescription: "Vote for USG/frxUSD pool",
+        taskDescription: "Vote for USG/frxUSD Curve gauge (on-chain)",
         name: "USG/frxUSD",
         address: CURVE_GAUGES.USG_frxUSD.toLowerCase(),
         pointRate: 1,
@@ -59,8 +59,8 @@ export const OFFCHAIN_TASKS = [
     url: "https://snapshot.box/#/s:sdcrv.eth",
     title: "Gauge vote CRV",
     scoringChoices: [
-      { taskDescription: "usg+usdc on sdCRV snapshot", name: "usg+usdc", pointRate: 2 },
-      { taskDescription: "usg+frxUSD on sdCRV snapshot", name: "usg+frxUSD", pointRate: 2 },
+      { taskDescription: "Vote for USG/USDC Curve gauge (snapshot)", name: "usg+usdc", pointRate: 2 },
+      { taskDescription: "Vote for USG/frxUSD Curve gauge (snapshot)", name: "usg+frxUSD", pointRate: 2 },
     ],
     excludedVoters: [{ name: "Stake DAO delegation", user_address: "0x52ea58f4FC3CEd48fa18E909226c1f8A0EF887DC".toLowerCase() }],
   },
@@ -69,8 +69,8 @@ export const OFFCHAIN_TASKS = [
     url: "https://vote.convexfinance.com/",
     title: "Gauge Weight for Week",
     scoringChoices: [
-      { taskDescription: "usg+usdc on CVX snapshot", name: "usg+usdc", pointRate: 20 },
-      { taskDescription: "usg+frxUSD on CVX snapshot", name: "usg+frxUSD", pointRate: 20 },
+      { taskDescription: "Vote for USG/USDC on CVX (snapshot)", name: "usg+usdc", pointRate: 20 },
+      { taskDescription: "Vote for USG/frxUSD on CVX (snapshot)", name: "usg+frxUSD", pointRate: 20 },
     ],
     excludedVoters: [
       { name: "Votium delegation", user_address: "0xde1E6A7ED0ad3F61D531a8a78E83CcDdbd6E0c49".toLowerCase() },
