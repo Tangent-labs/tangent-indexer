@@ -21,6 +21,52 @@ export type MonitoringModuleConfig = {
   thresholds?: Record<string, number | Record<string, number>>
 }
 
+type PegThresholds = {
+  safe_pct: number
+  warning_pct: number
+  danger_pct: number
+}
+
+type OracleSanityThresholds = {
+  deviation_warning_pct: number
+  deviation_danger_pct: number
+  max_age_warning_seconds: number
+  max_age_danger_seconds: number
+}
+
+type CollateralizationThresholds = {
+  warning_multiplier: number
+  danger_multiplier: number
+  critical_multiplier: number
+}
+
+type LiquidationDistanceThresholds = {
+  safe_pct: number
+  warning_pct: number
+  danger_pct: number
+  critical_pct: number
+}
+
+type TvlVariationThresholds = {
+  warning_1h_pct: number
+  danger_1h_pct: number
+  warning_24h_pct: number
+  danger_24h_pct: number
+}
+
+type MonitoringConfig = {
+  overview: MonitoringModuleConfig
+  collateralization: MonitoringModuleConfig & { thresholds: CollateralizationThresholds }
+  liquidation_distance: MonitoringModuleConfig & { thresholds: LiquidationDistanceThresholds }
+  peg: MonitoringModuleConfig & { thresholds: PegThresholds }
+  price_variation: MonitoringModuleConfig
+  oracle_sanity: MonitoringModuleConfig & { thresholds: OracleSanityThresholds }
+  debt_utilization: MonitoringModuleConfig
+  tvl_variation: MonitoringModuleConfig & { thresholds: TvlVariationThresholds }
+  liquidations: MonitoringModuleConfig
+  ltv_distribution: MonitoringModuleConfig
+}
+
 function envFloat(name: string, fallback: number): number {
   const rawValue = process.env[name]
   if (rawValue == null || rawValue.trim() === "") {
@@ -35,7 +81,7 @@ function envFloat(name: string, fallback: number): number {
   return parsed
 }
 
-export const monitoringModuleConfig = {
+export const monitoringModuleConfig: MonitoringConfig = {
   overview: {
     ttl: 120,
     filters: [],
@@ -132,4 +178,4 @@ export const monitoringModuleConfig = {
     filters: ["market_address"],
     paginated: false,
   },
-} satisfies Record<MonitoringModuleName, MonitoringModuleConfig>
+}

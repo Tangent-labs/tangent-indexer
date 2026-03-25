@@ -20,6 +20,7 @@ import { MonitoringRepository } from "../../db/MonitoringRepository.js"
 import { indexerConfig } from "../../config/indexer_config.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { MonitoringAlertService } from "../../services/MonitoringAlertService.js"
+import { toSafeErrorMessage } from "../../utils/errors.js"
 
 dotenv.config()
 
@@ -44,13 +45,13 @@ async function main() {
       globalDataSucceeded = true
     })
     .catch(async (e) => {
-      await telegramNotifierService.sendError(`Error on GLOBAL DATA PROCESS  \`\`\` ${e.toString()} \`\`\``)
+      await telegramNotifierService.sendError(`Error on GLOBAL DATA PROCESS: ${toSafeErrorMessage(e)}`)
       console.error(e)
     })
 
   if (globalDataSucceeded) {
     await monitoringAlertService.processAlerts(nowBC).catch(async (e) => {
-      await telegramNotifierService.sendError(`Error on MONITORING ALERT PROCESS  \`\`\` ${e.toString()} \`\`\``)
+      await telegramNotifierService.sendError(`Error on MONITORING ALERT PROCESS: ${toSafeErrorMessage(e)}`)
       console.error(e)
     })
   }
@@ -70,7 +71,7 @@ async function main() {
     )
     .then((_) => {})
     .catch(async (e) => {
-      await telegramNotifierService.sendError(`Error on SAVING ACCOUNT APY  \`\`\` ${e.toString()} \`\`\``)
+      await telegramNotifierService.sendError(`Error on SAVING ACCOUNT APY: ${toSafeErrorMessage(e)}`)
 
       console.error(e)
     })
@@ -109,7 +110,6 @@ function setUpIndexerGlobalData() {
     totalSupplyRepository.setClient(dbTransaction)
     globalHistoryDataRepository.setClient(dbTransaction)
     pegMonitoredTokenRepository.setClient(dbTransaction)
-    monitoringRepository.setClient(dbTransaction)
   }
 
   const globalDataService = new GlobalDataService(

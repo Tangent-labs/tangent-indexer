@@ -28,10 +28,6 @@ const defaultSharedDataDir = process.platform === "win32" ? `${process.env.TEMP 
 const sharedDataDir = process.env.SHARED_DATA_DIR || defaultSharedDataDir
 mkdirSync(sharedDataDir, { recursive: true })
 
-const defaultSharedDataDir = process.platform === "win32" ? `${process.env.TEMP || "C:\\Temp"}\\tangent-indexer` : "/var/lib/tangent-indexer"
-const sharedDataDir = process.env.SHARED_DATA_DIR || defaultSharedDataDir
-mkdirSync(sharedDataDir, { recursive: true })
-
 export const indexerConfig = {
   blockRange,
   startingBlock,
