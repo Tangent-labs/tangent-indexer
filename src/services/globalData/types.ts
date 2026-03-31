@@ -79,7 +79,6 @@ export type CurveApiReturn = {
   error?: any
 }
 
-
 export type CurveFactoryStableNGApiReturn = {
   data?: {
     poolData: { address: string; gaugeRewards: { tokenAddress: string; symbol: string; apy: number }[] }[]
@@ -155,150 +154,146 @@ export type PendlePriceApiResult = {
   }
 }
 
+// STAKE DAO
 
-// STAKE DAO 
-
-
-type Address = string;
+type Address = string
 
 export interface Token {
-  id: string;
-  strId?: string;
-  address: Address;
-  chainId: number;
-  name: string;
-  symbol: string;
-  decimals: number;
-  price?: number;
-  logoURI?: string;
-  tags?: string[];
+  id: string
+  strId?: string
+  address: Address
+  chainId: number
+  name: string
+  symbol: string
+  decimals: number
+  price?: number
+  logoURI?: string
+  tags?: string[]
   extensions?: {
     onChainPrice?: {
-      to: Address;
-      data: string;
-      decimals: number;
-    };
-    coingeckoId?: string;
-  };
+      to: Address
+      data: string
+      decimals: number
+    }
+    coingeckoId?: string
+  }
 }
 
 export interface TokenAmountReward {
-  token: Token;
-  end: number;
-  rate: string; // bigint string
-  apr: number;
-  source?: string;
+  token: Token
+  end: number
+  rate: string // bigint string
+  apr: number
+  source?: string
 }
 
 export interface Coin {
-  id: string;
-  name: string;
-  symbol: string;
-  address: Address;
-  decimals: number;
-  logoURI: string;
-  price: number;
+  id: string
+  name: string
+  symbol: string
+  address: Address
+  decimals: number
+  logoURI: string
+  price: number
 }
 
 export interface Gauge {
-  address: Address;
-  totalSupply: string;
-  totalSupplyUsd: number;
+  address: Address
+  totalSupply: string
+  totalSupplyUsd: number
 }
 
 export interface LpToken {
-  address: Address;
-  name: string;
-  symbol: string;
-  decimals: number;
+  address: Address
+  name: string
+  symbol: string
+  decimals: number
 }
 
 export interface AprDetails {
-  label: string;
-  value: number[];
+  label: string
+  value: number[]
 }
 
 export interface Apr {
-  boost: number;
+  boost: number
   current: {
-    total: number;
-    details: AprDetails[];
-  };
+    total: number
+    details: AprDetails[]
+  }
+}
+export interface BoostSide {
+  tvl: number
+  supply: string
+  boost: number
+  share: number
+  workingBalance?: string
+  workingBalanceShare?: string
+  optimal: {
+    tvl: number
+    supply: string
+    boost: number
+    share: number
+  }
 }
 
 export interface OnlyBoost {
-  active: boolean;
+  active: boolean
   implementations: {
-    key: string;
-    address: Address;
-  }[];
-  totalSupply: string;
-  boost: number;
-  optimalBoost: number;
-  stakeDao: BoostSide;
-  sidecar: BoostSide;
-}
-
-export interface BoostSide {
-  tvl: number;
-  supply: string;
-  boost: number;
-  share: number;
-  workingBalance?: string;
-  workingBalanceShare?: string;
-  optimal: {
-    tvl: number;
-    supply: string;
-    boost: number;
-    share: number;
-  };
+    key: string
+    address: Address
+  }[]
+  totalSupply: string
+  boost: number
+  optimalBoost: number
+  stakeDao: BoostSide
+  sidecar: BoostSide
 }
 
 export interface SidecarPool {
-  id: number;
-  address: Address;
+  id: number
+  address: Address
 }
 
 export interface StakeDaoApiData {
-  key: string;
-  name: string;
-  type: string;
-  version: number;
-  protocol: string;
-  chainId: number;
-  vault: Address;
-  gaugeAddress: Address;
-  isLending: boolean;
-  streaming: boolean;
-  tokensFilter: string[];
+  key: string
+  name: string
+  type: string
+  version: number
+  protocol: string
+  chainId: number
+  vault: Address
+  gaugeAddress: Address
+  isLending: boolean
+  streaming: boolean
+  tokensFilter: string[]
 
-  lpToken: LpToken;
-  gauge: Gauge;
+  lpToken: LpToken
+  gauge: Gauge
 
-  coins: Coin[];
-  underlyingCoins: Coin[];
+  coins: Coin[]
+  underlyingCoins: Coin[]
 
-  lpPriceInUsd: number;
-  tvl: number;
+  lpPriceInUsd: number
+  tvl: number
 
-  apr: Apr;
-  rewards: TokenAmountReward[];
+  apr: Apr
+  rewards: TokenAmountReward[]
 
-  tradingApy: number;
-  minApr: number;
-  maxApr: number;
+  tradingApy: number
+  minApr: number
+  maxApr: number
 
-  totalSupply: string;
+  totalSupply: string
 
-  onlyboost: OnlyBoost;
+  onlyboost: OnlyBoost
 
-  sidecarPool: SidecarPool;
+  sidecarPool: SidecarPool
 
   error?: any
 }
 
-
 export type StakeDaoApiReturn = {
   data?: StakeDaoApiData[]
-  error?: any;
+  error?: any
 }

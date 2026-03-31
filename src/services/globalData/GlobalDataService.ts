@@ -38,10 +38,6 @@ import { WStableRepository } from "../../db/WStableRepository.js"
 import { GlobalHistoryDataRepository } from "src/db/GlobalHistoryDataRepository.js"
 import { PegMonitoredTokenRepository } from "../../db/PegMonitoredTokenRepository.js"
 
-// TODO This is arbitraty, need a more dynamic version
-// eslint-disable-next-line no-loss-of-precision
-const ratioCrvToConvex = 221.80769230769230769230769230769
-
 const rewardTokens = [
   { symbol: "CRV", address: COMMON_ERC20S.CRV },
   { symbol: "CVX", address: COMMON_ERC20S.CVX },
@@ -60,7 +56,6 @@ const rewardTokens = [
   { symbol: "frxUSD", address: COMMON_ERC20S.frxUSD },
   { symbol: "YB", address: "0x01791F726B4103694969820be083196cC7c045fF" },
   { symbol: "pmUSD", address: "0xc0c17dd08263c16f6b64e772fb9b723bf1344ddf" },
-
 ]
 
 type Markets = {
@@ -497,18 +492,16 @@ export class GlobalDataService {
 
         // Projected APR
 
-
         // Convex CRV
         // Call in the chainview to find weighted rate
         if (market.contract_type === APR_TYPE["Convex CRV"]) {
           const rewardStreamed = aprTvlData.projectedAPR.streamingData
-          rewardStreamed.forEach(rs => {
+          rewardStreamed.forEach((rs) => {
             const rewardInfos = formattedPrices[rs.token.toLowerCase()]
             if (rewardInfos) {
-              const apr = Number(formatUnits(rs.amount, rewardInfos.decimals)) * rewardInfos.price / Number(formatEther(aprTvlData.globalData.oraclePrice))
+              const apr = (Number(formatUnits(rs.amount, rewardInfos.decimals)) * rewardInfos.price) / Number(formatEther(aprTvlData.globalData.oraclePrice))
               projectedAPR[rewardInfos.symbol] = apr * 100
-            }
-            else {
+            } else {
               console.error("No reward infos for " + rs.token)
             }
           })
@@ -536,10 +529,10 @@ export class GlobalDataService {
         // StakeDaoVault Gauge
         // Found in API
         else if (market.contract_type === APR_TYPE["StakeDao Vault"]) {
-          const stakeDaoItem = stakeDaoAPIData.data?.find(item => item.lpToken.address.toLowerCase() === collateralAddress.toLowerCase())
+          const stakeDaoItem = stakeDaoAPIData.data?.find((item) => item.lpToken.address.toLowerCase() === collateralAddress.toLowerCase())
           if (stakeDaoItem && stakeDaoItem.apr) {
             const aprObject = stakeDaoItem.apr?.current
-            aprObject.details.forEach(aprObject => {
+            aprObject.details.forEach((aprObject) => {
               if (!aprObject.label.includes("APY")) {
                 projectedAPR[aprObject.label.split(" ")[0]] = aprObject.value[0]
               }
