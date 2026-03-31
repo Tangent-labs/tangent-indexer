@@ -58,6 +58,9 @@ const rewardTokens = [
   { symbol: "USDe", address: COMMON_ERC20S.USDe },
   { symbol: "USDC", address: COMMON_ERC20S.USDC },
   { symbol: "frxUSD", address: COMMON_ERC20S.frxUSD },
+  { symbol: "YB", address: "0x01791F726B4103694969820be083196cC7c045fF" },
+  { symbol: "pmUSD", address: "0xc0c17dd08263c16f6b64e772fb9b723bf1344ddf" },
+
 ]
 
 type Markets = {
@@ -494,18 +497,24 @@ export class GlobalDataService {
 
         // Projected APR
 
-        const underlyingTvl = Number(formatEther((aprTvlData.projectedAPR.totalSupplyUnderlying * aprTvlData.globalData.oraclePrice) / 10n ** 18n))
 
         // Convex CRV
+        // Call in the chainview to find weighted rate
         if (market.contract_type === APR_TYPE["Convex CRV"]) {
-          const crvPriceInfo = formattedPrices[COMMON_ERC20S?.CRV.toLocaleLowerCase()]
-
-          const usdPerYear = Number(formatUnits(aprTvlData.projectedAPR.streamingData[0].amountPerYear, crvPriceInfo.decimals)) * crvPriceInfo.price
-
-          projectedAPR.CRV = (usdPerYear * 100) / underlyingTvl
-          projectedAPR.CVX = projectedAPR.CRV / ratioCrvToConvex
+          const rewardStreamed = aprTvlData.projectedAPR.streamingData
+          rewardStreamed.forEach(rs => {
+            const rewardInfos = formattedPrices[rs.token.toLowerCase()]
+            if (rewardInfos) {
+              const apr = Number(formatUnits(rs.amount, rewardInfos.decimals)) * rewardInfos.price / Number(formatEther(aprTvlData.globalData.oraclePrice))
+              projectedAPR[rewardInfos.symbol] = apr * 100
+            }
+            else {
+              console.error("No reward infos for " + rs.token)
+            }
+          })
         }
         // Convex FXN
+        // Everything is retrieved from the API
         else if (market.contract_type === APR_TYPE["Convex FXN"]) {
           if (convexFXNAPIData?.pools) {
             const fxnData = convexFXNAPIData.pools.augmentedPoolData.find((cvxFxnPool: any) => {
@@ -525,30 +534,23 @@ export class GlobalDataService {
         }
 
         // StakeDaoVault Gauge
+        // Found in API
         else if (market.contract_type === APR_TYPE["StakeDao Vault"]) {
-          if (stakeDaoAPIData?.Vault) {
-            const vaultData = stakeDaoAPIData?.Vault.find((data) => {
-              const lpAddress = data?.asset?.address.toLowerCase()
-              return lpAddress === collateralAddress
+          const stakeDaoItem = stakeDaoAPIData.data?.find(item => item.lpToken.address.toLowerCase() === collateralAddress.toLowerCase())
+          if (stakeDaoItem && stakeDaoItem.apr) {
+            const aprObject = stakeDaoItem.apr?.current
+            aprObject.details.forEach(aprObject => {
+              if (!aprObject.label.includes("APY")) {
+                projectedAPR[aprObject.label.split(" ")[0]] = aprObject.value[0]
+              }
             })
-            if (vaultData) {
-              vaultData.gauge.aprDetails.forEach((rewards) => {
-                const symbol = rewards.asset.symbol
-                // If the symbol length is more than 7, we consider it's the LP itself, that we already saved in the projectedAPR object under the "APY" key
-                // It's a dirty hack but an honnest working hack :D
-                if (symbol.length < 7) {
-                  projectedAPR[rewards.asset.symbol] = Number(rewards.apr) * 100 + (projectedAPR[rewards.asset.symbol] || 0)
-                }
-              })
-            } else {
-              console.error(`Reward data for StakeDao vault ${collateralAddress} not found`)
-            }
           } else {
             console.error(`Error in graphQL call to StakeDao`)
           }
         }
 
         // Curve Gauge
+        // Found rate on chain
         else if (market.contract_type === APR_TYPE["Curve Gauge"]) {
           if (curveStableSwapData?.data) {
             const stableSwapData = curveStableSwapData.data.poolData.find((data) => data.address.toLowerCase() === collateralAddress)
@@ -566,6 +568,7 @@ export class GlobalDataService {
       }
 
       // PENDLE PT
+      // Data given by Pendle API
       else if (market.contract_type === APR_TYPE["Pendle PT"]) {
         if (pendleAPIData?.markets) {
           const item = pendleAPIData.markets.find((pendleMarket) => {
@@ -607,19 +610,27 @@ export class GlobalDataService {
   }
 
   private computeCurrentStreamedAPR(onchainData: TVLAprs, prices: Prices): NumMap {
+    // Total stake in $ computed with price oracle
     const tvlTangent = Number(formatEther(onchainData.globalData.totalStakedUSD))
+
     const actualAPRs: { [aprKey: string]: number } = {} // APY: item?.latestWeeklyApy
+
+    // Iterates over all rewards tokens streaming
     onchainData.currentAPR.forEach((streamData) => {
       const rewardAddress = streamData.token.toLowerCase()
       const priceInfo = prices[rewardAddress]
       if (priceInfo) {
-        const usdPerYear = Number(formatUnits(streamData.amountPerYear, priceInfo.decimals)) * priceInfo.price
+        // Compute the USD distributed per year with the annual rate
+        const usdPerYear = Number(formatUnits(streamData.amount, priceInfo.decimals)) * priceInfo.price
+        // Get the display key of the APR
         const key = rewardTokens.find((rewardToken) => rewardToken.address.toLowerCase() === rewardAddress.toLowerCase())!.symbol
+        // Divide the amount
         actualAPRs[key] = (usdPerYear * 100) / tvlTangent
       } else {
         console.error(`No priceInfo for ${rewardAddress}`)
       }
     })
+
     return actualAPRs
   }
 }

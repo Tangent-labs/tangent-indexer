@@ -25,17 +25,17 @@ export type GlobalData = {
   rewardCut: bigint
   rewardTokens: string[]
 }
-export type StreamingData = {
+export type TokenAmount = {
   token: string
-  amountPerYear: bigint
+  amount: bigint
 }
 export type TVLStreamingData = {
   totalSupplyUnderlying: bigint
-  streamingData: StreamingData[]
+  streamingData: TokenAmount[]
 }
 export type TVLAprs = {
   globalData: GlobalData
-  currentAPR: StreamingData[]
+  currentAPR: TokenAmount[]
   projectedAPR: TVLStreamingData
 }
 
@@ -78,18 +78,7 @@ export type CurveApiReturn = {
   }
   error?: any
 }
-export type StakeDaoApiReturn = {
-  Vault?: {
-    address: string
-    gauge: {
-      aprDetails: { apr: string; asset: { address: string; symbol: string } }[]
-    }
-    asset: {
-      address: string
-    }
-  }[]
-  error?: any
-}
+
 
 export type CurveFactoryStableNGApiReturn = {
   data?: {
@@ -164,4 +153,152 @@ export type PendlePriceApiResult = {
   prices: {
     [address: string]: number
   }
+}
+
+
+// STAKE DAO 
+
+
+type Address = string;
+
+export interface Token {
+  id: string;
+  strId?: string;
+  address: Address;
+  chainId: number;
+  name: string;
+  symbol: string;
+  decimals: number;
+  price?: number;
+  logoURI?: string;
+  tags?: string[];
+  extensions?: {
+    onChainPrice?: {
+      to: Address;
+      data: string;
+      decimals: number;
+    };
+    coingeckoId?: string;
+  };
+}
+
+export interface TokenAmountReward {
+  token: Token;
+  end: number;
+  rate: string; // bigint string
+  apr: number;
+  source?: string;
+}
+
+export interface Coin {
+  id: string;
+  name: string;
+  symbol: string;
+  address: Address;
+  decimals: number;
+  logoURI: string;
+  price: number;
+}
+
+export interface Gauge {
+  address: Address;
+  totalSupply: string;
+  totalSupplyUsd: number;
+}
+
+export interface LpToken {
+  address: Address;
+  name: string;
+  symbol: string;
+  decimals: number;
+}
+
+export interface AprDetails {
+  label: string;
+  value: number[];
+}
+
+export interface Apr {
+  boost: number;
+  current: {
+    total: number;
+    details: AprDetails[];
+  };
+}
+
+export interface OnlyBoost {
+  active: boolean;
+  implementations: {
+    key: string;
+    address: Address;
+  }[];
+  totalSupply: string;
+  boost: number;
+  optimalBoost: number;
+  stakeDao: BoostSide;
+  sidecar: BoostSide;
+}
+
+export interface BoostSide {
+  tvl: number;
+  supply: string;
+  boost: number;
+  share: number;
+  workingBalance?: string;
+  workingBalanceShare?: string;
+  optimal: {
+    tvl: number;
+    supply: string;
+    boost: number;
+    share: number;
+  };
+}
+
+export interface SidecarPool {
+  id: number;
+  address: Address;
+}
+
+export interface StakeDaoApiData {
+  key: string;
+  name: string;
+  type: string;
+  version: number;
+  protocol: string;
+  chainId: number;
+  vault: Address;
+  gaugeAddress: Address;
+  isLending: boolean;
+  streaming: boolean;
+  tokensFilter: string[];
+
+  lpToken: LpToken;
+  gauge: Gauge;
+
+  coins: Coin[];
+  underlyingCoins: Coin[];
+
+  lpPriceInUsd: number;
+  tvl: number;
+
+  apr: Apr;
+  rewards: TokenAmountReward[];
+
+  tradingApy: number;
+  minApr: number;
+  maxApr: number;
+
+  totalSupply: string;
+
+  onlyboost: OnlyBoost;
+
+  sidecarPool: SidecarPool;
+
+  error?: any
+}
+
+
+export type StakeDaoApiReturn = {
+  data?: StakeDaoApiData[]
+  error?: any;
 }
