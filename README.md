@@ -73,14 +73,17 @@ Create database tables from Prisma schema
 The Liquidation Bot is a critical component that monitors and processes liquidations in the Convergence protocol. It performs the following functions:
 
 1. **Parameter Collection**
+
    - Validates the execution context
    - Gathers market and borrower data
 
 2. **On-chain Data Analysis**
+
    - Retrieves real-time on-chain data for markets and borrowers
    - Analyzes positions for potential liquidations
 
 3. **Liquidation Processing**
+
    - Handles two types of liquidations:
      - Hard Liquidations: For positions that are severely undercollateralized
      - Soft Liquidations: For positions that are slightly undercollateralized
