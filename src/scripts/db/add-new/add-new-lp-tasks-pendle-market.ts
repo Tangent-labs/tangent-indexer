@@ -84,6 +84,7 @@ async function addPendle_LP_PT_YTTasks(prisma: TransactionPrisma, key: keyof typ
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-0/deposit",
       price_source_id: priceSources.find((p) => p.name.includes(`MARKET ${key}`))!.id!,
       start_date: date,
+      can_zap: true,
     },
     {
       name: `PT ${key}`,
@@ -95,6 +96,7 @@ async function addPendle_LP_PT_YTTasks(prisma: TransactionPrisma, key: keyof typ
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-1/deposit",
       price_source_id: priceSources.find((p) => p.name.includes(`PT ${key}`))!.id!,
       start_date: date,
+      can_zap: true,
     },
     {
       name: `YT ${key}`,
@@ -106,6 +108,7 @@ async function addPendle_LP_PT_YTTasks(prisma: TransactionPrisma, key: keyof typ
       url: "https://www.stakedao.org/yield",
       price_source_id: priceSources.find((p) => p.name === "USG")!.id!,
       start_date: date,
+      can_zap: true,
     },
   ]
 

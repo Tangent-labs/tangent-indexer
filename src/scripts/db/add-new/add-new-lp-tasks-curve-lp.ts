@@ -80,6 +80,7 @@ async function addCurve_LPTasks(prisma: TransactionPrisma, key: keyof typeof CUR
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-0/deposit",
       price_source_id: priceSources.find((p) => p.name.includes(key))!.id!,
       start_date: now,
+      can_zap: true,
     },
     {
       name: key,
@@ -91,6 +92,7 @@ async function addCurve_LPTasks(prisma: TransactionPrisma, key: keyof typeof CUR
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-1/deposit",
       price_source_id: priceSources.find((p) => p.name.includes(key))!.id!,
       start_date: now,
+      can_zap: true,
     },
     {
       name: key,
@@ -102,6 +104,7 @@ async function addCurve_LPTasks(prisma: TransactionPrisma, key: keyof typeof CUR
       url: "https://www.stakedao.org/yield",
       price_source_id: priceSources.find((p) => p.name.includes(key))!.id!,
       start_date: now,
+      can_zap: true,
     },
     {
       name: key,
@@ -113,6 +116,7 @@ async function addCurve_LPTasks(prisma: TransactionPrisma, key: keyof typeof CUR
       url: "http://mossad.com",
       price_source_id: priceSources.find((p) => p.name.includes(key))!.id!,
       start_date: now,
+      can_zap: false,
     },
   ]
 
