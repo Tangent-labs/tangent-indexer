@@ -8,6 +8,7 @@ import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 
 type AlertSeverity = "WARNING" | "DANGER" | "CRITICAL"
 const SHORT_ADDRESS_THRESHOLD = 12
+const ANALYTICS_URL = "https://analytics.tangent.finance/"
 
 type PersistedAlertState = {
   severity: AlertSeverity
@@ -292,7 +293,7 @@ export class MonitoringAlertService {
       grouped.get(candidate.category)!.push(candidate.message)
     }
 
-    const lines = [title]
+    const lines = [title, "", `Analytics: ${ANALYTICS_URL}`]
     for (const category of categoryOrder) {
       const messages = grouped.get(category)
       if (!messages || messages.length === 0) {

@@ -70,7 +70,14 @@ export class MonitoringRepository extends AbstractRepository {
         liquidation_threshold: number | null
       }[]
     >`
-      SELECT DISTINCT ON (ps.market_id, ps.borrower_address)
+      WITH target_snapshot AS (
+        SELECT snapshot_timestamp
+        FROM global.position_snapshots
+        WHERE snapshot_timestamp >= ${since}
+        ORDER BY snapshot_timestamp ASC
+        LIMIT 1
+      )
+      SELECT
         ps.market_id,
         ps.borrower_address,
         ps.cr,
@@ -85,8 +92,8 @@ export class MonitoringRepository extends AbstractRepository {
       FROM global.position_snapshots ps
       INNER JOIN global.usg_markets um ON um.id = ps.market_id
       LEFT JOIN global.market_config mc ON mc.market_id = ps.market_id
-      WHERE ps.snapshot_timestamp >= ${since}
-      ORDER BY ps.market_id, ps.borrower_address, ps.snapshot_timestamp DESC
+      INNER JOIN target_snapshot ts ON ts.snapshot_timestamp = ps.snapshot_timestamp
+      ORDER BY ps.market_id, ps.borrower_address
     `
   }
 }

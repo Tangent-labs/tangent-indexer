@@ -157,6 +157,7 @@ describe("MonitoringAlertService", () => {
 
     expect(sendMessage).toHaveBeenCalledTimes(1)
     expect(sendMessage.mock.calls[0][0]).toContain("Monitoring alerts triggered")
+    expect(sendMessage.mock.calls[0][0]).toContain("https://analytics.tangent.finance/")
     expect(sendMessage.mock.calls[0][0]).toContain("Peg")
     expect(sendMessage.mock.calls[0][0]).toContain("Oracle sanity")
     expect(sendMessage.mock.calls[0][0]).toContain("[WARNING] USDT")
