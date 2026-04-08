@@ -95,19 +95,23 @@ export class OnchainTxBotService {
             const parsedLog = new Interface(StablePoolNG).parseLog(liquidityLog)
             if (usecase === "deposit") {
               const dumpedUSG = parsedLog?.args[1][1]
-              const amount = Number(formatEther(dumpedUSG)).toFixed()
+              const keeper = this.telegramNotifierService.escapeMarkdownV2(currentKeeper)
+              const amount = this.telegramNotifierService.escapeMarkdownV2(Number(formatEther(dumpedUSG)).toFixed())
               await this.telegramNotifierService.sendMessage(
                 `*Keeper notif* 🔔
-*LP:* \`${currentKeeper}\`
-*Action:* 📈 *${amount} USG* added`
+*LP:* \`${keeper}\`
+*Action:* 📈 *${amount} USG* added`,
+                true
               )
             } else {
               const boughtUSG = parsedLog?.args[1][1]
-              const amount = Number(formatEther(boughtUSG)).toFixed()
+              const keeper = this.telegramNotifierService.escapeMarkdownV2(currentKeeper)
+              const amount = this.telegramNotifierService.escapeMarkdownV2(Number(formatEther(boughtUSG)).toFixed())
               await this.telegramNotifierService.sendMessage(
                 `*Keeper notif* 🔔
-*LP:* \`${currentKeeper}\`
-*Action:* 📉 *${amount} USG* removed`
+*LP:* \`${keeper}\`
+*Action:* 📉 *${amount} USG* removed`,
+                true
               )
             }
           } catch (e: any) {
