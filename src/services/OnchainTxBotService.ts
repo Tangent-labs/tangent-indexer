@@ -57,13 +57,10 @@ export class OnchainTxBotService {
     // Iteration through all pegKeeper
     for (let i = 0; i < profits.length; i++) {
       const currentKeeper = keeperNames[i]
-      console.log("bsoir")
 
       const profit = BigInt(profits[i])
       // If there is some profit to do, it means we can repeg the stablecoin
       if (profit !== 0n) {
-        console.log("aaaaa")
-
         const pegKeeper = new Contract(keeperAddresses[i], IPegKeeperV2.abi, this.signer)
         let gasfeeEstimation: bigint | undefined
         try {
@@ -98,14 +95,20 @@ export class OnchainTxBotService {
             const parsedLog = new Interface(StablePoolNG).parseLog(liquidityLog)
             if (usecase === "deposit") {
               const dumpedUSG = parsedLog?.args[1][1]
-              await this.telegramNotifierService.sendMessage(`
-                        ${currentKeeper} keeper 'update' function has been triggered 
-                        ${Number(formatEther(dumpedUSG)).toFixed()} USG have been added to the LP`)
+              const amount = Number(formatEther(dumpedUSG)).toFixed()
+              await this.telegramNotifierService.sendMessage(
+                `*Keeper notif* 🔔
+*LP:* \`${currentKeeper}\`
+*Action:* 📈 *${amount} USG* added`
+              )
             } else {
               const boughtUSG = parsedLog?.args[1][1]
-              await this.telegramNotifierService.sendMessage(`
-                        ${currentKeeper} keeper 'update' function has been triggered
-                        ${Number(formatEther(boughtUSG)).toFixed()} USG have been removed from the LP`)
+              const amount = Number(formatEther(boughtUSG)).toFixed()
+              await this.telegramNotifierService.sendMessage(
+                `*Keeper notif* 🔔
+*LP:* \`${currentKeeper}\`
+*Action:* 📉 *${amount} USG* removed`
+              )
             }
           } catch (e: any) {
             const isNormalError = this.isContainsNormalError(e)
@@ -197,7 +200,7 @@ export class OnchainTxBotService {
           await txCheckpointRC.wait()
           isSuccess = true
           break
-        } catch (e) { }
+        } catch (e) {}
       }
       if (isSuccess) {
         await this.telegramNotifierService.sendMessage(

@@ -31,7 +31,6 @@ async function main() {
   await onchainTxBotService.updateIRAndRC(onchainData.irsAndRcs, addresses.markets, addresses.utilities.irCalculator, addresses.utilities.rewardAccumulator)
 
   console.log("3")
-
 }
 
 async function setup() {
