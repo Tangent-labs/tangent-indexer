@@ -17,20 +17,14 @@ async function main() {
   // Retrieve the onchain data of :
   //  - Profits of the pegKeepers
   //  - Current and Next,  Interest Rate and Reward cut for all the markets
-  console.log("Get on chain data")
   const onchainData = await onchainTxBotService.getOnChainData(marketAddresses, keeperAddresses)
-  console.log("success to get onchain data")
 
   // Verify profits of pegkeepers and trigger the rebalancing if needed
   await onchainTxBotService.updatePegKeepers(onchainData.profits, keeperAddresses, keeperNames)
 
-  console.log("2")
-
   // Computes a relative variation computation between the current and next IR and Reward cut.
   // If the variation is greater than a threshold, we update them.
   await onchainTxBotService.updateIRAndRC(onchainData.irsAndRcs, addresses.markets, addresses.utilities.irCalculator, addresses.utilities.rewardAccumulator)
-
-  console.log("3")
 }
 
 async function setup() {
@@ -70,3 +64,9 @@ async function setup() {
 }
 
 main()
+  .then(() => {
+    console.log("On chain tx bot script ran")
+  })
+  .catch((e) => {
+    console.error(e.toString())
+  })
