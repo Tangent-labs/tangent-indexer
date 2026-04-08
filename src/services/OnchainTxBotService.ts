@@ -57,10 +57,13 @@ export class OnchainTxBotService {
     // Iteration through all pegKeeper
     for (let i = 0; i < profits.length; i++) {
       const currentKeeper = keeperNames[i]
+      console.log("bsoir")
 
       const profit = BigInt(profits[i])
       // If there is some profit to do, it means we can repeg the stablecoin
       if (profit !== 0n) {
+        console.log("aaaaa")
+
         const pegKeeper = new Contract(keeperAddresses[i], IPegKeeperV2.abi, this.signer)
         let gasfeeEstimation: bigint | undefined
         try {
@@ -194,7 +197,7 @@ export class OnchainTxBotService {
           await txCheckpointRC.wait()
           isSuccess = true
           break
-        } catch (e) {}
+        } catch (e) { }
       }
       if (isSuccess) {
         await this.telegramNotifierService.sendMessage(
