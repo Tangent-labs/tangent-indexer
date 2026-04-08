@@ -25,6 +25,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       url: "https://app.tangent.finance/swap?tokenIn=0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1&tokenOut=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
       start_date: now,
       price_source_id: priceSources.find((p) => p.name === "USG")!.id!,
+      can_zap: true,
     },
     {
       name: "sUSG",
@@ -36,6 +37,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       url: "https://app.tangent.finance/stake",
       start_date: now,
       price_source_id: priceSources.find((p) => p.name.includes("sUSG"))!.id!,
+      can_zap: true,
     },
     // Hold Curve LP unstaked
     {
@@ -48,6 +50,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       url: "https://www.curve.finance/dex/ethereum/pools/0x97ba10115da528c113462ede9c20d7adc806d93f/deposit",
       start_date: now,
       price_source_id: priceSources.find((p) => p.name.includes("USDC_crvUSD"))!.id!,
+      can_zap: true,
     },
     {
       name: "USG-frxUSD",
@@ -59,6 +62,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       url: "https://www.curve.finance/dex/ethereum/pools/0xefc056790bb19702b2164ec6ea6ba3ae01d81195/deposit",
       start_date: now,
       price_source_id: priceSources.find((p) => p.name.includes("USDT_crvUSD"))!.id!,
+      can_zap: true,
     },
     // Stake Curve LP in Curve Gauge
     {
@@ -71,6 +75,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       url: "https://www.curve.finance/dex/ethereum/pools/0x97ba10115da528c113462ede9c20d7adc806d93f/deposit",
       start_date: now,
       price_source_id: priceSources.find((p) => p.name.includes("USDC_crvUSD"))!.id!,
+      can_zap: true,
     },
 
     {
@@ -83,6 +88,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       url: "https://www.curve.finance/dex/ethereum/pools/0xefc056790bb19702b2164ec6ea6ba3ae01d81195/deposit",
       start_date: now,
       price_source_id: priceSources.find((p) => p.name.includes("USDT_crvUSD"))!.id!,
+      can_zap: true,
     },
     // Stake Curve LP in Stake DAO
     {
@@ -95,6 +101,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       url: "https://stakedao.org/yield?search=0x52Cd58C160A51C2207504A6d28975C8f981ea8E8",
       start_date: now,
       price_source_id: priceSources.find((p) => p.name.includes("USDC_crvUSD"))!.id!,
+      can_zap: true,
     },
     {
       name: "USG-frxUSD",
@@ -106,6 +113,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       url: "https://stakedao.org/yield?search=0x39b1df92f9485A73cAdF4846aBDe59eac0901A94",
       start_date: now,
       price_source_id: priceSources.find((p) => p.name.includes("USDT_crvUSD"))!.id!,
+      can_zap: true,
     },
 
     // Stake Curve LP in Convex
@@ -119,6 +127,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       url: "https://curve.convexfinance.com/stake/ethereum/541",
       start_date: now,
       price_source_id: priceSources.find((p) => p.name.includes("USDC_crvUSD"))!.id!,
+      can_zap: false,
     },
     {
       name: "USG-frxUSD",
@@ -130,6 +139,7 @@ export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_so
       url: "https://curve.convexfinance.com/stake/ethereum/542",
       start_date: now,
       price_source_id: priceSources.find((p) => p.name.includes("USDT_crvUSD"))!.id!,
+      can_zap: false,
     },
   ]
   return tasks

@@ -12,7 +12,6 @@ import {
   StakeDaoApiReturn,
 } from "./globalData/types.js"
 import axios from "axios"
-import { spawn } from "child_process"
 
 export const CURVE_API = "https://api.curve.finance/api"
 const PENDLE_PRICE_API = "https://api-v2.pendle.finance/core/v1/1/assets/prices"

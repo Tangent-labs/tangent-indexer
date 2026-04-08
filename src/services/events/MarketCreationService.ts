@@ -69,6 +69,7 @@ export class MarketCreationService {
             token_address: market.contract_address.toLowerCase(),
             url: process.env.DAPP_URL + "/" + market.contract_address.toLowerCase(),
             start_date: market.create_date,
+            can_zap: false,
           }))
         )
       }
