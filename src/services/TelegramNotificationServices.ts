@@ -23,12 +23,11 @@ export class TelegramNotifierService {
    * Send a message to the configured Telegram chat
    * @returns Promise<boolean> - Returns true if message was sent successfully
    */
-  async sendMessage(text: string): Promise<boolean> {
+  async sendMessage(text: string, alreadyFormatted = false): Promise<boolean> {
     if (!this.botToken || !this.chatId) {
       console.error("Telegram bot token or chat id is not set")
       return false
     }
-    // Ensure we only send strings, not objects
     const cleanedText = typeof text === "string" ? text : String(text)
     if (!cleanedText) {
       return false
@@ -39,7 +38,7 @@ export class TelegramNotifierService {
         `${this.baseUrl}/sendMessage`,
         {
           chat_id: this.chatId,
-          text: this.escapeMarkdownV2(cleanedText),
+          text: alreadyFormatted ? cleanedText : this.escapeMarkdownV2(cleanedText),
           parse_mode: "MarkdownV2",
           disableWebPagePreview: true,
           disableNotification: false,
