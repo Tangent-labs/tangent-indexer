@@ -69,8 +69,8 @@ export const OFFCHAIN_TASKS = [
     url: "https://vote.convexfinance.com/",
     title: "Gauge Weight for Week",
     scoringChoices: [
-      { taskDescription: "Vote for USG/USDC on CVX (snapshot)", name: "usg+usdc", pointRate: 20 },
-      { taskDescription: "Vote for USG/frxUSD on CVX (snapshot)", name: "usg+frxUSD", pointRate: 20 },
+      { taskDescription: "Vote for USG/USDC on Curve Gauge (snapshot)", name: "usg+usdc", pointRate: 20 },
+      { taskDescription: "Vote for USG/frxUSD on Curve Gauge (snapshot)", name: "usg+frxUSD", pointRate: 20 },
     ],
     excludedVoters: [
       { name: "Votium delegation", user_address: "0xde1E6A7ED0ad3F61D531a8a78E83CcDdbd6E0c49".toLowerCase() },
