@@ -18,9 +18,11 @@ import { TelegramNotifierService } from "../../services/TelegramNotificationServ
 import { routers } from "@tangent/defi-resources"
 import { getAddressesJson } from "../../utils/jsonReader.js"
 import { RouterService } from "../../services/RouterService.js"
+import { getLiquidatorWalletPks } from "../../config/liquidation_wallets.js"
 
 dotenv.config()
-const { providers, walletsPks, handleError } = setUpIndexer()
+const { providers, handleError } = setUpIndexer()
+const walletsPks = getLiquidatorWalletPks()
 const { liquidationService, context, liquidationBotService, telegramNotifierService, prismaClient } = await setUpCheckLiquidationServices()
 
 // Run main function if this file is being run directly

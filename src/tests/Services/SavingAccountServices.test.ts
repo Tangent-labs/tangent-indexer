@@ -177,10 +177,10 @@ describe("SavingAccountServices", () => {
 
       const usgAddress = "0xUSG"
 
+      // totalGain = 3 tokens, totalAsset = 100 tokens → APR = (3*52)/100 = 1.56, APY = exp(1.56)-1
       const events = [
-        // USG token: 1e18 + 2e18 = 3e18 → 3 / 52
-        { token: usgAddress, gain: "1000000000000000000", block_date: within7Days },
-        { token: usgAddress, gain: "2000000000000000000", block_date: within7Days },
+        { token: usgAddress, gain: "1000000000000000000", currentDebtAfter: "50000000000000000000", block_id: 100, block_date: within7Days },
+        { token: usgAddress, gain: "2000000000000000000", currentDebtAfter: "100000000000000000000", block_id: 101, block_date: within7Days },
       ]
 
       ;(mockSavingAccountRepository.findEventsAfterDate as any).mockResolvedValue(events)
@@ -210,8 +210,8 @@ describe("SavingAccountServices", () => {
         expect(row.timestamp).toEqual(nowBC)
       }
 
-      // USG: 3 / 52
-      expect(byIndicator.get(22n)!.value).toBeCloseTo(3 / 52, 10)
+      // USG: APR = (3*52)/100 = 1.56 → APY = exp(1.56) - 1
+      expect(byIndicator.get(22n)!.value).toBeCloseTo(Math.exp(1.56) - 1, 10)
     })
 
     it("should insert missing indicators when they don't exist", async () => {
@@ -223,8 +223,8 @@ describe("SavingAccountServices", () => {
       const usgAddress = "0xUSG"
 
       const events = [
-        { token: tanAddress, gain: "1000000000000000000", block_date: within7Days },
-        { token: usgAddress, gain: "500000000000000000", block_date: within7Days },
+        { token: tanAddress, gain: "1000000000000000000", currentDebtAfter: "100000000000000000000", block_id: 100, block_date: within7Days },
+        { token: usgAddress, gain: "500000000000000000", currentDebtAfter: "100000000000000000000", block_id: 100, block_date: within7Days },
       ]
 
       ;(mockSavingAccountRepository.findEventsAfterDate as any).mockResolvedValue(events)
@@ -259,7 +259,7 @@ describe("SavingAccountServices", () => {
 
       const events = [
         // Test with lowercase token that should match uppercase address
-        { token: "0xusg", gain: "500000000000000000", block_date: within7Days },
+        { token: "0xusg", gain: "500000000000000000", currentDebtAfter: "100000000000000000000", block_id: 100, block_date: within7Days },
       ]
 
       ;(mockSavingAccountRepository.findEventsAfterDate as any).mockResolvedValue(events)
@@ -284,7 +284,27 @@ describe("SavingAccountServices", () => {
         byIndicator.set(row.global_indicator_id, { value: row.value })
       }
 
-      expect(byIndicator.get(22n)!.value).toBeCloseTo(0.5 / 52, 10) // USG
+      // APR = (0.5*52)/100 = 0.26 → APY = exp(0.26) - 1
+      expect(byIndicator.get(22n)!.value).toBeCloseTo(Math.exp(0.26) - 1, 10)
+    })
+    it("should skip APY insertion when the latest event has no currentDebtAfter", async () => {
+      const nowBC = new Date()
+      const within7Days = new Date(nowBC.getTime() - 2 * 24 * 60 * 60 * 1000)
+      const usgAddress = "0xUSG"
+
+      const events = [{ token: usgAddress, gain: "500000000000000000", currentDebtAfter: null, block_id: 100, block_date: within7Days }]
+
+      ;(mockSavingAccountRepository.findEventsAfterDate as any).mockResolvedValue(events)
+
+      const mockGlobalRepo = {
+        getGlobalIndicatorIds: vi.fn().mockResolvedValue(new Map<string, bigint>([["SAVING_APY_USG", 22n]])),
+        insertGlobalIndicator: vi.fn(),
+        insertGlobalIndicatorValue: vi.fn(),
+      } as any
+
+      await savingAccountService.processSavingAccountApy(mockGlobalRepo, nowBC, usgAddress)
+
+      expect(mockGlobalRepo.insertGlobalIndicatorValue).not.toHaveBeenCalled()
     })
   })
 })

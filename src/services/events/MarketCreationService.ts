@@ -89,7 +89,7 @@ export class MarketCreationService {
     const mapMarketIdAddresses = new Map<string, number>()
 
     marketContracts.forEach((market) => {
-      mapMarketIdAddresses.set(market.contract_address, Number(market.id))
+      mapMarketIdAddresses.set(market.contract_address.toLowerCase(), Number(market.id))
     })
 
     const marketAddresses = marketContracts.map((market) => market.contract_address as AddressLike)

@@ -4,7 +4,6 @@ import {
   LiquidationBotLogAction,
   LiquidationExecutionResult,
   LiquidationMarketAccountOutInfo,
-  LiquidationUserInfo,
   LiquidationUserInInfo,
 } from "../type/data.js"
 import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
@@ -184,7 +183,7 @@ export class LiquidationBotLogService {
     await this._logAction(action, context, null)
   }
 
-  async logLiquidationBadDebtExecution(data: LiquidationUserInfo | null, context: LiquidationExecutionContext, txHash?: string) {
+  async logLiquidationBadDebtExecution(data: LiquidationUserInInfo | null, context: LiquidationExecutionContext, txHash?: string) {
     await this.liquidationBotLogRepository.insertLiquidationExecution({
       execution_key: context.executionKey,
       market: (data?.market as string) ?? "",

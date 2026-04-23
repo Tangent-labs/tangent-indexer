@@ -149,6 +149,10 @@ export class UserMarketService {
       uniqueBlockId.add(log.blockNumber)
       const contractAddress = log.address.toLowerCase()
 
+      if (!mapMarketIdPerAddresses.get(contractAddress)) {
+        console.warn(`[UserMarketService] unknown market address: ${contractAddress} (event: ${eventType ?? log.topics[0]})`)
+      }
+
       switch (eventType) {
         case "Repay":
           {

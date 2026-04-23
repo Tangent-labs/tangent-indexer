@@ -1,15 +1,15 @@
 {
   "success": {
     "0x5018be882dcce5e3f2f3b0913ae2096b9b3fb61f": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
               "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
               "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -39,8 +39,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7"
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1"
             ],
             "swapParamsFull": [
               [0, 1, 6, 1, 2],
@@ -64,8 +64,8 @@
               "0xcf62f905562626cfcdd2261162a51fd02fc9c5b6",
               "0xF292eB6c5dcb693Eaaf392D0562a01C3710E5978",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7"
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1"
             ],
             "swapParamsFull": [
               [0, 1, 6, 1, 2],
@@ -79,13 +79,13 @@
         }
       ]
     },
-    "0x2da2b5387bcc99ea97413733c4876f628695f0f7": {
+    "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": {
       "0x5018be882dcce5e3f2f3b0913ae2096b9b3fb61f": [
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
               "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
@@ -109,8 +109,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -134,8 +134,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0xF292eB6c5dcb693Eaaf392D0562a01C3710E5978",
               "0xcf62f905562626cfcdd2261162a51fd02fc9c5b6",
@@ -161,8 +161,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
@@ -186,8 +186,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -211,8 +211,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
               "0xdac17f958d2ee523a2206206994597c13d831ec7",
@@ -238,8 +238,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
               "0xdac17f958d2ee523a2206206994597c13d831ec7",
@@ -263,8 +263,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -288,8 +288,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -315,8 +315,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
               "0xdac17f958d2ee523a2206206994597c13d831ec7",
@@ -340,8 +340,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
               "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
@@ -367,8 +367,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -392,8 +392,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
               "0x085780639cc2cacd35e474e71f4d000e2405d8f6",
@@ -417,8 +417,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -444,8 +444,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0xF292eB6c5dcb693Eaaf392D0562a01C3710E5978",
               "0xcf62f905562626cfcdd2261162a51fd02fc9c5b6",
@@ -469,8 +469,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -494,8 +494,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
               "0x085780639cc2cacd35e474e71f4d000e2405d8f6",
@@ -521,8 +521,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x383e6b4437b59fff47b619cba855ca29342a8559",
               "0x383e6b4437b59fff47b619cba855ca29342a8559",
@@ -546,8 +546,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
               "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
@@ -571,8 +571,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -598,8 +598,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0xD001aE433f254283FeCE51d4ACcE8c53263aa186",
               "0xD001aE433f254283FeCE51d4ACcE8c53263aa186",
@@ -623,8 +623,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -650,8 +650,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x383e6b4437b59fff47b619cba855ca29342a8559",
               "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8",
@@ -675,8 +675,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
               "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
@@ -696,39 +696,14 @@
             ]
           },
           "display": "USG* >> USG-frxUSD* >> frxUSD >> frxUSD/sUSDS >> sUSDS >> sUSDS >> USDS >> stUSDS/USDS >> stUSDS/USDS"
-        },
-        {
-          "params": {
-            "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x383e6b4437b59fff47b619cba855ca29342a8559",
-              "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8",
-              "0xA632D59b9B804a956BfaA9b48Af3A1b74808FC1f",
-              "0xdC035D45d973E3EC169d2276DDab16f1e407384F",
-              "0x99CD4Ec3f88A45940936F469E4bB72A2A701EEB9",
-              "0x99CD4Ec3f88A45940936F469E4bB72A2A701EEB9",
-              "0x2C7C98A3b1582D83c43987202aEFf638312478aE",
-              "0x2C7C98A3b1582D83c43987202aEFf638312478aE"
-            ],
-            "swapParamsFull": [
-              [1, 0, 1, 1, 2],
-              [1, 0, 1, 1, 2],
-              [0, 1, 1, 1, 2],
-              [0, 0, 9, 1, 0],
-              [1, 0, 4, 10, 2]
-            ]
-          },
-          "display": "USG* >> USG-USDC* >> USDC >> PYUSD/USDC >> PYUSD >> PYUSD/USDS >> USDS >> stUSDS >> stUSDS >> stUSDS/USDS >> stUSDS/USDS"
         }
       ],
       "0x9a9e2e70919c75d80aaaa1d483c46cdbb8ac4d1b": [
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x9A9e2e70919c75D80aAaA1D483c46CdBb8ac4d1b",
               "0x9A9e2e70919c75D80aAaA1D483c46CdBb8ac4d1b",
@@ -752,8 +727,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
               "0x085780639cc2cacd35e474e71f4d000e2405d8f6",
@@ -777,8 +752,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -804,8 +779,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -829,8 +804,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
               "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
@@ -854,8 +829,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -881,8 +856,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
               "0x085780639cc2cacd35e474e71f4d000e2405d8f6",
@@ -906,8 +881,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -931,8 +906,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
               "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
@@ -958,8 +933,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
               "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
@@ -983,8 +958,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -1008,8 +983,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
               "0xdac17f958d2ee523a2206206994597c13d831ec7",
@@ -1035,8 +1010,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -1060,8 +1035,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -1085,8 +1060,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
               "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
@@ -1112,8 +1087,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
               "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
@@ -1137,8 +1112,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -1162,8 +1137,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
               "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
@@ -1189,8 +1164,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
               "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
@@ -1214,8 +1189,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -1239,8 +1214,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -1266,8 +1241,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
               "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
@@ -1291,8 +1266,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
               "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
@@ -1318,8 +1293,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x02950460e2b9529d0e00284a5fa2d7bdf3fa4d72",
               "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
@@ -1345,8 +1320,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
               "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
@@ -1370,8 +1345,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -1397,8 +1372,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
@@ -1424,8 +1399,8 @@
         {
           "params": {
             "routeAddresses": [
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
               "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
@@ -1446,18 +1421,174 @@
           },
           "display": "USG* >> USG-USDC* >> USDC >> WBTC/ETH/USDC >> WBTC"
         }
+      ],
+      "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-frxUSD* >> frxUSD >> crvUSD/frxUSD >> crvUSD >> USDC/crvUSD >> USDC"
+        }
+      ],
+      "0xcacd6fd266af91b8aed52accc382b4e165586e29": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-frxUSD* >> frxUSD"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> USDC/crvUSD >> crvUSD >> crvUSD/frxUSD >> frxUSD"
+        }
+      ],
+      "0xdac17f958d2ee523a2206206994597c13d831ec7": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> USDC/USDT >> USDT"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-frxUSD* >> frxUSD >> crvUSD/frxUSD >> crvUSD >> crvUSD/USDC >> USDC >> USDC/USDT >> USDT"
+        }
       ]
     },
     "0x4dece678ceceb27446b35c672dc7d61f30bad69e": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -1483,8 +1614,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -1510,8 +1641,8 @@
               "0xdac17f958d2ee523a2206206994597c13d831ec7",
               "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -1528,7 +1659,7 @@
       ]
     },
     "0x390f3595bca2df7d23783dfd126427cceb997bf4": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
@@ -1537,8 +1668,8 @@
               "0xdac17f958d2ee523a2206206994597c13d831ec7",
               "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -1562,8 +1693,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -1587,8 +1718,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -1607,7 +1738,7 @@
       ]
     },
     "0x5b03cccab7ba3010fa5cad23746cbf0794938e96": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
@@ -1616,8 +1747,8 @@
               "0xdac17f958d2ee523a2206206994597c13d831ec7",
               "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -1643,8 +1774,8 @@
               "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
               "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -1670,8 +1801,8 @@
               "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
               "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7"
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1"
             ],
             "swapParamsFull": [
               [0, 1, 6, 1, 2],
@@ -1686,7 +1817,7 @@
       ]
     },
     "0x635ef0056a597d13863b73825cca297236578595": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
@@ -1695,8 +1826,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -1722,8 +1853,8 @@
               "0x085780639cc2cacd35e474e71f4d000e2405d8f6",
               "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -1745,8 +1876,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -1765,7 +1896,7 @@
       ]
     },
     "0xed785af60bed688baa8990cd5c4166221599a441": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
@@ -1774,8 +1905,8 @@
               "0xcf62f905562626cfcdd2261162a51fd02fc9c5b6",
               "0xF292eB6c5dcb693Eaaf392D0562a01C3710E5978",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -1803,8 +1934,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7"
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1"
             ],
             "swapParamsFull": [
               [0, 0, 6, 1, 2],
@@ -1826,8 +1957,8 @@
               "0x085780639cc2cacd35e474e71f4d000e2405d8f6",
               "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -1844,15 +1975,15 @@
       ]
     },
     "0x383e6b4437b59fff47b619cba855ca29342a8559": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
               "0x383e6b4437b59fff47b619cba855ca29342a8559",
               "0x383e6b4437b59fff47b619cba855ca29342a8559",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -1882,8 +2013,8 @@
               "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
               "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7"
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1"
             ],
             "swapParamsFull": [
               [0, 0, 6, 1, 2],
@@ -1905,8 +2036,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -1923,15 +2054,15 @@
       ]
     },
     "0xd001ae433f254283fece51d4acce8c53263aa186": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
               "0xD001aE433f254283FeCE51d4ACcE8c53263aa186",
               "0xD001aE433f254283FeCE51d4ACcE8c53263aa186",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -1959,8 +2090,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -1977,7 +2108,7 @@
       ]
     },
     "0x2c7c98a3b1582d83c43987202aeff638312478ae": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
@@ -1988,8 +2119,8 @@
               "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8",
               "0x383e6b4437b59fff47b619cba855ca29342a8559",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2013,8 +2144,8 @@
               "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
               "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2040,8 +2171,8 @@
               "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8",
               "0x383e6b4437b59fff47b619cba855ca29342a8559",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7"
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1"
             ],
             "swapParamsFull": [
               [0, 1, 6, 1, 2],
@@ -2056,15 +2187,15 @@
       ]
     },
     "0x9a9e2e70919c75d80aaaa1d483c46cdbb8ac4d1b": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
               "0x9A9e2e70919c75D80aAaA1D483c46CdBb8ac4d1b",
               "0x9A9e2e70919c75D80aAaA1D483c46CdBb8ac4d1b",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -2092,8 +2223,8 @@
               "0x085780639cc2cacd35e474e71f4d000e2405d8f6",
               "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2117,8 +2248,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2135,7 +2266,7 @@
       ]
     },
     "0x57064f49ad7123c92560882a45518374ad982e85": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
@@ -2144,8 +2275,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -2171,8 +2302,8 @@
               "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
               "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2194,8 +2325,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -2214,7 +2345,7 @@
       ]
     },
     "0x74345504eaea3d9408fc69ae7eb2d14095643c5b": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
@@ -2223,8 +2354,8 @@
               "0x085780639cc2cacd35e474e71f4d000e2405d8f6",
               "0x5018BE882DccE5E3F2f3B0913AE2096B9b3fB61f",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -2250,8 +2381,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2275,8 +2406,8 @@
               "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
               "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2293,7 +2424,7 @@
       ]
     },
     "0x2c683fad51da2cd17793219cc86439c1875c353e": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
@@ -2302,8 +2433,8 @@
               "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
               "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -2331,8 +2462,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7"
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1"
             ],
             "swapParamsFull": [
               [0, 0, 6, 1, 2],
@@ -2354,8 +2485,8 @@
               "0xdac17f958d2ee523a2206206994597c13d831ec7",
               "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2372,7 +2503,7 @@
       ]
     },
     "0xae6ee608b297305abf3eb609b81febbb8f6a0bb3": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
@@ -2383,8 +2514,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2408,8 +2539,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2433,8 +2564,8 @@
               "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
               "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2451,7 +2582,7 @@
       ]
     },
     "0xb5b93dde9d87563184d31f3b7f85dd58404e2ee0": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
@@ -2462,8 +2593,8 @@
               "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
               "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2489,8 +2620,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7"
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1"
             ],
             "swapParamsFull": [
               [0, 1, 6, 1, 2],
@@ -2501,19 +2632,44 @@
             ]
           },
           "display": "msETH/OETH >> msETH/OETH >> OETH >> OETH/WETH >> WETH >> crvUSD/ETH/CRV >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0xB5b93dde9D87563184d31F3b7f85dd58404E2ee0",
+              "0xB5b93dde9D87563184d31F3b7f85dd58404E2ee0",
+              "0x856c4Efb76C1D1AE02e20CEB03A2A6a08b0b8dC3",
+              "0x94B17476A93b3262d87B9a326965D1E91f9c13E7",
+              "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [1, 0, 1, 1, 2],
+              [2, 0, 1, 2, 3],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "msETH/OETH >> msETH/OETH >> OETH >> OETH/ETH >> ETH >> WBTC/ETH/USDC >> USDC >> USG-USDC* >> USG*"
         }
       ]
     },
     "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
               "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
               "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -2541,8 +2697,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2566,8 +2722,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2583,8 +2739,62 @@
         }
       ]
     },
+    "0x1202f5c7b4b9e47a1a484e8b270be34dbbc75055": {
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x1202f5c7b4b9e47a1a484e8b270be34dbbc75055",
+              "0x64273624eb57c5cA961d366CBF3968e760Bf0452",
+              "0x865377367054516e17014CcdED1e7d814EDC9ce4",
+              "0x8b83c4aA949254895507D09365229BC3a8c7f710",
+              "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
+              "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "wstUSR >> DOLA/wstUSR >> DOLA >> DOLA/sUSDS >> sUSDS >> frxUSD/sUSDS >> frxUSD >> USG-frxUSD* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x1202f5c7b4b9e47a1a484e8b270be34dbbc75055",
+              "0x1202f5c7b4b9e47a1a484e8b270be34dbbc75055",
+              "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
+              "0x38de22a3175708d45e7c7c64cd78479c8b56f76e",
+              "0x865377367054516e17014CcdED1e7d814EDC9ce4",
+              "0x8b83c4aA949254895507D09365229BC3a8c7f710",
+              "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
+              "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1"
+            ],
+            "swapParamsFull": [
+              [1, 0, 9, 1, 0],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2]
+            ]
+          },
+          "display": "wstUSR >> wstUSR >> USR >> DOLA/USR >> DOLA >> DOLA/sUSDS >> sUSDS >> frxUSD/sUSDS >> frxUSD >> USG-frxUSD* >> USG*"
+        }
+      ]
+    },
     "0x4c9edd5852cd905f086c759e8383e09bff1e68b3": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
@@ -2595,8 +2805,8 @@
               "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
               "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2616,8 +2826,8 @@
               "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
               "0x02950460e2b9529d0e00284a5fa2d7bdf3fa4d72",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -2647,8 +2857,8 @@
               "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
               "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7"
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1"
             ],
             "swapParamsFull": [
               [0, 0, 9, 1, 0],
@@ -2660,37 +2870,10 @@
           },
           "display": "USDe >> sUSDe >> sUSDe >> DOLA/sUSDe >> DOLA >> DOLA/sUSDS >> sUSDS >> frxUSD/sUSDS >> frxUSD >> USG-frxUSD* >> USG*"
         }
-      ],
-      "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": [
-        {
-          "params": {
-            "routeAddresses": [
-              "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
-              "0x02950460e2b9529d0e00284a5fa2d7bdf3fa4d72",
-              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000"
-            ],
-            "swapParamsFull": [
-              [0, 1, 1, 1, 2],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0]
-            ]
-          },
-          "display": "USDe >> USDC/USDe >> USDC"
-        }
       ]
     },
     "0x9d39a5de30e57443bff2a8307a4256c8797a3497": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
@@ -2699,8 +2882,8 @@
               "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
               "0x81A2612F6dEA269a6Dd1F6DeAb45C5424EE2c4b7",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -2726,8 +2909,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2744,7 +2927,7 @@
       ]
     },
     "0x9c3b46c0ceb5b9e304fcd6d88fc50f7dd24b31bc": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
@@ -2755,8 +2938,8 @@
               "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
               "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
               "0xcacd6fd266af91b8aed52accc382b4e165586e29",
-              "0x1D9008eDfEA355905Ba5668417a227D46962F4DD",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000"
             ],
@@ -2773,15 +2956,15 @@
       ]
     },
     "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599": {
-      "0x2da2b5387bcc99ea97413733c4876f628695f0f7": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
               "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
               "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x2877ece562057ee8B0A711bFfA10987C3D6398E7",
-              "0x2DA2b5387bcC99Ea97413733c4876F628695f0f7",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -2799,157 +2982,18 @@
           },
           "display": "WBTC >> WBTC/ETH/USDC >> USDC >> USG-USDC* >> USG*"
         }
-      ],
-      "0x6c292d0e6cfd9f14c474f26ad457de1ff9f4bd26": [
-        {
-          "params": {
-            "routeAddresses": [
-              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
-              "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-              "0x26D85588B9eD20abA4Fa8Fb9b3C8977C4aAd133C",
-              "0x6c292D0E6CFd9f14c474F26Ad457de1fF9f4bD26",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000"
-            ],
-            "swapParamsFull": [
-              [1, 2, 1, 2, 3],
-              [0, 1, 1, 2, 2],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0]
-            ]
-          },
-          "display": "WBTC >> WBTC/ETH/USDC >> WETH >> TAN-WETH* >> TAN*"
-        }
-      ]
-    },
-    "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": {
-      "0x6c292d0e6cfd9f14c474f26ad457de1ff9f4bd26": [
-        {
-          "params": {
-            "routeAddresses": [
-              "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-              "0x26D85588B9eD20abA4Fa8Fb9b3C8977C4aAd133C",
-              "0x6c292D0E6CFd9f14c474F26Ad457de1fF9f4bD26",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000"
-            ],
-            "swapParamsFull": [
-              [0, 1, 1, 2, 2],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0]
-            ]
-          },
-          "display": "WETH >> TAN-WETH* >> TAN*"
-        }
-      ]
-    },
-    "0x6c292d0e6cfd9f14c474f26ad457de1ff9f4bd26": {
-      "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": [
-        {
-          "params": {
-            "routeAddresses": [
-              "0x6c292D0E6CFd9f14c474F26Ad457de1fF9f4bD26",
-              "0x26D85588B9eD20abA4Fa8Fb9b3C8977C4aAd133C",
-              "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000"
-            ],
-            "swapParamsFull": [
-              [1, 0, 1, 2, 2],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0]
-            ]
-          },
-          "display": "TAN* >> TAN-WETH* >> WETH"
-        }
-      ],
-      "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599": [
-        {
-          "params": {
-            "routeAddresses": [
-              "0x6c292D0E6CFd9f14c474F26Ad457de1fF9f4bD26",
-              "0x26D85588B9eD20abA4Fa8Fb9b3C8977C4aAd133C",
-              "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
-              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000"
-            ],
-            "swapParamsFull": [
-              [1, 0, 1, 2, 2],
-              [2, 1, 1, 2, 3],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0]
-            ]
-          },
-          "display": "TAN* >> TAN-WETH* >> WETH >> WBTC/ETH/USDC >> WBTC"
-        }
-      ],
-      "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": [
-        {
-          "params": {
-            "routeAddresses": [
-              "0x6c292D0E6CFd9f14c474F26Ad457de1fF9f4bD26",
-              "0x26D85588B9eD20abA4Fa8Fb9b3C8977C4aAd133C",
-              "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
-              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000",
-              "0x0000000000000000000000000000000000000000"
-            ],
-            "swapParamsFull": [
-              [1, 0, 1, 2, 2],
-              [2, 0, 1, 2, 3],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0]
-            ]
-          },
-          "display": "TAN* >> TAN-WETH* >> WETH >> WBTC/ETH/USDC >> USDC"
-        }
       ]
     },
     "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": {
-      "0x6c292d0e6cfd9f14c474f26ad457de1ff9f4bd26": [
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
         {
           "params": {
             "routeAddresses": [
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
-              "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-              "0x26D85588B9eD20abA4Fa8Fb9b3C8977C4aAd133C",
-              "0x6c292D0E6CFd9f14c474F26Ad457de1fF9f4bD26",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -2958,25 +3002,214 @@
               "0x0000000000000000000000000000000000000000"
             ],
             "swapParamsFull": [
-              [0, 2, 1, 2, 3],
-              [0, 1, 1, 2, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
               [0, 0, 0, 0, 0],
               [0, 0, 0, 0, 0],
               [0, 0, 0, 0, 0]
             ]
           },
-          "display": "USDC >> WBTC/ETH/USDC >> WETH >> TAN-WETH* >> TAN*"
-        }
-      ],
-      "0x4c9edd5852cd905f086c759e8383e09bff1e68b3": [
+          "display": "USDC >> USG-USDC* >> USG*"
+        },
         {
           "params": {
             "routeAddresses": [
               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-              "0x02950460e2b9529d0e00284a5fa2d7bdf3fa4d72",
-              "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDC >> USDC/crvUSD >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG*"
+        }
+      ],
+      "0x97ba10115da528c113462ede9c20d7adc806d93f": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDC >> USG-USDC* >> USG-USDC*"
+        }
+      ],
+      "0xefc056790bb19702b2164ec6ea6ba3ae01d81195": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDC >> USDC/crvUSD >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG-frxUSD*"
+        }
+      ]
+    },
+    "0xcacd6fd266af91b8aed52accc382b4e165586e29": {
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "frxUSD >> USG-frxUSD* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "frxUSD >> crvUSD/frxUSD >> crvUSD >> USDC/crvUSD >> USDC >> USG-USDC* >> USG*"
+        }
+      ],
+      "0xefc056790bb19702b2164ec6ea6ba3ae01d81195": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "frxUSD >> USG-frxUSD* >> USG-frxUSD*"
+        }
+      ],
+      "0x97ba10115da528c113462ede9c20d7adc806d93f": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "frxUSD >> crvUSD/frxUSD >> crvUSD >> USDC/crvUSD >> USDC >> USG-USDC* >> USG-USDC*"
+        }
+      ]
+    },
+    "0xdac17f958d2ee523a2206206994597c13d831ec7": {
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xdac17f958d2ee523a2206206994597c13d831ec7",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
               "0x0000000000000000000000000000000000000000",
@@ -2986,22 +3219,157 @@
             ],
             "swapParamsFull": [
               [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDT >> USDC/USDT >> USDC >> USG-USDC* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0xdac17f958d2ee523a2206206994597c13d831ec7",
+              "0x4f493b7de8aac7d55f71853688b1f7c8f0243c85",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USDT >> USDC/USDT >> USDC >> crvUSD/USDC >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG*"
+        }
+      ]
+    },
+    "0x97ba10115da528c113462ede9c20d7adc806d93f": {
+      "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
               [0, 0, 0, 0, 0],
               [0, 0, 0, 0, 0],
               [0, 0, 0, 0, 0],
               [0, 0, 0, 0, 0]
             ]
           },
-          "display": "USDC >> USDC/USDe >> USDe"
+          "display": "USG-USDC* >> USG-USDC* >> USDC"
+        }
+      ],
+      "0xcacd6fd266af91b8aed52accc382b4e165586e29": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG-USDC* >> USG-USDC* >> USDC >> USDC/crvUSD >> crvUSD >> crvUSD/frxUSD >> frxUSD"
+        }
+      ]
+    },
+    "0xefc056790bb19702b2164ec6ea6ba3ae01d81195": {
+      "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG-frxUSD* >> USG-frxUSD* >> frxUSD >> crvUSD/frxUSD >> crvUSD >> USDC/crvUSD >> USDC"
+        }
+      ],
+      "0xcacd6fd266af91b8aed52accc382b4e165586e29": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG-frxUSD* >> USG-frxUSD* >> frxUSD"
         }
       ]
     }
   },
   "errors": [
     "USG* >> USG-frxUSD* >> frxUSD >> frxUSD/sUSDS >> sUSDS >> sUSDe/sUSDS >> sUSDe >> sUSDe >> USDe >> USDT/USDe >> USDT/USDe",
-    "msETH/OETH >> msETH/OETH >> OETH >> OETH/ETH >> ETH >> WBTC/ETH/USDC >> USDC >> USG-USDC* >> USG*",
-    "wstUSR >> DOLA/wstUSR >> DOLA >> DOLA/sUSDS >> sUSDS >> frxUSD/sUSDS >> frxUSD >> USG-frxUSD* >> USG*",
-    "wstUSR >> wstUSR >> USR >> DOLA/USR >> DOLA >> DOLA/sUSDS >> sUSDS >> frxUSD/sUSDS >> frxUSD >> USG-frxUSD* >> USG*",
+    "USG* >> USG-USDC* >> USDC >> PYUSD/USDC >> PYUSD >> PYUSD/USDS >> USDS >> stUSDS >> stUSDS >> stUSDS/USDS >> stUSDS/USDS",
     "USG* >> USG-frxUSD* >> frxUSD >> sUSDS/frxUSD >> sUSDS >> sUSDe/sUSDS >> sUSDe >> sUSDe >> USDe",
     "USG* >> USG-frxUSD* >> frxUSD >> frxUSD/sUSDS >> sUSDS >> DOLA/sUSDS >> DOLA >> DOLA/sUSDe >> sUSDe >> sUSDe >> USDe",
     "frxETH/WETH >> frxETH/WETH >> frxETH >> frxETH/ETH >> ETH >> WBTC/ETH/USDC >> USDC >> USG-USDC* >> USG*",

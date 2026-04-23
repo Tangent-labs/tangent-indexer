@@ -1284,6 +1284,71 @@ describe("LiquidationService - executeLiquidation", () => {
       expect.objectContaining({ account: "0xUser1", market: "0xMarket1" })
     )
   })
+
+  it("should still reject with the original estimation error when DB logging fails", async () => {
+    const account: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 2000000000000000000n,
+      userDebt: 760n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 1500n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+      collateralUSDPrice: 1n * DECIMALS,
+      oracleDecimals: 18n,
+    }
+
+    vi.spyOn(liquidationService, "estimateLiquidation").mockRejectedValue(new Error("Estimation failed"))
+    mockLiquidationBotService.logLiquidationExecutionError.mockRejectedValueOnce(new Error("DB write failed"))
+    mockLiquidationBotService.logError.mockRejectedValueOnce(new Error("DB action log failed"))
+
+    await expect(liquidationService.executeLiquidation(0, account, 0n)).rejects.toThrow("Estimation failed")
+
+    expect(mockLiquidationBotService.logLiquidationExecutionError).toHaveBeenCalledTimes(1)
+    expect(mockLiquidationBotService.logError).toHaveBeenCalledTimes(1)
+  })
+
+  it("should not fail a successful liquidation when DB execution logging fails", async () => {
+    const account: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 2000000000000000000n,
+      userDebt: 760n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 1500n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+      collateralUSDPrice: 1n * DECIMALS,
+      oracleDecimals: 18n,
+    }
+
+    const mockEstimate: LiquidationEstimateInfo[] = [
+      {
+        account: account.account,
+        collatToLiquidate: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        minTgUSDOut: 900n * DECIMALS,
+        liquidationCall: {
+          routerCall: "0x1234",
+          routerAddress: "0xCurveRouter",
+        },
+        expectedOutput: 1000n * DECIMALS,
+        slippageBps: 10n,
+        gasEstimate: {
+          gasLimit: 200000n,
+          eth: 0.0002,
+        },
+        grossProfit: 240n * DECIMALS,
+        routerType: "curve" as const,
+      },
+    ]
+
+    vi.spyOn(liquidationService, "estimateLiquidation").mockResolvedValue(mockEstimate)
+    mockLiquidationBotService.logLiquidationExecution.mockRejectedValueOnce(new Error("DB write failed"))
+
+    await expect(liquidationService.executeLiquidation(0, account, 0n)).resolves.toBeUndefined()
+
+    expect(mockMarketContract.liquidate).toHaveBeenCalledTimes(1)
+    expect(mockLiquidationBotService.logLiquidationExecution).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe("LiquidationService - Best RPC Provider", () => {
@@ -1666,6 +1731,86 @@ describe("LiquidationService - Best RPC Provider", () => {
       // Verify that context.currentRpcIndex was NOT updated (should remain at initial value)
       expect(mockContext.currentRpcIndex).toBe(initialRpcIndex)
       expect(mockContext.currentBlock).toBe(initialBlock)
+    })
+  })
+
+  describe("LiquidationService - estimateTransaction diagnostics", () => {
+    let liquidationService: LiquidationService
+    let mockContext: any
+    let mockRouterService: ReturnType<typeof createMockRouterService>
+    let mockSigner: any
+    let mockProvider: any
+    let mockMarketContract: any
+
+    const account: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 2n * DECIMALS,
+      userDebt: 760n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 100n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+      collateralUSDPrice: 1n * DECIMALS,
+      oracleDecimals: 18n,
+    }
+
+    const route = {
+      display: "mock-route",
+      params: { routeAddresses: ["0xToken1"], swapParamsFull: [] },
+    } as any
+
+    beforeEach(() => {
+      vi.clearAllMocks()
+
+      mockProvider = {
+        getFeeData: vi.fn().mockResolvedValue({ gasPrice: 1n }),
+        send: vi.fn().mockRejectedValue(new Error("trace unavailable")),
+      }
+
+      mockSigner = {
+        getAddress: vi.fn().mockResolvedValue("0xSignerAddress"),
+      }
+
+      mockMarketContract = {
+        liquidate: {
+          estimateGas: vi.fn(),
+          populateTransaction: vi.fn().mockResolvedValue({ to: "0xMarket1", data: "0xabcdef" }),
+        },
+      }
+
+      mockWallet.mockImplementation(() => mockSigner)
+      mockContract.mockImplementation(() => mockMarketContract)
+
+      mockContext = {
+        ...nominalContext,
+        providers: [mockProvider],
+        walletsPks: ["0xPrivateKey1"],
+      }
+
+      mockRouterService = createMockRouterService()
+      liquidationService = new LiquidationService(new ActiveBorrowersRepository({} as any), mockContext, mockRouterService as unknown as RouterService)
+    })
+
+    it("should wrap preflight min collateral calculation errors as gas estimation errors", async () => {
+      vi.spyOn(liquidationService as any, "calculateMinCollatValueToLiquidate").mockImplementation(() => {
+        throw new Error("collateralUSDPrice or oracleDecimals is missing")
+      })
+
+      await expect(
+        (liquidationService as any).estimateTransaction(route, 1100n * DECIMALS, account, mockSigner, mockProvider, 50n, "curve", "0xCurveRouter")
+      ).rejects.toMatchObject({
+        message: expect.stringContaining("Gas estimation failed: collateralUSDPrice or oracleDecimals is missing"),
+      })
+    })
+
+    it("should surface a gas estimation error when estimateGas reverts", async () => {
+      mockMarketContract.liquidate.estimateGas.mockRejectedValue(new Error('execution reverted (no data present; likely require(false) occurred (data="0x"))'))
+
+      await expect(
+        (liquidationService as any).estimateTransaction(route, 1100n * DECIMALS, account, mockSigner, mockProvider, 50n, "curve", "0xCurveRouter")
+      ).rejects.toMatchObject({
+        message: expect.stringContaining("Gas estimation failed"),
+      })
     })
   })
 
