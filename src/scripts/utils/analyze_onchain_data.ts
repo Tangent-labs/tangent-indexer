@@ -192,9 +192,9 @@ function delta(before: number, after: number): string {
 }
 
 function compareOnchainData(before: OnchainData, after: OnchainData): void {
-  const marketCollatNameMap = loadMarketCollatNameMap()
-  const beforeMap = buildMarketSummaries(before, marketCollatNameMap)
-  const afterMap = buildMarketSummaries(after, marketCollatNameMap)
+  const marketNameMap = loadMarketNameMap()
+  const beforeMap = buildMarketSummaries(before, marketNameMap)
+  const afterMap = buildMarketSummaries(after, marketNameMap)
 
   const allMarkets = new Set([...beforeMap.keys(), ...afterMap.keys()])
 
@@ -339,8 +339,6 @@ function analyzeOnchainData(jsonData: OnchainData): void {
   for (const market of markets) {
     marketThresholds.set(market.market, market.liquidationThreshold)
   }
-
-  const marketSummaryMap = buildMarketSummaries(jsonData, marketCollatNameMap)
 
   console.log("\n\n📊 SYNTHÈSE PAR MARCHÉ (" + accounts.length + " positions / " + markets.length + " marchés)")
   console.log("-".repeat(120))

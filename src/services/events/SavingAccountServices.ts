@@ -6,7 +6,7 @@ import { ProcessReportEvent } from "../../eventFectcher/savingAccountEventFetche
 import { ONE_WEEK_IN_SECONDS } from "@tangent/defi-resources/build/utils/durations.js"
 
 const WEEKS_PER_YEAR = 52n
-const APY_FIXED_POINT_SCALE = 1_000_000_000n
+const APY_FIXED_POINT_SCALE = 10n ** 18n
 
 export class SavingAccountServices {
   savingAccountRepository: SavingAccountRepository
