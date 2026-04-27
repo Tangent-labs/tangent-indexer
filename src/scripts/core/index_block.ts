@@ -62,7 +62,9 @@ async function main() {
     const { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex } = blockInfo
 
     if (startBlock && endBlock) {
-      console.log("indexing :", startBlock, "<----------------->", endBlock)
+      const currentBlock = await bestProvider.getBlockNumber()
+
+      console.log(`indexing : ${startBlock} <-----------------> ${endBlock} (current: ${currentBlock} rpc#${bestProviderIndex})`)
       await prismaClient.$transaction(
         async (dbTransaction) => {
           // Set the database transaction to the repositories

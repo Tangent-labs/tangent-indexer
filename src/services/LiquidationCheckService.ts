@@ -181,7 +181,11 @@ export class CheckLiquidationService {
       // The end
       await this.liquidationBotService.logEndExecution(this.context)
     } catch (e) {
-      await this.liquidationBotService.logError(currentAction, e as Error, this.context, undefined, true)
+      try {
+        await this.liquidationBotService.logError(currentAction, e as Error, this.context, undefined, false)
+      } catch (logError) {
+        console.error(`Failed to write ${currentAction} error log to DB`, logError)
+      }
       await this.telegramNotifierService.sendError(`Liquidation Error on ${currentAction}: ${(e as Error).message}`)
 
       throw e

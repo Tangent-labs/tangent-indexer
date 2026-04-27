@@ -19,6 +19,7 @@ import { SerializedLiquidationUserFullInfo } from "../../type/data.js"
 import { getBestRpcProvider } from "../../utils/getBestRpcProvider.js"
 import { RouterService } from "../../services/RouterService.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
+import { getLiquidatorWalletPks } from "../../config/liquidation_wallets.js"
 
 dotenv.config()
 
@@ -34,7 +35,8 @@ function blockAlignedBackoff(attemptsMade: number): number {
   return blocks * BLOCK_TIME
 }
 
-const { providers, walletsPks, handleError } = setUpIndexer()
+const { providers, handleError } = setUpIndexer()
+const walletsPks = getLiquidatorWalletPks()
 const { liquidationService, context, telegramNotifierService } = await setUpLiquidationProcessServices()
 
 // Export for testing

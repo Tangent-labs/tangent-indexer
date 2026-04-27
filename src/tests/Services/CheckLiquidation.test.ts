@@ -193,7 +193,7 @@ describe("CheckLiquidationService", () => {
     vi.spyOn(mockLiquidationService, "checkContext").mockRejectedValue(error)
 
     await expect(checkLiquidationService.run()).rejects.toThrow("Test error")
-    expect(mockLiquidationBotLogService.logError).toHaveBeenCalledWith("check_context", error, mockContext, undefined, true)
+    expect(mockLiquidationBotLogService.logError).toHaveBeenCalledWith("check_context", error, mockContext, undefined, false)
     expect(mockTelegramNotifierService.sendMessage).toHaveBeenCalledWith("Liquidation Error on check_context: Test error")
   })
 

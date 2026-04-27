@@ -61,6 +61,55 @@ export class LiquidationService {
     this.liquidationBotService = LiquidationBotService
   }
 
+  private async saveLiquidationExecution(
+    account: LiquidationUserFullInfo | LiquidationUserInInfo,
+    context: LiquidationExecutionContext,
+    executionResult?: LiquidationExecutionResult
+  ) {
+    try {
+      await this.liquidationBotService?.logLiquidationExecution(account, context, executionResult)
+    } catch (logError) {
+      console.error("Failed to write liquidation execution log to DB", logError)
+    }
+  }
+
+  private async saveLiquidationExecutionError(context: LiquidationExecutionContext, error: Error, account: { account?: AddressLike; market?: AddressLike }) {
+    try {
+      await this.liquidationBotService?.logLiquidationExecutionError(context, error, account)
+    } catch (logError) {
+      console.error("Failed to write liquidation execution error to DB", logError)
+    }
+  }
+
+  private async saveSeizingExecution(account: LiquidationUserInInfo, context: LiquidationExecutionContext, txHash?: string) {
+    try {
+      await this.liquidationBotService?.logLiquidationBadDebtExecution(account, context, txHash)
+    } catch (logError) {
+      console.error("Failed to write seizing execution log to DB", logError)
+    }
+  }
+
+  private async saveSeizingExecutionError(context: LiquidationExecutionContext, error: Error, account: { account?: AddressLike; market?: AddressLike }) {
+    try {
+      await this.liquidationBotService?.logLiquidationBadDebtExecutionError(context, error, account)
+    } catch (logError) {
+      console.error("Failed to write seizing execution error to DB", logError)
+    }
+  }
+
+  private async safeLogActionError(
+    action: "liquidation_execution" | "liquidation_preparation" | "liquidation_bad_debt_execution",
+    error: Error,
+    context: LiquidationExecutionContext,
+    additionalData?: any
+  ) {
+    try {
+      await this.liquidationBotService?.logError(action, error, context, additionalData, false)
+    } catch (logError) {
+      console.error(`Failed to write ${action} action log to DB`, logError)
+    }
+  }
+
   /**
    * Parse Liquidate event from transaction receipt and calculate profit
    */
@@ -397,12 +446,12 @@ export class LiquidationService {
       const marketContract = new Contract(account.market as Addressable, MarketExternalActionsAbi.abi, signer)
       const tx = await marketContract.seizeCollateral(account.account, { nonce: currentNonce })
       await tx.wait() // Wait for the transaction to be mined
-      await this.liquidationBotService?.logLiquidationBadDebtExecution(account, loggedContext, tx.hash)
+      await this.saveSeizingExecution(account, loggedContext, tx.hash)
       return tx
     } catch (error) {
       this.errors.push({ action: "liquidation_bad_debt_execution", message: (error as Error)?.message.slice(0, 100), market: account.market as string })
-      await this.liquidationBotService?.logError("liquidation_bad_debt_execution", error as Error, loggedContext, { account }, false)
-      await this.liquidationBotService?.logLiquidationBadDebtExecutionError(loggedContext, error as Error, account)
+      await this.saveSeizingExecutionError(loggedContext, error as Error, account)
+      await this.safeLogActionError("liquidation_bad_debt_execution", error as Error, loggedContext, { account })
       // Re-throw the error so the job is retried by the queue
       throw error
     }
@@ -461,17 +510,11 @@ export class LiquidationService {
         market: normalizedAccount.market as string,
       })
 
-      await this.liquidationBotService?.logError(
-        "liquidation_execution",
-        error as Error,
-        loggedContext,
-        {
-          account,
-          step: "estimateLiquidation",
-        },
-        false
-      )
-      await this.liquidationBotService?.logLiquidationExecutionError(loggedContext, error as Error, normalizedAccount)
+      await this.saveLiquidationExecutionError(loggedContext, error as Error, normalizedAccount)
+      await this.safeLogActionError("liquidation_execution", error as Error, loggedContext, {
+        account,
+        step: "estimateLiquidation",
+      })
       // Re-throw the error so the job is retried by the queue
       throw error
     }
@@ -485,14 +528,11 @@ export class LiquidationService {
         message: `No route found for collateral: ${normalizedAccount.collatToken}`,
         market: normalizedAccount.market as string,
       })
-      await this.liquidationBotService?.logError(
-        "liquidation_execution",
-        error as Error,
-        loggedContext,
-        { account: normalizedAccount, step: "no_route" },
-        false
-      )
-      await this.liquidationBotService?.logLiquidationExecutionError(loggedContext, error, normalizedAccount)
+      await this.saveLiquidationExecutionError(loggedContext, error, normalizedAccount)
+      await this.safeLogActionError("liquidation_execution", error as Error, loggedContext, {
+        account: normalizedAccount,
+        step: "no_route",
+      })
       // Don't throw - route not found is a permanent failure that won't succeed on retry
       return
     }
@@ -518,7 +558,8 @@ export class LiquidationService {
           market: normalizedAccount.market as string,
         })
 
-        await this.liquidationBotService?.logError("liquidation_preparation", error, loggedContext, {
+        await this.saveLiquidationExecutionError(loggedContext, error, normalizedAccount)
+        await this.safeLogActionError("liquidation_preparation", error, loggedContext, {
           account: normalizedAccount,
           estimation,
           step: "invalid_min_amount",
@@ -540,6 +581,7 @@ export class LiquidationService {
               collatAmountToLiquidate: estimation.collatToLiquidate,
               minUsgOut: minAmount,
               maxUsgToBurn: MaxUint256,
+              // Intentionally `0n` (do not raise): min collateral *value* is enforced only via `minCollatValueToLiquidate` below.
               minCollatAmountToLiquidate: normalizedAccount.collateralBalance,
               isReceiptOut: false,
             },
@@ -555,18 +597,18 @@ export class LiquidationService {
         )
         const receipt = await tx.wait() // Wait for the transaction to be mined
         const executionResult = this.parseLiquidateEvent(receipt, normalizedAccount.market as string, normalizedAccount.userDebt)
-        await this.liquidationBotService?.logLiquidationExecution(normalizedAccount, loggedContext, executionResult ?? undefined)
+        await this.saveLiquidationExecution(normalizedAccount, loggedContext, executionResult ?? undefined)
         successCount++
       } catch (error) {
         this.errors.push({ action: "liquidation_execution", message: (error as Error)?.message.slice(0, 100), market: normalizedAccount.market as string })
 
-        await this.liquidationBotService?.logError("liquidation_execution", error as Error, loggedContext, {
+        await this.saveLiquidationExecutionError(loggedContext, error as Error, normalizedAccount)
+        await this.safeLogActionError("liquidation_execution", error as Error, loggedContext, {
           account: normalizedAccount,
           estimation,
           error,
           step: "liquidate",
         })
-        await this.liquidationBotService?.logLiquidationExecutionError(loggedContext, error as Error, normalizedAccount)
         // Store the error for later re-throwing if all transactions fail
         errors.push(error as Error)
       }
@@ -633,9 +675,9 @@ export class LiquidationService {
 
     // Estimate gas for the liquidation transaction
     const marketContract = new Contract(normalizedAccount.market as Addressable, MarketExternalActionsAbi.abi, signer)
+    let minCollatValueToLiquidate = 0n
     try {
-      const minCollatValueToLiquidate = this.calculateMinCollatValueToLiquidate(normalizedAccount)
-
+      minCollatValueToLiquidate = this.calculateMinCollatValueToLiquidate(normalizedAccount)
       const params = [
         {
           account: account.account,
@@ -643,7 +685,8 @@ export class LiquidationService {
             collatAmountToLiquidate: MaxUint256,
             minUsgOut: minAmount,
             maxUsgToBurn: MaxUint256,
-            minCollatAmountToLiquidate: collateralBalanceBigInt,
+            // Intentionally `0n`, same as execution path — must match `liquidate` above.
+            minCollatAmountToLiquidate: normalizedAccount.collateralBalance,
             isReceiptOut: false,
           },
           minCollatValueToLiquidate,
@@ -655,7 +698,6 @@ export class LiquidationService {
           routerCall: data,
         },
       ]
-
       const gasLimit = await marketContract.liquidate.estimateGas(params[0], params[1])
 
       // Get current gas price
@@ -688,6 +730,7 @@ export class LiquidationService {
       }
     } catch (error) {
       const parsedError = parseEthersError(error as any)
+
       const enhancedError = new Error(`Gas estimation failed: ${parsedError.message}${parsedError.decodedMessage ? ` (${parsedError.decodedMessage})` : ""}`)
       enhancedError.name = parsedError.errorName || "GasEstimationError"
       ;(enhancedError as any).code = parsedError.code

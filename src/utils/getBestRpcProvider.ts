@@ -30,11 +30,13 @@ export async function getBestRpcProvider(providers: JsonRpcProvider[], timeoutMs
         blockNumber,
         index,
         responseTime: Date.now() - requestStartTime,
+        success: true,
       }))
       .catch(() => ({
-        blockNumber: 0,
+        blockNumber: -1,
         index,
         responseTime: Date.now() - requestStartTime,
+        success: false,
       }))
   })
 
@@ -44,7 +46,7 @@ export async function getBestRpcProvider(providers: JsonRpcProvider[], timeoutMs
 
   // Process all results
   settledResults.forEach((result) => {
-    if (result.status === "fulfilled" && result.value.blockNumber > 0) {
+    if (result.status === "fulfilled" && result.value.success) {
       results.push(result.value)
     }
   })

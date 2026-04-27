@@ -54,7 +54,11 @@ export async function seedTotalSupply(addresses: AddressesJson) {
     },
   })
 
-  const tokenIds = [USG?.id, sUSG?.id] as const
+  if (!USG?.id || !sUSG?.id) {
+    throw new Error(`tracked_erc20 tokens not found — USG: ${USG?.id}, sUSG: ${sUSG?.id}. Run db:seed-db first.`)
+  }
+
+  const tokenIds = [USG.id, sUSG.id] as const
 
   const allRows: {
     token_id: bigint

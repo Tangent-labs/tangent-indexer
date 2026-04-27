@@ -2,9 +2,11 @@ import { Prisma } from "@prisma/client"
 
 import { GlobalDataRepository } from "../../db/GlobalDataRepository.js"
 import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
-import { formatEther } from "ethers"
 import { ProcessReportEvent } from "../../eventFectcher/savingAccountEventFetcher.js"
 import { ONE_WEEK_IN_SECONDS } from "@tangent/defi-resources/build/utils/durations.js"
+
+const WEEKS_PER_YEAR = 52n
+const APY_FIXED_POINT_SCALE = 1_000_000_000n
 
 export class SavingAccountServices {
   savingAccountRepository: SavingAccountRepository
@@ -29,6 +31,16 @@ export class SavingAccountServices {
   async saveSavingAccountEvents(events: ProcessReportEvent[], blockInfos: Map<number, number>): Promise<void> {
     const processReportEvents = this.formatSavingAccountEvents(events, blockInfos)
     await this.savingAccountRepository.saveEvents(processReportEvents)
+  }
+
+  private getApyFromWeeklyGain(amountForSevenDays: bigint, totalAsset: bigint): number {
+    if (amountForSevenDays <= 0n || totalAsset <= 0n) {
+      return 0
+    }
+
+    const aprScaled = (amountForSevenDays * WEEKS_PER_YEAR * APY_FIXED_POINT_SCALE) / totalAsset
+    const apr = Number(aprScaled) / Number(APY_FIXED_POINT_SCALE)
+    return Math.exp(apr) - 1
   }
 
   async processSavingAccountApy(globalDataRepository: GlobalDataRepository, nowBC: Date, sUSGAddress: string): Promise<void> {
@@ -74,7 +86,7 @@ export class SavingAccountServices {
 
     const apys = new Map<string, number>()
     for (const target of targetAddresses) {
-      const tokenEvents = processReportEvents.filter((ev) => ev.token.toLowerCase() === target)
+      const tokenEvents = processReportEvents.filter((ev) => ev.token.toLowerCase() === target && ev.gain !== null)
       if (tokenEvents.length === 0) {
         continue
       }
@@ -82,11 +94,27 @@ export class SavingAccountServices {
       if (amountForSevenDays === 0n) {
         continue
       }
-      apys.set(target, Number(formatEther(amountForSevenDays)) / 52)
+      const latestEvent = tokenEvents
+        .filter((ev) => ev.currentDebtAfter !== null)
+        .reduce<(typeof tokenEvents)[number] | null>((latest, event) => {
+          if (!latest || event.block_id > latest.block_id) {
+            return event
+          }
+          return latest
+        }, null)
+      if (!latestEvent?.currentDebtAfter) {
+        continue
+      }
+      const totalAsset = BigInt(latestEvent.currentDebtAfter)
+      if (totalAsset === 0n) {
+        continue
+      }
+      apys.set(target, this.getApyFromWeeklyGain(amountForSevenDays, totalAsset))
     }
     if (apys.size === 0) {
       return
     }
+
     // insert the DATA
 
     const addressToIndicatorId = new Map<string, bigint>([

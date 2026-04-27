@@ -131,6 +131,144 @@ function loadMarketCollatNameMap(): Map<string, string> {
   return marketMap
 }
 
+type MarketSummary = {
+  market: string
+  collatName: string
+  borrowers: number
+  totalDebt: bigint
+  totalPositionValue: bigint
+  safe: number
+  liquidable: number
+  seizable: number
+  liquidationThreshold: bigint
+}
+
+function buildMarketSummaries(jsonData: OnchainData, marketCollatNameMap: Map<string, string>): Map<string, MarketSummary> {
+  const markets = parseCSV<MarketData>(jsonData.data.markets, { bigintHeaders: new Set(["collateralUSDPrice"]) })
+  const accounts = parseCSV<AccountData>(jsonData.data.accounts, {
+    bigintHeaders: new Set(["healthRatio", "userDebt", "positionValue", "collateralBalance"]),
+  })
+
+  const marketThresholds = new Map<string, number>()
+  for (const market of markets) marketThresholds.set(market.market, market.liquidationThreshold)
+
+  const summaryMap = new Map<string, MarketSummary>()
+
+  for (const account of accounts) {
+    const liquidationThreshold = BigInt(marketThresholds.get(account.market) || 0)
+    const ltv = account.positionValue === 0n ? 0n : (account.userDebt * DENOMINATOR) / account.positionValue
+    const collatName = marketCollatNameMap.get(account.market.toLowerCase()) || "N/A"
+
+    if (!summaryMap.has(account.market)) {
+      summaryMap.set(account.market, {
+        market: account.market,
+        collatName,
+        borrowers: 0,
+        totalDebt: 0n,
+        totalPositionValue: 0n,
+        safe: 0,
+        liquidable: 0,
+        seizable: 0,
+        liquidationThreshold,
+      })
+    }
+
+    const s = summaryMap.get(account.market)!
+    s.borrowers++
+    s.totalDebt += account.userDebt
+    s.totalPositionValue += account.positionValue
+
+    if (account.userDebt >= account.positionValue) s.seizable++
+    else if (ltv > liquidationThreshold) s.liquidable++
+    else s.safe++
+  }
+
+  return summaryMap
+}
+
+function delta(before: number, after: number): string {
+  const d = after - before
+  return d === 0 ? "—" : d > 0 ? `+${d}` : `${d}`
+}
+
+function compareOnchainData(before: OnchainData, after: OnchainData): void {
+  const marketCollatNameMap = loadMarketCollatNameMap()
+  const beforeMap = buildMarketSummaries(before, marketCollatNameMap)
+  const afterMap = buildMarketSummaries(after, marketCollatNameMap)
+
+  const allMarkets = new Set([...beforeMap.keys(), ...afterMap.keys()])
+
+  console.log("\n" + "=".repeat(140))
+  console.log("                              COMPARAISON DES SNAPSHOTS")
+  console.log(`  AVANT  block ${before.context.currentBlock}  (exec: ${before.context.executionKey})`)
+  console.log(`  APRÈS  block ${after.context.currentBlock}  (exec: ${after.context.executionKey})`)
+  console.log("=".repeat(140))
+
+  const tableData = Array.from(allMarkets).map((market) => {
+    const b = beforeMap.get(market)
+    const a = afterMap.get(market)
+    const collatName = b?.collatName ?? a?.collatName ?? "N/A"
+
+    let event = ""
+    if (!b) event = "NEW"
+    else if (!a) event = b.seizable > 0 ? "SEIZED+CLOSED" : "CLOSED"
+    else {
+      const events: string[] = []
+
+      if (b.seizable > 0 && a.seizable < b.seizable) events.push(`${b.seizable - a.seizable} saisi(s)`)
+      if (b.liquidable > 0 && a.liquidable < b.liquidable) events.push(`${b.liquidable - a.liquidable} liquidé(s)`)
+      if (b.borrowers > a.borrowers) events.push(`${b.borrowers - a.borrowers} sorti(s)`)
+      if (b.borrowers < a.borrowers) events.push(`+${a.borrowers - b.borrowers} entré(s)`)
+      event = events.join(", ")
+    }
+
+    return {
+      Market: formatAddress(market),
+      Collat: collatName,
+      "#Av": b?.borrowers ?? 0,
+      "#Ap": a?.borrowers ?? 0,
+      "🔴 Av": b?.seizable ?? 0,
+      "🔴 Ap": a?.seizable ?? 0,
+      "Δ🔴": delta(b?.seizable ?? 0, a?.seizable ?? 0),
+      "🟠 Av": b?.liquidable ?? 0,
+      "🟠 Ap": a?.liquidable ?? 0,
+      "Δ🟠": delta(b?.liquidable ?? 0, a?.liquidable ?? 0),
+      "🟢 Av": b?.safe ?? 0,
+      "🟢 Ap": a?.safe ?? 0,
+      Événements: event,
+    }
+  })
+
+  console.table(tableData)
+
+  // Global summary
+  const totalBefore = { borrowers: 0, seizable: 0, liquidable: 0, safe: 0, debt: 0n }
+  const totalAfter = { borrowers: 0, seizable: 0, liquidable: 0, safe: 0, debt: 0n }
+  for (const s of beforeMap.values()) {
+    totalBefore.borrowers += s.borrowers
+    totalBefore.seizable += s.seizable
+    totalBefore.liquidable += s.liquidable
+    totalBefore.safe += s.safe
+    totalBefore.debt += s.totalDebt
+  }
+  for (const s of afterMap.values()) {
+    totalAfter.borrowers += s.borrowers
+    totalAfter.seizable += s.seizable
+    totalAfter.liquidable += s.liquidable
+    totalAfter.safe += s.safe
+    totalAfter.debt += s.totalDebt
+  }
+
+  console.log("\n📈 BILAN GLOBAL")
+  console.log("-".repeat(80))
+  console.log(`  Positions   : ${totalBefore.borrowers} → ${totalAfter.borrowers}  (${delta(totalBefore.borrowers, totalAfter.borrowers)})`)
+  console.log(`  Total Debt  : ${formatBigNumber(totalBefore.debt)} → ${formatBigNumber(totalAfter.debt)}`)
+  console.log(`  🔴 Seizable : ${totalBefore.seizable} → ${totalAfter.seizable}  (${delta(totalBefore.seizable, totalAfter.seizable)})`)
+  console.log(`  🟠 Liquidable: ${totalBefore.liquidable} → ${totalAfter.liquidable}  (${delta(totalBefore.liquidable, totalAfter.liquidable)})`)
+  console.log(`  🟢 Safe     : ${totalBefore.safe} → ${totalAfter.safe}  (${delta(totalBefore.safe, totalAfter.safe)})`)
+  console.log("=".repeat(140) + "\n")
+}
+
 function analyzeOnchainData(jsonData: OnchainData): void {
   console.log("\n" + "=".repeat(120))
   console.log("                              ANALYSE DES DONNÉES ONCHAIN")
@@ -202,31 +340,24 @@ function analyzeOnchainData(jsonData: OnchainData): void {
     marketThresholds.set(market.market, market.liquidationThreshold)
   }
 
-  console.log("\n\n👤 COMPTES / POSITIONS (" + accounts.length + " positions)")
+  const marketSummaryMap = buildMarketSummaries(jsonData, marketCollatNameMap)
+
+  console.log("\n\n📊 SYNTHÈSE PAR MARCHÉ (" + accounts.length + " positions / " + markets.length + " marchés)")
   console.log("-".repeat(120))
 
-  // Build table data for console.table
-  const tableData = accounts.map((account) => {
-    const ltv = account.positionValue === 0n ? 0n : (account.userDebt * DENOMINATOR) / account.positionValue
-    const liquidationThreshold = BigInt(marketThresholds.get(account.market) || 0)
-    const collatName = marketCollatNameMap.get(account.market.toLowerCase()) || "N/A"
-
-    let status = "🟢 Safe"
-    if (account.userDebt >= account.positionValue) {
-      status = "🔴 Seizable"
-    } else if (ltv > liquidationThreshold) {
-      status = "🟠 Liquidable"
-    }
+  const tableData = Array.from(marketSummaryMap.values()).map((s) => {
+    const globalLTV = s.totalPositionValue === 0n ? 0n : (s.totalDebt * DENOMINATOR) / s.totalPositionValue
 
     return {
-      Market: formatAddress(account.market),
-      "Collat Name": collatName,
-      LTV: formatLTV(ltv),
-      "Liq Thresh": formatLTV(liquidationThreshold),
-      Status: status,
-      "User Debt": formatBigNumber(account.userDebt),
-      "Position Value": formatBigNumber(account.positionValue),
-      "Collateral Bal": formatBigNumber(account.collateralBalance),
+      Market: formatAddress(s.market),
+      "Collat Name": s.collatName,
+      Borrowers: s.borrowers,
+      "Global LTV": formatLTV(globalLTV),
+      "Liq Thresh": formatLTV(s.liquidationThreshold),
+      "Total Debt": formatBigNumber(s.totalDebt),
+      "🔴 Seizable": s.seizable,
+      "🟠 Liquidable": s.liquidable,
+      "🟢 Safe": s.safe,
     }
   })
 
@@ -361,34 +492,84 @@ async function loadLatestOnchainDataFromDb(): Promise<OnchainData | null> {
 }
 
 /**
+ * Load the two most recent on_chain_data entries from the database
+ */
+async function loadLatestTwoOnchainDataFromDb(): Promise<[OnchainData, OnchainData] | null> {
+  const prisma = new PrismaClient()
+
+  try {
+    const logs = await prisma.liquidation_bot_log.findMany({
+      where: { action: "on_chain_data" },
+      orderBy: { id: "desc" },
+      take: 2,
+    })
+
+    if (logs.length < 2) {
+      console.error(`Seulement ${logs.length} snapshot(s) trouvé(s), besoin de 2 pour comparer`)
+      return null
+    }
+
+    console.log(`Snapshot AVANT : ID ${logs[1].id} (${logs[1].date})`)
+    console.log(`Snapshot APRÈS : ID ${logs[0].id} (${logs[0].date})`)
+    return [logs[1].data as unknown as OnchainData, logs[0].data as unknown as OnchainData]
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+
+/**
  * Main entry point
  */
 async function main() {
-  const arg = process.argv[2]
-  const logId = arg ? parseInt(arg, 10) : NaN
+  const args = process.argv.slice(2).filter((a) => a !== "--")
+  const arg1 = args[0]
+  const arg2 = args[1]
 
+  // Auto-diff mode: --diff flag
+  if (arg1 === "--diff") {
+    console.log("Mode diff : chargement des 2 derniers snapshots...")
+    const pair = await loadLatestTwoOnchainDataFromDb()
+    if (!pair) process.exit(1)
+    compareOnchainData(pair[0], pair[1])
+    return
+  }
+
+  // Compare mode: two IDs provided
+  if (arg1 && arg2) {
+    const id1 = parseInt(arg1, 10)
+    const id2 = parseInt(arg2, 10)
+    if (isNaN(id1) || isNaN(id2)) {
+      console.error("Usage: npm run dev:liquidation:analyse <id_avant> <id_après>")
+      process.exit(1)
+    }
+    console.log(`Chargement du snapshot AVANT (ID: ${id1})...`)
+    const before = await loadOnchainDataFromDb(id1)
+    console.log(`Chargement du snapshot APRÈS (ID: ${id2})...`)
+    const after = await loadOnchainDataFromDb(id2)
+    if (!before || !after) process.exit(1)
+    compareOnchainData(before, after)
+    return
+  }
+
+  // Single snapshot mode
   let data: OnchainData | null
 
-  if (!arg) {
+  if (!arg1) {
     console.log("No log_id provided, fetching latest on_chain_data from database...")
     data = await loadLatestOnchainDataFromDb()
   } else {
+    const logId = parseInt(arg1, 10)
     if (isNaN(logId)) {
       console.error("Usage: npm run dev:liquidation:analyse [log_id]")
-      console.error("  If no log_id is provided, the latest on_chain_data will be used.")
-      console.error("Example: npm run dev:liquidation:analyse 29280")
+      console.error("       npm run dev:liquidation:analyse <id_avant> <id_après>  (comparaison)")
       process.exit(1)
     }
-
     console.log(`Loading onchain data from liquidation_bot_log ID: ${logId}...`)
     data = await loadOnchainDataFromDb(logId)
   }
 
-  if (!data) {
-    process.exit(1)
-  }
-
-  analyzeOnchainData(data)
+  if (!data) process.exit(1)
+  analyzeOnchainData(data!)
 }
 
 // Run if executed directly
