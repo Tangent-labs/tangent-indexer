@@ -7,6 +7,7 @@ import IPegKeeperV2 from "../abis/IPegKeeperV2.json" with { type: "json" }
 import IRCalculator from "../abis/IRCalculator.json" with { type: "json" }
 import RewardAccumulator from "../abis/RewardAccumulator.json" with { type: "json" }
 import StablePoolNG from "../abis/StablePoolNG.json" with { type: "json" }
+import { toSafeErrorMessage } from "../utils/errors.js"
 
 const pegKeepersKnowErrors = ["Regulator ban", "peg unprofitable"]
 
@@ -47,7 +48,7 @@ export class OnchainTxBotService {
         marketsAddresses,
       ])
     } catch (e) {
-      await this.telegramNotifierService.sendError(`OnchainTxBot chainview has failed ${e}`)
+      await this.telegramNotifierService.sendError(`OnchainTxBot chainview has failed: ${toSafeErrorMessage(e)}`)
       throw e
     }
     return onChainData
@@ -68,7 +69,7 @@ export class OnchainTxBotService {
         } catch (e: any) {
           const isNormalError = this.isContainsNormalError(e)
           if (!isNormalError) {
-            await this.telegramNotifierService.sendError(`Estimation of 'update' on ${currentKeeper} pegkeeper has failed : \`\`\` ${e} \`\`\` `)
+            await this.telegramNotifierService.sendError(`Estimation of 'update' on ${currentKeeper} pegkeeper has failed: ${toSafeErrorMessage(e)}`)
           }
         }
         if (gasfeeEstimation) {
@@ -118,7 +119,7 @@ export class OnchainTxBotService {
             const isNormalError = this.isContainsNormalError(e)
 
             if (!isNormalError) {
-              await this.telegramNotifierService.sendError(`Trigger of 'update' on ${currentKeeper} pegkeeper has failed : \`\`\` ${e} \`\`\` `)
+              await this.telegramNotifierService.sendError(`Trigger of 'update' on ${currentKeeper} pegkeeper has failed: ${toSafeErrorMessage(e)}`)
             }
             throw e
           }
@@ -181,10 +182,10 @@ export class OnchainTxBotService {
         const txCheckpointIR = await irCalculator.checkpointIRMulti(irToCheckpoint.map((market) => market.marketAddress))
         await txCheckpointIR.wait()
         await this.telegramNotifierService.sendMessage(
-          `IR of markets \`${irToCheckpoint.map((market) => market.collatName).join(",")}\` have been checkpointed`
+          `IR of markets \`${irToCheckpoint.map((market) => market.marketName).join(",")}\` have been checkpointed`
         )
       } catch (e: any) {
-        await this.telegramNotifierService.sendError(`Checkpoint IR has failed : ${e}`)
+        await this.telegramNotifierService.sendError(`Checkpoint IR has failed: ${toSafeErrorMessage(e)}`)
       }
     }
 
@@ -208,7 +209,7 @@ export class OnchainTxBotService {
       }
       if (isSuccess) {
         await this.telegramNotifierService.sendMessage(
-          `RC of markets \`${rcToCheckpoint.map((market) => market.collatName).join(",")}\` have been checkpointed`
+          `RC of markets \`${rcToCheckpoint.map((market) => market.marketName).join(",")}\` have been checkpointed`
         )
       } else {
         await this.telegramNotifierService.sendError(`Checkpoint RC has failed`)

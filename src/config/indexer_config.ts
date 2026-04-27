@@ -24,7 +24,6 @@ export type IndexerConfig = {
 }
 
 const { blockRange, chainId, chainRpcs, walletPks, startingBlock } = _initEnv()
-
 const defaultSharedDataDir = process.platform === "win32" ? `${process.env.TEMP || "C:\\Temp"}\\tangent-indexer` : "/var/lib/tangent-indexer"
 const sharedDataDir = process.env.SHARED_DATA_DIR || defaultSharedDataDir
 mkdirSync(sharedDataDir, { recursive: true })

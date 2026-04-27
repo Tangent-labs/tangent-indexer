@@ -828,7 +828,7 @@ export class LiquidationService {
     // Deserialize the job data (convert string BigInt values back to BigInt)
     const action = this.deserializeLiquidationAction(job.data)
     const addresses = await getAddressesJson()
-    const collateralName = addresses.markets.find((market) => market.marketAddress === action.market)?.collatName || "Unknown"
+    const collateralName = addresses.markets.find((market) => market.marketAddress === action.market)?.marketName || "Unknown"
 
     // Use provided rpcIndex or fallback to context.currentRpcIndex
     const providerIndex = rpcIndex ?? this.context.currentRpcIndex

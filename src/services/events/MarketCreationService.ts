@@ -1,6 +1,6 @@
 import { AddressLike, JsonRpcProvider } from "ethers"
 import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
-import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher.js"
+import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFetcher.js"
 import { UserPointsLPRepository } from "../../db/Points/UserPointsLPRepository.js"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
 import { PTS_PER_DAY_TO_SECONDS_RATE } from "../../scripts/db/config/config_lp_tasks.js"

@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from "vitest"
 import { JsonRpcProvider } from "ethers"
 import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
-import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFectcher.js"
+import { fetchMarketCreationLogs } from "../../eventFectcher/marketCreationEventFetcher.js"
 import { MarketCreationService } from "../../services/events/MarketCreationService.js"
 import { UserPointsLPRepository } from "../../db/Points/UserPointsLPRepository.js"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
 import { BlockService } from "../../../src/services/BlockService.js"
 
-vi.mock("../../eventFectcher/marketCreationEventFectcher", () => ({
+vi.mock("../../eventFectcher/marketCreationEventFetcher", () => ({
   fetchMarketCreationLogs: vi.fn(),
 }))
 

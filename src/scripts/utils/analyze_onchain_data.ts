@@ -112,18 +112,18 @@ function formatLTV(value: bigint): string {
 const DENOMINATOR = 100000n // From the codebase
 
 /**
- * Load market address to collatName mapping from addresses.json
+ * Load market address to marketName mapping from addresses.json
  */
-function loadMarketCollatNameMap(): Map<string, string> {
+function loadMarketNameMap(): Map<string, string> {
   const addressesPath = path.join(process.cwd(), "addresses.json")
   const addressesData = JSON.parse(fs.readFileSync(addressesPath, "utf-8"))
   const marketMap = new Map<string, string>()
 
   if (addressesData.markets && Array.isArray(addressesData.markets)) {
     for (const market of addressesData.markets) {
-      if (market.marketAddress && market.collatName) {
+      if (market.marketAddress && market.marketName) {
         // Use lowercase for case-insensitive matching
-        marketMap.set(market.marketAddress.toLowerCase(), market.collatName)
+        marketMap.set(market.marketAddress.toLowerCase(), market.marketName)
       }
     }
   }
@@ -192,9 +192,9 @@ function delta(before: number, after: number): string {
 }
 
 function compareOnchainData(before: OnchainData, after: OnchainData): void {
-  const marketCollatNameMap = loadMarketCollatNameMap()
-  const beforeMap = buildMarketSummaries(before, marketCollatNameMap)
-  const afterMap = buildMarketSummaries(after, marketCollatNameMap)
+  const marketNameMap = loadMarketNameMap()
+  const beforeMap = buildMarketSummaries(before, marketNameMap)
+  const afterMap = buildMarketSummaries(after, marketNameMap)
 
   const allMarkets = new Set([...beforeMap.keys(), ...afterMap.keys()])
 
@@ -282,8 +282,8 @@ function analyzeOnchainData(jsonData: OnchainData): void {
     bigintHeaders: new Set(["healthRatio", "userDebt", "positionValue", "collateralBalance"]),
   })
 
-  // Load market to collatName mapping
-  const marketCollatNameMap = loadMarketCollatNameMap()
+  // Load market to marketName mapping
+  const marketNameMap = loadMarketNameMap()
 
   // Context info
   console.log("\n📋 CONTEXTE")
@@ -316,12 +316,12 @@ function analyzeOnchainData(jsonData: OnchainData): void {
 
   for (const market of markets) {
     const price = formatBigNumber(market.collateralUSDPrice, market.oracleDecimals)
-    const collatName = marketCollatNameMap.get(market.market.toLowerCase()) || "N/A"
+    const marketName = marketNameMap.get(market.market.toLowerCase()) || "N/A"
     console.log(
       "| " +
         formatAddress(market.market).padEnd(14) +
         " | " +
-        collatName.padEnd(20) +
+        marketName.padEnd(20) +
         " | " +
         formatAddress(market.collatToken).padEnd(14) +
         " | " +
@@ -340,24 +340,31 @@ function analyzeOnchainData(jsonData: OnchainData): void {
     marketThresholds.set(market.market, market.liquidationThreshold)
   }
 
-  const marketSummaryMap = buildMarketSummaries(jsonData, marketCollatNameMap)
-
   console.log("\n\n📊 SYNTHÈSE PAR MARCHÉ (" + accounts.length + " positions / " + markets.length + " marchés)")
   console.log("-".repeat(120))
 
-  const tableData = Array.from(marketSummaryMap.values()).map((s) => {
-    const globalLTV = s.totalPositionValue === 0n ? 0n : (s.totalDebt * DENOMINATOR) / s.totalPositionValue
+  // Build table data for console.table
+  const tableData = accounts.map((account) => {
+    const ltv = account.positionValue === 0n ? 0n : (account.userDebt * DENOMINATOR) / account.positionValue
+    const liquidationThreshold = BigInt(marketThresholds.get(account.market) || 0)
+    const marketName = marketNameMap.get(account.market.toLowerCase()) || "N/A"
+
+    let status = "🟢 Safe"
+    if (account.userDebt >= account.positionValue) {
+      status = "🔴 Seizable"
+    } else if (ltv > liquidationThreshold) {
+      status = "🟠 Liquidable"
+    }
 
     return {
-      Market: formatAddress(s.market),
-      "Collat Name": s.collatName,
-      Borrowers: s.borrowers,
-      "Global LTV": formatLTV(globalLTV),
-      "Liq Thresh": formatLTV(s.liquidationThreshold),
-      "Total Debt": formatBigNumber(s.totalDebt),
-      "🔴 Seizable": s.seizable,
-      "🟠 Liquidable": s.liquidable,
-      "🟢 Safe": s.safe,
+      Market: formatAddress(account.market),
+      "Collat Name": marketName,
+      LTV: formatLTV(ltv),
+      "Liq Thresh": formatLTV(liquidationThreshold),
+      Status: status,
+      "User Debt": formatBigNumber(account.userDebt),
+      "Position Value": formatBigNumber(account.positionValue),
+      "Collateral Bal": formatBigNumber(account.collateralBalance),
     }
   })
 
