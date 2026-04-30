@@ -6,8 +6,9 @@ import { Wallet, formatEther, parseEther } from "ethers"
 import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
 import { LiquidationBotLogRepository } from "../../db/LiquidationBotLogRepository.js"
 
-import { LiquidationService } from "../../services/LiquidationService.js"
 import { LiquidationBotLogService } from "../../services/LiquidationBotLogService.js"
+import { LiquidationContextService } from "../../services/LiquidationContextService.js"
+import { LiquidationProcessService } from "../../services/LiquidationProcessService.js"
 
 import { indexerConfig } from "../../config/indexer_config.js"
 import { liquidationConfig } from "../../config/liquidation_config.js"
@@ -37,7 +38,7 @@ function blockAlignedBackoff(attemptsMade: number): number {
 
 const { providers, handleError } = setUpIndexer()
 const walletsPks = getLiquidatorWalletPks()
-const { liquidationService, context, telegramNotifierService } = await setUpLiquidationProcessServices()
+const { liquidationProcessService, liquidationContextService, context, telegramNotifierService } = await setUpLiquidationProcessServices()
 
 // Export for testing
 export { providers, context, telegramNotifierService }
@@ -171,7 +172,7 @@ async function main() {
 
   // Check context (validate RPCs and wallets)
   try {
-    await liquidationService.checkContext()
+    await liquidationContextService.checkContext()
   } catch (error) {
     console.error("Failed to check context:", error)
     await telegramNotifierService.sendError(`Liquidation Process Error: Failed to check context: ${(error as Error).message}`)
@@ -258,7 +259,7 @@ async function main() {
               }
 
               // Process liquidation (pass signal, rpcIndex, and currentBlock for cancellation support)
-              await liquidationService.processJob(job, telegramNotifierService, walletPk, signal, rpcIndex, currentBlock)
+              await liquidationProcessService.processJob(job, telegramNotifierService, walletPk, signal, rpcIndex, currentBlock)
 
               // Check if cancelled after processing
               if (signal?.aborted) {
@@ -361,11 +362,14 @@ export async function setUpLiquidationProcessServices() {
   const liquidationBotService = new LiquidationBotLogService(liquidationBotLogRepository, telegramNotifierService)
   const routerService = new RouterService(providers, routers.CURVE_V1_2_ROUTER, addresses.utilities.pendlePTRouter)
 
-  const liquidationService = new LiquidationService(new ActiveBorrowersRepository(prismaClient), context, routerService, liquidationBotService)
-  liquidationService.minEthBalance = indexerConfig.minEthBalance
+  const activeBorrowersRepository = new ActiveBorrowersRepository(prismaClient)
+  const liquidationContextService = new LiquidationContextService(activeBorrowersRepository, context)
+  liquidationContextService.minEthBalance = indexerConfig.minEthBalance
+  const liquidationProcessService = new LiquidationProcessService(context, routerService, liquidationBotService)
 
   return {
-    liquidationService,
+    liquidationProcessService,
+    liquidationContextService,
     context,
     liquidationBotService,
     telegramNotifierService,

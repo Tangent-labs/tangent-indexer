@@ -1,19 +1,11 @@
-import fs from "fs"
-
 import MarketExternalActionsAbi from "../abis/MarketExternalActions.json" with { type: "json" }
-import MarketAccountLiquidationBotInfoAbi from "../abis/MarketAccountLiquidationBotInfo.json" with { type: "json" }
 
 import { Addressable, AddressLike, Contract, Interface, JsonRpcProvider, MaxUint256, Wallet, formatEther } from "ethers"
-import { ActiveBorrowersRepository } from "../db/ActiveBorrowersRepository.js"
 import { type Job } from "bullmq"
 
 import {
-  LiquidationAccountOutInfo,
-  LiquidationAnalyseInfo,
   LiquidationEstimateInfo,
   LiquidationExecutionResult,
-  LiquidationMarketAccountOutInfo,
-  LiquidationMarketOutInfo,
   LiquidationRoute,
   LiquidationUserFullInfo,
   LiquidationUserInInfo,
@@ -21,44 +13,24 @@ import {
   RouterType,
   SerializedLiquidationUserFullInfo,
 } from "../type/data.js"
-import { chainView } from "../utils/chainView.js"
 import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
-import { BlockRepository } from "../db/BlockRepository.js"
 import { LiquidationBotLogService } from "./LiquidationBotLogService.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 import { parseEthersError } from "../utils/errorParser.js"
 import { liquidationConfig } from "../config/liquidation_config.js"
-import { indexerConfig } from "../config/indexer_config.js"
-import { getBestRpcProvider } from "../utils/getBestRpcProvider.js"
 import { RouterService } from "./RouterService.js"
 import { getAddressesJson } from "../utils/jsonReader.js"
 
-const DENOMINATOR = 100_000n
-
-type WithToObject<T> = T & {
-  toObject: () => T
-}
-
-export class LiquidationService {
+export class LiquidationProcessService {
   errors: { action: string; message: string; market: string }[] = []
-  activeBorrowersRepository: ActiveBorrowersRepository
   context: LiquidationExecutionContext
   liquidationBotService?: LiquidationBotLogService
-  marketBorrowerFilePath: string = `${indexerConfig.sharedDataDir}/market_borrowers.json`
-  minEthBalance: number = 0.1
   routerService: RouterService
-  // Map to track pending transactions per wallet for sequential processing
 
-  constructor(
-    activeBorrowersRepository: ActiveBorrowersRepository,
-    context: LiquidationExecutionContext,
-    routerService: RouterService,
-    LiquidationBotService?: LiquidationBotLogService
-  ) {
-    this.activeBorrowersRepository = activeBorrowersRepository
+  constructor(context: LiquidationExecutionContext, routerService: RouterService, liquidationBotService?: LiquidationBotLogService) {
     this.context = context
     this.routerService = routerService
-    this.liquidationBotService = LiquidationBotService
+    this.liquidationBotService = liquidationBotService
   }
 
   private async saveLiquidationExecution(
@@ -140,258 +112,6 @@ export class LiquidationService {
       console.warn("Failed to parse Liquidate event:", error)
     }
     return null
-  }
-
-  async checkContext() {
-    const providers = this.context.providers
-
-    const blockRepository = new BlockRepository(null!)
-    blockRepository.setClient(this.activeBorrowersRepository.prismaClient)
-
-    // try the database connectivty
-    try {
-      await blockRepository.getLastEventBlock()
-      this.context.isDbAlive = true
-    } catch (error) {
-      this.context.isDbAlive = false
-    }
-
-    // Get the best RPC provider for checking wallet balances
-    // Note: Each job will check the best provider at the start, so we don't need to set it in the shared context
-    const bestRpc = await getBestRpcProvider(providers)
-    const rpcIndexForBalanceCheck = bestRpc.index
-    const provider = providers[rpcIndexForBalanceCheck]
-
-    // check all wallets balance remove under the limit (parallelized)
-    const walletBalanceChecks = await Promise.all(
-      this.context.walletsPks.map(async (pk) => {
-        const signer = new Wallet(pk, provider)
-        const address = await signer.getAddress()
-        const balance = await provider.getBalance(address)
-        return {
-          pk,
-          balance,
-          hasSufficientBalance: balance > BigInt(this.minEthBalance * 10 ** 18),
-        }
-      })
-    )
-
-    // Filter wallets with sufficient balance
-    this.context.walletsPks = walletBalanceChecks.filter((check) => check.hasSufficientBalance).map((check) => check.pk)
-  }
-
-  async getLiquidationParams(): Promise<{ markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }> {
-    if (this.context.isDbAlive) {
-      const data = await this.getLiquidationParamsFromDb()
-      return data
-    } else {
-      const data = await this.getLiquidationParamsFromFile()
-      return data
-    }
-  }
-
-  async getLiquidationParamsFromFile(): Promise<{ markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }> {
-    // Read the file synchronously (you can also use async methods)
-    const data = fs.readFileSync(this.marketBorrowerFilePath, "utf-8")
-
-    // Parse the JSON content
-    const parsedData = JSON.parse(data)
-
-    // Return the expected structure
-    return {
-      markets: parsedData.markets, // Assuming the markets field is an array of AddressLike
-      borrowers: parsedData.borrowers, // Assuming borrowers field is an array of LiquidationUserInInfo
-    }
-  }
-
-  /**
-   * Retrieves the parameters required for liquidation.
-   * @returns An object containing the markets and borrowers to be liquidated.
-   */
-  async getLiquidationParamsFromDb(): Promise<{ markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }> {
-    if (this.context.isDbAlive) {
-      const borrowersRawList = await this.activeBorrowersRepository.getAll()
-
-      const markets = new Set<AddressLike>()
-      const borrowers = borrowersRawList.map((borrower) => {
-        markets.add(borrower.market.contract_address as AddressLike)
-        return {
-          account: borrower.borrower_address as AddressLike,
-          market: borrower.market.contract_address as AddressLike,
-        }
-      })
-      return { markets: Array.from(markets), borrowers }
-    } else {
-      const data = fs.readFileSync(this.marketBorrowerFilePath, "utf-8")
-      return JSON.parse(data)
-    }
-  }
-
-  /**
-   * Retrieves on-chain data for liquidation analysis.
-   * @param provider The JSON RPC provider.
-   * @param markets The markets to be analyzed.
-   * @param borrowers The borrowers to be analyzed.
-   * @returns LiquidationMarketAccountOutInfo or undefined.
-   */
-  async getOnchainData(
-    providers: JsonRpcProvider[],
-    markets: AddressLike[],
-    borrowers: LiquidationUserInInfo[],
-    marketViewerAddress: string
-  ): Promise<LiquidationMarketAccountOutInfo | undefined> {
-    // get the data from the  all the providers
-    const calls = providers.map((provider, index) =>
-      chainView<[AddressLike[], LiquidationUserInInfo[], string], [LiquidationMarketAccountOutInfo]>(
-        provider,
-        MarketAccountLiquidationBotInfoAbi.abi,
-        MarketAccountLiquidationBotInfoAbi.bytecode,
-        [markets, borrowers, marketViewerAddress]
-      )
-    )
-
-    // Don't let a single failing RPC interrupt the whole process.
-    // We keep successful results and log failures for observability.
-    const results = await Promise.allSettled(calls)
-    const datas = results.map((result, callIndex) => {
-      if (result.status !== "fulfilled") {
-        const message = (result.reason as Error | undefined)?.message ?? String(result.reason)
-        console.warn(`⚠️ getOnchainData: provider call failed (rpcIndex=${callIndex}): ${message}`)
-        return undefined
-      }
-
-      const d = result.value?.at(0)
-      if (!d) return undefined
-
-      return {
-        markets: d.markets.map((m) => (m as unknown as WithToObject<LiquidationMarketOutInfo>).toObject()),
-        accounts: d.accounts.map((a, index) => ({ ...(a as unknown as WithToObject<LiquidationAccountOutInfo>).toObject(), callIndex, index })),
-        blockNumber: d.blockNumber,
-        blockTimestamp: d.blockTimestamp,
-      }
-    })
-
-    // remove duplicates in markets
-    const marketsResult = datas
-      .map((d) => d?.markets || [])
-      .flat()
-      .filter((m, index, self) => self.findIndex((t) => t.market === m.market) === index)
-
-    // remove duplicates in accounts and keep the one with the highest healthRatio
-    const finalAccounts = []
-    const accountLength = datas.find((d) => (d?.accounts?.length || 0) > 0)?.accounts?.length || 0
-    const accountsFlat = datas.map((d) => d?.accounts || []).flat()
-
-    if (accountLength !== borrowers.length) {
-      const errorMessage = `CRITICAL: Account length mismatch in getOnchainData! Expected ${borrowers.length} accounts (from borrowers), but got ${accountLength} from on-chain data. This indicates a data integrity issue.`
-      console.error(`❌ ${errorMessage}`)
-      return undefined
-    }
-
-    for (let i = 0; i < accountLength; i++) {
-      const results = accountsFlat.filter((a) => a.index === i)
-      const minHealthRatio = results.reduce<bigint | undefined>((acc, curr) => (acc && acc < curr.healthRatio ? acc : curr.healthRatio), undefined)
-
-      const row = results.find((a) => a.healthRatio === minHealthRatio)
-      if (row) {
-        finalAccounts.push(row)
-      }
-    }
-
-    const finalAccountsResult = finalAccounts.filter((a) => a !== undefined)
-
-    if (finalAccountsResult.length !== borrowers.length) {
-      const errorMessage = `CRITICAL: Final accounts count (${finalAccountsResult.length}) doesn't match borrowers count (${borrowers.length}) in getOnchainData. This indicates missing accounts from all provider responses.`
-      console.error(`❌ ${errorMessage}`)
-      return undefined
-    }
-
-    const validDatas = datas.filter((d) => d !== undefined)
-    const blockNumber = validDatas.reduce<bigint>((max, d) => (d.blockNumber > max ? d.blockNumber : max), 0n)
-    const blockTimestamp = validDatas.find((d) => d.blockNumber === blockNumber)?.blockTimestamp ?? 0n
-
-    return { markets: marketsResult, accounts: finalAccountsResult as LiquidationAccountOutInfo[], blockNumber, blockTimestamp }
-  }
-
-  /**
-   * Analyzes liquidation opportunities.
-   * @param datas The liquidation market account out info.
-   * @param markets The markets to be analyzed.
-   * @param accounts The accounts to be analyzed.
-   * @returns LiquidationAnalyseInfo.
-   */
-  async analyzeLiquidation(datas: LiquidationMarketAccountOutInfo, accounts: LiquidationUserInInfo[]): Promise<LiquidationAnalyseInfo> {
-    if (datas.accounts.length !== accounts.length) {
-      const errorMessage = `CRITICAL: accounts length mismatch in analyzeLiquidation! On-chain: ${datas.accounts.length}, Borrowers: ${accounts.length}. This indicates a data integrity issue.`
-      console.error(`❌ ${errorMessage}`)
-      throw new Error(errorMessage)
-    }
-
-    let hydratedAccounts = datas.accounts.map((accountData, index) => {
-      const account = accounts[index]
-      const market = datas.markets.find((m) => (m.market as string).toLowerCase() === (accountData.market as string).toLowerCase())
-      return {
-        ...accountData,
-        ...account,
-        ...market,
-        ltv: accountData.positionValue === 0n ? 0n : (accountData.userDebt * DENOMINATOR) / accountData.positionValue,
-      }
-    })
-
-    hydratedAccounts = hydratedAccounts.filter((a) => a.userDebt > 0n)
-
-    let seizingList: LiquidationUserFullInfo[] = [] // borrower with positionvalue < debt
-    let liquidationList: LiquidationUserFullInfo[] = [] // borrower with ltv > liquidationThreshold
-
-    // We detect the potential actions we have to do
-    hydratedAccounts.forEach((account) => {
-      if (account.userDebt >= account.positionValue) {
-        seizingList.push(account as LiquidationUserFullInfo)
-        return
-      }
-      if (account.ltv > account.liquidationThreshold!) {
-        liquidationList.push(account as LiquidationUserFullInfo)
-      }
-    })
-
-    const sortFn: (a: LiquidationUserFullInfo, b: LiquidationUserFullInfo) => number = (a, b) => Number(b.positionValue) - Number(a.positionValue)
-
-    seizingList = seizingList.sort(sortFn)
-    liquidationList = liquidationList.sort(sortFn)
-
-    return { seizingList, liquidationList }
-  }
-
-  /**
-   * Prioritizes the liquidation actions by combining seizing and liquidation lists,
-   * then sorting them by position value in descending order.
-   *
-   * Prioritization strategy:
-   * - Seizing actions (bad debt) are combined with liquidation actions
-   * - All actions are sorted by positionValue (highest first) to prioritize larger positions
-   * - This ensures the most valuable liquidations are processed first
-   * - All actions are returned (not limited by wallet count) as they will be distributed
-   *   across available wallets in round-robin fashion by the caller
-   *
-   * @param seizingList The list of seizing actions (bad debt cases where debt >= position value)
-   * @param liquidationList The list of liquidation actions (cases where LTV > liquidation threshold)
-   * @returns The prioritized liquidation actions sorted by position value (descending)
-   */
-  prioritizeActions(
-    seizingList: LiquidationUserFullInfo[],
-    liquidationList: LiquidationUserFullInfo[]
-  ): (LiquidationUserFullInfo & { type: "seizing" | "liquidation" })[] {
-    // Combine both action types with their type indicator
-    const actionsList = [
-      ...seizingList.map((a) => ({ ...a, type: "seizing" as const })),
-      ...liquidationList.map((b) => ({ ...b, type: "liquidation" as const })),
-    ]
-    // Sort by position value in descending order (highest value first)
-    const sortedActionsList = actionsList.sort((a, b) => Number(b.positionValue) - Number(a.positionValue))
-
-    // Return all actions, not limited by wallet count
-    // The caller will distribute these across wallets in round-robin fashion
-    return sortedActionsList || []
   }
 
   /**
@@ -671,7 +391,15 @@ export class LiquidationService {
     }
 
     // Build router call data using RouterService
-    const data = this.routerService.buildRouterCallData(route, normalizedAccount, minAmount, signerAddress, routerType, pendleData)
+    let routerAddressForCall = routerAddress
+    let data: string
+    if (routerType === "enso") {
+      const ensoCall = await this.routerService.buildEnsoRouterCallData(normalizedAccount, minAmount, signerAddress)
+      data = ensoCall.routerCall
+      routerAddressForCall = ensoCall.routerAddress
+    } else {
+      data = this.routerService.buildRouterCallData(route, normalizedAccount, minAmount, signerAddress, routerType, pendleData)
+    }
 
     // Estimate gas for the liquidation transaction
     const marketContract = new Contract(normalizedAccount.market as Addressable, MarketExternalActionsAbi.abi, signer)
@@ -694,7 +422,7 @@ export class LiquidationService {
         {
           // IMPORTANT: use the router that matches `routerCall` encoding.
           // Hardcoding the Pendle router here makes Curve routes revert with INVALID_SELECTOR during estimateGas.
-          router: routerAddress,
+          router: routerAddressForCall,
           routerCall: data,
         },
       ]
@@ -717,7 +445,7 @@ export class LiquidationService {
         minTgUSDOut: minAmount,
         liquidationCall: {
           routerCall: data,
-          routerAddress,
+          routerAddress: routerAddressForCall,
         },
         expectedOutput: quote,
         slippageBps,
@@ -750,7 +478,8 @@ export class LiquidationService {
 
     // Get expected output from the best route using RouterService
 
-    const { route, amount, priceImpact, routerType, routerAddress, pendleData } = await this.routerService.getBestRoute(account, providerIndex)
+    const signerAddress = await signer.getAddress()
+    const { route, amount, priceImpact, routerType, routerAddress, pendleData } = await this.routerService.getBestRoute(account, providerIndex, signerAddress)
 
     if (!route) {
       throw new Error(`No route found for collateral: ${account.collatToken}`)
@@ -783,15 +512,6 @@ export class LiquidationService {
 
     // Build the liquidation transaction data
     return [await this.estimateTransaction(route, amount, account, signer, provider, slippageBps, routerType, routerAddress, pendleData)]
-  }
-
-  /**
-   * Save the files to the database
-   * @param data The markets and borrowers to be saved.
-   */
-  saveFiles(data: { markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }) {
-    fs.mkdirSync(indexerConfig.sharedDataDir, { recursive: true })
-    fs.writeFileSync(this.marketBorrowerFilePath, JSON.stringify(data, null, 2))
   }
 
   /**

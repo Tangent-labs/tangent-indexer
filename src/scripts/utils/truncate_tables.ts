@@ -13,7 +13,9 @@ async function promptConfirmation(): Promise<boolean> {
       output: process.stdout,
     })
 
-    rl.question("\x1b[32m⚠️ Are you sure you want to truncate all tables? (y/n): \x1b[0m", (answer: string) => {
+    //  we delete the password from the display .
+    const safeDb = (process.env.DATABASE_URL ?? "unknown").replace(/:([^:@]+)@/, ":***@")
+    rl.question(`\x1b[33m⚠️  Database : ${safeDb}\x1b[0m\n\x1b[31mVoulez-vous vraiment truncate toutes les tables ? (y/n): \x1b[0m`, (answer: string) => {
       rl.close()
       resolve(answer.trim().toLowerCase() === "y")
     })

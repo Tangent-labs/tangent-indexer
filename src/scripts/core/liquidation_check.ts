@@ -7,31 +7,33 @@ import { PositionSnapshotRepository } from "../../db/PositionSnapshotRepository.
 import { MarketConfigRepository } from "../../db/MarketConfigRepository.js"
 import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
 
-import { LiquidationService } from "../../services/LiquidationService.js"
 import { LiquidationBotLogService } from "../../services/LiquidationBotLogService.js"
-import { CheckLiquidationService } from "../../services/LiquidationCheckService.js"
+import { LiquidationCheckService } from "../../services/LiquidationCheckService.js"
+import { LiquidationCheckRunner } from "../../services/LiquidationCheckRunner.js"
+import { LiquidationContextService } from "../../services/LiquidationContextService.js"
 
 import { indexerConfig } from "../../config/indexer_config.js"
+import { liquidationConfig } from "../../config/liquidation_config.js"
 import { LiquidationExecutionContext } from "../../services/LiquidationExecutionContext.js"
 import { setUpIndexer } from "../../config/indexer_setup.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
-import { routers } from "@tangent/defi-resources"
 import { getAddressesJson } from "../../utils/jsonReader.js"
-import { RouterService } from "../../services/RouterService.js"
 import { getLiquidatorWalletPks } from "../../config/liquidation_wallets.js"
 
 dotenv.config()
 const { providers, handleError } = setUpIndexer()
 const walletsPks = getLiquidatorWalletPks()
-const { liquidationService, context, liquidationBotService, telegramNotifierService, prismaClient } = await setUpCheckLiquidationServices()
+const { liquidationCheckService, liquidationContextService, context, liquidationBotService, telegramNotifierService, prismaClient } =
+  await setUpCheckLiquidationServices()
 
 // Run main function if this file is being run directly
 if (process.env.NODE_ENV !== "test") {
   const positionSnapshotRepository = new PositionSnapshotRepository(prismaClient)
   const marketConfigRepository = new MarketConfigRepository(prismaClient)
   const marketContractsRepository = new MarketContractsRepository(prismaClient)
-  const checkLiquidationService = new CheckLiquidationService(
-    liquidationService,
+  const checkLiquidationService = new LiquidationCheckRunner(
+    liquidationCheckService,
+    liquidationContextService,
     context,
     liquidationBotService,
     telegramNotifierService,
@@ -66,7 +68,6 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 export async function setUpCheckLiquidationServices() {
-  const addresses = await getAddressesJson()
   const prismaClient = new PrismaClient()
 
   const context = new LiquidationExecutionContext()
@@ -76,16 +77,22 @@ export async function setUpCheckLiquidationServices() {
     botToken: process.env.TELEGRAM_BOT_TOKEN!,
     chatId: process.env.TELEGRAM_CHAT_ID!,
   })
+
+  if (!liquidationConfig.enso.apiKey) {
+    await telegramNotifierService.sendError("⚠️ ENSO_API_KEY is not set — Enso routing disabled, falling back to Curve/Pendle only.")
+  }
+
   const liquidationBotLogRepository = new LiquidationBotLogRepository(prismaClient)
   const liquidationBotService = new LiquidationBotLogService(liquidationBotLogRepository, telegramNotifierService)
 
-  const routerService = new RouterService(providers, routers.CURVE_V1_2_ROUTER, addresses.utilities.pendlePTRouter)
-
-  const liquidationService = new LiquidationService(new ActiveBorrowersRepository(prismaClient), context, routerService, liquidationBotService)
-  liquidationService.minEthBalance = indexerConfig.minEthBalance
+  const activeBorrowersRepository = new ActiveBorrowersRepository(prismaClient)
+  const liquidationCheckService = new LiquidationCheckService(activeBorrowersRepository, context)
+  const liquidationContextService = new LiquidationContextService(activeBorrowersRepository, context)
+  liquidationContextService.minEthBalance = indexerConfig.minEthBalance
 
   return {
-    liquidationService,
+    liquidationCheckService,
+    liquidationContextService,
     context,
     liquidationBotService,
     telegramNotifierService,

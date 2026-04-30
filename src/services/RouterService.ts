@@ -21,6 +21,7 @@ import {
   RouterType,
   SuccessRoutes,
 } from "../type/data.js"
+import { EnsoRouterService, EnsoRouteRequest } from "./EnsoRouterService.js"
 
 const successRoutes = successRoutesJson as unknown as SuccessRoutes
 
@@ -36,11 +37,13 @@ export class RouterService {
   private pendleRouterAddress: string
   private providers: JsonRpcProvider[]
   private pendleCollaterals: Set<string> = new Set()
+  private ensoRouterService: EnsoRouterService
 
-  constructor(providers: JsonRpcProvider[], curveRouterAddress: string, pendleRouterAddress: string) {
+  constructor(providers: JsonRpcProvider[], curveRouterAddress: string, pendleRouterAddress: string, ensoRouterService = new EnsoRouterService()) {
     this.providers = providers
     this.curveRouterAddress = curveRouterAddress
     this.pendleRouterAddress = pendleRouterAddress
+    this.ensoRouterService = ensoRouterService
     this._initPendleCollaterals()
   }
 
@@ -83,26 +86,36 @@ export class RouterService {
    */
   public async getBestRoute(
     info: LiquidationUserFullInfo,
-    rpcIndex: number = 0
+    rpcIndex: number = 0,
+    receiver?: AddressLike
   ): Promise<RouteEvaluationResult & { routerType: RouterType; routerAddress: string; pendleData?: PendlePTToSYQuote }> {
+    // Check the custom router
     const routerType = this.getRouterType(info.collatToken)
+    const customRoutePromise =
+      routerType === "pendle"
+        ? this._getBestPendleRoute(info, rpcIndex).then((result) => ({
+            ...result,
+            routerType: "pendle" as const,
+            routerAddress: this.pendleRouterAddress,
+            pendleData: result.pendleData,
+          }))
+        : this._getBestCurveRoute(info, rpcIndex).then((result) => ({
+            ...result,
+            routerType: "curve" as const,
+            routerAddress: this.curveRouterAddress,
+          }))
 
-    if (routerType === "pendle") {
-      const result = await this._getBestPendleRoute(info, rpcIndex)
-      return {
-        ...result,
-        routerType: "pendle",
-        routerAddress: this.pendleRouterAddress,
-        pendleData: result.pendleData,
-      }
-    } else {
-      const result = await this._getBestCurveRoute(info, rpcIndex)
-      return {
-        ...result,
-        routerType: "curve",
-        routerAddress: this.curveRouterAddress,
-      }
+    // We check on enso as well
+    const ensoRoutePromise = receiver ? this._getEnsoRoute(info, receiver, rpcIndex) : Promise.resolve(null)
+
+    // let's run it .
+    const [customRoute, ensoRoute] = await Promise.all([customRoutePromise, ensoRoutePromise])
+
+    if (ensoRoute && ensoRoute.amount > customRoute.amount) {
+      return ensoRoute
     }
+
+    return customRoute
   }
 
   /**
@@ -116,10 +129,119 @@ export class RouterService {
     routerType: RouterType,
     pendleData?: PendlePTToSYQuote
   ): string {
-    if (routerType === "pendle" && pendleData) {
+    if (routerType === "enso") {
+      if (!route.params.routerCall) {
+        throw new Error("Enso route is missing router call data")
+      }
+      return route.params.routerCall
+    } else if (routerType === "pendle" && pendleData) {
       return this._buildPendleRouterCallData(route, pendleData, minAmountOut, receiver)
     } else {
       return this._buildCurveRouterCallData(route, info.collateralBalance, minAmountOut, receiver)
+    }
+  }
+
+  public async buildEnsoRouterCallData(
+    info: LiquidationUserFullInfo,
+    minAmountOut: bigint,
+    receiver: AddressLike
+  ): Promise<{ routerCall: string; routerAddress: string }> {
+    const addresses = await getAddressesJson()
+    const route = await this.ensoRouterService.getRoute({
+      amountIn: BigInt(info.collateralBalance),
+      tokenIn: info.collatToken,
+      tokenOut: addresses.tokens.USG,
+      fromAddress: info.market,
+      receiver,
+      minAmountOut,
+    })
+
+    if (!route?.tx?.to || !route.tx.data) {
+      throw new Error("Enso route is missing transaction data")
+    }
+
+    return {
+      routerCall: route.tx.data,
+      routerAddress: route.tx.to,
+    }
+  }
+
+  private _buildEnsoRequestParams(info: LiquidationUserFullInfo, tokenOut: string, receiver: AddressLike): EnsoRouteRequest {
+    return {
+      amountIn: BigInt(info.collateralBalance),
+      tokenIn: info.collatToken,
+      tokenOut,
+      fromAddress: info.market,
+      receiver,
+      minAmountOut: 0n,
+    }
+  }
+
+  // TODO: remove — used to validate Enso API + estimateGas with a liquid pair (USG pools empty in dev)
+  private async _buildEnsoDebugRequestParams(receiver: AddressLike, rpcIndex: number): Promise<EnsoRouteRequest> {
+    const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+    const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+    const usdcContract = new Interface(["function balanceOf(address) view returns (uint256)"])
+    const balanceData = usdcContract.encodeFunctionData("balanceOf", [receiver])
+    const raw = await this.providers[rpcIndex].call({ to: USDC, data: balanceData })
+    const usdcBalance = usdcContract.decodeFunctionResult("balanceOf", raw)[0] as bigint
+    console.log(`[ENSO DEBUG] USDC balance of ${receiver}: ${usdcBalance}`)
+
+    return {
+      amountIn: usdcBalance,
+      tokenIn: USDC,
+      tokenOut: USDT,
+      fromAddress: receiver,
+      receiver,
+      minAmountOut: 0n,
+    }
+  }
+
+  private async _getEnsoRoute(
+    info: LiquidationUserFullInfo,
+    receiver: AddressLike,
+    rpcIndex: number = 0
+  ): Promise<(RouteEvaluationResult & { routerType: "enso"; routerAddress: string }) | null> {
+    // DEBUG
+    // const params = await this._buildEnsoDebugRequestParams(receiver, rpcIndex)
+
+    const addresses = await getAddressesJson()
+    const params = this._buildEnsoRequestParams(info, addresses.tokens.USG, receiver)
+
+    const route = await this.ensoRouterService.getRoute(params)
+
+    const amount = BigInt(route?.amountOut || 0n)
+    const routerAddress = route?.tx?.to
+    const routerCall = route?.tx?.data
+
+    if (!route || amount <= 0n || !routerAddress || !routerCall) {
+      return null
+    }
+
+    try {
+      await this.providers[rpcIndex].estimateGas({
+        to: routerAddress,
+        from: params.fromAddress as string,
+        data: routerCall,
+      })
+    } catch (error) {
+      console.warn(`Enso route failed gas estimation, skipping: ${(error as Error).message}`)
+      return null
+    }
+
+    return {
+      route: {
+        display: "enso",
+        params: {
+          routeAddresses: [],
+          swapParamsFull: [],
+          routerCall,
+        },
+      },
+      amount,
+      priceImpact: route.priceImpact || 0,
+      routerType: "enso",
+      routerAddress,
     }
   }
 
