@@ -2,25 +2,25 @@ import { PrismaClient } from "@prisma/client"
 import * as dotenv from "dotenv"
 import { JsonRpcProvider } from "ethers"
 
-import { GlobalDataRepository } from "../../db/GlobalDataRepository.js"
-import { TotalSupplyRepository } from "../../db/TotalSupplyRepository.js"
-import { GlobalDataService } from "../../services/globalData/GlobalDataService.js"
-import { CallApiService } from "../../services/CallApiService.js"
-import { TransactionPrisma } from "../../type/prisma.js"
-import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
+import { indexerConfig } from "src/config/indexer_config.js"
+import { MonitoringRepository } from "src/db/MonitoringRepository.js"
+import { MonitoringAlertService } from "src/services/MonitoringAlertService.js"
+import { toSafeErrorMessage } from "src/utils/errors.js"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
-import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
-import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
-import { getAddressesJson } from "../../utils/jsonReader.js"
-import { PegKeeperRepository } from "../../db/PegKeepeerRepository.js"
-import { WStableRepository } from "../../db/WStableRepository.js"
+import { GlobalDataRepository } from "../../db/GlobalDataRepository.js"
 import { GlobalHistoryDataRepository } from "../../db/GlobalHistoryDataRepository.js"
+import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
+import { PegKeeperRepository } from "../../db/PegKeepeerRepository.js"
 import { PegMonitoredTokenRepository } from "../../db/PegMonitoredTokenRepository.js"
-import { MonitoringRepository } from "../../db/MonitoringRepository.js"
-import { indexerConfig } from "../../config/indexer_config.js"
+import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
+import { TotalSupplyRepository } from "../../db/TotalSupplyRepository.js"
+import { WStableRepository } from "../../db/WStableRepository.js"
+import { CallApiService } from "../../services/CallApiService.js"
+import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
+import { GlobalDataService } from "../../services/globalData/GlobalDataService.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
-import { MonitoringAlertService } from "../../services/MonitoringAlertService.js"
-import { toSafeErrorMessage } from "../../utils/errors.js"
+import { TransactionPrisma } from "../../type/prisma.js"
+import { getAddressesJson } from "../../utils/jsonReader.js"
 
 dotenv.config()
 
@@ -45,7 +45,7 @@ async function main() {
       globalDataSucceeded = true
     })
     .catch(async (e) => {
-      await telegramNotifierService.sendError(`Error on GLOBAL DATA PROCESS: ${toSafeErrorMessage(e)}`)
+      await telegramNotifierService.sendError(`Error on GLOBAL DATA PROCESS : ${toSafeErrorMessage(e)}`)
       console.error(e)
     })
 
