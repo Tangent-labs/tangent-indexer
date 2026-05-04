@@ -62,22 +62,17 @@ export class LiquidationCheckService {
    * @returns An object containing the markets and borrowers to be liquidated.
    */
   async getLiquidationParamsFromDb(): Promise<{ markets: AddressLike[]; borrowers: LiquidationUserInInfo[] }> {
-    if (this.context.isDbAlive) {
-      const borrowersRawList = await this.activeBorrowersRepository.getAll()
+    const borrowersRawList = await this.activeBorrowersRepository.getAll()
 
-      const markets = new Set<AddressLike>()
-      const borrowers = borrowersRawList.map((borrower) => {
-        markets.add(borrower.market.contract_address as AddressLike)
-        return {
-          account: borrower.borrower_address as AddressLike,
-          market: borrower.market.contract_address as AddressLike,
-        }
-      })
-      return { markets: Array.from(markets), borrowers }
-    } else {
-      const data = fs.readFileSync(this.marketBorrowerFilePath, "utf-8")
-      return JSON.parse(data)
-    }
+    const markets = new Set<AddressLike>()
+    const borrowers = borrowersRawList.map((borrower) => {
+      markets.add(borrower.market.contract_address as AddressLike)
+      return {
+        account: borrower.borrower_address as AddressLike,
+        market: borrower.market.contract_address as AddressLike,
+      }
+    })
+    return { markets: Array.from(markets), borrowers }
   }
 
   /**

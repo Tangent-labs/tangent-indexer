@@ -150,6 +150,16 @@ export class LiquidationProcessService {
     return (collateralBalanceBigInt * collateralUSDPriceBigInt * protectionMultiplier) / (oracleDecimalsDivisor * bpsDenominator)
   }
 
+  private checkRecoveredValueCoversDebt(totalRecovered: bigint, userDebt: bigint, routeContext: "single" | "split") {
+    if (totalRecovered < userDebt) {
+      const error = new Error(
+        `Liquidation ${routeContext} route output does not cover debt value: recovered=${totalRecovered.toString()}, debt=${userDebt.toString()}`
+      )
+      ;(error as any).code = "INSUFFICIENT_RECOVERED_VALUE"
+      throw error
+    }
+  }
+
   /**
    * Executes a single seizing of collateral for a given market and account
    * @param signer The wallet signer
@@ -413,6 +423,7 @@ export class LiquidationProcessService {
             collatAmountToLiquidate: MaxUint256,
             minUsgOut: minAmount,
             maxUsgToBurn: MaxUint256,
+
             // Intentionally `0n`, same as execution path — must match `liquidate` above.
             minCollatAmountToLiquidate: normalizedAccount.collateralBalance,
             isReceiptOut: false,
@@ -480,6 +491,7 @@ export class LiquidationProcessService {
 
     const signerAddress = await signer.getAddress()
     const { route, amount, priceImpact, routerType, routerAddress, pendleData } = await this.routerService.getBestRoute(account, providerIndex, signerAddress)
+    const userDebt = BigInt(account.userDebt)
 
     if (!route) {
       throw new Error(`No route found for collateral: ${account.collatToken}`)
@@ -502,6 +514,15 @@ export class LiquidationProcessService {
         } = splittedRoutes || {}
         // is splitted profitable
         if (splittedAmountTotal > amount) {
+          const computedSplitAmountTotal = amount1 + amount2
+          if (computedSplitAmountTotal !== splittedAmountTotal) {
+            const error = new Error(`Split route amount mismatch: amountTotal=${splittedAmountTotal.toString()}, sum=${computedSplitAmountTotal.toString()}`)
+            ;(error as any).code = "INVALID_SPLIT_RECOVERED_VALUE"
+            throw error
+          }
+
+          this.checkRecoveredValueCoversDebt(computedSplitAmountTotal, userDebt, "split")
+
           return [
             await this.estimateTransaction(route1 as LiquidationRoute, amount1, info1, signer, provider, slippageBps, routerType, routerAddress),
             await this.estimateTransaction(route2 as LiquidationRoute, amount2, info2, signer, provider, slippageBps, routerType, routerAddress),
@@ -509,6 +530,8 @@ export class LiquidationProcessService {
         }
       }
     }
+
+    this.checkRecoveredValueCoversDebt(amount, userDebt, "single")
 
     // Build the liquidation transaction data
     return [await this.estimateTransaction(route, amount, account, signer, provider, slippageBps, routerType, routerAddress, pendleData)]

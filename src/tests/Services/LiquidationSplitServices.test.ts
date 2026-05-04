@@ -1801,6 +1801,145 @@ describe("TestLiquidationHarness - Best RPC Provider", () => {
     })
   })
 
+  describe("TestLiquidationHarness - estimateLiquidation recovered value validation", () => {
+    let liquidationService: TestLiquidationHarness
+    let mockRouterService: ReturnType<typeof createMockRouterService>
+    let mockSigner: any
+
+    const account: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 2n * DECIMALS,
+      userDebt: 760n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 100n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+      collateralUSDPrice: 1n * DECIMALS,
+      oracleDecimals: 18n,
+    }
+
+    const route = {
+      display: "mock-route",
+      params: { routeAddresses: ["0xToken1"], swapParamsFull: [] },
+    } as any
+
+    beforeEach(() => {
+      vi.clearAllMocks()
+
+      mockSigner = {
+        getAddress: vi.fn().mockResolvedValue("0xSignerAddress"),
+      }
+
+      mockRouterService = createMockRouterService()
+      liquidationService = new TestLiquidationHarness(
+        new ActiveBorrowersRepository({} as any),
+        { ...nominalContext, providers: [{} as any] },
+        mockRouterService as unknown as RouterService
+      )
+    })
+
+    it("should reject a single route when recovered value is lower than debt value", async () => {
+      mockRouterService.getBestRoute.mockResolvedValue({
+        route,
+        amount: 700n * DECIMALS,
+        priceImpact: 0.001,
+        routerType: "curve",
+        routerAddress: "0xCurveRouter",
+      })
+      const estimateTransactionSpy = vi.spyOn(liquidationService as any, "estimateTransaction")
+
+      await expect(liquidationService.estimateLiquidation(mockSigner, account, 50n)).rejects.toMatchObject({
+        code: "INSUFFICIENT_RECOVERED_VALUE",
+        message: expect.stringContaining("does not cover debt value"),
+      })
+
+      expect(estimateTransactionSpy).not.toHaveBeenCalled()
+    })
+
+    it("should reject split routes when the split recovered sum is lower than debt value", async () => {
+      mockRouterService.getBestRoute.mockResolvedValue({
+        route,
+        amount: 700n * DECIMALS,
+        priceImpact: liquidationConfig.limits.maxPriceImpact + 1,
+        routerType: "curve",
+        routerAddress: "0xCurveRouter",
+      })
+      mockRouterService.getBestSplitCurveRoutes.mockResolvedValue({
+        route1: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 350n * DECIMALS },
+        route2: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 400n * DECIMALS },
+        amountTotal: 750n * DECIMALS,
+        priceImpactTotal: 0.1,
+      })
+      const estimateTransactionSpy = vi.spyOn(liquidationService as any, "estimateTransaction")
+
+      await expect(liquidationService.estimateLiquidation(mockSigner, account, 50n)).rejects.toMatchObject({
+        code: "INSUFFICIENT_RECOVERED_VALUE",
+        message: expect.stringContaining("split route output does not cover debt value"),
+      })
+
+      expect(estimateTransactionSpy).not.toHaveBeenCalled()
+    })
+
+    it("should reject split routes when reported total does not equal the split sum", async () => {
+      mockRouterService.getBestRoute.mockResolvedValue({
+        route,
+        amount: 600n * DECIMALS,
+        priceImpact: liquidationConfig.limits.maxPriceImpact + 1,
+        routerType: "curve",
+        routerAddress: "0xCurveRouter",
+      })
+      mockRouterService.getBestSplitCurveRoutes.mockResolvedValue({
+        route1: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 300n * DECIMALS },
+        route2: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 400n * DECIMALS },
+        amountTotal: 780n * DECIMALS,
+        priceImpactTotal: 0.1,
+      })
+
+      await expect(liquidationService.estimateLiquidation(mockSigner, account, 50n)).rejects.toThrow("Split route amount mismatch")
+    })
+
+    it("should accept split routes when their recovered sum covers debt value", async () => {
+      mockRouterService.getBestRoute.mockResolvedValue({
+        route,
+        amount: 700n * DECIMALS,
+        priceImpact: liquidationConfig.limits.maxPriceImpact + 1,
+        routerType: "curve",
+        routerAddress: "0xCurveRouter",
+      })
+      mockRouterService.getBestSplitCurveRoutes.mockResolvedValue({
+        route1: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 400n * DECIMALS },
+        route2: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 380n * DECIMALS },
+        amountTotal: 780n * DECIMALS,
+        priceImpactTotal: 0.1,
+      })
+      vi.spyOn(liquidationService as any, "estimateTransaction").mockImplementation(async (...args: any[]) => {
+        const [, quote, info, , , slippageBps] = args as [any, bigint, LiquidationUserFullInfo, any, any, bigint]
+        return {
+          account: info.account,
+          collatToLiquidate: info.collateralBalance,
+          minTgUSDOut: quote - (quote * slippageBps) / 10000n,
+          liquidationCall: {
+            routerCall: "0xMockRouterCallData",
+            routerAddress: "0xCurveRouter",
+          },
+          expectedOutput: quote,
+          slippageBps,
+          gasEstimate: {
+            gasLimit: 200000n,
+            eth: 0.0002,
+          },
+          grossProfit: quote - BigInt(info.userDebt),
+          routerType: "curve" as const,
+        }
+      })
+
+      const result = await liquidationService.estimateLiquidation(mockSigner, account, 50n)
+
+      expect(result).toHaveLength(2)
+      expect(result.reduce((sum, estimation) => sum + estimation.expectedOutput, 0n)).toBe(780n * DECIMALS)
+    })
+  })
+
   describe("TestLiquidationHarness - estimateTransaction diagnostics", () => {
     let liquidationService: TestLiquidationHarness
     let mockContext: any
