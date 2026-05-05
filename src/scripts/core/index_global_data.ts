@@ -2,33 +2,40 @@ import { PrismaClient } from "@prisma/client"
 import * as dotenv from "dotenv"
 import { JsonRpcProvider } from "ethers"
 
-import { GlobalDataRepository } from "../../db/GlobalDataRepository.js"
-import { TotalSupplyRepository } from "../../db/TotalSupplyRepository.js"
-import { GlobalDataService } from "../../services/globalData/GlobalDataService.js"
-import { CallApiService } from "../../services/CallApiService.js"
-import { TransactionPrisma } from "../../type/prisma.js"
-import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
-import { ERC20Repository } from "../../db/ERC20Repository.js"
-import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
-import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
-import { getAddressesJson } from "../../utils/jsonReader.js"
-import { PegKeeperRepository } from "../../db/PegKeepeerRepository.js"
-import { WStableRepository } from "../../db/WStableRepository.js"
-import { GlobalHistoryDataRepository } from "../../db/GlobalHistoryDataRepository.js"
-import { PegMonitoredTokenRepository } from "../../db/PegMonitoredTokenRepository.js"
-import { MonitoringRepository } from "../../db/MonitoringRepository.js"
 import { indexerConfig } from "../../config/indexer_config.js"
-import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
+import { ERC20Repository } from "../../db/ERC20Repository.js"
+import { GlobalDataRepository } from "../../db/GlobalDataRepository.js"
+import { GlobalHistoryDataRepository } from "../../db/GlobalHistoryDataRepository.js"
+import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
+import { MonitoringRepository } from "../../db/MonitoringRepository.js"
+import { PegKeeperRepository } from "../../db/PegKeepeerRepository.js"
+import { PegMonitoredTokenRepository } from "../../db/PegMonitoredTokenRepository.js"
+import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
+import { TotalSupplyRepository } from "../../db/TotalSupplyRepository.js"
+import { WStableRepository } from "../../db/WStableRepository.js"
+import { CallApiService } from "../../services/CallApiService.js"
+import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
+import { GlobalDataService } from "../../services/globalData/GlobalDataService.js"
 import { MonitoringAlertService } from "../../services/MonitoringAlertService.js"
+import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
+import { TransactionPrisma } from "../../type/prisma.js"
 import { toSafeErrorMessage } from "../../utils/errors.js"
+import { getAddressesJson } from "../../utils/jsonReader.js"
 
 dotenv.config()
 
 async function main() {
-  const { prismaClient, setTransaction, globalDataService, globalDataRepository, savingAccountService, telegramNotifierService, monitoringAlertService } =
-    setUpIndexerGlobalData()
+  const {
+    provider,
+    prismaClient,
+    setTransaction,
+    globalDataService,
+    globalDataRepository,
+    savingAccountService,
+    telegramNotifierService,
+    monitoringAlertService,
+  } = setUpIndexerGlobalData()
 
-  const nowBC = new Date()
   let globalDataSucceeded = false
 
   await prismaClient
@@ -45,12 +52,12 @@ async function main() {
       globalDataSucceeded = true
     })
     .catch(async (e) => {
-      await telegramNotifierService.sendError(`Error on GLOBAL DATA PROCESS: ${toSafeErrorMessage(e)}`)
+      await telegramNotifierService.sendError(`Error on GLOBAL DATA PROCESS : ${toSafeErrorMessage(e)}`)
       console.error(e)
     })
 
   if (globalDataSucceeded) {
-    await monitoringAlertService.processAlerts(nowBC).catch(async (e) => {
+    await monitoringAlertService.processAlerts(new Date()).catch(async (e) => {
       await telegramNotifierService.sendError(`Error on MONITORING ALERT PROCESS: ${toSafeErrorMessage(e)}`)
       console.error(e)
     })
@@ -63,6 +70,10 @@ async function main() {
         const {
           tokens: { sUSG },
         } = await getAddressesJson()
+
+        const lastBlock = await provider.getBlock("latest")
+        const nowBC = new Date((lastBlock?.timestamp as number) * 1000)
+
         await savingAccountService.processSavingAccountApy(globalDataRepository, nowBC, sUSG)
       },
       {
@@ -133,6 +144,7 @@ function setUpIndexerGlobalData() {
   )
   return {
     prismaClient,
+    provider,
     globalDataService,
     savingAccountService,
     totalSupplyRepo,

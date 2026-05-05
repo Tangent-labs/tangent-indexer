@@ -1,5 +1,5 @@
-import { AbstractRepository } from "./AbstractRepository.js"
 import { Prisma } from "@prisma/client"
+import { AbstractRepository } from "./AbstractRepository.js"
 
 export type processReportDbEvent = Prisma.process_reportGetPayload<{}>
 

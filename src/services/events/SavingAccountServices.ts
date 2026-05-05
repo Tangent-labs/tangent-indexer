@@ -1,9 +1,9 @@
 import { Prisma } from "@prisma/client"
 
+import { ONE_WEEK_IN_SECONDS } from "@tangent/defi-resources/build/utils/durations.js"
 import { GlobalDataRepository } from "../../db/GlobalDataRepository.js"
 import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
 import { ProcessReportEvent } from "../../eventFectcher/savingAccountEventFetcher.js"
-import { ONE_WEEK_IN_SECONDS } from "@tangent/defi-resources/build/utils/durations.js"
 
 const WEEKS_PER_YEAR = 52n
 const APY_FIXED_POINT_SCALE = 10n ** 18n
