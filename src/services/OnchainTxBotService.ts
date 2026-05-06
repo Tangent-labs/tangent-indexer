@@ -1,13 +1,15 @@
-import { Interface, Signer, Contract, JsonRpcProvider, formatEther, formatUnits } from "ethers"
-import { chainView } from "../utils/chainView.js"
+import { Contract, formatEther, formatUnits, Interface, JsonRpcProvider, Signer } from "ethers"
 
-import { TelegramNotifierService } from "./TelegramNotificationServices.js"
-import OnchainTxBot from "../abis/OnchainTxBot.json" with { type: "json" }
 import IPegKeeperV2 from "../abis/IPegKeeperV2.json" with { type: "json" }
 import IRCalculator from "../abis/IRCalculator.json" with { type: "json" }
+import OnchainTxBot from "../abis/OnchainTxBot.json" with { type: "json" }
 import RewardAccumulator from "../abis/RewardAccumulator.json" with { type: "json" }
 import StablePoolNG from "../abis/StablePoolNG.json" with { type: "json" }
+import { INDEXER_EXECUTION_NAMES } from "../type/indexerExecution.js"
+import { chainView } from "../utils/chainView.js"
 import { toSafeErrorMessage } from "../utils/errors.js"
+import { IndexerExecutionLogService } from "./IndexerExecutionLogService.js"
+import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 
 const pegKeepersKnowErrors = ["Regulator ban", "peg unprofitable"]
 
@@ -33,11 +35,18 @@ export class OnchainTxBotService {
   telegramNotifierService: TelegramNotifierService
   provider: JsonRpcProvider
   signer: Signer
+  indexerExecutionLogService?: IndexerExecutionLogService
 
-  constructor(telegramNotifierService: TelegramNotifierService, provider: JsonRpcProvider, signer: Signer) {
+  constructor(
+    telegramNotifierService: TelegramNotifierService,
+    provider: JsonRpcProvider,
+    signer: Signer,
+    indexerExecutionLogService?: IndexerExecutionLogService
+  ) {
     this.telegramNotifierService = telegramNotifierService
     this.provider = provider
     this.signer = signer
+    this.indexerExecutionLogService = indexerExecutionLogService
   }
 
   async getOnChainData(marketsAddresses: string[], keeperAddresses: string[]) {
@@ -55,15 +64,18 @@ export class OnchainTxBotService {
   }
 
   async updatePegKeepers(profits: string[], keeperAddresses: string[], keeperNames: string[]) {
-    // Iteration through all pegKeeper
-    for (let i = 0; i < profits.length; i++) {
-      const currentKeeper = keeperNames[i]
+    const runPegKeeperUpdate = async () => {
+      for (let i = 0; i < profits.length; i++) {
+        const currentKeeper = keeperNames[i]
+        const profit = BigInt(profits[i])
 
-      const profit = BigInt(profits[i])
-      // If there is some profit to do, it means we can repeg the stablecoin
-      if (profit !== 0n) {
+        if (profit === 0n) {
+          continue
+        }
+
         const pegKeeper = new Contract(keeperAddresses[i], IPegKeeperV2.abi, this.signer)
         let gasfeeEstimation: bigint | undefined
+
         try {
           gasfeeEstimation = await this.estimateSCTx(pegKeeper, "update", [await this.signer.getAddress()], this.provider, this.signer)
         } catch (e: any) {
@@ -72,83 +84,75 @@ export class OnchainTxBotService {
             await this.telegramNotifierService.sendError(`Estimation of 'update' on ${currentKeeper} pegkeeper has failed: ${toSafeErrorMessage(e)}`)
           }
         }
-        if (gasfeeEstimation) {
-          try {
-            const tx = await pegKeeper.update(this.signer)
-            const receipt = await tx.wait()
-            const logs = receipt.logs
-            let usecase: "deposit" | "withdraw" = "deposit"
-            let liquidityLog: any
 
-            logs.forEach((log: any) => {
-              // AddLiquidty case - USG < 1$
-              if (log?.topics[0] === addLiquidityTopic) {
-                usecase = "deposit"
-                liquidityLog = log
-              }
-              // RemoveLiquidity case - USG > 1$
-              else if (log.topics[0] === removeLiquidityTopic) {
-                usecase = "withdraw"
-                liquidityLog = log
-              }
-            })
+        if (!gasfeeEstimation) {
+          continue
+        }
 
-            const parsedLog = new Interface(StablePoolNG).parseLog(liquidityLog)
-            if (usecase === "deposit") {
-              const dumpedUSG = parsedLog?.args[1][1]
-              const keeper = this.telegramNotifierService.escapeMarkdownV2(currentKeeper)
-              const amount = this.telegramNotifierService.escapeMarkdownV2(Number(formatEther(dumpedUSG)).toFixed())
-              await this.telegramNotifierService.sendMessage(
-                `*Keeper notif* 🔔
-*LP:* \`${keeper}\`
-*Action:* 📈 *${amount} USG* added`,
-                true
-              )
-            } else {
-              const boughtUSG = parsedLog?.args[1][1]
-              const keeper = this.telegramNotifierService.escapeMarkdownV2(currentKeeper)
-              const amount = this.telegramNotifierService.escapeMarkdownV2(Number(formatEther(boughtUSG)).toFixed())
-              await this.telegramNotifierService.sendMessage(
-                `*Keeper notif* 🔔
-*LP:* \`${keeper}\`
-*Action:* 📉 *${amount} USG* removed`,
-                true
-              )
+        try {
+          const tx = await pegKeeper.update(this.signer)
+          const receipt = await tx.wait()
+          const logs = receipt.logs
+          let usecase: "deposit" | "withdraw" = "deposit"
+          let liquidityLog: any
+
+          logs.forEach((log: any) => {
+            if (log?.topics[0] === addLiquidityTopic) {
+              usecase = "deposit"
+              liquidityLog = log
+            } else if (log.topics[0] === removeLiquidityTopic) {
+              usecase = "withdraw"
+              liquidityLog = log
             }
-          } catch (e: any) {
-            const isNormalError = this.isContainsNormalError(e)
+          })
 
-            if (!isNormalError) {
-              await this.telegramNotifierService.sendError(`Trigger of 'update' on ${currentKeeper} pegkeeper has failed: ${toSafeErrorMessage(e)}`)
-            }
-            throw e
+          const parsedLog = new Interface(StablePoolNG).parseLog(liquidityLog)
+          if (usecase === "deposit") {
+            const dumpedUSG = parsedLog?.args[1][1]
+            const keeper = this.telegramNotifierService.escapeMarkdownV2(currentKeeper)
+            const amount = this.telegramNotifierService.escapeMarkdownV2(Number(formatEther(dumpedUSG)).toFixed())
+            await this.telegramNotifierService.sendMessage(`*Keeper notif*\n*LP:* \`${keeper}\`\n*Action:* *${amount} USG* added`, true)
+          } else {
+            const boughtUSG = parsedLog?.args[1][1]
+            const keeper = this.telegramNotifierService.escapeMarkdownV2(currentKeeper)
+            const amount = this.telegramNotifierService.escapeMarkdownV2(Number(formatEther(boughtUSG)).toFixed())
+            await this.telegramNotifierService.sendMessage(`*Keeper notif*\n*LP:* \`${keeper}\`\n*Action:* *${amount} USG* removed`, true)
           }
+        } catch (e: any) {
+          const isNormalError = this.isContainsNormalError(e)
+
+          if (!isNormalError) {
+            await this.telegramNotifierService.sendError(`Trigger of 'update' on ${currentKeeper} pegkeeper has failed: ${toSafeErrorMessage(e)}`)
+          }
+          throw e
         }
       }
     }
+
+    if (!this.indexerExecutionLogService) {
+      await runPegKeeperUpdate()
+      return
+    }
+
+    await this.indexerExecutionLogService.run(INDEXER_EXECUTION_NAMES.PEG_KEEPER_UPDATE, runPegKeeperUpdate)
   }
 
   async updateIRAndRC(irsAndRcs: IRAndRC[], markets: any[], irCalc: string, rcCalc: string) {
     const irToCheckpoint = []
     const rcToCheckpoint = []
 
-    // Iteration over all markets
     for (let i = 0; i < irsAndRcs.length; i++) {
       const market = markets[i]
       const irAndRc = irsAndRcs[i]
 
       let relativeChangeIR = 0
-      /// Format in number IRs and RCs ///
       const lastIR = Number(formatEther(irAndRc.lastIR))
       let newIR = Number(formatEther(irAndRc.newIR))
 
-      // Case both current and new IR are equals to 0
       if (lastIR === 0 && newIR === 0) {
         relativeChangeIR = 0
       } else {
-        // To prevent the division by 0 we put a very small value on the denominator
         newIR = newIR === 0 ? 0.000001 : newIR
-        // Compute relative variations
         relativeChangeIR = Math.abs(((lastIR - newIR) * 100) / newIR)
       }
 
@@ -156,17 +160,13 @@ export class OnchainTxBotService {
       const lastRC = Number(formatUnits(irAndRc.lastRC, 5))
       let newRC = Number(formatUnits(irAndRc.newRC, 5))
 
-      // Case both current and new IR are equals to 0
       if (lastIR === 0 && newIR === 0) {
         relativeChangeRC = 0
       } else {
-        // To prevent the division by 0 we put a very small value on the denominator
         newRC = newRC === 0 ? 0.000001 : newRC
         relativeChangeRC = Math.abs(((lastRC - newRC) * 100) / newRC)
       }
 
-      // If the relative change is bigger than the threshold, we add them in their respective array
-      // to be ready for multicheckpoints
       if (relativeChangeIR > relativeVariationIR) {
         irToCheckpoint.push(market)
       }
@@ -175,7 +175,6 @@ export class OnchainTxBotService {
       }
     }
 
-    /// Checkpoint IR of the markets if needed
     if (irToCheckpoint.length !== 0) {
       const irCalculator = new Contract(irCalc, IRCalculator.abi, this.signer)
       try {
@@ -189,12 +188,11 @@ export class OnchainTxBotService {
       }
     }
 
-    /// Checkpoint RC of the markets if needed
     if (rcToCheckpoint.length !== 0) {
       const rewardAccumulator = new Contract(rcCalc, RewardAccumulator.abi, this.signer)
       let txCheckpointRC
       let isSuccess = false
-      // Here we loop over 0 to 5
+
       for (let i = 0; i < 5; i++) {
         try {
           txCheckpointRC = await rewardAccumulator.processMultiRewards(
@@ -207,6 +205,7 @@ export class OnchainTxBotService {
           break
         } catch (e) {}
       }
+
       if (isSuccess) {
         await this.telegramNotifierService.sendMessage(
           `RC of markets \`${rcToCheckpoint.map((market) => market.marketName).join(",")}\` have been checkpointed`

@@ -51,6 +51,14 @@ export type SerializedLiquidationUserFullInfo = Omit<LiquidationUserFullInfo, "h
   collateralBalance: string
 } & { type: "seizing" | "liquidation"; executionKey: string }
 
+export type SerializedLiquidationHeartbeatJob = {
+  type: "heartbeat"
+  executionKey: string
+  createdAt: string
+}
+
+export type SerializedLiquidationQueueJob = SerializedLiquidationUserFullInfo | SerializedLiquidationHeartbeatJob
+
 export type LiquidationAnalyseInfo = {
   seizingList?: LiquidationUserFullInfo[]
   liquidationList?: LiquidationUserFullInfo[]

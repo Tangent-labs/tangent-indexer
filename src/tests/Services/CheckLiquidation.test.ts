@@ -140,6 +140,7 @@ describe("LiquidationCheckRunner", () => {
     vi.spyOn(mockLiquidationBotLogService, "logLiquidationAnalysis").mockResolvedValue(undefined)
     vi.spyOn(mockLiquidationBotLogService, "logError").mockResolvedValue(undefined)
     vi.spyOn(mockTelegramNotifierService, "sendMessage").mockResolvedValue(true)
+    vi.spyOn(mockTelegramNotifierService, "sendError").mockResolvedValue(true)
 
     // Create service instance
     mockPositionSnapshotRepository = new PositionSnapshotRepository({} as PrismaClient)
@@ -150,7 +151,6 @@ describe("LiquidationCheckRunner", () => {
     vi.spyOn(mockMarketConfigRepository, "saveMarketConfigs").mockResolvedValue(undefined)
     vi.spyOn(mockMarketConfigRepository, "getLastUpdateByMarketIds").mockResolvedValue(new Map())
     vi.spyOn(mockMarketContractsRepository, "getContracts").mockResolvedValue([])
-
     liquidationCheckRunner = new LiquidationCheckRunner(
       mockLiquidationCheckService as any,
       mockLiquidationCheckService as any,
@@ -192,7 +192,7 @@ describe("LiquidationCheckRunner", () => {
 
     await expect(liquidationCheckRunner.run()).rejects.toThrow("Test error")
     expect(mockLiquidationBotLogService.logError).toHaveBeenCalledWith("check_context", error, mockContext, undefined, false)
-    expect(mockTelegramNotifierService.sendMessage).toHaveBeenCalledWith("Liquidation Error on check_context: Test error")
+    expect(mockTelegramNotifierService.sendError).toHaveBeenCalledWith("Liquidation Error on check_context: Test error")
   })
 
   it("should add seizing actions to the queue", async () => {
@@ -313,7 +313,7 @@ describe("LiquidationCheckRunner", () => {
 
     await liquidationCheckRunner.run()
 
-    expect(mocks.add).toHaveBeenCalledTimes(5)
+    expect(mocks.add).toHaveBeenCalledTimes(6)
     actions.forEach((action) => {
       const expectedPriority = action.type === "liquidation" ? 2 : 3
       const jobId = `${action.market}-${action.account}-${action.type}`

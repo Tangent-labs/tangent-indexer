@@ -13,31 +13,43 @@ import { BlockService } from "../../services/BlockService.js"
 import { SnapShotVoteService } from "../../services/SnapShotVoteService.js"
 import { OnChainVoteService } from "../../services/OnChainVoteService.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
+import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
+import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
 
 dotenv.config()
 
 async function main() {
   const { providers, handleError } = setUpIndexer()
-  const { prismaClient, blockService, snapShotVoteService, onChainVoteService, blockRepository, telegramNotifierService, setTransaction } =
-    setUpIndexerVoteServices()
+  const {
+    prismaClient,
+    blockService,
+    snapShotVoteService,
+    onChainVoteService,
+    blockRepository,
+    telegramNotifierService,
+    setTransaction,
+    indexerExecutionLogService,
+  } = setUpIndexerVoteServices()
 
   try {
-    const blockInfo = await blockService.getLastEpochDateAndBestProvider(providers)
+    await indexerExecutionLogService.run(INDEXER_EXECUTION_NAMES.POINTS_VOTES, async () => {
+      const blockInfo = await blockService.getLastEpochDateAndBestProvider(providers)
 
-    const { bestProvider, lastEpochDate } = blockInfo
-    await prismaClient.$transaction(
-      async (dbTransaction) => {
-        setTransaction(dbTransaction as TransactionPrisma)
-        // Retrieve the last block
-        const now = await onChainVoteService.computeUserVoteTasks(bestProvider)
-        const newEpochDate = onChainVoteService.verifyEpochFullyFinished(now, lastEpochDate)
-        await snapShotVoteService.computeUserVoteTasks(newEpochDate)
-        await blockRepository.storeVotesPointsBlock(now, newEpochDate)
-      },
-      {
-        timeout: 10_000_000,
-      }
-    )
+      const { bestProvider, lastEpochDate } = blockInfo
+      await prismaClient.$transaction(
+        async (dbTransaction) => {
+          setTransaction(dbTransaction as TransactionPrisma)
+          // Retrieve the last block
+          const now = await onChainVoteService.computeUserVoteTasks(bestProvider)
+          const newEpochDate = onChainVoteService.verifyEpochFullyFinished(now, lastEpochDate)
+          await snapShotVoteService.computeUserVoteTasks(newEpochDate)
+          await blockRepository.storeVotesPointsBlock(now, newEpochDate)
+        },
+        {
+          timeout: 10_000_000,
+        }
+      )
+    })
   } catch (e: any) {
     await telegramNotifierService.sendError(`Error on POINTS VOTES :  \`\`\` ${e.toString()} \`\`\``)
     console.error("Error while indexing blocks", (e as Error).message)
@@ -70,6 +82,7 @@ function setUpIndexerVoteServices() {
   const blockService = new BlockService(blockRepository)
   const snapShotVoteService = new SnapShotVoteService(userVoteRepository)
   const onChainVoteService = new OnChainVoteService(userVoteRepository, boostRepository, rpcProvider)
+  const indexerExecutionLogService = IndexerExecutionLogService.fromClient(prismaClient)
 
   return {
     prismaClient,
@@ -79,5 +92,6 @@ function setUpIndexerVoteServices() {
     setTransaction,
     blockRepository,
     telegramNotifierService,
+    indexerExecutionLogService,
   }
 }

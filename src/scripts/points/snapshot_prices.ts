@@ -11,6 +11,8 @@ import { PointsBotLogRepository } from "../../db/Points/PointsBotLogRepository.j
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { NotificationService } from "../../services/NotificationService.js"
 import { POINTS_BOT_ACTIONS } from "../../type/data.js"
+import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
+import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
 
 const snapshotPrices = async () => {
   const executionKey = uuidv4()
@@ -25,45 +27,48 @@ const snapshotPrices = async () => {
     chatId: process.env.TELEGRAM_CHAT_ID!,
   })
   const notificationService = new NotificationService(notificationRepository, telegramNotifierService)
+  const indexerExecutionLogService = IndexerExecutionLogService.fromClient(prisma)
 
-  const result = await priceService.fetchPriceFeed()
-  await notificationService.addPointNotification(executionKey, {
-    process: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
-    error: null,
-    action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
-    message: "Execution",
-    level: "INFO",
+  await indexerExecutionLogService.run(INDEXER_EXECUTION_NAMES.SNAPSHOT_PRICES, async () => {
+    const result = await priceService.fetchPriceFeed()
+    await notificationService.addPointNotification(executionKey, {
+      process: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
+      error: null,
+      action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
+      message: "Execution",
+      level: "INFO",
+    })
+
+    if (result?.notifications?.length > 0) {
+      // Collect all notifications to create them in batch
+      const notificationsToCreate = []
+
+      for (const notification of result.notifications) {
+        if (notification.level === "WARNING") {
+          notificationsToCreate.push({
+            action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
+            errorLevel: "WARNING" as const,
+            message: `WARNING in ${POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES}`,
+            data: JSON.stringify(notification),
+          })
+        }
+        if (notification.level === "ERROR") {
+          const message = `Error in points process : POINTS_FETCH_PRICES/${notification.process}, error:  ${notification.error}`
+          notificationsToCreate.push({
+            action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
+            errorLevel: "ERROR" as const,
+            message,
+            data: JSON.stringify(notification),
+          })
+        }
+      }
+
+      // Create all notifications in a single batch operation
+      if (notificationsToCreate.length > 0) {
+        await notificationService.createMultiNotifications(executionKey, notificationsToCreate)
+      }
+    }
   })
-
-  if (result?.notifications?.length > 0) {
-    // Collect all notifications to create them in batch
-    const notificationsToCreate = []
-
-    for (const notification of result.notifications) {
-      if (notification.level === "WARNING") {
-        notificationsToCreate.push({
-          action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
-          errorLevel: "WARNING" as const,
-          message: `WARNING in ${POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES}`,
-          data: JSON.stringify(notification),
-        })
-      }
-      if (notification.level === "ERROR") {
-        const message = `Error in points process : POINTS_FETCH_PRICES/${notification.process}, error:  ${notification.error}`
-        notificationsToCreate.push({
-          action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
-          errorLevel: "ERROR" as const,
-          message,
-          data: JSON.stringify(notification),
-        })
-      }
-    }
-
-    // Create all notifications in a single batch operation
-    if (notificationsToCreate.length > 0) {
-      await notificationService.createMultiNotifications(executionKey, notificationsToCreate)
-    }
-  }
 }
 
 snapshotPrices()

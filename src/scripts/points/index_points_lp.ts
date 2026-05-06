@@ -20,69 +20,74 @@ import { NotificationService } from "../../services/NotificationService.js"
 import { PointsBotLogRepository } from "../../db/Points/PointsBotLogRepository.js"
 import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
 import { fetchBlockTimestamps } from "../../utils/getLastBlock.js"
+import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
+import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
 
 dotenv.config()
 
 async function main() {
   const { providers, handleError } = setUpIndexer()
-  const { prismaClient, userPointsService, blockService, setTransaction, blockRepository, notificationService } = setUpIndexerPointServices()
+  const { prismaClient, userPointsService, blockService, setTransaction, blockRepository, notificationService, indexerExecutionLogService } =
+    setUpIndexerPointServices()
   let currentAction = POINTS_BOT_ACTIONS.POINTS_INDEXER
   const executionKey = uuidv4()
   try {
-    const blockInfo = await blockService.getLPPointsBlockInfo(providers)
-    if (blockInfo === false) {
-      console.log("Nothing to index")
-      return
-    }
+    await indexerExecutionLogService.run(INDEXER_EXECUTION_NAMES.POINTS_LP, async () => {
+      const blockInfo = await blockService.getLPPointsBlockInfo(providers)
+      if (blockInfo === false) {
+        console.log("Nothing to index")
+        return
+      }
 
-    const { startBlock, endBlock, bestProviderIndex } = blockInfo
-    // const random = endBlock.totp()
+      const { startBlock, endBlock, bestProviderIndex } = blockInfo
+      // const random = endBlock.totp()
 
-    if (startBlock && endBlock) {
-      console.log("indexing :", startBlock, "<----------------->", endBlock)
-      await prismaClient.$transaction(
-        async (dbTransaction) => {
-          setTransaction(dbTransaction as TransactionPrisma)
-          await userPointsService.retrieveUserAddressesFromTransfers(startBlock, endBlock)
-          const blockDates = await fetchBlockTimestamps([startBlock, endBlock], indexerConfig.provider.chainRpc[bestProviderIndex])
+      if (startBlock && endBlock) {
+        console.log("indexing :", startBlock, "<----------------->", endBlock)
+        await prismaClient.$transaction(
+          async (dbTransaction) => {
+            setTransaction(dbTransaction as TransactionPrisma)
+            await userPointsService.retrieveUserAddressesFromTransfers(startBlock, endBlock)
+            const blockDates = await fetchBlockTimestamps([startBlock, endBlock], indexerConfig.provider.chainRpc[bestProviderIndex])
 
-          currentAction = POINTS_BOT_ACTIONS.POINTS_PROCESS_USER_TASK
-          await userPointsService.updateLPUserTasks(startBlock, endBlock, blockDates)
-          await notificationService.addPointNotification(executionKey, {
-            process: POINTS_BOT_ACTIONS.POINTS_PROCESS_USER_TASK,
-            error: null,
-            action: currentAction,
-            message: "EXEC",
-            level: "INFO",
-          })
+            currentAction = POINTS_BOT_ACTIONS.POINTS_PROCESS_USER_TASK
+            await userPointsService.updateLPUserTasks(startBlock, endBlock, blockDates)
+            await notificationService.addPointNotification(executionKey, {
+              process: POINTS_BOT_ACTIONS.POINTS_PROCESS_USER_TASK,
+              error: null,
+              action: currentAction,
+              message: "EXEC",
+              level: "INFO",
+            })
 
-          // Process points calculation for user tasks
-          currentAction = POINTS_BOT_ACTIONS.POINTS_CALCULATE_POINTS
+            // Process points calculation for user tasks
+            currentAction = POINTS_BOT_ACTIONS.POINTS_CALCULATE_POINTS
 
-          await userPointsService.computeUserPoints(startBlock, endBlock, blockDates)
-          await notificationService.addPointNotification(executionKey, {
-            process: POINTS_BOT_ACTIONS.POINTS_CALCULATE_POINTS,
-            error: null,
-            action: currentAction,
-            message: "EXEC",
-            level: "INFO",
-          })
-          // Update block logic
-          await blockRepository.storeLPPointsBlock(endBlock)
-        },
-        {
-          timeout: 10_000_000,
-        }
-      )
-    } else {
-      await notificationService.addPointWarningNotification(executionKey, {
-        process: "indexer points",
-        error: null,
-        message: `Nothing to index, blocks: ${startBlock} -> ${endBlock}`,
-        action: POINTS_BOT_ACTIONS.POINTS_INDEXER,
-        level: "WARNING",
-      })
-    }
+            await userPointsService.computeUserPoints(startBlock, endBlock, blockDates)
+            await notificationService.addPointNotification(executionKey, {
+              process: POINTS_BOT_ACTIONS.POINTS_CALCULATE_POINTS,
+              error: null,
+              action: currentAction,
+              message: "EXEC",
+              level: "INFO",
+            })
+            // Update block logic
+            await blockRepository.storeLPPointsBlock(endBlock)
+          },
+          {
+            timeout: 10_000_000,
+          }
+        )
+      } else {
+        await notificationService.addPointWarningNotification(executionKey, {
+          process: "indexer points",
+          error: null,
+          message: `Nothing to index, blocks: ${startBlock} -> ${endBlock}`,
+          action: POINTS_BOT_ACTIONS.POINTS_INDEXER,
+          level: "WARNING",
+        })
+      }
+    })
   } catch (e: any) {
     console.error("Error while indexing blocks", (e as Error).message)
     await notificationService.addPointErrorNotification(executionKey, {
@@ -118,12 +123,14 @@ function setUpIndexerPointServices() {
   const blockService = new BlockService(blockRepository)
   const userPointsService = new UserPointsService(userPointsLPRepository, erc20Repository, activeBorrowerRepository)
   const notificationService = new NotificationService(notificationRepository, telegramNotifierService)
+  const indexerExecutionLogService = IndexerExecutionLogService.fromClient(prismaClient)
 
   return {
     prismaClient,
     userPointsService,
     blockService,
     notificationService,
+    indexerExecutionLogService,
     telegramNotifierService,
     setTransaction,
     blockRepository,

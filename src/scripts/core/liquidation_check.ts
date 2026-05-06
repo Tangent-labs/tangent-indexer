@@ -19,12 +19,21 @@ import { setUpIndexer } from "../../config/indexer_setup.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
 import { getLiquidatorWalletPks } from "../../config/liquidation_wallets.js"
+import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
+import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
 
 dotenv.config()
 const { providers, handleError } = setUpIndexer()
 const walletsPks = getLiquidatorWalletPks()
-const { liquidationCheckService, liquidationContextService, context, liquidationBotService, telegramNotifierService, prismaClient } =
-  await setUpCheckLiquidationServices()
+const {
+  liquidationCheckService,
+  liquidationContextService,
+  context,
+  liquidationBotService,
+  telegramNotifierService,
+  prismaClient,
+  indexerExecutionLogService,
+} = await setUpCheckLiquidationServices()
 
 // Run main function if this file is being run directly
 if (process.env.NODE_ENV !== "test") {
@@ -46,8 +55,10 @@ if (process.env.NODE_ENV !== "test") {
   checkLiquidationService.marketViewerAddress = marketViewerAddress
   let exitCode = 0
 
-  checkLiquidationService
-    .run()
+  indexerExecutionLogService
+    .run(INDEXER_EXECUTION_NAMES.LIQUIDATION_CHECK, async () => {
+      await checkLiquidationService.run()
+    })
     .then(() => {
       console.log("Done")
       // Queue is already closed in the run() method's finally block
@@ -89,6 +100,7 @@ export async function setUpCheckLiquidationServices() {
   const liquidationCheckService = new LiquidationCheckService(activeBorrowersRepository, context)
   const liquidationContextService = new LiquidationContextService(activeBorrowersRepository, context)
   liquidationContextService.minEthBalance = indexerConfig.minEthBalance
+  const indexerExecutionLogService = IndexerExecutionLogService.fromClient(prismaClient)
 
   return {
     liquidationCheckService,
@@ -97,5 +109,6 @@ export async function setUpCheckLiquidationServices() {
     liquidationBotService,
     telegramNotifierService,
     prismaClient,
+    indexerExecutionLogService,
   }
 }
