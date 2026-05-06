@@ -16,11 +16,13 @@ import { LiquidationExecutionContext } from "../../services/LiquidationExecution
 import { setUpIndexer } from "../../config/indexer_setup.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { routers } from "@tangent/defi-resources"
-import { SerializedLiquidationUserFullInfo } from "../../type/data.js"
+import { SerializedLiquidationQueueJob, SerializedLiquidationUserFullInfo } from "../../type/data.js"
 import { getBestRpcProvider } from "../../utils/getBestRpcProvider.js"
 import { RouterService } from "../../services/RouterService.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
 import { getLiquidatorWalletPks } from "../../config/liquidation_wallets.js"
+import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
+import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
 
 dotenv.config()
 
@@ -38,7 +40,8 @@ function blockAlignedBackoff(attemptsMade: number): number {
 
 const { providers, handleError } = setUpIndexer()
 const walletsPks = getLiquidatorWalletPks()
-const { liquidationProcessService, liquidationContextService, context, telegramNotifierService } = await setUpLiquidationProcessServices()
+const { liquidationProcessService, liquidationContextService, context, telegramNotifierService, indexerExecutionLogService } =
+  await setUpLiquidationProcessServices()
 
 // Export for testing
 export { providers, context, telegramNotifierService }
@@ -54,7 +57,7 @@ type WalletState = {
 const walletStates = new Map<string, WalletState>()
 
 // Map to store workers (wallet address -> Worker)
-const walletWorkers = new Map<string, Worker<SerializedLiquidationUserFullInfo>>()
+const walletWorkers = new Map<string, Worker<SerializedLiquidationQueueJob>>()
 
 // Export for testing
 export { walletStates, walletWorkers }
@@ -152,7 +155,7 @@ async function main() {
     throw error
   }
 
-  const liquidatorQueue = new Queue<SerializedLiquidationUserFullInfo>("liquidatorQueue", {
+  const liquidatorQueue = new Queue<SerializedLiquidationQueueJob>("liquidatorQueue", {
     connection: liquidationConfig.queueRedis as any, // BullMQ accepts connection string
     defaultJobOptions: {
       // Removed invalid lockDuration and lockRenewTime properties
@@ -208,9 +211,9 @@ async function main() {
     })
 
     // Create a worker for this specific wallet
-    const worker = new Worker<SerializedLiquidationUserFullInfo>(
+    const worker = new Worker<SerializedLiquidationQueueJob>(
       "liquidatorQueue",
-      async (job: Job<SerializedLiquidationUserFullInfo>, token, signal) => {
+      async (job: Job<SerializedLiquidationQueueJob>, token, signal) => {
         // Handle cancellation when lock is lost
         return new Promise((resolve, reject) => {
           // Set up abort listener for graceful cancellation
@@ -222,6 +225,12 @@ async function main() {
           // Execute async work
           ;(async () => {
             try {
+              if (job.data.type === "heartbeat") {
+                await indexerExecutionLogService.run(INDEXER_EXECUTION_NAMES.LIQUIDATION_PROCESS, async () => undefined)
+                resolve(undefined)
+                return
+              }
+
               // ✅ Check for the best RPC provider at the start of each job
               const bestRpc = await getBestRpcProvider(providers)
               const rpcIndex = bestRpc.index
@@ -259,7 +268,14 @@ async function main() {
               }
 
               // Process liquidation (pass signal, rpcIndex, and currentBlock for cancellation support)
-              await liquidationProcessService.processJob(job, telegramNotifierService, walletPk, signal, rpcIndex, currentBlock)
+              await liquidationProcessService.processJob(
+                job as Job<SerializedLiquidationUserFullInfo>,
+                telegramNotifierService,
+                walletPk,
+                signal,
+                rpcIndex,
+                currentBlock
+              )
 
               // Check if cancelled after processing
               if (signal?.aborted) {
@@ -336,7 +352,8 @@ async function main() {
 
 // Run main function if this file is being run directly
 if (process.env.NODE_ENV !== "test") {
-  main()
+  indexerExecutionLogService
+    .run(INDEXER_EXECUTION_NAMES.LIQUIDATION_PROCESS, main)
     .then(() => {
       console.log("Liquidation process worker started")
     })
@@ -366,6 +383,7 @@ export async function setUpLiquidationProcessServices() {
   const liquidationContextService = new LiquidationContextService(activeBorrowersRepository, context)
   liquidationContextService.minEthBalance = indexerConfig.minEthBalance
   const liquidationProcessService = new LiquidationProcessService(context, routerService, liquidationBotService)
+  const indexerExecutionLogService = IndexerExecutionLogService.fromClient(prismaClient)
 
   return {
     liquidationProcessService,
@@ -373,5 +391,6 @@ export async function setUpLiquidationProcessServices() {
     context,
     liquidationBotService,
     telegramNotifierService,
+    indexerExecutionLogService,
   }
 }

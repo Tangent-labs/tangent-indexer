@@ -31,6 +31,8 @@ import { SavingAccountServices } from "../../services/events/SavingAccountServic
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { PredepositCampaignService } from "../../services/PredepositCampaignService.js"
 import { fetchBlockTimestamps } from "../../utils/getLastBlock.js"
+import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
+import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
 
 dotenv.config()
 
@@ -38,6 +40,7 @@ async function main() {
   const { providers, handleError } = setUpIndexer()
   const {
     prismaClient,
+    indexerExecutionLogService,
     telegramNotifierService,
     userMarketService,
     userPointsService,
@@ -53,96 +56,98 @@ async function main() {
   } = await setUpIndexerBlockServices()
 
   try {
-    const blockInfo = await blockService.getIndexerBlockInfo(providers)
-    if (blockInfo === false) {
-      console.log("Nothing to index")
-      return
-    }
+    await indexerExecutionLogService.run(INDEXER_EXECUTION_NAMES.BLOCK, async () => {
+      const blockInfo = await blockService.getIndexerBlockInfo(providers)
+      if (blockInfo === false) {
+        console.log("Nothing to index")
+        return
+      }
 
-    const { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex } = blockInfo
+      const { startBlock, endBlock, actualBlock, bestProvider, bestProviderIndex } = blockInfo
 
-    if (startBlock && endBlock) {
-      const currentBlock = await bestProvider.getBlockNumber()
+      if (startBlock && endBlock) {
+        const currentBlock = await bestProvider.getBlockNumber()
 
-      console.log(`indexing : ${startBlock} <-----------------> ${endBlock} (current: ${currentBlock} rpc#${bestProviderIndex})`)
-      await prismaClient.$transaction(
-        async (dbTransaction) => {
-          // Set the database transaction to the repositories
-          setTransaction(dbTransaction as TransactionPrisma)
+        console.log(`indexing : ${startBlock} <-----------------> ${endBlock} (current: ${currentBlock} rpc#${bestProviderIndex})`)
+        await prismaClient.$transaction(
+          async (dbTransaction) => {
+            // Set the database transaction to the repositories
+            setTransaction(dbTransaction as TransactionPrisma)
 
-          // Detect new markets
-          await marketCreationService.runDetection(bestProvider, startBlock, endBlock)
+            // Detect new markets
+            await marketCreationService.runDetection(bestProvider, startBlock, endBlock)
 
-          const { marketAddresses, mapMarketIdAddresses } = await marketCreationService.getMarketsAddressesAndMap()
+            const { marketAddresses, mapMarketIdAddresses } = await marketCreationService.getMarketsAddressesAndMap()
 
-          // Fetch all User market logs
-          const logs = await getEthLogs(bestProvider, startBlock, endBlock, marketAddresses, [])
+            // Fetch all User market logs
+            const logs = await getEthLogs(bestProvider, startBlock, endBlock, marketAddresses, [])
 
-          const transferToWatch = await userPointsService.getERC20ToTrack()
+            const transferToWatch = await userPointsService.getERC20ToTrack()
 
-          await voteEnventService.runDetection(bestProvider, startBlock, endBlock)
+            await voteEnventService.runDetection(bestProvider, startBlock, endBlock)
 
-          // Call fetchTransferLogs with the addresses
-          if (!transferToWatch?.length) {
-            throw new Error("ERC20 to track is not filled")
+            // Call fetchTransferLogs with the addresses
+            if (!transferToWatch?.length) {
+              throw new Error("ERC20 to track is not filled")
+            }
+            const transferLogs = await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch)
+
+            const savingAccountsLogs = await getSavingAccountLogs(bestProvider, startBlock, endBlock, [
+              addresses.tokens.sUSG,
+              // addresses.tokens.sTAN
+            ])
+            const savingAccountsBlockIds = savingAccountsLogs.map((log) => log.block_id)
+            // Parse events with their proper topics and group all user events to update active borrowers
+            const { activeBorrowActions, sortedAndParsedEvents, blockIds, users, debtSharesCheckpoints } = userMarketService.sortUserMarketLogs(
+              logs,
+              mapMarketIdAddresses
+            )
+            // Recomposer transfer events for debt tasks
+            const debtTransferEvents = await userPointsService.recomposeDebtTransferEvents(users, debtSharesCheckpoints)
+
+            const { transferEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs(transferLogs)
+
+            const usgLps = await predepositService.getUsgLpKeys()
+            const { addLiquidityEvents, addLiquEventsBlockIds } = userPointsService.parseAddLiquidity(transferLogs, usgLps)
+
+            // Create a set with all block ID that we need to get the timestamp of
+            const uniqueBlockIds = [
+              ...new Set([...blockIds, ...pointsEventsBlockIds, ...savingAccountsBlockIds, ...addLiquEventsBlockIds, "0x" + endBlock.toString(16)]),
+            ]
+
+            // Find block timestamps of the unique blockIDs in ONE RPC call
+            const blocks = await fetchBlockTimestamps(uniqueBlockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
+
+            const hydratedWithCorrectDates = userMarketService.replaceRightDates(sortedAndParsedEvents, activeBorrowActions, blocks)
+
+            const mergedTransferEvents = transferEvents.concat(debtTransferEvents)
+            const transferEventsRightDates = userPointsService.replaceDates<Prisma.transfer_eventsCreateManyInput>(mergedTransferEvents, blocks)
+
+            const addLiquidityEventsRightDates = userPointsService.replaceDates<Prisma.add_liquidity_eventsCreateManyInput>(addLiquidityEvents, blocks)
+
+            // Insert user points actions
+            await userPointsService.insertEvents(transferEventsRightDates, addLiquidityEventsRightDates)
+
+            // Insert user events
+            await userMarketService.insertEvents(hydratedWithCorrectDates.sortedParsedEvents)
+
+            // Update active borrowers
+            await activeBorrowersService.updateActiveBorrowers(hydratedWithCorrectDates.userActions)
+
+            // Save saving account events
+            await savingAccountService.saveSavingAccountEvents(savingAccountsLogs, blocks)
+
+            // Update the last indexed block
+            await blockRepository.storeEventBlock(endBlock, new Date(blocks.get(endBlock)! * 1000))
+          },
+          {
+            timeout: 10_000_000,
           }
-          const transferLogs = await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch)
-
-          const savingAccountsLogs = await getSavingAccountLogs(bestProvider, startBlock, endBlock, [
-            addresses.tokens.sUSG,
-            // addresses.tokens.sTAN
-          ])
-          const savingAccountsBlockIds = savingAccountsLogs.map((log) => log.block_id)
-          // Parse events with their proper topics and group all user events to update active borrowers
-          const { activeBorrowActions, sortedAndParsedEvents, blockIds, users, debtSharesCheckpoints } = userMarketService.sortUserMarketLogs(
-            logs,
-            mapMarketIdAddresses
-          )
-          // Recomposer transfer events for debt tasks
-          const debtTransferEvents = await userPointsService.recomposeDebtTransferEvents(users, debtSharesCheckpoints)
-
-          const { transferEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs(transferLogs)
-
-          const usgLps = await predepositService.getUsgLpKeys()
-          const { addLiquidityEvents, addLiquEventsBlockIds } = userPointsService.parseAddLiquidity(transferLogs, usgLps)
-
-          // Create a set with all block ID that we need to get the timestamp of
-          const uniqueBlockIds = [
-            ...new Set([...blockIds, ...pointsEventsBlockIds, ...savingAccountsBlockIds, ...addLiquEventsBlockIds, "0x" + endBlock.toString(16)]),
-          ]
-
-          // Find block timestamps of the unique blockIDs in ONE RPC call
-          const blocks = await fetchBlockTimestamps(uniqueBlockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
-
-          const hydratedWithCorrectDates = userMarketService.replaceRightDates(sortedAndParsedEvents, activeBorrowActions, blocks)
-
-          const mergedTransferEvents = transferEvents.concat(debtTransferEvents)
-          const transferEventsRightDates = userPointsService.replaceDates<Prisma.transfer_eventsCreateManyInput>(mergedTransferEvents, blocks)
-
-          const addLiquidityEventsRightDates = userPointsService.replaceDates<Prisma.add_liquidity_eventsCreateManyInput>(addLiquidityEvents, blocks)
-
-          // Insert user points actions
-          await userPointsService.insertEvents(transferEventsRightDates, addLiquidityEventsRightDates)
-
-          // Insert user events
-          await userMarketService.insertEvents(hydratedWithCorrectDates.sortedParsedEvents)
-
-          // Update active borrowers
-          await activeBorrowersService.updateActiveBorrowers(hydratedWithCorrectDates.userActions)
-
-          // Save saving account events
-          await savingAccountService.saveSavingAccountEvents(savingAccountsLogs, blocks)
-
-          // Update the last indexed block
-          await blockRepository.storeEventBlock(endBlock, new Date(blocks.get(endBlock)! * 1000))
-        },
-        {
-          timeout: 10_000_000,
-        }
-      )
-    } else {
-      console.log("Nothing to index, Current block:", actualBlock)
-    }
+        )
+      } else {
+        console.log("Nothing to index, Current block:", actualBlock)
+      }
+    })
   } catch (e: any) {
     await telegramNotifierService.sendError(`Error on INDEXER BLOCK  \`\`\` ${e.toString()} \`\`\``)
     handleError(e)
@@ -187,6 +192,7 @@ async function setUpIndexerBlockServices() {
   const voteEnventService = new VotesEventService(userPointsVoteRepository)
   const savingAccountService = new SavingAccountServices(savingAccountRepository)
   const predepositService = new PredepositCampaignService(predepositRepository, blockRepository)
+  const indexerExecutionLogService = IndexerExecutionLogService.fromClient(prismaClient)
 
   const telegramNotifierService = new TelegramNotifierService({
     botToken: process.env.TELEGRAM_BOT_TOKEN!,
@@ -195,6 +201,7 @@ async function setUpIndexerBlockServices() {
 
   return {
     prismaClient,
+    indexerExecutionLogService,
     marketCreationService,
     telegramNotifierService,
     userEventsRepository,

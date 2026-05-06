@@ -20,13 +20,14 @@ import { MonitoringAlertService } from "../../services/MonitoringAlertService.js
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { TransactionPrisma } from "../../type/prisma.js"
 import { toSafeErrorMessage } from "../../utils/errors.js"
-import { getAddressesJson } from "../../utils/jsonReader.js"
+import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
+import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
+import { getAddressesJson } from "src/utils/jsonReader.js"
 
 dotenv.config()
 
 async function main() {
   const {
-    provider,
     prismaClient,
     setTransaction,
     globalDataService,
@@ -34,58 +35,69 @@ async function main() {
     savingAccountService,
     telegramNotifierService,
     monitoringAlertService,
+    indexerExecutionLogService,
   } = setUpIndexerGlobalData()
 
-  let globalDataSucceeded = false
+  try {
+    await indexerExecutionLogService.run(INDEXER_EXECUTION_NAMES.GLOBAL_DATA, async () => {
+      const nowBC = new Date()
+      let globalDataSucceeded = false
+      const executionErrors: string[] = []
 
-  await prismaClient
-    .$transaction(
-      async (dbTransaction) => {
-        setTransaction(dbTransaction as TransactionPrisma)
-        await globalDataService.globalDataProcess()
-      },
-      {
-        timeout: 10_000_000,
+      await prismaClient
+        .$transaction(
+          async (dbTransaction) => {
+            setTransaction(dbTransaction as TransactionPrisma)
+            await globalDataService.globalDataProcess()
+          },
+          {
+            timeout: 10_000_000,
+          }
+        )
+        .then((_) => {
+          globalDataSucceeded = true
+        })
+        .catch(async (e) => {
+          executionErrors.push(`GLOBAL DATA PROCESS: ${toSafeErrorMessage(e)}`)
+          await telegramNotifierService.sendError(`Error on GLOBAL DATA PROCESS: ${toSafeErrorMessage(e)}`)
+          console.error(e)
+        })
+
+      if (globalDataSucceeded) {
+        await monitoringAlertService.processAlerts(nowBC).catch(async (e) => {
+          executionErrors.push(`MONITORING ALERT PROCESS: ${toSafeErrorMessage(e)}`)
+          await telegramNotifierService.sendError(`Error on MONITORING ALERT PROCESS: ${toSafeErrorMessage(e)}`)
+          console.error(e)
+        })
       }
-    )
-    .then((_) => {
-      globalDataSucceeded = true
-    })
-    .catch(async (e) => {
-      await telegramNotifierService.sendError(`Error on GLOBAL DATA PROCESS : ${toSafeErrorMessage(e)}`)
-      console.error(e)
-    })
 
-  if (globalDataSucceeded) {
-    await monitoringAlertService.processAlerts(new Date()).catch(async (e) => {
-      await telegramNotifierService.sendError(`Error on MONITORING ALERT PROCESS: ${toSafeErrorMessage(e)}`)
-      console.error(e)
+      await prismaClient
+        .$transaction(
+          async (dbTransaction) => {
+            setTransaction(dbTransaction as TransactionPrisma)
+            const {
+              tokens: { sUSG },
+            } = await getAddressesJson()
+            await savingAccountService.processSavingAccountApy(globalDataRepository, nowBC, sUSG)
+          },
+          {
+            timeout: 10_000_000,
+          }
+        )
+        .catch(async (e) => {
+          executionErrors.push(`SAVING ACCOUNT APY: ${toSafeErrorMessage(e)}`)
+          await telegramNotifierService.sendError(`Error on SAVING ACCOUNT APY: ${toSafeErrorMessage(e)}`)
+
+          console.error(e)
+        })
+
+      if (executionErrors.length > 0) {
+        throw new Error(executionErrors.join(" | "))
+      }
     })
+  } catch (e) {
+    console.error(e)
   }
-
-  await prismaClient
-    .$transaction(
-      async (dbTransaction) => {
-        setTransaction(dbTransaction as TransactionPrisma)
-        const {
-          tokens: { sUSG },
-        } = await getAddressesJson()
-
-        const lastBlock = await provider.getBlock("latest")
-        const nowBC = new Date((lastBlock?.timestamp as number) * 1000)
-
-        await savingAccountService.processSavingAccountApy(globalDataRepository, nowBC, sUSG)
-      },
-      {
-        timeout: 10_000_000,
-      }
-    )
-    .then((_) => {})
-    .catch(async (e) => {
-      await telegramNotifierService.sendError(`Error on SAVING ACCOUNT APY: ${toSafeErrorMessage(e)}`)
-
-      console.error(e)
-    })
 }
 
 function setUpIndexerGlobalData() {
@@ -142,6 +154,7 @@ function setUpIndexerGlobalData() {
     telegramNotifierService,
     `${indexerConfig.sharedDataDir}/monitoring-alert-state.json`
   )
+  const indexerExecutionLogService = IndexerExecutionLogService.fromClient(prismaClient)
   return {
     prismaClient,
     provider,
@@ -151,6 +164,7 @@ function setUpIndexerGlobalData() {
     globalDataRepository,
     monitoringAlertService,
     telegramNotifierService,
+    indexerExecutionLogService,
     setTransaction,
   }
 }
