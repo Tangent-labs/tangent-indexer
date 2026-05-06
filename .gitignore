@@ -23,3 +23,4 @@ prisma/migrations
 /--version
 /--help
 
+.local/

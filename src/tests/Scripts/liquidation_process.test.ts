@@ -6,7 +6,8 @@ import { PrismaClient } from "@prisma/client"
 import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
 import { LiquidationBotLogRepository } from "../../db/LiquidationBotLogRepository.js"
 import { LiquidationBotLogService } from "../../services/LiquidationBotLogService.js"
-import { LiquidationService } from "../../services/LiquidationService.js"
+import { LiquidationContextService } from "../../services/LiquidationContextService.js"
+import { LiquidationProcessService } from "../../services/LiquidationProcessService.js"
 import { LiquidationExecutionContext } from "../../services/LiquidationExecutionContext.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { SerializedLiquidationUserFullInfo } from "../../type/data.js"
@@ -50,7 +51,7 @@ vi.mock("utils/jsonSerializer", () => ({
 
 vi.mock("db/ActiveBorrowersRepository")
 vi.mock("db/LiquidationBotLogRepository")
-// Note: We don't mock LiquidationService here because we want to test the real processJob method
+// Note: We don't mock LiquidationProcessService here because we want to test the real processJob method
 vi.mock("services/LiquidationBotLogService")
 vi.mock("config/indexer_setup", () => ({
   setUpIndexer: vi.fn(() => ({
@@ -98,7 +99,8 @@ describe("liquidation_process", () => {
   let activeBorrowersRepository: ActiveBorrowersRepository
   let mockLiquidationBotLogRepository: LiquidationBotLogRepository
   let mockLiquidationBotLogService: LiquidationBotLogService
-  let mockLiquidationService: LiquidationService
+  let mockLiquidationProcessService: LiquidationProcessService
+  let mockLiquidationContextService: LiquidationContextService
   let mockContext: LiquidationExecutionContext
   let mockTelegramNotifierService: TelegramNotifierService
   let mockProvider: any
@@ -144,26 +146,26 @@ describe("liquidation_process", () => {
     // Setup mock repositories
     activeBorrowersRepository = new ActiveBorrowersRepository({} as PrismaClient)
     mockLiquidationBotLogRepository = new LiquidationBotLogRepository({} as PrismaClient)
-    mockTelegramNotifierService = new TelegramNotifierService({
-      botToken: "test-token",
-      chatId: "test-chat-id",
-    })
+    mockTelegramNotifierService = {
+      sendMessage: vi.fn().mockResolvedValue(true),
+      sendError: vi.fn().mockResolvedValue(true),
+    } as unknown as TelegramNotifierService
 
     // Setup mock services
     mockLiquidationBotLogService = new LiquidationBotLogService(mockLiquidationBotLogRepository, mockTelegramNotifierService)
     const mockRouterService = {} as any
-    mockLiquidationService = new LiquidationService(activeBorrowersRepository, mockContext, mockRouterService, mockLiquidationBotLogService)
+    mockLiquidationProcessService = new LiquidationProcessService(mockContext, mockRouterService, mockLiquidationBotLogService)
+    mockLiquidationContextService = new LiquidationContextService(activeBorrowersRepository, mockContext)
 
     // Mock service methods
-    vi.spyOn(mockLiquidationService, "checkContext").mockResolvedValue(undefined)
-    vi.spyOn(mockLiquidationService, "executeSeizing").mockResolvedValue(undefined)
-    vi.spyOn(mockLiquidationService, "executeLiquidation").mockResolvedValue(undefined)
+    vi.spyOn(mockLiquidationContextService, "checkContext").mockResolvedValue(undefined)
+    vi.spyOn(mockLiquidationProcessService, "executeSeizing").mockResolvedValue(undefined)
+    vi.spyOn(mockLiquidationProcessService, "executeLiquidation").mockResolvedValue(undefined)
     // Note: processJob is a real method, so we don't need to mock it
     // The actual implementation will be used, but we can spy on it to verify calls
 
     // Mock bot service methods
     vi.spyOn(mockLiquidationBotLogService, "logError").mockResolvedValue(undefined)
-    vi.spyOn(mockTelegramNotifierService, "sendError").mockResolvedValue(true)
   })
 
   afterEach(() => {
@@ -174,7 +176,8 @@ describe("liquidation_process", () => {
     it("should set up all services correctly", async () => {
       const services = await setUpLiquidationProcessServices()
 
-      expect(services.liquidationService).toBeDefined()
+      expect(services.liquidationProcessService).toBeDefined()
+      expect(services.liquidationContextService).toBeDefined()
       expect(services.context).toBeDefined()
       expect(services.liquidationBotService).toBeDefined()
       expect(services.telegramNotifierService).toBeDefined()
@@ -204,15 +207,15 @@ describe("liquidation_process", () => {
       // Verify Wallet mock is set up
       expect(mockWallet).toBeDefined()
 
-      // Process the job using processJob method from LiquidationService (one job at a time)
-      await mockLiquidationService.processJob(seizingJob, mockTelegramNotifierService, walletPk)
+      // Process the job using processJob method from LiquidationProcessService (one job at a time)
+      await mockLiquidationProcessService.processJob(seizingJob, mockTelegramNotifierService, walletPk)
 
       // Verify that Wallet was called to create the signer
       expect(mockWallet).toHaveBeenCalledWith(walletPk, mockProvider)
 
       // Verify that executeSeizing was called with the correct arguments
-      expect(mockLiquidationService.executeSeizing).toHaveBeenCalledTimes(1)
-      const executeSeizingSpy = mockLiquidationService.executeSeizing as any
+      expect(mockLiquidationProcessService.executeSeizing).toHaveBeenCalledTimes(1)
+      const executeSeizingSpy = mockLiquidationProcessService.executeSeizing as any
       const executeSeizingCall = executeSeizingSpy.mock.calls[0]
       expect(executeSeizingCall[0]).toBe(mockSigner)
       expect(executeSeizingCall[1]).toMatchObject({
@@ -224,7 +227,7 @@ describe("liquidation_process", () => {
         currentRpcIndex: expect.any(Number),
         currentBlock: expect.any(Number),
       }) // logContext
-      expect(mockLiquidationService.executeLiquidation).not.toHaveBeenCalled()
+      expect(mockLiquidationProcessService.executeLiquidation).not.toHaveBeenCalled()
     })
 
     it("should process liquidation jobs and call executeLiquidation", async () => {
@@ -246,15 +249,15 @@ describe("liquidation_process", () => {
 
       const walletPk = "wallet1"
 
-      // Process the job using processJob method from LiquidationService (one job at a time)
-      await mockLiquidationService.processJob(liquidationJob, mockTelegramNotifierService, walletPk)
+      // Process the job using processJob method from LiquidationProcessService (one job at a time)
+      await mockLiquidationProcessService.processJob(liquidationJob, mockTelegramNotifierService, walletPk)
 
       // Verify that executeLiquidation was called with deserialized data (BigInt values)
       // executeLiquidation is called with: walletIndex, action, slippageModifierBps, nbAttempt
       // slippageModifierBps is 0n when attemptsMade is 0
       // nbAttempt is the attemptsMade value from the job (0 in this case)
       // Note: executionKey is also included in the action object
-      const executeLiquidationSpy = mockLiquidationService.executeLiquidation as any
+      const executeLiquidationSpy = mockLiquidationProcessService.executeLiquidation as any
       const executeLiquidationCall = executeLiquidationSpy.mock.calls[0]
       expect(executeLiquidationCall[0]).toBe(0) // walletIndex
       expect(executeLiquidationCall[1]).toMatchObject({
@@ -275,8 +278,8 @@ describe("liquidation_process", () => {
         currentRpcIndex: expect.any(Number),
         currentBlock: expect.any(Number),
       })
-      expect(mockLiquidationService.executeLiquidation).toHaveBeenCalledTimes(1)
-      expect(mockLiquidationService.executeSeizing).not.toHaveBeenCalled()
+      expect(mockLiquidationProcessService.executeLiquidation).toHaveBeenCalledTimes(1)
+      expect(mockLiquidationProcessService.executeSeizing).not.toHaveBeenCalled()
     })
 
     it("should increase slippage modifier based on retry attempts", async () => {
@@ -311,10 +314,10 @@ describe("liquidation_process", () => {
         const walletPk = "wallet1"
 
         // Process the job
-        await mockLiquidationService.processJob(liquidationJob, mockTelegramNotifierService, walletPk)
+        await mockLiquidationProcessService.processJob(liquidationJob, mockTelegramNotifierService, walletPk)
 
         // Verify executeLiquidation was called with correct slippageModifierBps
-        const executeLiquidationSpy = mockLiquidationService.executeLiquidation as any
+        const executeLiquidationSpy = mockLiquidationProcessService.executeLiquidation as any
         const executeLiquidationCall = executeLiquidationSpy.mock.calls[0]
         expect(executeLiquidationCall[0]).toBe(0) // walletIndex
         expect(executeLiquidationCall[1]).toMatchObject({
@@ -360,12 +363,12 @@ describe("liquidation_process", () => {
 
       // Process jobs one at a time using processJob method
       for (const job of jobs) {
-        await mockLiquidationService.processJob(job, mockTelegramNotifierService, walletPk)
+        await mockLiquidationProcessService.processJob(job, mockTelegramNotifierService, walletPk)
       }
 
       // Verify all jobs were processed
-      expect(mockLiquidationService.executeSeizing).toHaveBeenCalledTimes(2) // Jobs 0, 2
-      expect(mockLiquidationService.executeLiquidation).toHaveBeenCalledTimes(1) // Job 1
+      expect(mockLiquidationProcessService.executeSeizing).toHaveBeenCalledTimes(2) // Jobs 0, 2
+      expect(mockLiquidationProcessService.executeLiquidation).toHaveBeenCalledTimes(1) // Job 1
     })
 
     it("should handle errors during job processing", async () => {
@@ -386,14 +389,14 @@ describe("liquidation_process", () => {
         attemptsMade: 0,
       } as Job<SerializedLiquidationUserFullInfo>
 
-      vi.spyOn(mockLiquidationService, "executeSeizing").mockRejectedValue(error)
+      vi.spyOn(mockLiquidationProcessService, "executeSeizing").mockRejectedValue(error)
 
       const walletPk = "wallet1"
 
       // Process the job and expect it to throw
-      await expect(mockLiquidationService.processJob(seizingJob, mockTelegramNotifierService, walletPk)).rejects.toThrow("Execution failed")
+      await expect(mockLiquidationProcessService.processJob(seizingJob, mockTelegramNotifierService, walletPk)).rejects.toThrow("Execution failed")
 
-      expect(mockLiquidationService.executeSeizing).toHaveBeenCalled()
+      expect(mockLiquidationProcessService.executeSeizing).toHaveBeenCalled()
       expect(mockTelegramNotifierService.sendError).toHaveBeenCalledWith(expect.stringContaining("Seizing error"))
     })
 
@@ -417,25 +420,25 @@ describe("liquidation_process", () => {
       const walletPk = "wallet1"
 
       // Process the job and expect it to throw
-      await expect(mockLiquidationService.processJob(unknownJob, mockTelegramNotifierService, walletPk)).rejects.toThrow("Unknown action type: unknown")
+      await expect(mockLiquidationProcessService.processJob(unknownJob, mockTelegramNotifierService, walletPk)).rejects.toThrow("Unknown action type: unknown")
     })
   })
 
   describe("context validation", () => {
     it("should validate context before processing", async () => {
       // This would be tested in the main() function
-      await mockLiquidationService.checkContext()
+      await mockLiquidationContextService.checkContext()
 
-      expect(mockLiquidationService.checkContext).toHaveBeenCalled()
+      expect(mockLiquidationContextService.checkContext).toHaveBeenCalled()
       expect(mockContext.currentRpcIndex).toBe(0)
       expect(mockContext.currentBlock).toBe(1000)
     })
 
     it("should handle context validation errors", async () => {
       const error = new Error("Context validation failed")
-      vi.spyOn(mockLiquidationService, "checkContext").mockRejectedValue(error)
+      vi.spyOn(mockLiquidationContextService, "checkContext").mockRejectedValue(error)
 
-      await expect(mockLiquidationService.checkContext()).rejects.toThrow("Context validation failed")
+      await expect(mockLiquidationContextService.checkContext()).rejects.toThrow("Context validation failed")
     })
   })
 
@@ -445,10 +448,10 @@ describe("liquidation_process", () => {
       const callOrder: string[] = []
 
       // Track the order of calls
-      vi.spyOn(mockLiquidationService, "executeSeizing").mockImplementation(async () => {
+      vi.spyOn(mockLiquidationProcessService, "executeSeizing").mockImplementation(async () => {
         callOrder.push("executeSeizing")
       })
-      vi.spyOn(mockLiquidationService, "executeLiquidation").mockImplementation(async () => {
+      vi.spyOn(mockLiquidationProcessService, "executeLiquidation").mockImplementation(async () => {
         callOrder.push("executeLiquidation")
       })
 
@@ -474,7 +477,7 @@ describe("liquidation_process", () => {
 
       // Process all jobs one at a time with the same wallet
       for (const job of jobs) {
-        await mockLiquidationService.processJob(job, mockTelegramNotifierService, walletPk)
+        await mockLiquidationProcessService.processJob(job, mockTelegramNotifierService, walletPk)
       }
 
       // Verify jobs were processed sequentially
@@ -501,9 +504,9 @@ describe("liquidation_process", () => {
       } as Job<SerializedLiquidationUserFullInfo>
 
       // Process single job
-      await mockLiquidationService.processJob(job, mockTelegramNotifierService, walletPk)
+      await mockLiquidationProcessService.processJob(job, mockTelegramNotifierService, walletPk)
 
-      expect(mockLiquidationService.executeSeizing).toHaveBeenCalledTimes(1)
+      expect(mockLiquidationProcessService.executeSeizing).toHaveBeenCalledTimes(1)
     })
   })
 

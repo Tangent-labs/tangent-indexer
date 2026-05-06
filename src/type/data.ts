@@ -59,7 +59,7 @@ export type LiquidationAnalyseInfo = {
 /**
  * Router type used for liquidation
  */
-export type RouterType = "curve" | "pendle"
+export type RouterType = "curve" | "pendle" | "enso"
 
 export type LiquidationEstimateInfo = {
   // Swap info needed to call liquidate on the contract
@@ -125,6 +125,7 @@ export type QuoteLiquidationRouterIn = {
 export type LiquidationRouteParams = {
   routeAddresses: string[]
   swapParamsFull: number[][]
+  routerCall?: string
 }
 
 /**
@@ -375,6 +376,7 @@ export type RouteEvaluationResult = {
   route: LiquidationRoute | null
   amount: bigint
   priceImpact: number
+  routerAddress?: string
 }
 
 /**

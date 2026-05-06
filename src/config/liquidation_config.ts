@@ -17,6 +17,7 @@ export type LiquidationConfig = {
   }
   enso: {
     baseUrl: string
+    apiKey: string
   }
 }
 
@@ -35,6 +36,7 @@ export const liquidationConfig = {
     oraclePriceProtectionBps: Number(process.env.ORACLE_PRICE_PROTECTION_BPS) || 200, // Default 2% protection
   },
   enso: {
-    baseUrl: "https://api.enso.finance/api/v1/shortcuts/route",
+    baseUrl: process.env.ENSO_API_BASE_URL || "https://api.enso.finance/api/v1/shortcuts/route",
+    apiKey: process.env.ENSO_API_KEY || "",
   },
 } satisfies LiquidationConfig

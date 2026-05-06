@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import fs from "fs"
 import { AddressLike, JsonRpcProvider } from "ethers"
-import { LiquidationService } from "../..//services/LiquidationService.js"
 import { ActiveBorrowersRepository } from "../..//db/ActiveBorrowersRepository.js"
 import {
   LiquidationAccountOutInfo,
@@ -14,6 +13,9 @@ import {
 } from "../../../src/type/data.js"
 import { BlockRepository } from "../../../src/db/BlockRepository.js"
 import { LiquidationExecutionContext } from "../../../src/services/LiquidationExecutionContext.js"
+import { LiquidationCheckService } from "../../../src/services/LiquidationCheckService.js"
+import { LiquidationContextService } from "../../../src/services/LiquidationContextService.js"
+import { LiquidationProcessService } from "../../../src/services/LiquidationProcessService.js"
 import * as getBestRpcProviderModule from "../../../src/utils/getBestRpcProvider.js"
 import { RouterService } from "../../services/RouterService.js"
 import { liquidationConfig } from "../../config/liquidation_config.js"
@@ -44,6 +46,7 @@ const createMockRouterService = () => ({
   }),
   getBestSplitCurveRoutes: vi.fn().mockResolvedValue(undefined),
   buildRouterCallData: vi.fn().mockReturnValue("0xMockRouterCallData"),
+  buildEnsoRouterCallData: vi.fn().mockResolvedValue({ routerCall: "0xMockEnsoRouterCallData", routerAddress: "0xEnsoRouter" }),
   isPendleCollateral: vi.fn().mockReturnValue(false),
   getRouterType: vi.fn().mockReturnValue("curve"),
   getRouterAddress: vi.fn().mockReturnValue("0xCurveRouter"),
@@ -68,8 +71,72 @@ const nominalContext = {
   walletsPks: [],
 }
 
-describe("LiquidationService", () => {
-  let liquidationService: LiquidationService
+class TestLiquidationHarness extends LiquidationProcessService {
+  checkService: LiquidationCheckService
+  contextService: LiquidationContextService
+
+  constructor(
+    activeBorrowersRepository: ActiveBorrowersRepository,
+    context: LiquidationExecutionContext,
+    routerService: RouterService,
+    liquidationBotService?: ConstructorParameters<typeof LiquidationProcessService>[2]
+  ) {
+    super(context, routerService, liquidationBotService)
+    this.checkService = new LiquidationCheckService(activeBorrowersRepository, context)
+    this.contextService = new LiquidationContextService(activeBorrowersRepository, context)
+  }
+
+  get minEthBalance() {
+    return this.contextService.minEthBalance
+  }
+
+  set minEthBalance(value: number) {
+    this.contextService.minEthBalance = value
+  }
+
+  get marketBorrowerFilePath() {
+    return this.checkService.marketBorrowerFilePath
+  }
+
+  set marketBorrowerFilePath(value: string) {
+    this.checkService.marketBorrowerFilePath = value
+  }
+
+  checkContext() {
+    return this.contextService.checkContext()
+  }
+
+  getLiquidationParams() {
+    return this.checkService.getLiquidationParams()
+  }
+
+  getLiquidationParamsFromFile() {
+    return this.checkService.getLiquidationParamsFromFile()
+  }
+
+  getLiquidationParamsFromDb() {
+    return this.checkService.getLiquidationParamsFromDb()
+  }
+
+  getOnchainData(...args: Parameters<LiquidationCheckService["getOnchainData"]>) {
+    return this.checkService.getOnchainData(...args)
+  }
+
+  analyzeLiquidation(...args: Parameters<LiquidationCheckService["analyzeLiquidation"]>) {
+    return this.checkService.analyzeLiquidation(...args)
+  }
+
+  prioritizeActions(...args: Parameters<LiquidationCheckService["prioritizeActions"]>) {
+    return this.checkService.prioritizeActions(...args)
+  }
+
+  saveFiles(...args: Parameters<LiquidationCheckService["saveFiles"]>) {
+    return this.checkService.saveFiles(...args)
+  }
+}
+
+describe("TestLiquidationHarness", () => {
+  let liquidationService: TestLiquidationHarness
   let marketBorrowerRepository: ActiveBorrowersRepository
   let mockBlockRepository: any
   let mockRouterService: ReturnType<typeof createMockRouterService>
@@ -77,7 +144,7 @@ describe("LiquidationService", () => {
   beforeEach(() => {
     marketBorrowerRepository = new ActiveBorrowersRepository({} as any) // Mock Prisma client
     mockRouterService = createMockRouterService()
-    liquidationService = new LiquidationService(marketBorrowerRepository, nominalContext, mockRouterService as unknown as RouterService)
+    liquidationService = new TestLiquidationHarness(marketBorrowerRepository, nominalContext, mockRouterService as unknown as RouterService)
 
     // Mock BlockRepository
     mockBlockRepository = {
@@ -209,7 +276,7 @@ describe("LiquidationService", () => {
       getAll: vi.fn().mockResolvedValue(mockBorrowers),
     }
 
-    liquidationService = new LiquidationService(
+    liquidationService = new TestLiquidationHarness(
       mockMarketBorrowerRepository as any as ActiveBorrowersRepository,
       nominalContext,
       mockRouterService as unknown as RouterService
@@ -262,7 +329,7 @@ describe("LiquidationService", () => {
     }
 
     const context = { ...nominalContext, isDbAlive: true, currentBlock: 0, providers: [], walletsPks: [] }
-    liquidationService = new LiquidationService(
+    liquidationService = new TestLiquidationHarness(
       mockMarketBorrowerRepository as any as ActiveBorrowersRepository,
       context,
       mockRouterService as unknown as RouterService
@@ -293,7 +360,7 @@ describe("LiquidationService", () => {
     }
 
     const context = { ...nominalContext, isDbAlive: false, currentBlock: 0, providers: [], walletsPks: [] }
-    liquidationService = new LiquidationService(
+    liquidationService = new TestLiquidationHarness(
       mockMarketBorrowerRepository as any as ActiveBorrowersRepository,
       context,
       mockRouterService as unknown as RouterService
@@ -324,8 +391,8 @@ describe("LiquidationService", () => {
   })
 })
 
-describe("LiquidationService - analyzeLiquidation", () => {
-  let liquidationService: LiquidationService
+describe("TestLiquidationHarness - analyzeLiquidation", () => {
+  let liquidationService: TestLiquidationHarness
   let mockMarketBorrowerRepository: ActiveBorrowersRepository
   let mockRouterService: ReturnType<typeof createMockRouterService>
 
@@ -339,7 +406,7 @@ describe("LiquidationService - analyzeLiquidation", () => {
     mockRouterService = createMockRouterService()
 
     // Create service instance
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext, mockRouterService as unknown as RouterService)
+    liquidationService = new TestLiquidationHarness(mockMarketBorrowerRepository, nominalContext, mockRouterService as unknown as RouterService)
   })
 
   it("should correctly classify accounts into hard, soft, and non-debtor categories", async () => {})
@@ -492,8 +559,8 @@ describe("LiquidationService - analyzeLiquidation", () => {
   })
 })
 
-describe("LiquidationService - prioritizeActions", () => {
-  let liquidationService: LiquidationService
+describe("TestLiquidationHarness - prioritizeActions", () => {
+  let liquidationService: TestLiquidationHarness
   let mockMarketBorrowerRepository: ActiveBorrowersRepository
 
   let mockRouterService: Partial<RouterService>
@@ -501,7 +568,7 @@ describe("LiquidationService - prioritizeActions", () => {
   beforeEach(() => {
     mockMarketBorrowerRepository = new ActiveBorrowersRepository({} as any)
     mockRouterService = {} // Provide a dummy object since we don't need its implementation here
-    liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext, mockRouterService as unknown as RouterService)
+    liquidationService = new TestLiquidationHarness(mockMarketBorrowerRepository, nominalContext, mockRouterService as unknown as RouterService)
   })
 
   it("should prioritize actions based on position value and return all actions", () => {
@@ -677,8 +744,8 @@ describe("LiquidationService - prioritizeActions", () => {
 
 // Mock ethers for executeLiquidation tests - this needs to be before the describe
 // but we'll use vi.doMock inside the describe to avoid affecting other tests
-describe("LiquidationService - executeLiquidation", () => {
-  let liquidationService: LiquidationService
+describe("TestLiquidationHarness - executeLiquidation", () => {
+  let liquidationService: TestLiquidationHarness
   let mockMarketBorrowerRepository: ActiveBorrowersRepository
   let mockContext: any
   let mockProvider: any
@@ -729,7 +796,7 @@ describe("LiquidationService - executeLiquidation", () => {
     mockContract.mockImplementation(() => mockMarketContract)
 
     mockRouterService = createMockRouterService()
-    liquidationService = new LiquidationService(
+    liquidationService = new TestLiquidationHarness(
       mockMarketBorrowerRepository,
       mockContext,
       mockRouterService as unknown as RouterService,
@@ -1351,8 +1418,8 @@ describe("LiquidationService - executeLiquidation", () => {
   })
 })
 
-describe("LiquidationService - Best RPC Provider", () => {
-  let liquidationService: LiquidationService
+describe("TestLiquidationHarness - Best RPC Provider", () => {
+  let liquidationService: TestLiquidationHarness
   let mockMarketBorrowerRepository: ActiveBorrowersRepository
   let mockContext: any
   let mockProviders: any[]
@@ -1420,7 +1487,7 @@ describe("LiquidationService - Best RPC Provider", () => {
     }
 
     mockRouterService = createMockRouterService()
-    liquidationService = new LiquidationService(
+    liquidationService = new TestLiquidationHarness(
       mockMarketBorrowerRepository,
       mockContext,
       mockRouterService as unknown as RouterService,
@@ -1734,8 +1801,147 @@ describe("LiquidationService - Best RPC Provider", () => {
     })
   })
 
-  describe("LiquidationService - estimateTransaction diagnostics", () => {
-    let liquidationService: LiquidationService
+  describe("TestLiquidationHarness - estimateLiquidation recovered value validation", () => {
+    let liquidationService: TestLiquidationHarness
+    let mockRouterService: ReturnType<typeof createMockRouterService>
+    let mockSigner: any
+
+    const account: LiquidationUserFullInfo = {
+      account: "0xUser1" as AddressLike,
+      market: "0xMarket1" as AddressLike,
+      healthRatio: 2n * DECIMALS,
+      userDebt: 760n * DECIMALS,
+      positionValue: 1000n * DECIMALS,
+      collateralBalance: 100n * DECIMALS,
+      collatToken: "0xToken1" as AddressLike,
+      collateralUSDPrice: 1n * DECIMALS,
+      oracleDecimals: 18n,
+    }
+
+    const route = {
+      display: "mock-route",
+      params: { routeAddresses: ["0xToken1"], swapParamsFull: [] },
+    } as any
+
+    beforeEach(() => {
+      vi.clearAllMocks()
+
+      mockSigner = {
+        getAddress: vi.fn().mockResolvedValue("0xSignerAddress"),
+      }
+
+      mockRouterService = createMockRouterService()
+      liquidationService = new TestLiquidationHarness(
+        new ActiveBorrowersRepository({} as any),
+        { ...nominalContext, providers: [{} as any] },
+        mockRouterService as unknown as RouterService
+      )
+    })
+
+    it("should reject a single route when recovered value is lower than debt value", async () => {
+      mockRouterService.getBestRoute.mockResolvedValue({
+        route,
+        amount: 700n * DECIMALS,
+        priceImpact: 0.001,
+        routerType: "curve",
+        routerAddress: "0xCurveRouter",
+      })
+      const estimateTransactionSpy = vi.spyOn(liquidationService as any, "estimateTransaction")
+
+      await expect(liquidationService.estimateLiquidation(mockSigner, account, 50n)).rejects.toMatchObject({
+        code: "INSUFFICIENT_RECOVERED_VALUE",
+        message: expect.stringContaining("does not cover debt value"),
+      })
+
+      expect(estimateTransactionSpy).not.toHaveBeenCalled()
+    })
+
+    it("should reject split routes when the split recovered sum is lower than debt value", async () => {
+      mockRouterService.getBestRoute.mockResolvedValue({
+        route,
+        amount: 700n * DECIMALS,
+        priceImpact: liquidationConfig.limits.maxPriceImpact + 1,
+        routerType: "curve",
+        routerAddress: "0xCurveRouter",
+      })
+      mockRouterService.getBestSplitCurveRoutes.mockResolvedValue({
+        route1: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 350n * DECIMALS },
+        route2: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 400n * DECIMALS },
+        amountTotal: 750n * DECIMALS,
+        priceImpactTotal: 0.1,
+      })
+      const estimateTransactionSpy = vi.spyOn(liquidationService as any, "estimateTransaction")
+
+      await expect(liquidationService.estimateLiquidation(mockSigner, account, 50n)).rejects.toMatchObject({
+        code: "INSUFFICIENT_RECOVERED_VALUE",
+        message: expect.stringContaining("split route output does not cover debt value"),
+      })
+
+      expect(estimateTransactionSpy).not.toHaveBeenCalled()
+    })
+
+    it("should reject split routes when reported total does not equal the split sum", async () => {
+      mockRouterService.getBestRoute.mockResolvedValue({
+        route,
+        amount: 600n * DECIMALS,
+        priceImpact: liquidationConfig.limits.maxPriceImpact + 1,
+        routerType: "curve",
+        routerAddress: "0xCurveRouter",
+      })
+      mockRouterService.getBestSplitCurveRoutes.mockResolvedValue({
+        route1: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 300n * DECIMALS },
+        route2: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 400n * DECIMALS },
+        amountTotal: 780n * DECIMALS,
+        priceImpactTotal: 0.1,
+      })
+
+      await expect(liquidationService.estimateLiquidation(mockSigner, account, 50n)).rejects.toThrow("Split route amount mismatch")
+    })
+
+    it("should accept split routes when their recovered sum covers debt value", async () => {
+      mockRouterService.getBestRoute.mockResolvedValue({
+        route,
+        amount: 700n * DECIMALS,
+        priceImpact: liquidationConfig.limits.maxPriceImpact + 1,
+        routerType: "curve",
+        routerAddress: "0xCurveRouter",
+      })
+      mockRouterService.getBestSplitCurveRoutes.mockResolvedValue({
+        route1: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 400n * DECIMALS },
+        route2: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 380n * DECIMALS },
+        amountTotal: 780n * DECIMALS,
+        priceImpactTotal: 0.1,
+      })
+      vi.spyOn(liquidationService as any, "estimateTransaction").mockImplementation(async (...args: any[]) => {
+        const [, quote, info, , , slippageBps] = args as [any, bigint, LiquidationUserFullInfo, any, any, bigint]
+        return {
+          account: info.account,
+          collatToLiquidate: info.collateralBalance,
+          minTgUSDOut: quote - (quote * slippageBps) / 10000n,
+          liquidationCall: {
+            routerCall: "0xMockRouterCallData",
+            routerAddress: "0xCurveRouter",
+          },
+          expectedOutput: quote,
+          slippageBps,
+          gasEstimate: {
+            gasLimit: 200000n,
+            eth: 0.0002,
+          },
+          grossProfit: quote - BigInt(info.userDebt),
+          routerType: "curve" as const,
+        }
+      })
+
+      const result = await liquidationService.estimateLiquidation(mockSigner, account, 50n)
+
+      expect(result).toHaveLength(2)
+      expect(result.reduce((sum, estimation) => sum + estimation.expectedOutput, 0n)).toBe(780n * DECIMALS)
+    })
+  })
+
+  describe("TestLiquidationHarness - estimateTransaction diagnostics", () => {
+    let liquidationService: TestLiquidationHarness
     let mockContext: any
     let mockRouterService: ReturnType<typeof createMockRouterService>
     let mockSigner: any
@@ -1788,7 +1994,7 @@ describe("LiquidationService - Best RPC Provider", () => {
       }
 
       mockRouterService = createMockRouterService()
-      liquidationService = new LiquidationService(new ActiveBorrowersRepository({} as any), mockContext, mockRouterService as unknown as RouterService)
+      liquidationService = new TestLiquidationHarness(new ActiveBorrowersRepository({} as any), mockContext, mockRouterService as unknown as RouterService)
     })
 
     it("should wrap preflight min collateral calculation errors as gas estimation errors", async () => {
@@ -1812,10 +2018,38 @@ describe("LiquidationService - Best RPC Provider", () => {
         message: expect.stringContaining("Gas estimation failed"),
       })
     })
+
+    it("should build Enso calldata with the slippaged minimum amount", async () => {
+      mockMarketContract.liquidate.estimateGas.mockResolvedValue(200000n)
+
+      const result = await (liquidationService as any).estimateTransaction(
+        route,
+        1100n * DECIMALS,
+        account,
+        mockSigner,
+        mockProvider,
+        50n,
+        "enso",
+        "0xQuoteEnsoRouter"
+      )
+
+      const expectedMinAmount = 1100n * DECIMALS - (1100n * DECIMALS * 50n) / 10000n
+      expect(mockRouterService.buildEnsoRouterCallData).toHaveBeenCalledWith(
+        expect.objectContaining({ collateralBalance: account.collateralBalance }),
+        expectedMinAmount,
+        "0xSignerAddress"
+      )
+      expect(mockRouterService.buildRouterCallData).not.toHaveBeenCalled()
+      expect(result.liquidationCall).toEqual({
+        routerCall: "0xMockEnsoRouterCallData",
+        routerAddress: "0xEnsoRouter",
+      })
+      expect(result.routerType).toBe("enso")
+    })
   })
 
   describe("calculateMinCollatValueToLiquidate", () => {
-    let liquidationService: LiquidationService
+    let liquidationService: TestLiquidationHarness
     let mockMarketBorrowerRepository: ActiveBorrowersRepository
     let mockRouterService: ReturnType<typeof createMockRouterService>
     let originalProtectionBps: number
@@ -1823,7 +2057,7 @@ describe("LiquidationService - Best RPC Provider", () => {
     beforeEach(() => {
       mockMarketBorrowerRepository = new ActiveBorrowersRepository({} as any)
       mockRouterService = createMockRouterService()
-      liquidationService = new LiquidationService(mockMarketBorrowerRepository, nominalContext, mockRouterService as unknown as RouterService)
+      liquidationService = new TestLiquidationHarness(mockMarketBorrowerRepository, nominalContext, mockRouterService as unknown as RouterService)
 
       // Store original protection BPS
       originalProtectionBps = liquidationConfig.limits.oraclePriceProtectionBps
@@ -2016,7 +2250,7 @@ describe("LiquidationService - Best RPC Provider", () => {
         walletsPks: ["0xPrivateKey1"],
       } as any
 
-      const liquidationServiceWithContext = new LiquidationService(mockMarketBorrowerRepository, mockContext, mockRouterService as unknown as RouterService)
+      const liquidationServiceWithContext = new TestLiquidationHarness(mockMarketBorrowerRepository, mockContext, mockRouterService as unknown as RouterService)
 
       vi.spyOn(liquidationServiceWithContext, "estimateLiquidation").mockResolvedValue(mockEstimate)
 
