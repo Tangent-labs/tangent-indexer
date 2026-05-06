@@ -27,21 +27,12 @@ import { MonitoringRepository } from "../../db/MonitoringRepository.js"
 dotenv.config()
 
 async function main() {
-  const {
-    prismaClient,
-    setTransaction,
-    globalDataService,
-    globalDataRepository,
-    savingAccountService,
-    telegramNotifierService,
-    monitoringAlertService,
-    indexerExecutionLogService,
-  } = setUpIndexerGlobalData()
+  const { prismaClient, setTransaction, globalDataService, globalDataRepository, savingAccountService, telegramNotifierService, indexerExecutionLogService } =
+    setUpIndexerGlobalData()
 
   try {
     await indexerExecutionLogService.run(INDEXER_EXECUTION_NAMES.GLOBAL_DATA, async () => {
       const nowBC = new Date()
-      let globalDataSucceeded = false
       const executionErrors: string[] = []
 
       await prismaClient
@@ -54,22 +45,11 @@ async function main() {
             timeout: 10_000_000,
           }
         )
-        .then((_) => {
-          globalDataSucceeded = true
-        })
         .catch(async (e) => {
           executionErrors.push(`GLOBAL DATA PROCESS: ${toSafeErrorMessage(e)}`)
           await telegramNotifierService.sendError(`Error on GLOBAL DATA PROCESS: ${toSafeErrorMessage(e)}`)
           console.error(e)
         })
-
-      if (globalDataSucceeded) {
-        await monitoringAlertService.processAlerts(nowBC).catch(async (e) => {
-          executionErrors.push(`MONITORING ALERT PROCESS: ${toSafeErrorMessage(e)}`)
-          await telegramNotifierService.sendError(`Error on MONITORING ALERT PROCESS: ${toSafeErrorMessage(e)}`)
-          console.error(e)
-        })
-      }
 
       await prismaClient
         .$transaction(
