@@ -521,7 +521,7 @@ export class GlobalDataService {
 
             fxnData.rewardCoins.forEach((rewardCoin, i) => {
               const key = rewardTokens.find((rewardToken) => rewardToken.address.toLowerCase() === rewardCoin.address.toLowerCase())!.symbol
-              projectedAPR[key] = fxnData.rewardAprs[i] * (100 - rewardCut)
+              projectedAPR[key] = fxnData.rewardAprs[i] * ((100 - rewardCut) / 100)
             })
           } else {
             console.error("No ConvexFXN API data ")
@@ -536,7 +536,7 @@ export class GlobalDataService {
             const aprObject = stakeDaoItem.apr?.current
             aprObject.details.forEach((aprObject) => {
               if (!aprObject.label.includes("APY")) {
-                projectedAPR[aprObject.label.split(" ")[0]] = aprObject.value[0] * (100 - rewardCut)
+                projectedAPR[aprObject.label.split(" ")[0]] = aprObject.value[0] * ((100 - rewardCut) / 100)
               }
             })
           } else {
@@ -551,7 +551,7 @@ export class GlobalDataService {
             const stableSwapData = curveStableSwapData.data.poolData.find((data) => data.address.toLowerCase() === collateralAddress)
             if (stableSwapData) {
               stableSwapData.gaugeRewards.forEach((rewards) => {
-                projectedAPR[rewards.symbol] = rewards.apy * (100 - rewardCut)
+                projectedAPR[rewards.symbol] = rewards.apy * ((100 - rewardCut) / 100)
               })
             } else {
               console.error(`Reward data for Curve gauge not found`)
