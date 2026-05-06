@@ -10,6 +10,7 @@ export const INDEXER_EXECUTION_NAMES = {
   GLOBAL_DATA: "global_data_indexer",
   LIQUIDATION_CHECK: "liquidation_check",
   LIQUIDATION_PROCESS: "liquidation_process",
+  MONITORING_CHECK: "monitoring_check",
   ONCHAIN_TX_BOT: "onchain_tx_bot",
   PEG_KEEPER_UPDATE: "peg_keeper_update",
   PREDEPOSIT: "predeposit_script",
