@@ -20,16 +20,28 @@ import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
 import { TransactionPrisma } from "../../type/prisma.js"
 import { toSafeErrorMessage } from "../../utils/errors.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
+import { MonitoringAlertService } from "../../services/MonitoringAlertService.js"
+import { indexerConfig } from "../../config/indexer_config.js"
+import { MonitoringRepository } from "../../db/MonitoringRepository.js"
 
 dotenv.config()
 
 async function main() {
-  const { prismaClient, setTransaction, globalDataService, globalDataRepository, savingAccountService, telegramNotifierService, indexerExecutionLogService } =
-    setUpIndexerGlobalData()
+  const {
+    prismaClient,
+    setTransaction,
+    globalDataService,
+    globalDataRepository,
+    savingAccountService,
+    telegramNotifierService,
+    monitoringAlertService,
+    indexerExecutionLogService,
+  } = setUpIndexerGlobalData()
 
   try {
     await indexerExecutionLogService.run(INDEXER_EXECUTION_NAMES.GLOBAL_DATA, async () => {
       const nowBC = new Date()
+      let globalDataSucceeded = false
       const executionErrors: string[] = []
 
       await prismaClient
@@ -42,11 +54,22 @@ async function main() {
             timeout: 10_000_000,
           }
         )
+        .then((_) => {
+          globalDataSucceeded = true
+        })
         .catch(async (e) => {
           executionErrors.push(`GLOBAL DATA PROCESS: ${toSafeErrorMessage(e)}`)
           await telegramNotifierService.sendError(`Error on GLOBAL DATA PROCESS: ${toSafeErrorMessage(e)}`)
           console.error(e)
         })
+
+      if (globalDataSucceeded) {
+        await monitoringAlertService.processAlerts(nowBC).catch(async (e) => {
+          executionErrors.push(`MONITORING ALERT PROCESS: ${toSafeErrorMessage(e)}`)
+          await telegramNotifierService.sendError(`Error on MONITORING ALERT PROCESS: ${toSafeErrorMessage(e)}`)
+          console.error(e)
+        })
+      }
 
       await prismaClient
         .$transaction(
@@ -125,6 +148,11 @@ function setUpIndexerGlobalData() {
   )
   const totalSupplyRepo = new TotalSupplyRepository(prismaClient)
   const savingAccountService = new SavingAccountServices(savingAccountRepository, provider)
+  const monitoringAlertService = new MonitoringAlertService(
+    new MonitoringRepository(prismaClient),
+    telegramNotifierService,
+    `${indexerConfig.sharedDataDir}/monitoring-alert-state.json`
+  )
   const indexerExecutionLogService = IndexerExecutionLogService.fromClient(prismaClient)
   return {
     prismaClient,
@@ -135,6 +163,7 @@ function setUpIndexerGlobalData() {
     globalDataRepository,
     telegramNotifierService,
     indexerExecutionLogService,
+    monitoringAlertService,
     setTransaction,
   }
 }
