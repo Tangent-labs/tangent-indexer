@@ -9,38 +9,43 @@ import { PredepositCampaignRepository } from "../../db/PredepositCampaignReposit
 import { PredepositCampaignService } from "../../services/PredepositCampaignService.js"
 import { BlockRepository } from "../../db/BlockRepository.js"
 import { getLastBlock } from "../../utils/getLastBlock.js"
+import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
+import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
 
 dotenv.config()
 
 async function main() {
-  const { prismaClient, setTransaction, predepositCampaignService, telegramNotifierService, providers } = setUpPredepositCampaignScript()
+  const { prismaClient, setTransaction, predepositCampaignService, telegramNotifierService, providers, indexerExecutionLogService } =
+    setUpPredepositCampaignScript()
 
   try {
-    await prismaClient.$transaction(
-      async (dbTransaction) => {
-        setTransaction(dbTransaction as TransactionPrisma)
+    await indexerExecutionLogService.run(INDEXER_EXECUTION_NAMES.PREDEPOSIT, async () => {
+      await prismaClient.$transaction(
+        async (dbTransaction) => {
+          setTransaction(dbTransaction as TransactionPrisma)
 
-        const { blockNumber, blockDate } = await getLastBlock(providers[0])
-        const state = await predepositCampaignService.getPredepositState()
+          const { blockNumber, blockDate } = await getLastBlock(providers[0])
+          const state = await predepositCampaignService.getPredepositState()
 
-        if (state === "finished") {
-          return
+          if (state === "finished") {
+            return
+          }
+          const isPrivate = state === "deposit_private"
+          // Increase accounted total and balances by reading `AddLiquidity` events stored in db by indexer-block
+          // Only done in deposit states
+          if (state !== "retention") {
+            await predepositCampaignService.increaseAccountedAmounts(isPrivate, blockNumber, blockDate)
+          }
+
+          // Decrease accounted total and balances by reading an Onchain snapshot of the merged balances of all users.
+          // Performed in deposit and retention state
+          await predepositCampaignService.decreaseAccountedAmounts(isPrivate, blockDate)
+        },
+        {
+          timeout: 10_000_000,
         }
-        const isPrivate = state === "deposit_private"
-        // Increase accounted total and balances by reading `AddLiquidity` events stored in db by indexer-block
-        // Only done in deposit states
-        if (state !== "retention") {
-          await predepositCampaignService.increaseAccountedAmounts(isPrivate, blockNumber, blockDate)
-        }
-
-        // Decrease accounted total and balances by reading an Onchain snapshot of the merged balances of all users.
-        // Performed in deposit and retention state
-        await predepositCampaignService.decreaseAccountedAmounts(isPrivate, blockDate)
-      },
-      {
-        timeout: 10_000_000,
-      }
-    )
+      )
+    })
   } catch (e: any) {
     console.error(e)
     await telegramNotifierService.sendError(`Error on predepositScript : \`\`\`${e.toString()}\`\`\``)
@@ -55,6 +60,7 @@ function setUpPredepositCampaignScript() {
   const prismaClient = new PrismaClient()
   const predepositCampaignRepository = new PredepositCampaignRepository(prismaClient)
   const blockRepository = new BlockRepository(prismaClient)
+  const indexerExecutionLogService = IndexerExecutionLogService.fromClient(prismaClient)
   return {
     prismaClient,
     predepositCampaignService: new PredepositCampaignService(predepositCampaignRepository, blockRepository, providers[0]),
@@ -67,5 +73,6 @@ function setUpPredepositCampaignScript() {
       blockRepository.setClient(dbTransaction)
     },
     providers,
+    indexerExecutionLogService,
   }
 }

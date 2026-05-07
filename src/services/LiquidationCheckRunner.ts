@@ -4,7 +4,13 @@ import { LiquidationCheckService } from "./LiquidationCheckService.js"
 import { LiquidationContextService } from "./LiquidationContextService.js"
 import { LiquidationExecutionContext } from "./LiquidationExecutionContext.js"
 import { LiquidationBotLogService } from "./LiquidationBotLogService.js"
-import { LiquidationBotLogAction, LiquidationMarketAccountOutInfo, LiquidationUserInInfo, SerializedLiquidationUserFullInfo } from "../type/data.js"
+import {
+  LiquidationBotLogAction,
+  LiquidationMarketAccountOutInfo,
+  LiquidationUserInInfo,
+  SerializedLiquidationQueueJob,
+  SerializedLiquidationUserFullInfo,
+} from "../type/data.js"
 import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 import { prepareSerialize } from "../utils/jsonSerializer.js"
 import { liquidationConfig } from "../config/liquidation_config.js"
@@ -22,7 +28,7 @@ export class LiquidationCheckRunner {
   private liquidationBotService: LiquidationBotLogService
   private telegramNotifierService: TelegramNotifierService
   private providers: JsonRpcProvider[]
-  private liquidatorQueue: BullQueue<SerializedLiquidationUserFullInfo>
+  private liquidatorQueue: BullQueue<SerializedLiquidationQueueJob>
   private positionSnapshotRepository: PositionSnapshotRepository
   private marketConfigRepository: MarketConfigRepository
   private marketContractsRepository: MarketContractsRepository
@@ -54,7 +60,7 @@ export class LiquidationCheckRunner {
       throw new Error("LIQUIDATION_QUEUE_REDIS is not configured. Please set the LIQUIDATION_QUEUE_REDIS environment variable.")
     }
 
-    this.liquidatorQueue = new Queue<SerializedLiquidationUserFullInfo>("liquidatorQueue", {
+    this.liquidatorQueue = new Queue<SerializedLiquidationQueueJob>("liquidatorQueue", {
       connection: liquidationConfig.queueRedis as any, // BullMQ accepts connection string
       defaultJobOptions: {
         attempts: liquidationConfig.queue.attempts,
@@ -75,6 +81,7 @@ export class LiquidationCheckRunner {
     try {
       // check the context
       await this.liquidationContextService.checkContext()
+      await this.enqueueLiquidationProcessHeartbeat()
 
       currentAction = "liquidation_params"
       let markets: AddressLike[] = []
@@ -197,6 +204,24 @@ export class LiquidationCheckRunner {
       // Close the queue connection to allow the process to exit
       await this.liquidatorQueue.close()
     }
+  }
+
+  private async enqueueLiquidationProcessHeartbeat() {
+    await this.liquidatorQueue.add(
+      "heartbeat",
+      {
+        type: "heartbeat",
+        executionKey: this.context.executionKey,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        jobId: `liquidation-process-heartbeat-${this.context.executionKey}`,
+        priority: 1,
+        attempts: 1,
+        removeOnComplete: true,
+        removeOnFail: false,
+      }
+    )
   }
 
   private async saveSnapshotsAndConfig(onChainData: LiquidationMarketAccountOutInfo, borrowers: LiquidationUserInInfo[]) {
