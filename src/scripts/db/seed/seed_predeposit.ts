@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client"
+import { parseEther } from "ethers"
 import { AddressesJson } from "../../../type/data.js"
 import { TransactionPrisma } from "../../../type/prisma.js"
-import { parseEther } from "ethers"
 
 export const user0 = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266".toLowerCase()
 export const user1 = "0x70997970c51812dc3a010c7d01b50e0d17dc79c8".toLowerCase()
@@ -25,23 +25,23 @@ export async function seedPredeposit(prisma: PrismaClient | TransactionPrisma, a
   await prisma.accounted_total.createMany({
     data: [
       { usg_lp_id: lps[0].id, cap_lp: parseEther((5_000_000).toString()).toString(), total_lp: "0" },
-      { usg_lp_id: lps[1].id, cap_lp: parseEther((2_000_000).toString()).toString(), total_lp: "0" },
+      { usg_lp_id: lps[1].id, cap_lp: parseEther((5_000_000).toString()).toString(), total_lp: "0" },
     ],
   })
 
-  await prisma.predeposit_users.createMany({
-    data: [
-      { user_address: user1, is_private: true, signature: "Zaza" },
-      { user_address: user2, is_private: true, signature: "Zaza" },
-      { user_address: user3, is_private: true, signature: "Zaza" },
-      { user_address: user4, is_private: true, signature: "Zaza" },
-      { user_address: user5, is_private: true, signature: "Zaza" },
-      { user_address: user6, is_private: false, signature: "Zaza" },
-      { user_address: user7, is_private: false, signature: "Zaza" },
-      { user_address: user8, is_private: false, signature: "Zaza" },
-      { user_address: user9, is_private: false, signature: "Zaza" },
-    ],
-  })
+  // await prisma.predeposit_users.createMany({
+  //   data: [
+  //     { user_address: user1, is_private: true, signature: "Zaza" },
+  //     { user_address: user2, is_private: true, signature: "Zaza" },
+  //     { user_address: user3, is_private: true, signature: "Zaza" },
+  //     { user_address: user4, is_private: true, signature: "Zaza" },
+  //     { user_address: user5, is_private: true, signature: "Zaza" },
+  //     { user_address: user6, is_private: false, signature: "Zaza" },
+  //     { user_address: user7, is_private: false, signature: "Zaza" },
+  //     { user_address: user8, is_private: false, signature: "Zaza" },
+  //     { user_address: user9, is_private: false, signature: "Zaza" },
+  //   ],
+  // })
 
   await prisma.predeposit_state.create({
     data: { state: "deposit_private" },

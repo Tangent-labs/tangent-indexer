@@ -1,4 +1,3 @@
-import { COMMON_ERC20S, PENDLE_POOLS } from "@tangent/defi-resources"
 import { AddressesJson, PriceSourceCreate } from "../../../type/data.js"
 import { TransactionPrisma } from "../../../type/prisma.js"
 
@@ -8,28 +7,16 @@ function PRICE_SOURCES(addresses: AddressesJson): PriceSourceCreate[] {
   return [
     // Stable USD
     {
-      name: "USDC_crvUSD",
-      type: "curveApi",
-      reference: "factory-crvUSD",
-      address: CURVE_CONTEXT.USDC_crvUSD.curveLp,
-    },
-    {
-      name: "USDT_crvUSD",
-      type: "curveApi",
-      reference: "factory-crvUSD",
-      address: CURVE_CONTEXT.USDT_crvUSD.curveLp,
-    },
-    {
-      name: "DOLA_sUSDS",
+      name: "USG_USDC",
       type: "curveApi",
       reference: "factory-stable-ng",
-      address: CURVE_CONTEXT.DOLA_sUSDS.curveLp,
+      address: CURVE_CONTEXT.USG_USDC.curveLp,
     },
     {
-      name: "LLAMALEND_sDOLA_crvUSD",
-      type: "ERC4626",
-      reference: COMMON_ERC20S.crvUSD,
-      address: CURVE_CONTEXT.LLAMALEND_sDOLA_crvUSD.curveLp,
+      name: "USG_frxUSD",
+      type: "curveApi",
+      reference: "factory-stable-ng",
+      address: CURVE_CONTEXT.USG_frxUSD.curveLp,
     },
     {
       name: "USG",
@@ -40,22 +27,6 @@ function PRICE_SOURCES(addresses: AddressesJson): PriceSourceCreate[] {
       name: "sUSG",
       type: "chainview",
       address: addresses.tokens.sUSG,
-    },
-    // PENDLE
-    {
-      name: "PT sUSDe 27/11/25",
-      type: "pendleApi",
-      address: PENDLE_POOLS["sUSDe 27/11/25"].PT,
-    },
-    {
-      name: "LP sUSDe 27/11/25",
-      type: "pendleApi",
-      address: PENDLE_POOLS["sUSDe 27/11/25"].MARKET,
-    },
-    {
-      name: "YT sUSDe 27/11/25",
-      type: "pendleApi",
-      address: PENDLE_POOLS["sUSDe 27/11/25"].YT,
     },
   ]
 }
