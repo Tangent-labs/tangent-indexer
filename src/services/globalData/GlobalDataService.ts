@@ -1,6 +1,6 @@
-import { formatEther, formatUnits, JsonRpcProvider } from "ethers"
-import { Prisma, peg_monitored_tokens } from "@prisma/client"
+import { peg_monitored_tokens, Prisma } from "@prisma/client"
 import { COMMON_ERC20S, curveLpMapping } from "@tangent/defi-resources"
+import { formatEther, formatUnits, JsonRpcProvider } from "ethers"
 
 import { ERC20Repository } from "../../db/ERC20Repository.js"
 import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
@@ -8,35 +8,35 @@ import { MarketContractsRepository } from "../../db/MarketContractsRepository.js
 import { chainView } from "../../utils/chainView.js"
 
 import GlobalDataChainview from "../../abis/GlobalDataChainview.json" with { type: "json" }
+import { NumMap } from "../../services/boost/types.js"
+import { bigIntToNumber } from "../../utils/formatting.js"
+import { defiLLamaFetchPrices } from "./DefiLLamaPriceFetcher.js"
 import {
   APR_TYPE,
-  TVLAprs,
-  Prices,
-  CurveApiReturn,
-  PendleApiReturn,
   ConvexFxnApiReturn,
-  USGIndexingGlobalDataOut,
-  USGInfoOut,
+  CurveApiReturn,
   CurveFactoryStableNGApiReturn,
-  StakeDaoApiReturn,
-  USGContractsIn,
-  WStableData,
   KeeperData,
   KeeperIn,
+  PendleApiReturn,
+  Prices,
+  StakeDaoApiReturn,
+  TVLAprs,
+  USGContractsIn,
+  USGIndexingGlobalDataOut,
+  USGInfoOut,
+  WStableData,
 } from "./types.js"
-import { defiLLamaFetchPrices } from "./DefiLLamaPriceFetcher.js"
-import { bigIntToNumber } from "../../utils/formatting.js"
-import { NumMap } from "../../services/boost/types.js"
 
-import { CallApiService } from "../CallApiService.js"
-import { getAddressesJson } from "../../utils/jsonReader.js"
-import { AddressesJson } from "../../type/data.js"
-import { GlobalDataRepository } from "../../db/GlobalDataRepository.js"
-import { TotalSupplyRepository } from "../../db/TotalSupplyRepository.js"
-import { PegKeeperRepository } from "../../db/PegKeepeerRepository.js"
-import { WStableRepository } from "../../db/WStableRepository.js"
 import { GlobalHistoryDataRepository } from "src/db/GlobalHistoryDataRepository.js"
+import { GlobalDataRepository } from "../../db/GlobalDataRepository.js"
+import { PegKeeperRepository } from "../../db/PegKeepeerRepository.js"
 import { PegMonitoredTokenRepository } from "../../db/PegMonitoredTokenRepository.js"
+import { TotalSupplyRepository } from "../../db/TotalSupplyRepository.js"
+import { WStableRepository } from "../../db/WStableRepository.js"
+import { AddressesJson } from "../../type/data.js"
+import { getAddressesJson } from "../../utils/jsonReader.js"
+import { CallApiService } from "../CallApiService.js"
 
 const rewardTokens = [
   { symbol: "CRV", address: COMMON_ERC20S.CRV },
@@ -464,6 +464,8 @@ export class GlobalDataService {
     const formattedData: Prisma.market_global_dataUncheckedCreateInput[] = markets.map((market) => {
       // Find the corresponding market in the onchain data
       const aprTvlData = marketData.find((onChainData) => onChainData.globalData.marketAddress.toLowerCase() === market.contract_address.toLowerCase())!
+      const rewardCut = bigIntToNumber(aprTvlData.globalData.rewardCut, 3)
+
       // Find the corresponding market in the onchain data
       const currentAPR = this.computeCurrentStreamedAPR(aprTvlData, formattedPrices)
       const projectedAPR: NumMap = {}
@@ -500,7 +502,7 @@ export class GlobalDataService {
             const rewardInfos = formattedPrices[rs.token.toLowerCase()]
             if (rewardInfos) {
               const apr = (Number(formatUnits(rs.amount, rewardInfos.decimals)) * rewardInfos.price) / Number(formatEther(aprTvlData.globalData.oraclePrice))
-              projectedAPR[rewardInfos.symbol] = apr * 100
+              projectedAPR[rewardInfos.symbol] = apr * (100 - rewardCut)
             } else {
               console.error("No reward infos for " + rs.token)
             }
@@ -519,7 +521,7 @@ export class GlobalDataService {
 
             fxnData.rewardCoins.forEach((rewardCoin, i) => {
               const key = rewardTokens.find((rewardToken) => rewardToken.address.toLowerCase() === rewardCoin.address.toLowerCase())!.symbol
-              projectedAPR[key] = fxnData.rewardAprs[i]
+              projectedAPR[key] = fxnData.rewardAprs[i] * ((100 - rewardCut) / 100)
             })
           } else {
             console.error("No ConvexFXN API data ")
@@ -534,7 +536,7 @@ export class GlobalDataService {
             const aprObject = stakeDaoItem.apr?.current
             aprObject.details.forEach((aprObject) => {
               if (!aprObject.label.includes("APY")) {
-                projectedAPR[aprObject.label.split(" ")[0]] = aprObject.value[0]
+                projectedAPR[aprObject.label.split(" ")[0]] = aprObject.value[0] * ((100 - rewardCut) / 100)
               }
             })
           } else {
@@ -549,7 +551,7 @@ export class GlobalDataService {
             const stableSwapData = curveStableSwapData.data.poolData.find((data) => data.address.toLowerCase() === collateralAddress)
             if (stableSwapData) {
               stableSwapData.gaugeRewards.forEach((rewards) => {
-                projectedAPR[rewards.symbol] = rewards.apy
+                projectedAPR[rewards.symbol] = rewards.apy * ((100 - rewardCut) / 100)
               })
             } else {
               console.error(`Reward data for Curve gauge not found`)
