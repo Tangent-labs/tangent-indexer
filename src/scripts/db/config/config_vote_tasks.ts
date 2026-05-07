@@ -51,16 +51,14 @@ export const ONCHAIN_TASKS = [
   // },
 ]
 
-// TODO REPLACE THE SNAPSHOT KEYS WITH THE RIGHT ONES
-// COULDNT DO BEFORE BECAUSE TOO RECENT, SHOULD BE GOOD IN FEW DAYS !!!!!
 export const OFFCHAIN_TASKS = [
   {
     orga: "sdcrv.eth",
     url: "https://snapshot.box/#/s:sdcrv.eth",
     title: "Gauge vote CRV",
     scoringChoices: [
-      { taskDescription: "Vote for USG/USDC Curve gauge (snapshot)", name: "usg+usdc", pointRate: 2 },
-      { taskDescription: "Vote for USG/frxUSD Curve gauge (snapshot)", name: "usg+frxUSD", pointRate: 2 },
+      { taskDescription: "Vote for USG/USDC Curve gauge (snapshot)", name: "USDC+USG", pointRate: 2 },
+      { taskDescription: "Vote for USG/frxUSD Curve gauge (snapshot)", name: "frxUSD+USG", pointRate: 2 },
     ],
     excludedVoters: [{ name: "Stake DAO delegation", user_address: "0x52ea58f4FC3CEd48fa18E909226c1f8A0EF887DC".toLowerCase() }],
   },
@@ -69,8 +67,8 @@ export const OFFCHAIN_TASKS = [
     url: "https://vote.convexfinance.com/",
     title: "Gauge Weight for Week",
     scoringChoices: [
-      { taskDescription: "Vote for USG/USDC on Curve Gauge (snapshot)", name: "usg+usdc", pointRate: 20 },
-      { taskDescription: "Vote for USG/frxUSD on Curve Gauge (snapshot)", name: "usg+frxUSD", pointRate: 20 },
+      { taskDescription: "Vote for USG/USDC on Curve Gauge (snapshot)", name: "USDC+USG", pointRate: 20 },
+      { taskDescription: "Vote for USG/frxUSD on Curve Gauge (snapshot)", name: "frxUSD+USG", pointRate: 20 },
     ],
     excludedVoters: [
       { name: "Votium delegation", user_address: "0xde1E6A7ED0ad3F61D531a8a78E83CcDdbd6E0c49".toLowerCase() },

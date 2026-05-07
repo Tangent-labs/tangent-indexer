@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client"
-import { TransactionPrisma } from "../../../type/prisma.js"
 import { COMMON_ERC20S } from "@tangent/defi-resources"
+import { TransactionPrisma } from "../../../type/prisma.js"
 
 const WETH = COMMON_ERC20S.WETH.toLowerCase()
 const WBTC = COMMON_ERC20S.WBTC.toLowerCase()
@@ -19,8 +19,13 @@ export async function seedPegMonitoredTokens(prisma: PrismaClient | TransactionP
       { symbol: "USDe", address: COMMON_ERC20S.USDe.toLowerCase(), peg_type: "USD", ref_address: null },
       { symbol: "USDS", address: COMMON_ERC20S.USDS.toLowerCase(), peg_type: "USD", ref_address: null },
       { symbol: "RLUSD", address: COMMON_ERC20S.RLUSD.toLowerCase(), peg_type: "USD", ref_address: null },
-      { symbol: "USR", address: COMMON_ERC20S.USR.toLowerCase(), peg_type: "USD", ref_address: null },
       { symbol: "frxUSD", address: COMMON_ERC20S.frxUSD.toLowerCase(), peg_type: "USD", ref_address: null },
+      { symbol: "reUSD", address: COMMON_ERC20S.reUSD.toLowerCase(), peg_type: "USD", ref_address: null },
+      { symbol: "eUSD", address: COMMON_ERC20S.eUSD.toLowerCase(), peg_type: "USD", ref_address: null },
+      { symbol: "fxUSD", address: COMMON_ERC20S.fxUSD.toLowerCase(), peg_type: "USD", ref_address: null },
+      { symbol: "BOLD", address: COMMON_ERC20S.BOLD.toLowerCase(), peg_type: "USD", ref_address: null },
+      { symbol: "OUSD", address: COMMON_ERC20S.OUSD.toLowerCase(), peg_type: "USD", ref_address: null },
+
       // ETH LSTs
       { symbol: "stETH", address: COMMON_ERC20S.stETH.toLowerCase(), peg_type: "ETH", ref_address: WETH },
       { symbol: "frxETH", address: COMMON_ERC20S.frxETH.toLowerCase(), peg_type: "ETH", ref_address: WETH },

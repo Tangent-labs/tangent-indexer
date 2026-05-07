@@ -2,17 +2,16 @@ import { PrismaClient } from "@prisma/client"
 
 import { deploySQLFunctions } from "./deploy_sql_functions.js"
 
-import { seedLPTasksAndTrackedERC20 } from "./seed_lp_tasks.js"
-import { seedVoteTasks } from "./seed_vote_tasks.js"
 import * as dotenv from "dotenv"
-import { getAddressesJson } from "../../../utils/jsonReader.js"
-import { seedPriceSources } from "./seed_price_sources.js"
-import { seedPredeposit } from "./seed_predeposit.js"
-import { seedUSGContracts } from "./seed_usg_contracts.js"
-import { seedPegMonitoredTokens } from "./seed_peg_monitored_tokens.js"
-import { seedBoosts } from "./seed_boosts.js"
 import { JsonRpcProvider } from "ethers"
 import { TransactionPrisma } from "../../../type/prisma.js"
+import { getAddressesJson } from "../../../utils/jsonReader.js"
+import { seedLPTasksAndTrackedERC20 } from "./seed_lp_tasks.js"
+import { seedPegMonitoredTokens } from "./seed_peg_monitored_tokens.js"
+import { seedPredeposit } from "./seed_predeposit.js"
+import { seedPriceSources } from "./seed_price_sources.js"
+import { seedUSGContracts } from "./seed_usg_contracts.js"
+import { seedVoteTasks } from "./seed_vote_tasks.js"
 dotenv.config()
 
 const prisma = new PrismaClient()
@@ -25,7 +24,7 @@ async function main() {
     await deploySQLFunctions(tx as TransactionPrisma)
     // Insert the pricing sources of the tokens for the point programs
     const priceSources = await seedPriceSources(tx as TransactionPrisma, addresses)
-    await seedBoosts(tx as TransactionPrisma)
+    // await seedBoosts(tx as TransactionPrisma)
     // Insert the points LP tasks
     await seedLPTasksAndTrackedERC20(tx as TransactionPrisma, addresses, priceSources, now)
     // Insert the points Votes tasks
