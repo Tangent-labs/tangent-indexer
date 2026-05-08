@@ -1,38 +1,38 @@
+import { Prisma, PrismaClient } from "@prisma/client"
 import * as dotenv from "dotenv"
 import { TransactionPrisma } from "../../type/prisma.js"
-import { Prisma, PrismaClient } from "@prisma/client"
 
 import { setUpIndexer } from "../../config/indexer_setup.js"
 
-import { BlockRepository } from "../../db/BlockRepository.js"
 import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
+import { BlockRepository } from "../../db/BlockRepository.js"
+import { ERC20Repository } from "../../db/ERC20Repository.js"
 import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
-import { UserEventsRepository } from "../../db/UserEventsRepository.js"
 import { UserPointsLPRepository } from "../../db/Points/UserPointsLPRepository.js"
 import { UserPointsVoteRepository } from "../../db/Points/UserPointsVoteRepository.js"
-import { ERC20Repository } from "../../db/ERC20Repository.js"
 import { PredepositCampaignRepository } from "../../db/PredepositCampaignRepository.js"
+import { UserEventsRepository } from "../../db/UserEventsRepository.js"
 
+import { ActiveBorrowersService } from "../../services/ActiveBorrowersService.js"
 import { BlockService } from "../../services/BlockService.js"
 import { MarketCreationService } from "../../services/events/MarketCreationService.js"
 import { UserMarketService } from "../../services/events/UserMarketService.js"
-import { VotesEventService } from "../../services/events/VotesEventService.js"
 import { UserPointsService } from "../../services/events/UserPointsService.js"
-import { ActiveBorrowersService } from "../../services/ActiveBorrowersService.js"
+import { VotesEventService } from "../../services/events/VotesEventService.js"
 
 import { getEthLogs } from "../../eventFectcher/_baseFetcher.js"
 import { fetchTransferLogs } from "../../eventFectcher/erc20TransferEventFetcher.js"
 import { getSavingAccountLogs } from "../../eventFectcher/savingAccountEventFetcher.js"
 
 import { indexerConfig } from "../../config/indexer_config.js"
-import { getAddressesJson } from "../../utils/jsonReader.js"
 import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
 import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
-import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
-import { PredepositCampaignService } from "../../services/PredepositCampaignService.js"
-import { fetchBlockTimestamps } from "../../utils/getLastBlock.js"
 import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
+import { PredepositCampaignService } from "../../services/PredepositCampaignService.js"
+import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
+import { fetchBlockTimestamps } from "../../utils/getLastBlock.js"
+import { getAddressesJson } from "../../utils/jsonReader.js"
 
 dotenv.config()
 
@@ -73,7 +73,6 @@ async function main() {
           async (dbTransaction) => {
             // Set the database transaction to the repositories
             setTransaction(dbTransaction as TransactionPrisma)
-
             // Detect new markets
             await marketCreationService.runDetection(bestProvider, startBlock, endBlock)
 
