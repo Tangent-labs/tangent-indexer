@@ -2,13 +2,12 @@ import { Prisma } from "@prisma/client"
 import { CURVE_CONTEXT } from "@tangent/defi-resources"
 import { AddressesJson } from "../../../type/data.js"
 
-const ONE_DAY = 86400
 export const PTS_PER_DAY_TO_SECONDS_RATE = {
-  1: 1 / ONE_DAY,
-  10: 10 / ONE_DAY,
-  15: 15 / ONE_DAY,
-  30: 30 / ONE_DAY,
-  45: 45 / ONE_DAY,
+  1: 0.00001157,
+  10: 0.00011574,
+  15: 0.00017361,
+  30: 0.00034722,
+  45: 0.00052083,
 }
 export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_sourceCreateManyInput[], now: Date) {
   const ctx = CURVE_CONTEXT.CURVE_CONTEXT
