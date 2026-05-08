@@ -1,4 +1,4 @@
-import { AddressLike, JsonRpcProvider, Log, toBeHex } from "ethers"
+import { AddressLike, JsonRpcProvider, Log, toQuantity } from "ethers"
 
 export const getEthLogs = async (
   provider: JsonRpcProvider,
@@ -7,10 +7,11 @@ export const getEthLogs = async (
   contracts: AddressLike[],
   topics: string[]
 ): Promise<Log[]> => {
+
   try {
     const params = {
-      fromBlock: toBeHex(startingBlock),
-      toBlock: toBeHex(endingBlock),
+      fromBlock: toQuantity(startingBlock),
+      toBlock: toQuantity(endingBlock),
       address: contracts,
       topics: !topics?.length ? [] : [topics],
     }

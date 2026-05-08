@@ -1,16 +1,16 @@
-import { AddressLike, Contract, ethers, id, JsonRpcProvider, Log } from "ethers"
 import { Prisma } from "@prisma/client"
+import { AddressLike, Contract, ethers, id, JsonRpcProvider, Log } from "ethers"
 
 import {
+  BASIC_ERC20_MARKET_CREATED,
   MARKET_CONVEX_CRV_CREATED,
   MARKET_CONVEX_FXN_CREATED,
   MARKET_CURVE_GAUGE_CREATED,
-  BASIC_ERC20_MARKET_CREATED,
   MARKET_STAKEDAO_VAULT_V2_CREATED,
 } from "../resources/eventSignatures.js"
-import { getEthLogs } from "./_baseFetcher.js"
 import { MarketType } from "../type/data.js"
 import { fetchBlockTimestamps } from "../utils/getLastBlock.js"
+import { getEthLogs } from "./_baseFetcher.js"
 
 // Define Event Signatures
 
