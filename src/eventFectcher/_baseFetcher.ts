@@ -7,7 +7,6 @@ export const getEthLogs = async (
   contracts: AddressLike[],
   topics: string[]
 ): Promise<Log[]> => {
-
   try {
     const params = {
       fromBlock: toQuantity(startingBlock),

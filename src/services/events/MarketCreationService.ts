@@ -27,7 +27,6 @@ export class MarketCreationService {
     // Fetch logs from MarketCreator
     let marketsCreated = await fetchMarketCreationLogs(provider, startingBlock, endingBlock, this.marketCreatorAddress)
 
-
     // If some logs are coming from MarketCreator, we insert them in db
     if (marketsCreated.length) {
       marketsCreated = marketsCreated.map((m) => {
