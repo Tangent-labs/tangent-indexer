@@ -1,4 +1,4 @@
-import { Prisma, PointsBotAction as PrismaPointsBotAction, ErrorLevel as PrismaErrorLevel } from "@prisma/client"
+import { Prisma, ErrorLevel as PrismaErrorLevel, PointsBotAction as PrismaPointsBotAction } from "@prisma/client"
 import { AddressLike } from "ethers"
 
 export type MarketType = "ConvexFxn" | "ConvexCrv" | "Pendle PT"
@@ -274,7 +274,7 @@ export type AddressesJson = {
     chainlink: { [tokenName: string]: string }
     coinFromCurveLp: { [tokenName: string]: string }
     duoPoolStable: { [tokenName: string]: string }
-    pendlePT: { [tokenName: string]: string }
+    pendlePT?: { [tokenName: string]: string }
     USG: string
   }
   pegKeepers: { [poolName: string]: string }
