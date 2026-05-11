@@ -1,22 +1,22 @@
 import { AddressLike, JsonRpcProvider } from "ethers"
 
 import { v4 as uuidv4 } from "uuid"
-import { PriceRepository } from "../db/Points/PriceRepository.js"
 import PointPricesAbi from "../abis/PointPrices.json" with { type: "json" }
+import { PriceRepository } from "../db/Points/PriceRepository.js"
 import {
-  PriceApiInfo,
-  PriceSource,
-  PriceApiResult,
-  CurverRegistry,
   AddressesJson,
+  CurverRegistry,
+  NOTIFICATION_LEVEL,
   NotificationMessage,
   POINTS_BOT_ACTIONS,
-  NOTIFICATION_LEVEL,
+  PriceApiInfo,
+  PriceApiResult,
+  PriceSource,
 } from "../type/data.js"
 
+import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
 import { chainView } from "../utils/chainView.js"
 import { CallApiService } from "./CallApiService.js"
-import { MarketContractsRepository } from "../db/MarketContractsRepository.js"
 
 const SCALE = 10n ** 18n
 
@@ -176,7 +176,6 @@ export class PricePointService {
       apiPrices?.flat()?.filter((price) => {
         return price && typeof price === "object" && typeof price.address === "string" && typeof price.price === "number" && price.address.length > 0
       }) || []
-
     return {
       prices: validPrices.map((price) => {
         return {
@@ -207,47 +206,45 @@ export class PricePointService {
       return undefined
     }
     // Check if there are ERC4626 sources
-    const erc4626Sources = priceSources.filter((p) => p.type === "ERC4626")
+    // const erc4626Sources = priceSources.filter((p) => p.type === "ERC4626")
     const date = new Date(Number(chainViewPrices.timestamp) * 1000)
 
-    // Only process USG/sUSG and debt indexes if there are ERC4626 sources
-    if (erc4626Sources.length > 0) {
-      // Handle ERC4626 chain view result
-      this.processErc4626Prices(priceSources, chainViewPrices, apiPrices, notifications)
+    // Handle ERC4626 chain view result
+    this.processErc4626Prices(priceSources, chainViewPrices, apiPrices, notifications)
 
-      const debtResult = this.processDebtIndexes(chainViewPrices, markets)
+    const debtResult = this.processDebtIndexes(chainViewPrices, markets)
 
-      // Add debt indexes prices
-      if (debtResult?.prices && debtResult?.prices?.length > 0) {
-        apiPrices.push(...debtResult.prices)
-      }
-
-      // Add USG price
-      if (this.addresses?.tokens?.USG) {
-        apiPrices.push({
-          address: this.addresses.tokens.USG,
-          price: Number(chainViewPrices.usgPrice) / Number(SCALE),
-        })
-      }
-      // Add sUSG price
-      if (this.addresses?.tokens?.sUSG) {
-        apiPrices.push({
-          address: this.addresses.tokens.sUSG,
-          price: Number(chainViewPrices.sUsgPrice) / Number(SCALE),
-        })
-      }
-
-      // Add notification if there are missing debt indexes for requested markets
-      if (debtResult?.missingMarkets && debtResult?.missingMarkets?.length > 0) {
-        const notification = {
-          action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
-          process: "DebtIndexes",
-          error: new Error(`No debt index data returned for markets: ${debtResult?.missingMarkets?.join(", ")}`),
-          level: NOTIFICATION_LEVEL.ERROR,
-        }
-        notifications.push(notification)
-      }
+    // Add debt indexes prices
+    if (debtResult?.prices && debtResult?.prices?.length > 0) {
+      apiPrices.push(...debtResult.prices)
     }
+
+    // Add USG price
+    if (this.addresses?.tokens?.USG) {
+      apiPrices.push({
+        address: this.addresses.tokens.USG,
+        price: Number(chainViewPrices.usgPrice) / Number(SCALE),
+      })
+    }
+    // Add sUSG price
+    if (this.addresses?.tokens?.sUSG) {
+      apiPrices.push({
+        address: this.addresses.tokens.sUSG,
+        price: Number(chainViewPrices.sUsgPrice) / Number(SCALE),
+      })
+    }
+
+    // Add notification if there are missing debt indexes for requested markets
+    if (debtResult?.missingMarkets && debtResult?.missingMarkets?.length > 0) {
+      const notification = {
+        action: POINTS_BOT_ACTIONS.POINTS_FETCH_PRICES,
+        process: "DebtIndexes",
+        error: new Error(`No debt index data returned for markets: ${debtResult?.missingMarkets?.join(", ")}`),
+        level: NOTIFICATION_LEVEL.ERROR,
+      }
+      notifications.push(notification)
+    }
+
     return date
   }
 
