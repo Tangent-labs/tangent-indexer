@@ -3,6 +3,8 @@ import { JsonRpcProvider } from "ethers"
 
 import PredepositCampaignSnapshot from "../abis/PredepositCampaignSnapshot.json" with { type: "json" }
 
+import { CURVE_GAUGES } from "@tangent/defi-resources"
+import { SDT_USG_frxUSD_VAULT, SDT_USG_USDC_VAULT } from "@tangent/defi-resources/build/ressources/erc20/stakeDao.js"
 import { BlockRepository } from "../db/BlockRepository.js"
 import { AccountedTotal, GetAccountedBalances, PredepositCampaignRepository } from "../db/PredepositCampaignRepository.js"
 import { chainView } from "../utils/chainView.js"
@@ -224,8 +226,23 @@ export class PredepositCampaignService {
 
     const { totalAccountedToDelete, totalAccountedToInsert, accountedBalancesToDelete, accountedBalancesToInsert } = await this.compareDbAndSnapshots(
       users,
-      // TODO We need to add the addresses of Curve Gauge, StakeVault, ConvexRewardToken
-      (await this.getOnchainSnapshot(users, [addresses.lps["USG-USDC"]], [addresses.lps["USG-frxUSD"]]))[0],
+      (
+        await this.getOnchainSnapshot(
+          users,
+          [
+            addresses.lps["USG-USDC"],
+            SDT_USG_USDC_VAULT.toLowerCase(),
+            CURVE_GAUGES.USG_USDC.toLowerCase(),
+            "0x3eAFd8C2B36B93A8463A5f460a01A1b3D37b6929".toLowerCase(),
+          ],
+          [
+            addresses.lps["USG-frxUSD"],
+            SDT_USG_frxUSD_VAULT.toLowerCase(),
+            CURVE_GAUGES.USG_frxUSD.toLowerCase(),
+            "0x8D79FA117C3B3a4da1D3F1c037f2e500a2f6D70D".toLowerCase(),
+          ]
+        )
+      )[0],
       await this.predepositRepository.getAllAccountedBalances(),
       await this.predepositRepository.getAccountedTotal()
     )
