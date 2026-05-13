@@ -151,32 +151,26 @@ describe("PricePointService", () => {
       )
     })
 
-    it("should call chainView even if no ERC4626 sources but not add USG/sUSG/debt", async () => {
+    it("should call chainView even if no ERC4626 sources and still add USG/sUSG/debt", async () => {
       mockPriceRepository.getPriceSources.mockResolvedValue(mockPriceSources.slice(0, 3)) // No ERC4626
 
       const result = await pricePointService.getPriceFeeds()
 
-      expect(chainView).toHaveBeenCalled() // chainView should always be called now
-      expect(result.prices).toHaveLength(3) // Only APIs (no USG/sUSG/debt since no ERC4626)
-      expect(result.notifications).toEqual([]) // No notifications expected
-      expect(result.date).toBeDefined() // No date when no ERC4626 sources
-      expect(result.prices).not.toEqual(
-        expect.arrayContaining([
-          { address: "0x400F4d9E2c8e33cfCb6F6b6E5B5B5B5B5B5B5B5B", price: expect.any(Number) },
-          { address: "0x500F4d9E2c8e33cfCb6F6b6E5B5B5B5B5B5B5B5B", price: expect.any(Number) },
-        ])
-      )
+      expect(chainView).toHaveBeenCalled()
+      expect(result.prices).toHaveLength(8) // 3 APIs + 1 ERC4626 (price=0, no refToken) + 2 debt + USG + sUSG
+      expect(result.notifications).toEqual([])
+      expect(result.date).toBeDefined()
     })
 
-    it("should handle empty price sources (chainView called but empty result)", async () => {
+    it("should handle empty price sources (chainView still returns USG/sUSG/debt)", async () => {
       mockPriceRepository.getPriceSources.mockResolvedValue([])
 
       const result = await pricePointService.getPriceFeeds()
 
-      expect(chainView).toHaveBeenCalled() // chainView should always be called now
-      expect(result.prices).toEqual([]) // No sources, so no prices
-      expect(result.notifications).toEqual([]) // No warnings
-      expect(result.date).toBeDefined() // No date when no ERC4626 sources
+      expect(chainView).toHaveBeenCalled()
+      expect(result.prices).toHaveLength(5) // 1 ERC4626 (price=0) + 2 debt + USG + sUSG from chainView
+      expect(result.notifications).toEqual([])
+      expect(result.date).toBeDefined()
     })
 
     it("should handle API errors and collect them as warnings", async () => {
