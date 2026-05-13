@@ -78,4 +78,22 @@ describe("PredepositCampaignServiceDecrease - Decrease amounts part", () => {
       aDate
     )
   })
+
+  it("Snapshot should include cvxLP deposit token addresses for both pools", async () => {
+    // Primary regression guard for the cvxLP fix.
+    ;(chainModule.chainView as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
+      [
+        [parseEther("3000000"), 0n, parseEther("1500000")],
+        [parseEther("1000000"), parseEther("500000"), 0n],
+      ],
+    ])
+
+    await predepositService.decreaseAccountedAmounts(false, aDate)
+
+    expect((predepositService as any).getOnchainSnapshot).toHaveBeenLastCalledWith(
+      expect.any(Array),
+      expect.arrayContaining(["0xab7364878bd4ec38a89134d6d8350b7fda66ebc1"]), // cvxLP USG-USDC
+      expect.arrayContaining(["0x1c0a3dacd1d6cd370302d1caa50aa663fd9fc2ee"]) // cvxLP USG-frxUSD
+    )
+  })
 })
