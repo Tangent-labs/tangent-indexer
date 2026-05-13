@@ -234,12 +234,14 @@ export class PredepositCampaignService {
             SDT_USG_USDC_VAULT.toLowerCase(),
             CURVE_GAUGES.USG_USDC.toLowerCase(),
             "0x3eAFd8C2B36B93A8463A5f460a01A1b3D37b6929".toLowerCase(),
+            "0xab7364878bd4ec38a89134d6d8350b7fda66ebc1",
           ],
           [
             addresses.lps["USG-frxUSD"],
             SDT_USG_frxUSD_VAULT.toLowerCase(),
             CURVE_GAUGES.USG_frxUSD.toLowerCase(),
             "0x8D79FA117C3B3a4da1D3F1c037f2e500a2f6D70D".toLowerCase(),
+            "0x1c0a3dacd1d6cd370302d1caa50aa663fd9fc2ee",
           ]
         )
       )[0],
