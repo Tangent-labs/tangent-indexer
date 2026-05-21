@@ -56,6 +56,7 @@ const rewardTokens = [
   { symbol: "frxUSD", address: COMMON_ERC20S.frxUSD },
   { symbol: "YB", address: COMMON_ERC20S.YB },
   { symbol: "pmUSD", address: COMMON_ERC20S.pmUSD },
+  { symbol: "BOLD", address: COMMON_ERC20S.BOLD },
 ]
 
 type Markets = {
