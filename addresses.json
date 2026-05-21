@@ -20,23 +20,113 @@
   },
   "markets": [
     {
-      "marketAddress": "0x4742a56668FBacbc11087f516C4b01ebc48F716f",
+      "marketAddress": "0x4742a56668fbacbc11087f516c4b01ebc48f716f",
       "marketName": "PYUSD/USDC",
       "collatAddress": "0x383e6b4437b59fff47b619cba855ca29342a8559",
       "marketType": "CRV_Gauge"
+    },
+    {
+      "marketAddress": "0xbffbd9c9ac1645285d017a69885304831e8b9b71",
+      "marketName": "RLUSD/USDC",
+      "collatAddress": "0xd001ae433f254283fece51d4acce8c53263aa186",
+      "marketType": "CRV_Gauge"
+    },
+    {
+      "marketAddress": "0xd2c7257efe28a1b1446904a371e3d51e1c2f7e0e",
+      "marketName": "frxUSD/sUSDS",
+      "collatAddress": "0x81a2612f6dea269a6dd1f6deab45c5424ee2c4b7",
+      "marketType": "STAKEDAO_CRV_Vault"
+    },
+    {
+      "marketAddress": "0xc9c80e8481c2b6f979afc155bc3f979cfad19c56",
+      "marketName": "BOLD/USDC",
+      "collatAddress": "0xefc6516323fbd28e80b85a497b65a86243a54b3e",
+      "marketType": "STAKEDAO_CRV_Vault"
+    },
+    {
+      "marketAddress": "0xd3d29a8752fc40d64a20bbc043147077570c1785",
+      "marketName": "frxUSD/sDOLA",
+      "collatAddress": "0x9d8afd5ce19a3b948049468188f1de13951a4383",
+      "marketType": "STAKEDAO_CRV_Vault"
+    },
+    {
+      "marketAddress": "0xaed9bcae0831caf4a45739ec7910cedf2ac5d9a1",
+      "marketName": "USDT/crvUSD",
+      "collatAddress": "0x390f3595bca2df7d23783dfd126427cceb997bf4",
+      "marketType": "STAKEDAO_CRV_Vault"
+    },
+    {
+      "marketAddress": "0x5c996574270f439bfff5b7647ee92c1879d35a4b",
+      "marketName": "frxUSD/scrvUSD",
+      "collatAddress": "0x4d968a5db8da0822a2f08840f553de4129aae5f3",
+      "marketType": "STAKEDAO_CRV_Vault"
+    },
+    {
+      "marketAddress": "0xa6069a4a53b564eb0a312e08f5af19ae2ba5d67e",
+      "marketName": "eUSD/USDC",
+      "collatAddress": "0x08bfa22bb3e024cdfeb3eca53c0cb93bf59c4147",
+      "marketType": "STAKEDAO_CRV_Vault"
+    },
+    {
+      "marketAddress": "0x161d6fa48b0e0152763c3929a3813bd177fc099f",
+      "marketName": "reUSD/scrvUSD",
+      "collatAddress": "0xc522a6606bba746d7960404f22a3db936b6f4f50",
+      "marketType": "STAKEDAO_CRV_Vault"
+    },
+    {
+      "marketAddress": "0x56dbc69208044748af4d33392e25fc9336f11931",
+      "marketName": "frxUSD/OUSD",
+      "collatAddress": "0x68d03ed49800e92d7aa8ab171424007e55fd1f49",
+      "marketType": "STAKEDAO_CRV_Vault"
+    },
+    {
+      "marketAddress": "0x849cf82e0ebcfeab8270cc5a3ea3b26cd481b754",
+      "marketName": "USDC/fxUSD",
+      "collatAddress": "0x5018be882dcce5e3f2f3b0913ae2096b9b3fb61f",
+      "marketType": "Convex_FXN"
+    },
+    {
+      "marketAddress": "0xa63ded87df22ee573567ad1dd87d0a71c8fcd380",
+      "marketName": "fxUSD/reUSD",
+      "collatAddress": "0xb0ef04ace97d350e24efa5139d2590d26a61a8dc",
+      "marketType": "Convex_FXN"
     }
   ],
   "oracles": {
     "chainlink": {
       "USDC": "0xfc3dff91fb8a7ac53f61d9d465d71d1b89e01fe4",
       "USDT": "0x06acead7af9abe0b2a3b2e914b54c9368935b292",
-      "PYUSD": "0xcba777240d1a0bd66c8ff67544a054862687b6ef"
+      "PYUSD": "0xcba777240d1a0bd66c8ff67544a054862687b6ef",
+      "crvUSD": "0x63f1715e46d9ce230f09a34c7d051ec0f738fe2b",
+      "RLUSD": "0x8ce9fb9a62dbae1cd8a3abbf5bf1e8b522d2f957",
+      "USDS": "0xe3adae98edd21c0b4a4c3e05e7e1136dad2163bd",
+      "USDe": "0xa3daa1d1e1fe2694db205eec4db7e89b2656c3f4"
     },
     "erc4626s": {},
-    "coinFromCurveLp": {},
+    "coinFromCurveLp": {
+      "msUSD": "0x867df395cf6af1abf4dfbd41bed6967667d598b7",
+      "BOLD": "0x25605c9981bcdf2457791daf84514bacd15b6775",
+      "reUSD": "0x4cf9d48ea81ac25b3ca2577962ce93e15783523e",
+      "OUSD": "0x6094c7944ebca80324f8ea2fe1504904aceb4a28",
+      "fxUSD": "0x905f644ad88f98a42ed830746b2a96c3378deefb",
+      "DOLA": "0x0124b3e9a4477ac694b37fbf6314fb5d7ed0b074",
+      "frxUSD": "0x8aa49a3ba86ed4c9fe8fa787934d2f7860509859",
+      "eUSD": "0xa8c43f747f17181eef26753371f52b3bb61651be"
+    },
     "duoPoolStable": {
       "USDC_USDT": "0x0695758772db50a0aa0255afdb7535de23168542",
-      "PYUSD_USDC": "0xcf434527aefbc808e3e3400ab489a0e25c4af4ca"
+      "PYUSD_USDC": "0xcf434527aefbc808e3e3400ab489a0e25c4af4ca",
+      "USDC_RLUSD": "0xd0879e35783a165965d5cd524fc9b0d1cf02b066",
+      "frxUSD_sUSDS": "0x3ccd01e66172b2c1b3c17f485b7f2987ae94da6a",
+      "BOLD_USDC": "0xf26b689da847db08f6bb3b3186fdf7eddb8e69c9",
+      "eUSD_USDC": "0xb8cc9e84941605f553004d188e31e2aeb4061fd2",
+      "reUSD_scrvUSD": "0xdb0fc4ae74fa8d8a1c3d31e6e9113dbc8b2c7daa",
+      "USDT_crvUSD": "0x5d34f650c779124676cd72922112a997a4173aef",
+      "frxUSD_OUSD": "0xe3e9628d2b047aa43ab08adc1b5bb059ca0b1268",
+      "frxUSD_sDOLA": "0x385b0c21d2f93a76468f8e074ede3ef6f8ff13ce",
+      "frxUSD_scrvUSD": "0xf31be70c9d9596b23088125345f044065b0bf886",
+      "USDC_fxUSD": "0x35c62ac45ddf3079e2daa0b8957862a1800920da",
+      "reUSD_fxUSD": "0x9f162292bc39f194a3ca87e39700293bd9aa710a"
     },
     "USG": "0x970b2f2cec66f92de81dae6af363d1d135dd2f97"
   },
