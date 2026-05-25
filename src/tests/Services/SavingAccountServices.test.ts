@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from "vitest"
-import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
+import { JsonRpcProvider } from "ethers"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
 import { ProcessReportEvent } from "../../eventFectcher/savingAccountEventFetcher.js"
+import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
 
 // Mock du repository
 const mockSavingAccountRepository = {
@@ -14,7 +15,7 @@ describe("SavingAccountServices", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    savingAccountService = new SavingAccountServices(mockSavingAccountRepository)
+    savingAccountService = new SavingAccountServices(mockSavingAccountRepository, new JsonRpcProvider())
   })
 
   describe("formatSavingAccountEvents", () => {
