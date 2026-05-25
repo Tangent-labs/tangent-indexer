@@ -87,7 +87,8 @@ export class RouterService {
   public async getBestRoute(
     info: LiquidationUserFullInfo,
     rpcIndex: number = 0,
-    receiver?: AddressLike
+    receiver?: AddressLike,
+    slippageBps: bigint = 0n
   ): Promise<RouteEvaluationResult & { routerType: RouterType; routerAddress: string; pendleData?: PendlePTToSYQuote }> {
     // Check the custom router
     const routerType = this.getRouterType(info.collatToken)
@@ -106,15 +107,14 @@ export class RouterService {
           }))
 
     // We check on enso as well
-    const ensoRoutePromise = receiver ? this._getEnsoRoute(info, receiver, rpcIndex) : Promise.resolve(null)
+    const ensoRoutePromise = receiver ? this._getEnsoRoute(info, receiver, slippageBps) : Promise.resolve(null)
 
     // let's run it .
     const [customRoute, ensoRoute] = await Promise.all([customRoutePromise, ensoRoutePromise])
 
-    if (ensoRoute && ensoRoute.amount > customRoute.amount) {
+    if (ensoRoute) {
       return ensoRoute
     }
-
     return customRoute
   }
 
@@ -151,7 +151,7 @@ export class RouterService {
       amountIn: BigInt(info.collateralBalance),
       tokenIn: info.collatToken,
       tokenOut: addresses.tokens.USG,
-      fromAddress: info.market,
+      fromAddress: addresses.utilities.zappingProxy,
       receiver,
       minAmountOut,
     })
@@ -166,47 +166,30 @@ export class RouterService {
     }
   }
 
-  private _buildEnsoRequestParams(info: LiquidationUserFullInfo, tokenOut: string, receiver: AddressLike): EnsoRouteRequest {
+  private _buildEnsoRequestParams(
+    info: LiquidationUserFullInfo,
+    tokenOut: string,
+    fromAddress: AddressLike,
+    receiver: AddressLike,
+    slippageBps: bigint
+  ): EnsoRouteRequest {
     return {
       amountIn: BigInt(info.collateralBalance),
       tokenIn: info.collatToken,
       tokenOut,
-      fromAddress: info.market,
+      fromAddress,
       receiver,
-      minAmountOut: 0n,
-    }
-  }
-
-  // TODO: remove — used to validate Enso API + estimateGas with a liquid pair (USG pools empty in dev)
-  private async _buildEnsoDebugRequestParams(receiver: AddressLike, rpcIndex: number): Promise<EnsoRouteRequest> {
-    const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-    const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
-    const usdcContract = new Interface(["function balanceOf(address) view returns (uint256)"])
-    const balanceData = usdcContract.encodeFunctionData("balanceOf", [receiver])
-    const raw = await this.providers[rpcIndex].call({ to: USDC, data: balanceData })
-    const usdcBalance = usdcContract.decodeFunctionResult("balanceOf", raw)[0] as bigint
-    console.log(`[ENSO DEBUG] USDC balance of ${receiver}: ${usdcBalance}`)
-
-    return {
-      amountIn: usdcBalance,
-      tokenIn: USDC,
-      tokenOut: USDT,
-      fromAddress: receiver,
-      receiver,
-      minAmountOut: 0n,
+      slippageBps,
     }
   }
 
   private async _getEnsoRoute(
     info: LiquidationUserFullInfo,
     receiver: AddressLike,
-    rpcIndex: number = 0
+    slippageBps: bigint
   ): Promise<(RouteEvaluationResult & { routerType: "enso"; routerAddress: string }) | null> {
-    // DEBUG
-    // const params = await this._buildEnsoDebugRequestParams(receiver, rpcIndex)
-
     const addresses = await getAddressesJson()
-    const params = this._buildEnsoRequestParams(info, addresses.tokens.USG, receiver)
+    const params = this._buildEnsoRequestParams(info, addresses.tokens.USG, addresses.utilities.zappingProxy, receiver, slippageBps)
 
     const route = await this.ensoRouterService.getRoute(params)
 
@@ -215,17 +198,6 @@ export class RouterService {
     const routerCall = route?.tx?.data
 
     if (!route || amount <= 0n || !routerAddress || !routerCall) {
-      return null
-    }
-
-    try {
-      await this.providers[rpcIndex].estimateGas({
-        to: routerAddress,
-        from: params.fromAddress as string,
-        data: routerCall,
-      })
-    } catch (error) {
-      console.warn(`Enso route failed gas estimation, skipping: ${(error as Error).message}`)
       return null
     }
 
