@@ -4,9 +4,9 @@ import { chainView } from "../../utils/chainView.js"
 import BoostBalancesSnapshots from "../../abis/BoostBalancesSnapshots.json" with { type: "json" }
 
 import { Prisma } from "@prisma/client"
-import { NumMap, TokenBalancesForBoostOut } from "./types.js"
-import { OFFCHAIN_BOOST_INFOS, ONCHAIN_BOOST_INFOS, SNAPSHOT_BOOST_TOKENS } from "./config.js"
 import { BoostRepository } from "../../db/Points/BoostRepository.js"
+import { OFFCHAIN_BOOST_INFOS, ONCHAIN_BOOST_INFOS, SNAPSHOT_BOOST_TOKENS } from "./config.js"
+import { NumMap, TokenBalancesForBoostOut } from "./types.js"
 
 // TODO
 // - Pull users dynamically from the database
@@ -53,6 +53,7 @@ export class BoostService {
       await this.boostRepository.deleteUserBoosts(toDelete)
     }
     if (toInsert.length !== 0) {
+      console.log(toInsert)
       await this.boostRepository.insertUserBoosts(toInsert)
     }
 
@@ -97,6 +98,8 @@ export class BoostService {
         ...acc,
         [current.user.toLowerCase()]: current.tokenBalance.reduce((acc, currentValue) => {
           const boost = ONCHAIN_BOOST_INFOS[currentValue.token]
+
+          console.log(currentValue.token, boost)
           // Verify if the minimum threshold is reached to give the boost
           if (BigInt(currentValue.balance) >= boost.min) {
             activesOnchainBoosts.push({ user_address: current.user.toLowerCase(), type: boost.key })

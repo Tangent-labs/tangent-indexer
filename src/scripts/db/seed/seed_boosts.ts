@@ -3,8 +3,6 @@ import { TransactionPrisma } from "src/type/prisma.js"
 // DEWHALE_MEMBERS: 0.75,
 // LP_DEALS: 1,
 // CVG_COMPENSATION: 1,
-// CVG_PEPE: 0.75,
-// TURTLE_CLUB: 0.5,
 // ONBOARDED: 0.1,
 export async function seedBoosts(prisma: TransactionPrisma) {
   await prisma.user.createMany({
