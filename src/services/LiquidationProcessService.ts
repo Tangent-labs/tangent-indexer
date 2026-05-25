@@ -213,7 +213,7 @@ export class LiquidationProcessService {
    * Processes a single liquidation for a given account
    * @param pkIndex  the index of the wallet in the context
    * @param account The account to be liquidated
-   * @param slippageModifierBps Slippage modifier in basis points
+   * @param slippageModifierBps Internal modifier used to increase the base 50 bps slippage on retries
    * @param nbAttempt Number of attempts made for this liquidation
    * @param rpcIndex Optional RPC provider index (if not provided, uses context.currentRpcIndex)
    * @param logContext Optional context for logging (if not provided, creates one from context)
@@ -296,8 +296,7 @@ export class LiquidationProcessService {
     for (let i = 0; i < estimations.length; i++) {
       const estimation = estimations[i]
       // Use minTgUSDOut directly from estimation
-      // The slippageModifierBps is already applied in the slippage calculation (line 406)
-      // and included in the estimation.minTgUSDOut via estimateLiquidation
+      // The retry slippage is already included in estimation.minTgUSDOut via estimateLiquidation.
       const minAmount = estimation.minTgUSDOut
 
       // Validate minAmount is positive and non-zero (required by contract)
@@ -637,12 +636,12 @@ export class LiquidationProcessService {
         }
         logContext.currentWalletIndex = walletIndex
 
-        // Calculate slippage modifier based on retry attempts
-        // Pattern: 1.0% => 2.0% (increases by 1% per retry)
+        // executeLiquidation starts at 50 bps and increases slippage by 100 bps per retry:
+        // 0.50% on the initial attempt, then 1.50%, 2.50%, etc.
         const attemptsMade = job.attemptsMade || 0
         const slippageStep = 100n
         const targetSlippageBps = 100n + BigInt(attemptsMade) * slippageStep
-        // Calculate modifier needed to achieve target slippage
+        // Convert retry count to the internal modifier used by executeLiquidation.
         const slippageModifierBps = attemptsMade > 0 ? (targetSlippageBps - slippageStep) * 1000n : 0n
 
         await this.executeLiquidation(walletIndex, action, slippageModifierBps, providerIndex, logContext)
