@@ -2,24 +2,24 @@ import { PrismaClient } from "@prisma/client"
 import * as dotenv from "dotenv"
 import { JsonRpcProvider } from "ethers"
 
-import { GlobalDataRepository } from "../../db/GlobalDataRepository.js"
-import { TotalSupplyRepository } from "../../db/TotalSupplyRepository.js"
-import { GlobalDataService } from "../../services/globalData/GlobalDataService.js"
-import { CallApiService } from "../../services/CallApiService.js"
-import { TransactionPrisma } from "../../type/prisma.js"
-import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
 import { ERC20Repository } from "../../db/ERC20Repository.js"
-import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
-import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
-import { getAddressesJson } from "../../utils/jsonReader.js"
-import { PegKeeperRepository } from "../../db/PegKeepeerRepository.js"
-import { WStableRepository } from "../../db/WStableRepository.js"
+import { GlobalDataRepository } from "../../db/GlobalDataRepository.js"
 import { GlobalHistoryDataRepository } from "../../db/GlobalHistoryDataRepository.js"
+import { MarketContractsRepository } from "../../db/MarketContractsRepository.js"
+import { PegKeeperRepository } from "../../db/PegKeepeerRepository.js"
 import { PegMonitoredTokenRepository } from "../../db/PegMonitoredTokenRepository.js"
-import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
-import { toSafeErrorMessage } from "../../utils/errors.js"
+import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
+import { TotalSupplyRepository } from "../../db/TotalSupplyRepository.js"
+import { WStableRepository } from "../../db/WStableRepository.js"
+import { CallApiService } from "../../services/CallApiService.js"
+import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
+import { GlobalDataService } from "../../services/globalData/GlobalDataService.js"
 import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
+import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
+import { TransactionPrisma } from "../../type/prisma.js"
+import { toSafeErrorMessage } from "../../utils/errors.js"
+import { getAddressesJson } from "../../utils/jsonReader.js"
 
 dotenv.config()
 
@@ -124,7 +124,7 @@ function setUpIndexerGlobalData() {
     pegMonitoredTokenRepository
   )
   const totalSupplyRepo = new TotalSupplyRepository(prismaClient)
-  const savingAccountService = new SavingAccountServices(savingAccountRepository)
+  const savingAccountService = new SavingAccountServices(savingAccountRepository, provider)
   const indexerExecutionLogService = IndexerExecutionLogService.fromClient(prismaClient)
   return {
     prismaClient,

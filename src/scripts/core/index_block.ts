@@ -37,8 +37,9 @@ import { getAddressesJson } from "../../utils/jsonReader.js"
 dotenv.config()
 
 async function main() {
-  const { providers, handleError } = setUpIndexer()
   const {
+    providers,
+    handleError,
     prismaClient,
     indexerExecutionLogService,
     telegramNotifierService,
@@ -156,6 +157,8 @@ async function main() {
 main().then()
 
 async function setUpIndexerBlockServices() {
+  const { providers, handleError } = setUpIndexer()
+
   const prismaClient = new PrismaClient()
   // Setup the repositories
   const blockRepository = new BlockRepository(prismaClient)
@@ -189,7 +192,7 @@ async function setUpIndexerBlockServices() {
   const userPointsService = new UserPointsService(userPointsLPRepository, erc20Repository, activeBorrowersRepository)
   const activeBorrowersService = new ActiveBorrowersService(activeBorrowersRepository)
   const voteEnventService = new VotesEventService(userPointsVoteRepository)
-  const savingAccountService = new SavingAccountServices(savingAccountRepository)
+  const savingAccountService = new SavingAccountServices(savingAccountRepository, providers[0])
   const predepositService = new PredepositCampaignService(predepositRepository, blockRepository)
   const indexerExecutionLogService = IndexerExecutionLogService.fromClient(prismaClient)
 
@@ -215,5 +218,7 @@ async function setUpIndexerBlockServices() {
     savingAccountService,
     predepositService,
     addresses,
+    handleError,
+    providers,
   }
 }

@@ -1,18 +1,23 @@
 import { Prisma } from "@prisma/client"
 
 import { ONE_WEEK_IN_SECONDS } from "@tangent/defi-resources/build/utils/durations.js"
+import { Contract, JsonRpcProvider } from "ethers"
 import { GlobalDataRepository } from "../../db/GlobalDataRepository.js"
 import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
 import { ProcessReportEvent } from "../../eventFectcher/savingAccountEventFetcher.js"
+
+import erc20Abis from "../../abis/ERC20.json" with { type: "json" }
 
 const WEEKS_PER_YEAR = 52n
 const APY_FIXED_POINT_SCALE = 10n ** 18n
 
 export class SavingAccountServices {
   savingAccountRepository: SavingAccountRepository
+  provider: JsonRpcProvider
 
-  constructor(savingAccountRepository: SavingAccountRepository) {
+  constructor(savingAccountRepository: SavingAccountRepository, provider: JsonRpcProvider) {
     this.savingAccountRepository = savingAccountRepository
+    this.provider = provider
   }
 
   formatSavingAccountEvents(events: ProcessReportEvent[], blockInfos: Map<number, number>): Prisma.process_reportCreateInput[] {
@@ -37,10 +42,9 @@ export class SavingAccountServices {
     if (amountForSevenDays <= 0n || totalAsset <= 0n) {
       return 0
     }
-
     const aprScaled = (amountForSevenDays * WEEKS_PER_YEAR * APY_FIXED_POINT_SCALE) / totalAsset
     const apr = Number(aprScaled) / Number(APY_FIXED_POINT_SCALE)
-    return Math.exp(apr) - 1
+    return (Math.exp(apr) - 1) * 100
   }
 
   async processSavingAccountApy(globalDataRepository: GlobalDataRepository, nowBC: Date, sUSGAddress: string): Promise<void> {
@@ -105,7 +109,9 @@ export class SavingAccountServices {
       if (!latestEvent?.currentDebtAfter) {
         continue
       }
-      const totalAsset = BigInt(latestEvent.currentDebtAfter)
+      const sUSG = new Contract(sUSGAddress, erc20Abis.abi, this.provider)
+
+      const totalAsset = BigInt((await sUSG.totalSupply()) - (await sUSG.balanceOf(sUSG)))
       if (totalAsset === 0n) {
         continue
       }
