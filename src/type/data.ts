@@ -99,7 +99,7 @@ export type LiquidationExecutionResult = {
   collateralLiquidated: bigint
   liquidator: string
   transactionHash: string
-  /** Profit from liquidation: repaidAmount - userDebt (can be negative) */
+  /** Profit from routed liquidation: USG received by liquidator - repaid amount - fee. */
   liquidationProfit: bigint
 }
 

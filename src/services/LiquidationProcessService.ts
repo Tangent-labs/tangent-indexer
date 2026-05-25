@@ -1,4 +1,5 @@
 import MarketExternalActionsAbi from "../abis/MarketExternalActions.json" with { type: "json" }
+import IERC20Abi from "../abis/IERC20.json" with { type: "json" }
 
 import { Addressable, AddressLike, Contract, Interface, JsonRpcProvider, MaxUint256, Wallet, formatEther } from "ethers"
 import { type Job } from "bullmq"
@@ -83,29 +84,50 @@ export class LiquidationProcessService {
   }
 
   /**
-   * Parse Liquidate event from transaction receipt and calculate profit
+   * Parse Liquidate and incoming USG Transfer events to calculate routed liquidation profit.
    */
-  private parseLiquidateEvent(receipt: any, marketAddress: string, userDebt: bigint): LiquidationExecutionResult | null {
+  private parseLiquidateEvent(receipt: any, marketAddress: string, usgAddress: string, receiver: string): LiquidationExecutionResult | null {
     try {
-      const iface = new Interface(MarketExternalActionsAbi.abi)
+      const marketInterface = new Interface(MarketExternalActionsAbi.abi)
+      const erc20Interface = new Interface(IERC20Abi.abi)
+      let usgReceived = 0n
+      let liquidateEvent: any = null
+
       for (const log of receipt.logs) {
-        if (log.address.toLowerCase() !== marketAddress.toLowerCase()) continue
-        try {
-          const parsed = iface.parseLog({ topics: log.topics, data: log.data })
-          if (parsed?.name === "Liquidate") {
-            const repaidAmount = parsed.args.repaidAmount as bigint
-            return {
-              repaidAmount,
-              debtShares: parsed.args.debtShares,
-              fee: parsed.args.fee,
-              collateralLiquidated: parsed.args.collateralLiquidated,
-              liquidator: parsed.args.liquidator,
-              transactionHash: receipt.hash,
-              liquidationProfit: repaidAmount - userDebt,
+        if (log.address.toLowerCase() === marketAddress.toLowerCase()) {
+          try {
+            const parsed = marketInterface.parseLog({ topics: log.topics, data: log.data })
+            if (parsed?.name === "Liquidate") {
+              liquidateEvent = parsed
             }
+          } catch {
+            // Not a Liquidate event, continue
           }
-        } catch {
-          // Not a Liquidate event, continue
+        }
+
+        if (log.address.toLowerCase() === usgAddress.toLowerCase()) {
+          try {
+            const parsed = erc20Interface.parseLog({ topics: log.topics, data: log.data })
+            if (parsed?.name === "Transfer" && (parsed.args.to as string).toLowerCase() === receiver.toLowerCase()) {
+              usgReceived += parsed.args.value as bigint
+            }
+          } catch {
+            // Not a Transfer event, continue
+          }
+        }
+      }
+
+      if (liquidateEvent) {
+        const repaidAmount = liquidateEvent.args.repaidAmount as bigint
+        const fee = liquidateEvent.args.fee as bigint
+        return {
+          repaidAmount,
+          debtShares: liquidateEvent.args.debtShares,
+          fee,
+          collateralLiquidated: liquidateEvent.args.collateralLiquidated,
+          liquidator: liquidateEvent.args.liquidator,
+          transactionHash: receipt.hash,
+          liquidationProfit: usgReceived - repaidAmount - fee,
         }
       }
     } catch (error) {
@@ -224,6 +246,7 @@ export class LiquidationProcessService {
       userDebt: BigInt(account.userDebt || "0"),
       healthRatio: BigInt(account.healthRatio || "0"),
     }
+    const addresses = await getAddressesJson()
 
     let estimations: LiquidationEstimateInfo[] = []
     try {
@@ -326,7 +349,7 @@ export class LiquidationProcessService {
           }
         )
         const receipt = await tx.wait() // Wait for the transaction to be mined
-        const executionResult = this.parseLiquidateEvent(receipt, normalizedAccount.market as string, normalizedAccount.userDebt)
+        const executionResult = this.parseLiquidateEvent(receipt, normalizedAccount.market as string, addresses.tokens.USG, signerAddress)
         await this.saveLiquidationExecution(normalizedAccount, loggedContext, executionResult ?? undefined)
         successCount++
       } catch (error) {
@@ -490,7 +513,12 @@ export class LiquidationProcessService {
     // Get expected output from the best route using RouterService
 
     const signerAddress = await signer.getAddress()
-    const { route, amount, priceImpact, routerType, routerAddress, pendleData } = await this.routerService.getBestRoute(account, providerIndex, signerAddress)
+    const { route, amount, priceImpact, routerType, routerAddress, pendleData } = await this.routerService.getBestRoute(
+      account,
+      providerIndex,
+      signerAddress,
+      slippageBps
+    )
     const userDebt = BigInt(account.userDebt)
 
     if (!route) {

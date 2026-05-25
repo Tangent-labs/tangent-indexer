@@ -17,13 +17,17 @@ export type EnsoRouteRequest = {
   tokenOut: AddressLike
   fromAddress: AddressLike
   receiver: AddressLike
-  minAmountOut: bigint
+  minAmountOut?: bigint
+  slippageBps?: bigint
 }
 
 export class EnsoRouterService {
-  async getRoute({ amountIn, tokenIn, tokenOut, fromAddress, receiver, minAmountOut }: EnsoRouteRequest): Promise<EnsoRoute | null> {
+  async getRoute({ amountIn, tokenIn, tokenOut, fromAddress, receiver, minAmountOut, slippageBps }: EnsoRouteRequest): Promise<EnsoRoute | null> {
     if (!liquidationConfig.enso.apiKey) {
       return null
+    }
+    if (minAmountOut !== undefined && slippageBps !== undefined) {
+      throw new Error("Enso route cannot set both minAmountOut and slippage")
     }
 
     const url = new URL(liquidationConfig.enso.baseUrl)
@@ -33,7 +37,12 @@ export class EnsoRouterService {
     url.searchParams.set("tokenIn", tokenIn.toString())
     url.searchParams.set("tokenOut", tokenOut.toString())
     url.searchParams.set("amountIn", amountIn.toString())
-    url.searchParams.set("minAmountOut", minAmountOut.toString())
+    if (minAmountOut !== undefined) {
+      url.searchParams.set("minAmountOut", minAmountOut.toString())
+    }
+    if (slippageBps !== undefined && !minAmountOut) {
+      url.searchParams.set("slippage", slippageBps.toString())
+    }
     url.searchParams.set("routingStrategy", "router")
 
     try {

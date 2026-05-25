@@ -87,7 +87,8 @@ export class RouterService {
   public async getBestRoute(
     info: LiquidationUserFullInfo,
     rpcIndex: number = 0,
-    receiver?: AddressLike
+    receiver?: AddressLike,
+    slippageBps: bigint = 0n
   ): Promise<RouteEvaluationResult & { routerType: RouterType; routerAddress: string; pendleData?: PendlePTToSYQuote }> {
     // Check the custom router
     const routerType = this.getRouterType(info.collatToken)
@@ -106,12 +107,12 @@ export class RouterService {
           }))
 
     // We check on enso as well
-    const ensoRoutePromise = receiver ? this._getEnsoRoute(info, receiver) : Promise.resolve(null)
+    const ensoRoutePromise = receiver ? this._getEnsoRoute(info, receiver, slippageBps) : Promise.resolve(null)
 
     // let's run it .
     const [customRoute, ensoRoute] = await Promise.all([customRoutePromise, ensoRoutePromise])
 
-    if (ensoRoute && ensoRoute.amount > customRoute.amount) {
+    if (ensoRoute) {
       return ensoRoute
     }
     return customRoute
@@ -165,23 +166,30 @@ export class RouterService {
     }
   }
 
-  private _buildEnsoRequestParams(info: LiquidationUserFullInfo, tokenOut: string, fromAddress: AddressLike, receiver: AddressLike): EnsoRouteRequest {
+  private _buildEnsoRequestParams(
+    info: LiquidationUserFullInfo,
+    tokenOut: string,
+    fromAddress: AddressLike,
+    receiver: AddressLike,
+    slippageBps: bigint
+  ): EnsoRouteRequest {
     return {
       amountIn: BigInt(info.collateralBalance),
       tokenIn: info.collatToken,
       tokenOut,
       fromAddress,
       receiver,
-      minAmountOut: 0n,
+      slippageBps,
     }
   }
 
   private async _getEnsoRoute(
     info: LiquidationUserFullInfo,
-    receiver: AddressLike
+    receiver: AddressLike,
+    slippageBps: bigint
   ): Promise<(RouteEvaluationResult & { routerType: "enso"; routerAddress: string }) | null> {
     const addresses = await getAddressesJson()
-    const params = this._buildEnsoRequestParams(info, addresses.tokens.USG, addresses.utilities.zappingProxy, receiver)
+    const params = this._buildEnsoRequestParams(info, addresses.tokens.USG, addresses.utilities.zappingProxy, receiver, slippageBps)
 
     const route = await this.ensoRouterService.getRoute(params)
 

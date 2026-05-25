@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import fs from "fs"
-import { AddressLike, JsonRpcProvider } from "ethers"
+import { AddressLike, Interface, JsonRpcProvider } from "ethers"
+import MarketExternalActionsAbi from "../../abis/MarketExternalActions.json" with { type: "json" }
+import IERC20Abi from "../../abis/IERC20.json" with { type: "json" }
 import { ActiveBorrowersRepository } from "../..//db/ActiveBorrowersRepository.js"
 import {
   LiquidationAccountOutInfo,
@@ -900,6 +902,40 @@ describe("TestLiquidationHarness - executeLiquidation", () => {
     const callArgs = estimateSpy.mock.calls[0]
     expect(callArgs[2]).toBe(expectedSlippage)
     expect(mockMarketContract.liquidate).toHaveBeenCalledTimes(1)
+  })
+
+  it("should calculate routed profit from USG received by the liquidator minus repaid amount and fee", () => {
+    const market = "0x0000000000000000000000000000000000000011"
+    const usg = "0x0000000000000000000000000000000000000012"
+    const liquidator = "0x0000000000000000000000000000000000000013"
+    const router = "0x0000000000000000000000000000000000000014"
+    const sender = "0x0000000000000000000000000000000000000015"
+    const marketInterface = new Interface(MarketExternalActionsAbi.abi)
+    const erc20Interface = new Interface(IERC20Abi.abi)
+    const liquidateLog = marketInterface.encodeEventLog(marketInterface.getEvent("Liquidate")!, [
+      "0x0000000000000000000000000000000000000016",
+      20_000n * DECIMALS,
+      0n,
+      140n * DECIMALS,
+      22_500n * DECIMALS,
+      router,
+    ])
+    const usgTransferLog = erc20Interface.encodeEventLog(erc20Interface.getEvent("Transfer")!, [sender, liquidator, 22_693n * DECIMALS])
+
+    const result = (liquidationService as any).parseLiquidateEvent(
+      {
+        hash: "0x1234",
+        logs: [
+          { address: market, ...liquidateLog },
+          { address: usg, ...usgTransferLog },
+        ],
+      },
+      market,
+      usg,
+      liquidator
+    )
+
+    expect(result.liquidationProfit).toBe(2_553n * DECIMALS)
   })
 
   it("should execute multiple transactions for split routes", async () => {
