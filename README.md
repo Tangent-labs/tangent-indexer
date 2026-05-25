@@ -22,7 +22,7 @@ The Indexer is a Typescript project that:
 - [ethers.js](https://res.cloudinary.com/divzjiip8/image/upload/v1624392472/logos/ethers_blue.png)
 - [prisma](https://www.prisma.io/)
 
-<!-- GETTING STARTED -->
+<!--- GETTING STARTED --->
 
 ## Getting Started
 
