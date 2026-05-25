@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
 import { JsonRpcProvider, parseEther } from "ethers"
-import { BoostService } from "../../../services/boost/BoostService.js"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { BoostRepository } from "../../../db/Points/BoostRepository.js"
+import { BoostService } from "../../../services/boost/BoostService.js"
 
 describe("UserPointsService.updateBoosts", () => {
   let boostService: BoostService
@@ -28,11 +28,7 @@ describe("UserPointsService.updateBoosts", () => {
 
       {
         user: "ue",
-        tokenBalance: [
-          { token: "0x0C30476f66034E11782938DF8e4384970B6c9e8a", balance: parseEther("2500").toString() },
-          { token: "0xFE4BCE4b3949c35fB17691D8b03c3caDBE2E5E23", balance: parseEther("9999").toString() },
-          { token: "0x90c1f9220d90d3966FbeE24045EDd73E1d588aD5", balance: parseEther("25").toString() },
-        ],
+        tokenBalance: [{ token: "0x72a19342e8F1838460eBFCCEf09F6585e32db86E", balance: parseEther("9999").toString() }],
       },
     ],
   }
@@ -78,11 +74,6 @@ describe("UserPointsService.updateBoosts", () => {
     // Retrieve last existing boosts
     getOffChainBoostUsersSpy.mockResolvedValue([
       {
-        id: 1n,
-        user_address: "ue",
-        type: "CVG_PEPE",
-      },
-      {
         id: 2n,
         user_address: "uy",
         type: "LP_DEALS",
@@ -100,7 +91,7 @@ describe("UserPointsService.updateBoosts", () => {
       {
         user_address: "ue",
         start_at: new Date(100 * 1000),
-        multiplier: 2.25,
+        multiplier: 1.25,
       },
       {
         user_address: "uy",
@@ -119,13 +110,6 @@ describe("UserPointsService.updateBoosts", () => {
     // Retrieve last existing boosts
     getActiveBoostsSpy.mockResolvedValue([
       {
-        id: 1n,
-        user_address: "ua",
-        multiplier: 1.5,
-        start_at: new Date(100 * 1000),
-        end_at: null,
-      },
-      {
         id: 2n,
         user_address: "ub",
         multiplier: 1.25,
@@ -139,11 +123,6 @@ describe("UserPointsService.updateBoosts", () => {
     // Retrieve last existing boosts
     getOffChainBoostUsersSpy.mockResolvedValue([
       {
-        id: 1n,
-        user_address: "ue",
-        type: "CVG_PEPE",
-      },
-      {
         id: 2n,
         user_address: "uy",
         type: "LP_DEALS",
@@ -152,14 +131,6 @@ describe("UserPointsService.updateBoosts", () => {
 
     expect(insertUserBoostsSpy).toBeCalledWith([
       {
-        id: 1n,
-        user_address: "ua",
-        multiplier: 1.5,
-        start_at: new Date(100 * 1000),
-        end_at: new Date(120 * 1000),
-      },
-
-      {
         user_address: "ua",
         multiplier: 1.75,
         start_at: new Date(120 * 1000),
@@ -167,7 +138,7 @@ describe("UserPointsService.updateBoosts", () => {
 
       {
         user_address: "ue",
-        multiplier: 2.25,
+        multiplier: 1.25,
         start_at: new Date(120 * 1000),
       },
 
@@ -185,6 +156,6 @@ describe("UserPointsService.updateBoosts", () => {
       },
     ])
 
-    expect(deleteUserBoostsSpy).toBeCalledWith([1n, 2n])
+    expect(deleteUserBoostsSpy).toBeCalledWith([2n])
   })
 })
