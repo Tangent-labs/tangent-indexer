@@ -90,6 +90,8 @@ export class RouterService {
     receiver?: AddressLike,
     slippageBps: bigint = 0n
   ): Promise<RouteEvaluationResult & { routerType: RouterType; routerAddress: string; pendleData?: PendlePTToSYQuote }> {
+    const addresses = receiver ? await getAddressesJson() : undefined
+
     // Check the custom router
     const routerType = this.getRouterType(info.collatToken)
     const customRoutePromise =
@@ -107,7 +109,7 @@ export class RouterService {
           }))
 
     // We check on enso as well
-    const ensoRoutePromise = receiver ? this._getEnsoRoute(info, receiver, slippageBps) : Promise.resolve(null)
+    const ensoRoutePromise = receiver && addresses ? this._getEnsoRoute(info, receiver) : Promise.resolve(null)
 
     // let's run it .
     const [customRoute, ensoRoute] = await Promise.all([customRoutePromise, ensoRoutePromise])
@@ -179,14 +181,13 @@ export class RouterService {
       tokenOut,
       fromAddress,
       receiver,
-      slippageBps,
+      minAmountOut: 0n,
     }
   }
 
   private async _getEnsoRoute(
     info: LiquidationUserFullInfo,
-    receiver: AddressLike,
-    slippageBps: bigint
+    receiver: AddressLike
   ): Promise<(RouteEvaluationResult & { routerType: "enso"; routerAddress: string }) | null> {
     const addresses = await getAddressesJson()
     const params = this._buildEnsoRequestParams(info, addresses.tokens.USG, addresses.utilities.zappingProxy, receiver, slippageBps)
