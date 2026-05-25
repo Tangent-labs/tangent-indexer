@@ -32,7 +32,7 @@
       "marketType": "Convex_FXN"
     },
     {
-      "marketAddress": "0x56DBc69208044748aF4D33392E25fC9336F11931",
+      "marketAddress": "0x4742a56668FBacbc11087f516C4b01ebc48F716f",
       "marketName": "PYUSD/USDC",
       "collatAddress": "0x383e6b4437b59fff47b619cba855ca29342a8559",
       "marketType": "CRV_Gauge"

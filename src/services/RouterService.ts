@@ -90,8 +90,6 @@ export class RouterService {
     receiver?: AddressLike,
     slippageBps: bigint = 0n
   ): Promise<RouteEvaluationResult & { routerType: RouterType; routerAddress: string; pendleData?: PendlePTToSYQuote }> {
-    const addresses = receiver ? await getAddressesJson() : undefined
-
     // Check the custom router
     const routerType = this.getRouterType(info.collatToken)
     const customRoutePromise =
@@ -109,7 +107,7 @@ export class RouterService {
           }))
 
     // We check on enso as well
-    const ensoRoutePromise = receiver && addresses ? this._getEnsoRoute(info, receiver) : Promise.resolve(null)
+    const ensoRoutePromise = receiver ? this._getEnsoRoute(info, receiver) : Promise.resolve(null)
 
     // let's run it .
     const [customRoute, ensoRoute] = await Promise.all([customRoutePromise, ensoRoutePromise])
