@@ -28,7 +28,7 @@ import {
   WStableData,
 } from "./types.js"
 
-import { GlobalHistoryDataRepository } from "src/db/GlobalHistoryDataRepository.js"
+import { GlobalHistoryDataRepository } from "../../db/GlobalHistoryDataRepository.js"
 import { GlobalDataRepository } from "../../db/GlobalDataRepository.js"
 import { PegKeeperRepository } from "../../db/PegKeepeerRepository.js"
 import { PegMonitoredTokenRepository } from "../../db/PegMonitoredTokenRepository.js"
