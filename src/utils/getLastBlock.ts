@@ -1,6 +1,6 @@
 import axios from "axios"
 import { JsonRpcProvider } from "ethers"
-import { BlockInfo } from "src/services/BlockService.js"
+import { BlockInfo } from "../services/BlockService.js"
 
 /**
  * @notice  Fetches the last block of a given provider and return its number and date

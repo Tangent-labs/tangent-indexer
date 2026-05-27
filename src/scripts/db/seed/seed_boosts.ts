@@ -1,4 +1,4 @@
-import { TransactionPrisma } from "src/type/prisma.js"
+import { TransactionPrisma } from "../../../type/prisma.js"
 
 // DEWHALE_MEMBERS: 0.75,
 // LP_DEALS: 1,

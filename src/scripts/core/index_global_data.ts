@@ -20,9 +20,9 @@ import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
 import { TransactionPrisma } from "../../type/prisma.js"
 import { toSafeErrorMessage } from "../../utils/errors.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
-import { indexerConfig } from "src/config/indexer_config.js"
-import { MonitoringRepository } from "src/db/MonitoringRepository.js"
-import { MonitoringAlertService } from "src/services/MonitoringAlertService.js"
+import { indexerConfig } from "../../config/indexer_config.js"
+import { MonitoringRepository } from "../../db/MonitoringRepository.js"
+import { MonitoringAlertService } from "../../services/MonitoringAlertService.js"
 
 dotenv.config()
 
