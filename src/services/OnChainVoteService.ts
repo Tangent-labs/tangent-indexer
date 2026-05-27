@@ -53,6 +53,13 @@ export type TaskVote = {
   }
 }
 
+export class NoneAlertError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "NoneAlertError"
+  }
+}
+
 export class OnChainVoteService {
   userVoteRepository: UserPointsVoteRepository
   boostRepository: BoostRepository
@@ -64,7 +71,7 @@ export class OnChainVoteService {
     this.provider = provider
   }
 
-  computeUserVoteTasks = async (rpcProvider: JsonRpcProvider) => {
+  computeUserVoteTasks = async (rpcProvider: JsonRpcProvider, lastEpochDate?: Date) => {
     const currentVoters = await this.userVoteRepository.getGaugeVoters()
 
     const { paramInChainview, pointRatesPerGauge, taskIdPerGauge, gaugeControllerIdPerControllerAddress } = this.formatDbReturn(currentVoters)
@@ -73,6 +80,7 @@ export class OnChainVoteService {
     const votingPowers = await this.getOnchainData(paramInChainview, rpcProvider)
 
     const now = new Date(Number(votingPowers.timestamp.toString()) * 1000)
+    const newEpochDate = this.verifyEpochFullyFinished(now, lastEpochDate)
 
     const allScorers: string[] = []
     // Keeps only users that are earning points to be able to fetch only the boosts we want
@@ -132,7 +140,7 @@ export class OnChainVoteService {
     // Insert all the
     await this.userVoteRepository.createUserVoteTasks(newPoints)
 
-    return now
+    return { now, newEpochDate }
   }
 
   formatProposalId(gaugeController: string, date: Date) {
@@ -224,7 +232,7 @@ export class OnChainVoteService {
       const lastEpochMili = lastEpochDate.getTime()
       const delta = nowTimestamp - (lastEpochMili + ONE_WEEK_IN_SECONDS * 1000)
       if (delta < 0) {
-        throw new Error(`Votes point indexer can run only one time per week : ${delta / -1000 / 3600} hours left`)
+        throw new NoneAlertError(`Votes point indexer can run only one time per week : ${delta / -1000 / 3600} hours left`)
       }
     }
     const weekId = BigInt(nowTimestamp) / BigInt(ONE_WEEK_IN_SECONDS * 1000)

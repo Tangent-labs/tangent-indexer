@@ -38,7 +38,7 @@ describe("MonitoringAlertService", () => {
         ]),
       getLatestOracleSnapshots: vi.fn().mockResolvedValue([]),
       getLatestGlobalHistory: vi.fn().mockResolvedValue(null),
-      getLatestPositionRiskSnapshotsWithin24h: vi.fn().mockResolvedValue([]),
+      getLatestActivePositionRiskSnapshots: vi.fn().mockResolvedValue([]),
       getGlobalHistoryAtOrBefore: vi.fn().mockResolvedValue(null),
     }
 
@@ -69,7 +69,7 @@ describe("MonitoringAlertService", () => {
         ]),
       getLatestOracleSnapshots: vi.fn().mockResolvedValue([]),
       getLatestGlobalHistory: vi.fn().mockResolvedValue(null),
-      getLatestPositionRiskSnapshotsWithin24h: vi.fn().mockResolvedValue([]),
+      getLatestActivePositionRiskSnapshots: vi.fn().mockResolvedValue([]),
       getGlobalHistoryAtOrBefore: vi.fn().mockResolvedValue(null),
     }
 
@@ -95,7 +95,7 @@ describe("MonitoringAlertService", () => {
         .mockResolvedValueOnce([]),
       getLatestOracleSnapshots: vi.fn().mockResolvedValue([]),
       getLatestGlobalHistory: vi.fn().mockResolvedValue(null),
-      getLatestPositionRiskSnapshotsWithin24h: vi.fn().mockResolvedValue([]),
+      getLatestActivePositionRiskSnapshots: vi.fn().mockResolvedValue([]),
       getGlobalHistoryAtOrBefore: vi.fn().mockResolvedValue(null),
     }
 
@@ -124,7 +124,7 @@ describe("MonitoringAlertService", () => {
       getLatestPegSnapshots: vi.fn().mockResolvedValue([]),
       getLatestOracleSnapshots: vi.fn().mockResolvedValue([]),
       getLatestGlobalHistory: vi.fn().mockResolvedValue(null),
-      getLatestPositionRiskSnapshotsWithin24h: vi.fn().mockResolvedValue([]),
+      getLatestActivePositionRiskSnapshots: vi.fn().mockResolvedValue([]),
       getGlobalHistoryAtOrBefore: vi.fn().mockResolvedValue(null),
     }
     const service = new MonitoringAlertService(repository as any, { sendMessage } as any, stateFilePath)
@@ -155,7 +155,7 @@ describe("MonitoringAlertService", () => {
       ]),
       getLatestOracleSnapshots: vi.fn().mockResolvedValue([]),
       getLatestGlobalHistory: vi.fn().mockResolvedValue(null),
-      getLatestPositionRiskSnapshotsWithin24h: vi.fn().mockResolvedValue([]),
+      getLatestActivePositionRiskSnapshots: vi.fn().mockResolvedValue([]),
       getGlobalHistoryAtOrBefore: vi.fn().mockResolvedValue(null),
     }
     const service = new MonitoringAlertService(repository as any, { sendMessage } as any, stateFilePath)
@@ -193,7 +193,7 @@ describe("MonitoringAlertService", () => {
         ])
         .mockResolvedValueOnce([]),
       getLatestGlobalHistory: vi.fn().mockResolvedValue(null),
-      getLatestPositionRiskSnapshotsWithin24h: vi.fn().mockResolvedValueOnce([riskyPosition]).mockResolvedValueOnce([]),
+      getLatestActivePositionRiskSnapshots: vi.fn().mockResolvedValueOnce([riskyPosition]).mockResolvedValueOnce([]),
       getGlobalHistoryAtOrBefore: vi.fn().mockResolvedValue(null),
     }
     const service = new MonitoringAlertService(repository as any, { sendMessage } as any, stateFilePath)
@@ -204,6 +204,8 @@ describe("MonitoringAlertService", () => {
     const resolvedMessage = sendMessage.mock.calls[1][0]
     expect(resolvedMessage).toContain("[RESOLVED] Oracle sanity scrvUSD/sUSDe back below threshold")
     expect(resolvedMessage).toContain("[RESOLVED] Collateralization scrvUSD/sUSDe / 0x0000...0bad back to normal")
+    expect(resolvedMessage).toContain("last critical CR 1.200")
+    expect(resolvedMessage).not.toContain("last critical 1.20%")
     expect(resolvedMessage).toContain("[RESOLVED] Liquidation distance scrvUSD/sUSDe / 0x0000...0bad back to normal")
   })
 
@@ -214,7 +216,7 @@ describe("MonitoringAlertService", () => {
       getLatestGlobalHistory: vi.fn().mockResolvedValue({
         total_tvl: 80,
       }),
-      getLatestPositionRiskSnapshotsWithin24h: vi.fn().mockResolvedValue([]),
+      getLatestActivePositionRiskSnapshots: vi.fn().mockResolvedValue([]),
       getGlobalHistoryAtOrBefore: vi.fn().mockResolvedValueOnce({ total_tvl: 100 }).mockResolvedValueOnce({ total_tvl: 120 }),
     }
 
@@ -246,7 +248,7 @@ describe("MonitoringAlertService", () => {
         },
       ]),
       getLatestGlobalHistory: vi.fn().mockResolvedValue(null),
-      getLatestPositionRiskSnapshotsWithin24h: vi.fn().mockResolvedValue([]),
+      getLatestActivePositionRiskSnapshots: vi.fn().mockResolvedValue([]),
       getGlobalHistoryAtOrBefore: vi.fn().mockResolvedValue(null),
     }
 
@@ -256,7 +258,6 @@ describe("MonitoringAlertService", () => {
 
     expect(sendMessage).toHaveBeenCalledTimes(1)
     expect(sendMessage.mock.calls[0][0]).toContain("Monitoring alerts triggered")
-    expect(sendMessage.mock.calls[0][0]).toContain("https://analytics.tangent.finance/")
     expect(sendMessage.mock.calls[0][0]).toContain("Peg")
     expect(sendMessage.mock.calls[0][0]).toContain("Oracle sanity")
     expect(sendMessage.mock.calls[0][0]).toContain("[WARNING] USDT")
@@ -269,7 +270,7 @@ describe("MonitoringAlertService", () => {
       getLatestOracleSnapshots: vi.fn().mockResolvedValue([]),
       getLatestGlobalHistory: vi.fn().mockResolvedValue(null),
       getGlobalHistoryAtOrBefore: vi.fn().mockResolvedValue(null),
-      getLatestPositionRiskSnapshotsWithin24h: vi.fn().mockResolvedValue([
+      getLatestActivePositionRiskSnapshots: vi.fn().mockResolvedValue([
         {
           market_id: 1n,
           borrower_address: "0xborrower",
@@ -302,7 +303,7 @@ describe("MonitoringAlertService", () => {
       getLatestOracleSnapshots: vi.fn().mockResolvedValue([]),
       getLatestGlobalHistory: vi.fn().mockResolvedValue(null),
       getGlobalHistoryAtOrBefore: vi.fn().mockResolvedValue(null),
-      getLatestPositionRiskSnapshotsWithin24h: vi.fn().mockResolvedValue([
+      getLatestActivePositionRiskSnapshots: vi.fn().mockResolvedValue([
         {
           market_id: 1n,
           borrower_address: "0x0000000000000000000000000000000000000bad",
@@ -339,7 +340,7 @@ describe("MonitoringAlertService", () => {
       ]),
       getLatestOracleSnapshots: vi.fn().mockResolvedValue([]),
       getLatestGlobalHistory: vi.fn().mockResolvedValue(null),
-      getLatestPositionRiskSnapshotsWithin24h: vi.fn().mockResolvedValue([]),
+      getLatestActivePositionRiskSnapshots: vi.fn().mockResolvedValue([]),
       getGlobalHistoryAtOrBefore: vi.fn().mockResolvedValue(null),
     }
 
@@ -357,7 +358,7 @@ describe("MonitoringAlertService", () => {
       getLatestOracleSnapshots: vi.fn().mockResolvedValue([]),
       getLatestGlobalHistory: vi.fn().mockResolvedValue(null),
       getGlobalHistoryAtOrBefore: vi.fn().mockResolvedValue(null),
-      getLatestPositionRiskSnapshotsWithin24h: vi.fn().mockResolvedValue([
+      getLatestActivePositionRiskSnapshots: vi.fn().mockResolvedValue([
         {
           market_id: 1n,
           borrower_address: "0xborrower",

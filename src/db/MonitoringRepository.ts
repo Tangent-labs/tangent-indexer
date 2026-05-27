@@ -52,9 +52,7 @@ export class MonitoringRepository extends AbstractRepository {
     })
   }
 
-  async getLatestPositionRiskSnapshotsWithin24h() {
-    const since = new Date(Date.now() - 24 * 60 * 60 * 1000)
-
+  async getLatestActivePositionRiskSnapshots() {
     return this.prismaClient.$queryRaw<
       {
         market_id: bigint
@@ -70,12 +68,21 @@ export class MonitoringRepository extends AbstractRepository {
         liquidation_threshold: number | null
       }[]
     >`
-      WITH target_snapshot AS (
-        SELECT snapshot_timestamp
-        FROM global.position_snapshots
-        WHERE snapshot_timestamp >= ${since}
-        ORDER BY snapshot_timestamp ASC
-        LIMIT 1
+      WITH latest_position_snapshots AS (
+        SELECT DISTINCT ON (ps.market_id, LOWER(ps.borrower_address))
+          ps.market_id,
+          ps.borrower_address,
+          ps.cr,
+          ps.distance_pct,
+          ps.liquidation_price,
+          ps.position_value_usd,
+          ps.user_debt,
+          ps.snapshot_timestamp
+        FROM global.position_snapshots ps
+        INNER JOIN global.active_borrowers ab
+          ON ab.market_id = ps.market_id
+          AND LOWER(ab.borrower_address) = LOWER(ps.borrower_address)
+        ORDER BY ps.market_id, LOWER(ps.borrower_address), ps.snapshot_timestamp DESC
       )
       SELECT
         ps.market_id,
@@ -89,10 +96,9 @@ export class MonitoringRepository extends AbstractRepository {
         um.contract_name,
         um.contract_address,
         mc.liquidation_threshold
-      FROM global.position_snapshots ps
+      FROM latest_position_snapshots ps
       INNER JOIN global.usg_markets um ON um.id = ps.market_id
       LEFT JOIN global.market_config mc ON mc.market_id = ps.market_id
-      INNER JOIN target_snapshot ts ON ts.snapshot_timestamp = ps.snapshot_timestamp
       ORDER BY ps.market_id, ps.borrower_address
     `
   }

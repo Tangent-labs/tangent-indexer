@@ -8,7 +8,6 @@ import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 
 type AlertSeverity = "WARNING" | "DANGER" | "CRITICAL"
 const SHORT_ADDRESS_THRESHOLD = 12
-const ANALYTICS_URL = "https://analytics.tangent.finance/"
 
 type PersistedAlertState = {
   severity: AlertSeverity
@@ -45,7 +44,7 @@ export class MonitoringAlertService {
       this.monitoringRepository.getLatestPegSnapshots(),
       this.monitoringRepository.getLatestOracleSnapshots(),
       this.monitoringRepository.getLatestGlobalHistory(),
-      this.monitoringRepository.getLatestPositionRiskSnapshotsWithin24h(),
+      this.monitoringRepository.getLatestActivePositionRiskSnapshots(),
     ])
 
     const alertCandidates: AlertCandidate[] = [
@@ -158,7 +157,7 @@ export class MonitoringAlertService {
   }
 
   private buildCollateralizationAlerts(
-    positionRiskSnapshots: Awaited<ReturnType<MonitoringRepository["getLatestPositionRiskSnapshotsWithin24h"]>>
+    positionRiskSnapshots: Awaited<ReturnType<MonitoringRepository["getLatestActivePositionRiskSnapshots"]>>
   ): AlertCandidate[] {
     const thresholds = monitoringModuleConfig.collateralization.thresholds
 
@@ -195,7 +194,7 @@ export class MonitoringAlertService {
   }
 
   private buildLiquidationDistanceAlerts(
-    positionRiskSnapshots: Awaited<ReturnType<MonitoringRepository["getLatestPositionRiskSnapshotsWithin24h"]>>
+    positionRiskSnapshots: Awaited<ReturnType<MonitoringRepository["getLatestActivePositionRiskSnapshots"]>>
   ): AlertCandidate[] {
     const thresholds = monitoringModuleConfig.liquidation_distance.thresholds
 
@@ -308,7 +307,7 @@ export class MonitoringAlertService {
       grouped.get(candidate.category)!.push(candidate.message)
     }
 
-    const lines = [title, "", `Analytics: ${ANALYTICS_URL}`]
+    const lines = [title, ""]
     for (const category of categoryOrder) {
       const messages = grouped.get(category)
       if (!messages || messages.length === 0) {
@@ -330,22 +329,21 @@ export class MonitoringAlertService {
   private buildResolvedMessage(key: string, previous: PersistedAlertState, currentDisplayName?: string) {
     const [category, firstRef, secondRef] = key.split(":")
     const prefix = `[RESOLVED]`
-    const lastValue = `${previous.lastValue.toFixed(2)}%`
     const severity = previous.severity.toLowerCase()
 
     switch (category) {
       case "PEG":
-        return `${prefix} Peg ${previous.displayName || currentDisplayName || this.shortAddress(firstRef)} back below threshold (last ${severity} ${lastValue})`
+        return `${prefix} Peg ${previous.displayName || currentDisplayName || this.shortAddress(firstRef)} back below threshold (last ${severity} ${previous.lastValue.toFixed(2)}%)`
       case "ORACLE_SANITY":
-        return `${prefix} Oracle sanity ${previous.displayName || currentDisplayName || this.shortAddress(firstRef)} back below threshold (last ${severity} ${lastValue})`
+        return `${prefix} Oracle sanity ${previous.displayName || currentDisplayName || this.shortAddress(firstRef)} back below threshold (last ${severity} ${previous.lastValue.toFixed(2)}%)`
       case "COLLATERALIZATION":
-        return `${prefix} Collateralization ${previous.displayName || currentDisplayName || this.shortAddress(firstRef)} / ${this.shortAddress(secondRef)} back to normal (last ${severity} ${lastValue})`
+        return `${prefix} Collateralization ${previous.displayName || currentDisplayName || this.shortAddress(firstRef)} / ${this.shortAddress(secondRef)} back to normal (last ${severity} CR ${previous.lastValue.toFixed(3)})`
       case "LIQUIDATION_DISTANCE":
-        return `${prefix} Liquidation distance ${previous.displayName || currentDisplayName || this.shortAddress(firstRef)} / ${this.shortAddress(secondRef)} back to normal (last ${severity} ${lastValue})`
+        return `${prefix} Liquidation distance ${previous.displayName || currentDisplayName || this.shortAddress(firstRef)} / ${this.shortAddress(secondRef)} back to normal (last ${severity} ${previous.lastValue.toFixed(2)}%)`
       case "TVL_VARIATION":
-        return `${prefix} TVL ${firstRef} back below threshold (last ${severity} ${lastValue})`
+        return `${prefix} TVL ${firstRef} back below threshold (last ${severity} ${previous.lastValue.toFixed(2)}%)`
       default:
-        return `${prefix} ${key} back below threshold (last ${severity} ${lastValue})`
+        return `${prefix} ${key} back below threshold (last ${severity} ${previous.lastValue.toFixed(2)}%)`
     }
   }
 

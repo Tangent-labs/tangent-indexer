@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { JsonRpcProvider } from "ethers"
-import { OnChainVoteService } from "../../../services/OnChainVoteService.js"
+import { NoneAlertError, OnChainVoteService } from "../../../services/OnChainVoteService.js"
 import { BoostRepository } from "../../../db/Points/BoostRepository.js"
 import { UserPointsVoteRepository } from "../../../db/Points/UserPointsVoteRepository.js"
 import { dateTimestamp, epochProposal, onChainSnapshot, USER_A, USER_B, votesFromDbPerTask } from "./mock.js"
@@ -132,6 +132,20 @@ describe("OnchainVoteService", () => {
     expect(() => onChainVoteService.verifyEpochFullyFinished(currentDate, lastEpochDate)).toThrow(
       "Votes point indexer can run only one time per week : 96 hours left"
     )
+  })
+
+  it("does not persist vote points when the current epoch was already processed", async () => {
+    getGaugeVotersSpy.mockResolvedValue(votesFromDbPerTask)
+    vi.spyOn(onChainVoteService, "getOnchainData").mockResolvedValue(onChainSnapshot)
+
+    const currentDate = new Date(Number(onChainSnapshot.timestamp) * 1000)
+    const lastEpochDate = new Date(currentDate)
+    lastEpochDate.setDate(lastEpochDate.getDate() - 3)
+
+    await expect(onChainVoteService.computeUserVoteTasks(provider, lastEpochDate)).rejects.toBeInstanceOf(NoneAlertError)
+
+    expect(storeEpochProposalSpy).not.toHaveBeenCalled()
+    expect(createUserVoteTasksSpy).not.toHaveBeenCalled()
   })
 
   it("verifyEpochFullyFinished should success when the last epoch is passed more than 1 week", async () => {

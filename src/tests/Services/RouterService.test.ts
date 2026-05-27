@@ -44,7 +44,7 @@ describe("RouterService Enso route validation", () => {
   it("requests an Enso route from the zapping proxy context", async () => {
     const service = new RouterService([provider as any], "0xCurve", "0xPendle", ensoRouterService as any)
 
-    const result = await (service as any)._getEnsoRoute(account, receiver)
+    const result = await (service as any)._getEnsoRoute(account, receiver, 0n)
 
     expect(result.routerType).toBe("enso")
     expect(ensoRouterService.getRoute).toHaveBeenCalledWith({
@@ -53,7 +53,7 @@ describe("RouterService Enso route validation", () => {
       tokenOut: "0x0000000000000000000000000000000000000006",
       fromAddress: zappingProxy,
       receiver,
-      minAmountOut: 0n,
+      slippageBps: 0n,
     })
     expect(provider.estimateGas).not.toHaveBeenCalled()
   })
