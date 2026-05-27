@@ -149,6 +149,7 @@ export class UserMarketService {
 
       if (!mapMarketIdPerAddresses.get(contractAddress)) {
         console.warn(`[UserMarketService] unknown market address: ${contractAddress} (event: ${eventType ?? log.topics[0]})`)
+        return
       }
 
       switch (eventType) {

@@ -96,6 +96,31 @@ describe("GlobalDataService – buildPegSanitySnapshots", () => {
     expect(rows[0].deviation_pct).toBeCloseTo(0.7407, 2)
   })
 
+  it("should skip volatile peg comparison when quote timestamps are not aligned", () => {
+    const tokens = [token({ id: 2n, address: "0xSTETH", peg_type: "ETH", ref_address: "0xWETH", symbol: "stETH" })]
+    const prices: Prices = {
+      "0xsteth": { ...priceEntry(2425), timestamp: 1_000 },
+      "0xweth": { ...priceEntry(2500), timestamp: 1_301 },
+    }
+
+    const rows = build(tokens, prices)
+
+    expect(rows).toHaveLength(0)
+  })
+
+  it("should compare volatile peg quotes within the accepted timestamp skew", () => {
+    const tokens = [token({ id: 2n, address: "0xSTETH", peg_type: "ETH", ref_address: "0xWETH", symbol: "stETH" })]
+    const prices: Prices = {
+      "0xsteth": { ...priceEntry(2495), timestamp: 1_000 },
+      "0xweth": { ...priceEntry(2500), timestamp: 1_300 },
+    }
+
+    const rows = build(tokens, prices)
+
+    expect(rows).toHaveLength(1)
+    expect(rows[0].deviation_pct).toBeCloseTo(0.2, 5)
+  })
+
   it("should skip token when price is missing", () => {
     const tokens = [token({ id: 1n, address: "0xMISSING", peg_type: "USD" })]
     const rows = build(tokens, {})

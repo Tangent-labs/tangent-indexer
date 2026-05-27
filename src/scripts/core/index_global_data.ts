@@ -20,6 +20,9 @@ import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
 import { TransactionPrisma } from "../../type/prisma.js"
 import { toSafeErrorMessage } from "../../utils/errors.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
+import { indexerConfig } from "src/config/indexer_config.js"
+import { MonitoringRepository } from "src/db/MonitoringRepository.js"
+import { MonitoringAlertService } from "src/services/MonitoringAlertService.js"
 
 dotenv.config()
 
@@ -126,6 +129,11 @@ function setUpIndexerGlobalData() {
   const totalSupplyRepo = new TotalSupplyRepository(prismaClient)
   const savingAccountService = new SavingAccountServices(savingAccountRepository, provider)
   const indexerExecutionLogService = IndexerExecutionLogService.fromClient(prismaClient)
+  const monitoringAlertService = new MonitoringAlertService(
+    new MonitoringRepository(prismaClient),
+    telegramNotifierService,
+    `${indexerConfig.sharedDataDir}/monitoring-alert-state.json`
+  )
   return {
     prismaClient,
     provider,
@@ -135,6 +143,7 @@ function setUpIndexerGlobalData() {
     globalDataRepository,
     telegramNotifierService,
     indexerExecutionLogService,
+    monitoringAlertService,
     setTransaction,
   }
 }

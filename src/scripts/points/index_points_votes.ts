@@ -11,7 +11,7 @@ import { setUpIndexer } from "../../config/indexer_setup.js"
 
 import { BlockService } from "../../services/BlockService.js"
 import { SnapShotVoteService } from "../../services/SnapShotVoteService.js"
-import { OnChainVoteService } from "../../services/OnChainVoteService.js"
+import { NoneAlertError, OnChainVoteService } from "../../services/OnChainVoteService.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
 import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
@@ -36,19 +36,26 @@ async function main() {
       const blockInfo = await blockService.getLastEpochDateAndBestProvider(providers)
 
       const { bestProvider, lastEpochDate } = blockInfo
-      await prismaClient.$transaction(
-        async (dbTransaction) => {
-          setTransaction(dbTransaction as TransactionPrisma)
-          // Retrieve the last block
-          const now = await onChainVoteService.computeUserVoteTasks(bestProvider)
-          const newEpochDate = onChainVoteService.verifyEpochFullyFinished(now, lastEpochDate)
-          await snapShotVoteService.computeUserVoteTasks(newEpochDate)
-          await blockRepository.storeVotesPointsBlock(now, newEpochDate)
-        },
-        {
-          timeout: 10_000_000,
+      try {
+        await prismaClient.$transaction(
+          async (dbTransaction) => {
+            setTransaction(dbTransaction as TransactionPrisma)
+            const { now, newEpochDate } = await onChainVoteService.computeUserVoteTasks(bestProvider, lastEpochDate)
+            await snapShotVoteService.computeUserVoteTasks(newEpochDate)
+            await blockRepository.storeVotesPointsBlock(now, newEpochDate)
+          },
+          {
+            timeout: 10_000_000,
+          }
+        )
+      } catch (error) {
+        if (error instanceof NoneAlertError) {
+          console.info(error.message)
+          return
         }
-      )
+
+        throw error
+      }
     })
   } catch (e: any) {
     await telegramNotifierService.sendError(`Error on POINTS VOTES :  \`\`\` ${e.toString()} \`\`\``)

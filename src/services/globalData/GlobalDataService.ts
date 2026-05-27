@@ -59,6 +59,8 @@ const rewardTokens = [
   { symbol: "BOLD", address: COMMON_ERC20S.BOLD },
 ]
 
+const MAX_VOLATILE_PEG_PRICE_TIMESTAMP_SKEW_SECONDS = 5 * 60
+
 type Markets = {
   contract_type: number
   id: bigint
@@ -293,6 +295,7 @@ export class GlobalDataService {
           if (token.ref_address == null) continue
           const refInfo = prices[token.ref_address.toLowerCase()]
           if (refInfo == null) continue
+          if (Math.abs(priceInfo.timestamp - refInfo.timestamp) > MAX_VOLATILE_PEG_PRICE_TIMESTAMP_SKEW_SECONDS) continue
           refPrice = refInfo.price
           break
         }

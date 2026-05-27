@@ -27,12 +27,12 @@ import { getSavingAccountLogs } from "../../eventFectcher/savingAccountEventFetc
 import { indexerConfig } from "../../config/indexer_config.js"
 import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
 import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
-import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
 import { PredepositCampaignService } from "../../services/PredepositCampaignService.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
-import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
 import { fetchBlockTimestamps } from "../../utils/getLastBlock.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
+import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
+import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
 
 dotenv.config()
 
@@ -74,6 +74,7 @@ async function main() {
           async (dbTransaction) => {
             // Set the database transaction to the repositories
             setTransaction(dbTransaction as TransactionPrisma)
+
             // Detect new markets
             await marketCreationService.runDetection(bestProvider, startBlock, endBlock)
 

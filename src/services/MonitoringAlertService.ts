@@ -8,13 +8,13 @@ import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 
 type AlertSeverity = "WARNING" | "DANGER" | "CRITICAL"
 const SHORT_ADDRESS_THRESHOLD = 12
-const ANALYTICS_URL = "https://analytics.tangent.finance/"
 
 type PersistedAlertState = {
   severity: AlertSeverity
   status: "OPEN"
   lastValue: number
   updatedAt: string
+  displayName?: string
 }
 
 type AlertStateFile = Record<string, PersistedAlertState>
@@ -25,6 +25,7 @@ type AlertCandidate = {
   severity: AlertSeverity
   message: string
   value: number
+  displayName?: string
 }
 
 export class MonitoringAlertService {
@@ -43,7 +44,7 @@ export class MonitoringAlertService {
       this.monitoringRepository.getLatestPegSnapshots(),
       this.monitoringRepository.getLatestOracleSnapshots(),
       this.monitoringRepository.getLatestGlobalHistory(),
-      this.monitoringRepository.getLatestPositionRiskSnapshotsWithin24h(),
+      this.monitoringRepository.getLatestActivePositionRiskSnapshots(),
     ])
 
     const alertCandidates: AlertCandidate[] = [
@@ -53,8 +54,16 @@ export class MonitoringAlertService {
       ...this.buildLiquidationDistanceAlerts(positionRiskSnapshots),
       ...(latestGlobalHistory ? await this.buildTvlAlerts(latestGlobalHistory, referenceDate) : []),
     ]
+    const displayNames = new Map<string, string>([
+      ...pegSnapshots.map((snapshot) => [`PEG:${snapshot.token.address.toLowerCase()}`, snapshot.token.symbol] as const),
+      ...oracleSnapshots.map((snapshot) => [`ORACLE_SANITY:${snapshot.market.contract_address.toLowerCase()}`, snapshot.market.contract_name] as const),
+      ...positionRiskSnapshots.flatMap((snapshot) => [
+        [`COLLATERALIZATION:${snapshot.contract_address.toLowerCase()}:${snapshot.borrower_address.toLowerCase()}`, snapshot.contract_name] as const,
+        [`LIQUIDATION_DISTANCE:${snapshot.contract_address.toLowerCase()}:${snapshot.borrower_address.toLowerCase()}`, snapshot.contract_name] as const,
+      ]),
+    ])
 
-    await this.flushAlerts(alertCandidates, referenceDate)
+    await this.flushAlerts(alertCandidates, referenceDate, displayNames)
   }
 
   private buildPegAlerts(pegSnapshots: Awaited<ReturnType<MonitoringRepository["getLatestPegSnapshots"]>>): AlertCandidate[] {
@@ -72,6 +81,7 @@ export class MonitoringAlertService {
           category: "PEG",
           severity,
           value: snapshot.deviation_pct,
+          displayName: snapshot.token.symbol,
           message: `[${severity}] ${snapshot.token.symbol}: deviation ${snapshot.deviation_pct.toFixed(2)}% vs ${snapshot.token.peg_type}`,
         },
       ]
@@ -93,6 +103,7 @@ export class MonitoringAlertService {
           category: "ORACLE_SANITY",
           severity,
           value: snapshot.deviation_pct,
+          displayName: snapshot.market.contract_name,
           message:
             `[${severity}] ${snapshot.market.contract_name}: ` +
             `${snapshot.deviation_pct.toFixed(2)}% ` +
@@ -146,7 +157,7 @@ export class MonitoringAlertService {
   }
 
   private buildCollateralizationAlerts(
-    positionRiskSnapshots: Awaited<ReturnType<MonitoringRepository["getLatestPositionRiskSnapshotsWithin24h"]>>
+    positionRiskSnapshots: Awaited<ReturnType<MonitoringRepository["getLatestActivePositionRiskSnapshots"]>>
   ): AlertCandidate[] {
     const thresholds = monitoringModuleConfig.collateralization.thresholds
 
@@ -173,6 +184,7 @@ export class MonitoringAlertService {
           category: "COLLATERALIZATION",
           severity,
           value: snapshot.cr,
+          displayName: snapshot.contract_name,
           message:
             `[${severity}] ${snapshot.contract_name} / ${this.shortAddress(snapshot.borrower_address)}: ` +
             `CR ${snapshot.cr.toFixed(3)} (min ${minCollateralizationRatio.toFixed(3)})`,
@@ -182,7 +194,7 @@ export class MonitoringAlertService {
   }
 
   private buildLiquidationDistanceAlerts(
-    positionRiskSnapshots: Awaited<ReturnType<MonitoringRepository["getLatestPositionRiskSnapshotsWithin24h"]>>
+    positionRiskSnapshots: Awaited<ReturnType<MonitoringRepository["getLatestActivePositionRiskSnapshots"]>>
   ): AlertCandidate[] {
     const thresholds = monitoringModuleConfig.liquidation_distance.thresholds
 
@@ -203,6 +215,7 @@ export class MonitoringAlertService {
           category: "LIQUIDATION_DISTANCE",
           severity,
           value: snapshot.distance_pct,
+          displayName: snapshot.contract_name,
           message:
             `[${severity}] ${snapshot.contract_name} / ${this.shortAddress(snapshot.borrower_address)}: ` +
             `${snapshot.distance_pct.toFixed(2)}% to liq price $${snapshot.liquidation_price.toFixed(4)}`,
@@ -243,7 +256,7 @@ export class MonitoringAlertService {
     return null
   }
 
-  private async flushAlerts(alertCandidates: AlertCandidate[], referenceDate: Date) {
+  private async flushAlerts(alertCandidates: AlertCandidate[], referenceDate: Date, displayNames = new Map<string, string>()) {
     const previousState = await this.readState()
     const nextState: AlertStateFile = {}
     const triggeredCandidates: AlertCandidate[] = []
@@ -255,6 +268,7 @@ export class MonitoringAlertService {
         status: "OPEN",
         lastValue: candidate.value,
         updatedAt: referenceDate.toISOString(),
+        displayName: candidate.displayName,
       }
 
       const previous = previousState[candidate.key]
@@ -268,7 +282,7 @@ export class MonitoringAlertService {
         continue
       }
 
-      resolvedMessages.push(this.buildResolvedMessage(key, previous))
+      resolvedMessages.push(this.buildResolvedMessage(key, previous, displayNames.get(key)))
     }
 
     if (triggeredCandidates.length > 0) {
@@ -293,7 +307,7 @@ export class MonitoringAlertService {
       grouped.get(candidate.category)!.push(candidate.message)
     }
 
-    const lines = [title, "", `Analytics: ${ANALYTICS_URL}`]
+    const lines = [title, ""]
     for (const category of categoryOrder) {
       const messages = grouped.get(category)
       if (!messages || messages.length === 0) {
@@ -312,25 +326,24 @@ export class MonitoringAlertService {
     return [title, "", ...messages.map((message) => `- ${message}`)].join("\n")
   }
 
-  private buildResolvedMessage(key: string, previous: PersistedAlertState) {
+  private buildResolvedMessage(key: string, previous: PersistedAlertState, currentDisplayName?: string) {
     const [category, firstRef, secondRef] = key.split(":")
     const prefix = `[RESOLVED]`
-    const lastValue = `${previous.lastValue.toFixed(2)}%`
     const severity = previous.severity.toLowerCase()
 
     switch (category) {
       case "PEG":
-        return `${prefix} Peg ${this.shortAddress(firstRef)} back below threshold (last ${severity} ${lastValue})`
+        return `${prefix} Peg ${previous.displayName || currentDisplayName || this.shortAddress(firstRef)} back below threshold (last ${severity} ${previous.lastValue.toFixed(2)}%)`
       case "ORACLE_SANITY":
-        return `${prefix} Oracle sanity ${this.shortAddress(firstRef)} back below threshold (last ${severity} ${lastValue})`
+        return `${prefix} Oracle sanity ${previous.displayName || currentDisplayName || this.shortAddress(firstRef)} back below threshold (last ${severity} ${previous.lastValue.toFixed(2)}%)`
       case "COLLATERALIZATION":
-        return `${prefix} Collateralization ${this.shortAddress(firstRef)} / ${this.shortAddress(secondRef)} back to normal (last ${severity} ${lastValue})`
+        return `${prefix} Collateralization ${previous.displayName || currentDisplayName || this.shortAddress(firstRef)} / ${this.shortAddress(secondRef)} back to normal (last ${severity} CR ${previous.lastValue.toFixed(3)})`
       case "LIQUIDATION_DISTANCE":
-        return `${prefix} Liquidation distance ${this.shortAddress(firstRef)} / ${this.shortAddress(secondRef)} back to normal (last ${severity} ${lastValue})`
+        return `${prefix} Liquidation distance ${previous.displayName || currentDisplayName || this.shortAddress(firstRef)} / ${this.shortAddress(secondRef)} back to normal (last ${severity} ${previous.lastValue.toFixed(2)}%)`
       case "TVL_VARIATION":
-        return `${prefix} TVL ${firstRef} back below threshold (last ${severity} ${lastValue})`
+        return `${prefix} TVL ${firstRef} back below threshold (last ${severity} ${previous.lastValue.toFixed(2)}%)`
       default:
-        return `${prefix} ${key} back below threshold (last ${severity} ${lastValue})`
+        return `${prefix} ${key} back below threshold (last ${severity} ${previous.lastValue.toFixed(2)}%)`
     }
   }
 
@@ -406,7 +419,8 @@ export class MonitoringAlertService {
       candidate.status === "OPEN" &&
       typeof candidate.lastValue === "number" &&
       Number.isFinite(candidate.lastValue) &&
-      typeof candidate.updatedAt === "string"
+      typeof candidate.updatedAt === "string" &&
+      (candidate.displayName === undefined || typeof candidate.displayName === "string")
     )
   }
 }

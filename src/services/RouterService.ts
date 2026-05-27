@@ -112,7 +112,7 @@ export class RouterService {
     // let's run it .
     const [customRoute, ensoRoute] = await Promise.all([customRoutePromise, ensoRoutePromise])
 
-    if (ensoRoute) {
+    if (ensoRoute && ensoRoute.amount >= customRoute.amount) {
       return ensoRoute
     }
     return customRoute
