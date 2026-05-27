@@ -16,7 +16,7 @@ import { UserEventsRepository } from "../../db/UserEventsRepository.js"
 import { ActiveBorrowersService } from "../../services/ActiveBorrowersService.js"
 import { BlockService } from "../../services/BlockService.js"
 import { MarketCreationService } from "../../services/events/MarketCreationService.js"
-import { UserMarketService } from "../../services/events/UserMarketService.js"
+import { SortedEvents, UserMarketService } from "../../services/events/UserMarketService.js"
 import { UserPointsService } from "../../services/events/UserPointsService.js"
 import { VotesEventService } from "../../services/events/VotesEventService.js"
 
@@ -28,6 +28,7 @@ import { indexerConfig } from "../../config/indexer_config.js"
 import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
 import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
 import { PredepositCampaignService } from "../../services/PredepositCampaignService.js"
+import { MarketActivityNotificationService } from "../../services/MarketActivityNotificationService.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { fetchBlockTimestamps } from "../../utils/getLastBlock.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
@@ -43,6 +44,7 @@ async function main() {
     prismaClient,
     indexerExecutionLogService,
     telegramNotifierService,
+    marketActivityNotificationService,
     userMarketService,
     userPointsService,
     marketCreationService,
@@ -68,6 +70,8 @@ async function main() {
 
       if (startBlock && endBlock) {
         const currentBlock = await bestProvider.getBlockNumber()
+        let marketActivityEvents: SortedEvents | undefined
+        let mapMarketNamesById = new Map<number, string>()
 
         console.log(`indexing : ${startBlock} <-----------------> ${endBlock} (current: ${currentBlock} rpc#${bestProviderIndex})`)
         await prismaClient.$transaction(
@@ -78,7 +82,8 @@ async function main() {
             // Detect new markets
             await marketCreationService.runDetection(bestProvider, startBlock, endBlock)
 
-            const { marketAddresses, mapMarketIdAddresses } = await marketCreationService.getMarketsAddressesAndMap()
+            const { marketAddresses, mapMarketIdAddresses, mapMarketNamesById: loadedMarketNamesById } = await marketCreationService.getMarketsAddressesAndMap()
+            mapMarketNamesById = loadedMarketNamesById
 
             // Fetch all User market logs
             const logs = await getEthLogs(bestProvider, startBlock, endBlock, marketAddresses, [])
@@ -120,6 +125,7 @@ async function main() {
             const blocks = await fetchBlockTimestamps(uniqueBlockIds, indexerConfig.provider.chainRpc[bestProviderIndex])
 
             const hydratedWithCorrectDates = userMarketService.replaceRightDates(sortedAndParsedEvents, activeBorrowActions, blocks)
+            marketActivityEvents = hydratedWithCorrectDates.sortedParsedEvents
 
             const mergedTransferEvents = transferEvents.concat(debtTransferEvents)
             const transferEventsRightDates = userPointsService.replaceDates<Prisma.transfer_eventsCreateManyInput>(mergedTransferEvents, blocks)
@@ -145,6 +151,14 @@ async function main() {
             timeout: 10_000_000,
           }
         )
+
+        if (marketActivityEvents) {
+          try {
+            await marketActivityNotificationService.sendNotifications(marketActivityEvents, mapMarketNamesById)
+          } catch (error) {
+            console.error("Error sending market activity notifications:", error)
+          }
+        }
       } else {
         console.log("Nothing to index, Current block:", actualBlock)
       }
@@ -201,12 +215,18 @@ async function setUpIndexerBlockServices() {
     botToken: process.env.TELEGRAM_BOT_TOKEN!,
     chatId: process.env.TELEGRAM_CHAT_ID!,
   })
+  const marketActivityTelegramNotifierService = new TelegramNotifierService({
+    botToken: process.env.TELEGRAM_BOT_TOKEN!,
+    chatId: process.env.TELEGRAM_MARKET_ACTIVITY_CHAT_ID || process.env.TELEGRAM_CHAT_ID!,
+  })
+  const marketActivityNotificationService = new MarketActivityNotificationService(marketActivityTelegramNotifierService)
 
   return {
     prismaClient,
     indexerExecutionLogService,
     marketCreationService,
     telegramNotifierService,
+    marketActivityNotificationService,
     userEventsRepository,
     userMarketService,
     userPointsService,
