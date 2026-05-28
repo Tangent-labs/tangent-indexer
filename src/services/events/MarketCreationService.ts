@@ -80,6 +80,8 @@ export class MarketCreationService {
    * Retrieves all the markets in the market table
    * @returns   An object composed of a map  (marketAddress => marketID)
    *          AND
+   *            A map (marketID => marketName)
+   *          AND
    *            The list of all market addresses
    */
   async getMarketsAddressesAndMap() {
@@ -87,15 +89,19 @@ export class MarketCreationService {
     const marketContracts = await this.marketContractsRepository.getContracts()
 
     const mapMarketIdAddresses = new Map<string, number>()
+    const mapMarketNamesById = new Map<number, string>()
 
     marketContracts.forEach((market) => {
-      mapMarketIdAddresses.set(market.contract_address.toLowerCase(), Number(market.id))
+      const marketId = Number(market.id)
+      mapMarketIdAddresses.set(market.contract_address.toLowerCase(), marketId)
+      mapMarketNamesById.set(marketId, market.contract_name)
     })
 
     const marketAddresses = marketContracts.map((market) => market.contract_address as AddressLike)
 
     return {
       mapMarketIdAddresses,
+      mapMarketNamesById,
       marketAddresses,
     }
   }
