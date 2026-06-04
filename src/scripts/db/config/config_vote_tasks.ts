@@ -19,6 +19,12 @@ export const ONCHAIN_TASKS = [
         address: CURVE_GAUGES.USG_frxUSD.toLowerCase(),
         pointRate: 1,
       },
+      {
+        taskDescription: "Vote for USG/sDOLA Curve gauge (on-chain)",
+        name: "USG/sDOLA",
+        address: CURVE_GAUGES.USG_sDOLA.toLowerCase(),
+        pointRate: 1,
+      },
     ],
     votersToExclude: [
       { name: "Convex", address: CURVE_GLOBAL_CONTRACTS.CONVEX_veCRV_VOTER.toLowerCase() },
@@ -59,6 +65,7 @@ export const OFFCHAIN_TASKS = [
     scoringChoices: [
       { taskDescription: "Vote for USG/USDC Curve gauge (snapshot)", name: "USDC+USG", pointRate: 2 },
       { taskDescription: "Vote for USG/frxUSD Curve gauge (snapshot)", name: "frxUSD+USG", pointRate: 2 },
+      { taskDescription: "Vote for USG/sDOLA Curve gauge (snapshot)", name: "sDOLA+USG", pointRate: 2 },
     ],
     excludedVoters: [{ name: "Stake DAO delegation", user_address: "0x52ea58f4FC3CEd48fa18E909226c1f8A0EF887DC".toLowerCase() }],
   },
@@ -69,6 +76,7 @@ export const OFFCHAIN_TASKS = [
     scoringChoices: [
       { taskDescription: "Vote for USG/USDC on Curve Gauge (snapshot)", name: "USDC+USG", pointRate: 20 },
       { taskDescription: "Vote for USG/frxUSD on Curve Gauge (snapshot)", name: "frxUSD+USG", pointRate: 20 },
+      { taskDescription: "Vote for USG/sDOLA on Curve Gauge (snapshot)", name: "sDOLA+USG", pointRate: 20 },
     ],
     excludedVoters: [
       { name: "Votium delegation", user_address: "0xde1E6A7ED0ad3F61D531a8a78E83CcDdbd6E0c49".toLowerCase() },
