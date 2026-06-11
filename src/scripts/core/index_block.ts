@@ -35,6 +35,7 @@ import { fetchBlockTimestamps } from "../../utils/getLastBlock.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
 import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
 import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
+import { MORPHO_MARKETS } from "@tangent/defi-resources"
 
 dotenv.config()
 
@@ -108,7 +109,8 @@ async function main() {
             // in tracked_erc20 are watched (see add-new-lp-tasks-morpho.ts): an unprovisioned market
             // would violate the transfer_events FK and deterministically fail the indexing transaction
             const trackedTokens = new Set(transferToWatch.map((address) => address.toLowerCase()))
-            const morphoMarkets = Object.values(addresses.morpho?.markets ?? {})
+            const { singleton: morphoSingleton, ...morphoMarketConfigs } = MORPHO_MARKETS
+            const morphoMarkets = Object.values(morphoMarketConfigs)
             const morphoMarketsToWatch = morphoMarkets.filter((market) => trackedTokens.has(morphoMarketSyntheticTokenAddress(market.id)))
             if (morphoMarketsToWatch.length < morphoMarkets.length) {
               console.warn(
@@ -117,7 +119,7 @@ async function main() {
             }
             const morphoMarketIds = morphoMarketsToWatch.filter((market) => endBlock >= market.creationBlock).map((market) => market.id)
             const morphoLogs = morphoMarketIds.length
-              ? await fetchMorphoCollateralLogs(bestProvider, startBlock, endBlock, addresses.morpho!.singleton, morphoMarketIds)
+              ? await fetchMorphoCollateralLogs(bestProvider, startBlock, endBlock, morphoSingleton, morphoMarketIds)
               : []
 
             const savingAccountsBlockIds = savingAccountsLogs.map((log) => log.block_id)

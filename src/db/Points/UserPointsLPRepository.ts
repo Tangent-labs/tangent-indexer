@@ -108,30 +108,6 @@ export class UserPointsLPRepository extends AbstractRepository {
     })
   }
 
-  /**
-   * Excludes addresses from LP points AND closes their already-open lp_user_tasks segments.
-   * The exclusion list is only consulted when processing new transfer events; the points
-   * computation never re-checks it, so an address excluded after it already holds a tracked
-   * token would keep earning on its open segment forever without the close.
-   */
-  async excludeAddressesFromLpPoints(addresses: string[], closedAt: Date) {
-    const users = addresses.map((address) => address.toLowerCase())
-    const existing = await this.prismaClient.lp_points_users_excluded.findMany({
-      where: { user: { in: users } },
-      select: { user: true },
-    })
-    const existingSet = new Set(existing.map((row) => row.user.toLowerCase()))
-
-    await this.prismaClient.lp_points_users_excluded.createMany({
-      data: users.filter((user) => !existingSet.has(user)).map((user) => ({ user })),
-    })
-
-    return await this.prismaClient.lp_user_tasks.updateMany({
-      where: { user_address: { in: users, mode: "insensitive" }, closed_date: null },
-      data: { closed_date: closedAt },
-    })
-  }
-
   getUniqueAddressesFromTransfers = async (startBlock: number, endBlock: number) => {
     const transferEvents = await this.prismaClient.transfer_events.findMany({
       where: {

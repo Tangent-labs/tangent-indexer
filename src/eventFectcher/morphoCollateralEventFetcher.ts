@@ -43,23 +43,6 @@ export const fetchMorphoCollateralLogs = async (
   )
 }
 
-/** Chunked variant for large historical ranges (backfills, verifications): providers cap eth_getLogs ranges. */
-export const fetchMorphoCollateralLogsChunked = async (
-  provider: JsonRpcProvider,
-  startingBlock: number,
-  endingBlock: number,
-  morphoSingleton: string,
-  marketIds: string[],
-  chunkSize = 10_000
-): Promise<Log[]> => {
-  const logs: Log[] = []
-  for (let start = startingBlock; start <= endingBlock; start += chunkSize) {
-    const end = Math.min(start + chunkSize - 1, endingBlock)
-    logs.push(...(await fetchMorphoCollateralLogs(provider, start, end, morphoSingleton, marketIds)))
-  }
-  return logs
-}
-
 /**
  * Recomposes synthetic transfer events from Morpho collateral logs: a supply is a mint,
  * a withdraw or a seizure is a burn. Single source of truth for the recomposition,
