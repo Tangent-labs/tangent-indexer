@@ -83,7 +83,7 @@ async function addMorphoCollateralLPTask(provider: JsonRpcProvider, marketKey: s
           protocol: "Morpho",
           token_address: syntheticToken,
           point_rate: PTS_PER_DAY_TO_SECONDS_RATE[ptsPerDay],
-          description: `Supply sUSG as collateral on Morpho ${marketKey}`,
+          description: "Supply sUSG as collateral on Morpho",
           url: `https://app.morpho.org/ethereum/market/${market.id}`,
           price_source_id: priceSource.id,
           start_date: startDate,
