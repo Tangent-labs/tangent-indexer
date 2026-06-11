@@ -138,5 +138,16 @@
   "pegKeepers": {
     "USG-USDC": "0xf89615f75c8161dc185c03020240905f6b66bad9",
     "USG-frxUSD": "0x8a7f16508d1e8b48bdf36023f378cc04d9506d4e"
+  },
+  "morpho": {
+    "singleton": "0xbbbbbbbbbb9cc5e90e3b3af64bdaf62c37eeffcb",
+    "markets": {
+      "sUSG-frxUSD": {
+        "id": "0x2a2f62fe3d123077da35f281fbe69ebc296759b34873d627cf44c94f05fecf7e",
+        "collateralToken": "0xf17d6f98a5c6eaa99d149079984119e0a4ef6900",
+        "loanToken": "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+        "creationBlock": 25277170
+      }
+    }
   }
 }

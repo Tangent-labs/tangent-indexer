@@ -280,6 +280,17 @@ export type AddressesJson = {
   pegKeepers: { [poolName: string]: string }
   wStables: { [poolName: string]: string }
   markets: { marketAddress: string; marketName: string; collatAddress: string; marketType: string; collatDecimals?: number; logoURI?: string }[]
+  morpho?: {
+    singleton: string
+    markets: {
+      [marketKey: string]: {
+        id: string
+        collateralToken: string
+        loanToken: string
+        creationBlock: number
+      }
+    }
+  }
 }
 export type NotificationBotErrorLevel = PrismaErrorLevel
 

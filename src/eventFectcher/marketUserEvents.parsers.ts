@@ -1,7 +1,7 @@
 import { Log, AbiCoder, ZeroAddress } from "ethers"
 import { Prisma } from "@prisma/client"
 
-function userAddress(topic: string): string {
+export function userAddress(topic: string): string {
   return AbiCoder.defaultAbiCoder().decode(["address"], topic)[0].toLowerCase()
 }
 
