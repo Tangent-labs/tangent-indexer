@@ -4,10 +4,12 @@ import { AddressesJson } from "../../../type/data.js"
 
 export const PTS_PER_DAY_TO_SECONDS_RATE = {
   1: 0.00001157,
+  5: 0.00005787,
   10: 0.00011574,
   15: 0.00017361,
   30: 0.00034722,
   45: 0.00052083,
+  105: 0.00121528,
   125: 0.00144675,
 }
 export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_sourceCreateManyInput[], now: Date) {
