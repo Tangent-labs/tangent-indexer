@@ -12,6 +12,7 @@ import {
   parseWithdrawConvexEvent,
 } from "../../eventFectcher/marketUserEvents.parsers.js"
 import { TRANSFER_TOPICS } from "../../eventFectcher/erc20TransferEventFetcher.js"
+import { parseMorphoCollateralLogs } from "../../eventFectcher/morphoCollateralEventFetcher.js"
 import { DebtSharesCheckpointStruct } from "./UserMarketService.js"
 import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js"
 
@@ -207,6 +208,12 @@ export class UserPointsService {
     })
 
     return { transferEvents, pointsEventsBlockIds: Array.from(uniqueBlockId) }
+  }
+
+  // Recompose synthetic transfer events from Morpho collateral events: a supply is a mint,
+  // a withdraw or a seizure is a burn (same trick as Convex staking and the debt tasks)
+  sortMorphoCollateralLogs = (logs: Log[]) => {
+    return parseMorphoCollateralLogs(logs)
   }
 
   parseAddLiquidity(logs: Log[], usgLpKeys: Prisma.usg_lp_keysCreateManyInput[]) {

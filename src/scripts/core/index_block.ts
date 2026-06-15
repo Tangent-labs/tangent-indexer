@@ -22,6 +22,7 @@ import { VotesEventService } from "../../services/events/VotesEventService.js"
 
 import { getEthLogs } from "../../eventFectcher/_baseFetcher.js"
 import { fetchTransferLogs } from "../../eventFectcher/erc20TransferEventFetcher.js"
+import { fetchMorphoCollateralLogs, morphoMarketSyntheticTokenAddress } from "../../eventFectcher/morphoCollateralEventFetcher.js"
 import { getSavingAccountLogs } from "../../eventFectcher/savingAccountEventFetcher.js"
 
 import { indexerConfig } from "../../config/indexer_config.js"
@@ -34,6 +35,7 @@ import { fetchBlockTimestamps } from "../../utils/getLastBlock.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
 import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
 import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
+import { MORPHO_MARKETS } from "@tangent/defi-resources"
 
 dotenv.config()
 
@@ -102,6 +104,24 @@ async function main() {
               addresses.tokens.sUSG,
               // addresses.tokens.sTAN
             ])
+
+            // Fetch Morpho collateral events. Only markets whose synthetic token is already registered
+            // in tracked_erc20 are watched (see add-new-lp-tasks-morpho.ts): an unprovisioned market
+            // would violate the transfer_events FK and deterministically fail the indexing transaction
+            const trackedTokens = new Set(transferToWatch.map((address) => address.toLowerCase()))
+            const { singleton: morphoSingleton, ...morphoMarketConfigs } = MORPHO_MARKETS
+            const morphoMarkets = Object.values(morphoMarketConfigs)
+            const morphoMarketsToWatch = morphoMarkets.filter((market) => trackedTokens.has(morphoMarketSyntheticTokenAddress(market.id)))
+            if (morphoMarketsToWatch.length < morphoMarkets.length) {
+              console.warn(
+                `Morpho: ${morphoMarkets.length - morphoMarketsToWatch.length} configured market(s) not in tracked_erc20, skipped (run db:add-morpho-lp-task)`
+              )
+            }
+            const morphoMarketIds = morphoMarketsToWatch.filter((market) => endBlock >= market.creationBlock).map((market) => market.id)
+            const morphoLogs = morphoMarketIds.length
+              ? await fetchMorphoCollateralLogs(bestProvider, startBlock, endBlock, morphoSingleton, morphoMarketIds)
+              : []
+
             const savingAccountsBlockIds = savingAccountsLogs.map((log) => log.block_id)
             // Parse events with their proper topics and group all user events to update active borrowers
             const { activeBorrowActions, sortedAndParsedEvents, blockIds, users, debtSharesCheckpoints } = userMarketService.sortUserMarketLogs(
@@ -113,12 +133,22 @@ async function main() {
 
             const { transferEvents, pointsEventsBlockIds } = userPointsService.sortPointsActionsLogs(transferLogs)
 
+            // Recompose transfer events for Morpho collateral tasks
+            const { transferEvents: morphoTransferEvents, morphoEventsBlockIds } = userPointsService.sortMorphoCollateralLogs(morphoLogs)
+
             const usgLps = await predepositService.getUsgLpKeys()
             const { addLiquidityEvents, addLiquEventsBlockIds } = userPointsService.parseAddLiquidity(transferLogs, usgLps)
 
             // Create a set with all block ID that we need to get the timestamp of
             const uniqueBlockIds = [
-              ...new Set([...blockIds, ...pointsEventsBlockIds, ...savingAccountsBlockIds, ...addLiquEventsBlockIds, "0x" + endBlock.toString(16)]),
+              ...new Set([
+                ...blockIds,
+                ...pointsEventsBlockIds,
+                ...morphoEventsBlockIds,
+                ...savingAccountsBlockIds,
+                ...addLiquEventsBlockIds,
+                "0x" + endBlock.toString(16),
+              ]),
             ]
 
             // Find block timestamps of the unique blockIDs in ONE RPC call
@@ -127,7 +157,7 @@ async function main() {
             const hydratedWithCorrectDates = userMarketService.replaceRightDates(sortedAndParsedEvents, activeBorrowActions, blocks)
             marketActivityEvents = hydratedWithCorrectDates.sortedParsedEvents
 
-            const mergedTransferEvents = transferEvents.concat(debtTransferEvents)
+            const mergedTransferEvents = transferEvents.concat(debtTransferEvents).concat(morphoTransferEvents)
             const transferEventsRightDates = userPointsService.replaceDates<Prisma.transfer_eventsCreateManyInput>(mergedTransferEvents, blocks)
 
             const addLiquidityEventsRightDates = userPointsService.replaceDates<Prisma.add_liquidity_eventsCreateManyInput>(addLiquidityEvents, blocks)
