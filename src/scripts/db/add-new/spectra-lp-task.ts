@@ -8,27 +8,27 @@ async function main() {
   const provider = new JsonRpcProvider(process.env.CHAIN_RPCS!.split(",")[0])
   const now = new Date((await provider.getBlock("latest"))!.timestamp * 1000)
 
-  const pt = "0x0c70be04fdb5f4df8c5ff3573624cb76676cfdc4".toLowerCase()
-  const lp = "0x16fda3e759c5ff8d34198abf453a7f8f043515d5".toLowerCase()
-  const yt = "0xfb4e59541e308ee1E61f608892245e5da607FA14".toLowerCase()
+  const pt = "0x316f61a5b02118b37230814e008b547de671e505".toLowerCase()
+  const lp = "0x57a769a84509f5bfc872f8a475d2d3cf66e5ee6b".toLowerCase()
+  const yt = "0x807F99d44b25edBBB163047119a2E6a1A3b0af3A".toLowerCase()
 
   await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const priceSources = await prisma.price_source.createManyAndReturn({
       data: [
         {
-          name: "PT sUSG 20260609",
+          name: "PT sUSG 20260625",
           type: "spectraApi",
           reference: pt,
           address: pt,
         },
         {
-          name: "LP sUSG 20260609",
+          name: "LP sUSG 20260625",
           type: "spectraApi",
           reference: pt,
           address: lp,
         },
         {
-          name: "YT sUSG 20260609",
+          name: "YT sUSG 20260625",
           type: "spectraApi",
           reference: pt,
           address: yt,
@@ -38,7 +38,7 @@ async function main() {
 
     const lpBal: Prisma.lp_taskCreateManyInput[] = [
       {
-        name: "PT sUSG 2026/06/09",
+        name: "PT sUSG 2026/06/25",
         action_type: "PT",
         protocol: "Spectra",
         token_address: pt,
@@ -50,7 +50,7 @@ async function main() {
         can_zap: false,
       },
       {
-        name: "LP sUSG 2026/06/09",
+        name: "LP sUSG 2026/06/25",
         action_type: "LP",
         protocol: "Spectra",
         token_address: lp,
@@ -62,7 +62,7 @@ async function main() {
         can_zap: false,
       },
       {
-        name: "YT sUSG 2026/06/09",
+        name: "YT sUSG 2026/06/25",
         action_type: "YT",
         protocol: "Spectra",
         token_address: yt,
