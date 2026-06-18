@@ -11,6 +11,7 @@ import {
   LiquidationUserFullInfo,
   LiquidationUserInInfo,
   PendlePTToSYQuote,
+  RouteCandidate,
   RouterType,
   SerializedLiquidationUserFullInfo,
 } from "../type/data.js"
@@ -426,7 +427,7 @@ export class LiquidationProcessService {
     let routerAddressForCall = routerAddress
     let data: string
     if (routerType === "enso") {
-      const ensoCall = await this.routerService.buildEnsoRouterCallData(normalizedAccount, minAmount, signerAddress)
+      const ensoCall = await this.routerService.buildEnsoRouterCallData(normalizedAccount, minAmount, signer)
       data = ensoCall.routerCall
       routerAddressForCall = ensoCall.routerAddress
     } else {
@@ -496,6 +497,8 @@ export class LiquidationProcessService {
       enhancedError.name = parsedError.errorName || "GasEstimationError"
       ;(enhancedError as any).code = parsedError.code
       ;(enhancedError as any).data = parsedError.rawData
+      // Detects if gas estimation failed
+      ;(enhancedError as any).isGasEstimationError = true
       throw enhancedError
     }
   }
@@ -509,15 +512,60 @@ export class LiquidationProcessService {
     const providerIndex = rpcIndex ?? this.context.currentRpcIndex
     const provider = this.context.providers[providerIndex]
 
-    // Get expected output from the best route using RouterService
+    // Get all viable routing candidates (custom Curve/Pendle + Enso), ordered by quote (highest first).
+    const candidates = await this.routerService.getBestRoute(account, providerIndex, signer, slippageBps)
 
-    const signerAddress = await signer.getAddress()
-    const { route, amount, priceImpact, routerType, routerAddress, pendleData } = await this.routerService.getBestRoute(
-      account,
-      providerIndex,
-      signerAddress,
-      slippageBps
+    if (!candidates.length) {
+      throw new Error(`No route found for collateral: ${account.collatToken}`)
+    }
+
+    // Try candidates best-first. If a candidate's gas estimation reverts (e.g. an Enso
+    // route that quotes well but cannot execute), fall back to the next candidate within
+    // the same attempt instead of failing the whole job and retrying the same route.
+    let lastGasEstimationError: Error | undefined
+    for (const candidate of candidates) {
+      try {
+        return await this.estimateCandidate(candidate, account, signer, provider, slippageBps, providerIndex)
+      } catch (error) {
+        // Fall back to the next candidate only on a gas-estimation revert. We key off the
+        // `isGasEstimationError` flag (not `name`) because parseEthersError can overwrite
+        // `name` with a decoded revert/error name (e.g. CALL_EXCEPTION).
+        if ((error as any)?.isGasEstimationError) {
+          lastGasEstimationError = error as Error
+          console.warn(
+            `Gas estimation failed for ${candidate.routerType} route on collateral ${account.collatToken}, trying next candidate: ${(error as Error).message}`
+          )
+          continue
+        }
+        // Non-gas-estimation errors (validation, insufficient recovered value, etc.) are real and must propagate.
+        throw error
+      }
+    }
+
+    // All candidates failed gas estimation — throw so the job is retried (price/liquidity may recover).
+    const aggregatedError = new Error(
+      `All ${candidates.length} routing candidate(s) failed gas estimation for collateral ${account.collatToken}. Last error: ${lastGasEstimationError?.message}`
     )
+    aggregatedError.name = lastGasEstimationError?.name || "GasEstimationError"
+    ;(aggregatedError as any).code = (lastGasEstimationError as any)?.code
+    ;(aggregatedError as any).isGasEstimationError = true
+    throw aggregatedError
+  }
+
+  /**
+   * Build the estimation(s) for a single routing candidate, applying the Curve split-route
+   * optimization where appropriate. Throws a `GasEstimationError` (via estimateTransaction)
+   * if the candidate cannot be estimated, so the caller can fall back to another candidate.
+   */
+  private async estimateCandidate(
+    candidate: RouteCandidate,
+    account: LiquidationUserFullInfo,
+    signer: Wallet,
+    provider: JsonRpcProvider,
+    slippageBps: bigint,
+    providerIndex: number
+  ): Promise<LiquidationEstimateInfo[]> {
+    const { route, amount, priceImpact, routerType, routerAddress, pendleData } = candidate
     const userDebt = BigInt(account.userDebt)
 
     if (!route) {

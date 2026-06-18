@@ -39,13 +39,15 @@ vi.mock("ethers", async () => {
 
 // Create mock RouterService factory
 const createMockRouterService = () => ({
-  getBestRoute: vi.fn().mockResolvedValue({
-    route: { display: "mock-route", params: { routeAddresses: [], swapParamsFull: [] } },
-    amount: 1000n * BigInt(10 ** 18),
-    priceImpact: 0.001,
-    routerType: "curve" as const,
-    routerAddress: "0xCurveRouter",
-  }),
+  getBestRoute: vi.fn().mockResolvedValue([
+    {
+      route: { display: "mock-route", params: { routeAddresses: [], swapParamsFull: [] } },
+      amount: 1000n * BigInt(10 ** 18),
+      priceImpact: 0.001,
+      routerType: "curve" as const,
+      routerAddress: "0xCurveRouter",
+    },
+  ]),
   getBestSplitCurveRoutes: vi.fn().mockResolvedValue(undefined),
   buildRouterCallData: vi.fn().mockReturnValue("0xMockRouterCallData"),
   buildEnsoRouterCallData: vi.fn().mockResolvedValue({ routerCall: "0xMockEnsoRouterCallData", routerAddress: "0xEnsoRouter" }),
@@ -1875,13 +1877,15 @@ describe("TestLiquidationHarness - Best RPC Provider", () => {
     })
 
     it("should reject a single route when recovered value is lower than debt value", async () => {
-      mockRouterService.getBestRoute.mockResolvedValue({
-        route,
-        amount: 700n * DECIMALS,
-        priceImpact: 0.001,
-        routerType: "curve",
-        routerAddress: "0xCurveRouter",
-      })
+      mockRouterService.getBestRoute.mockResolvedValue([
+        {
+          route,
+          amount: 700n * DECIMALS,
+          priceImpact: 0.001,
+          routerType: "curve",
+          routerAddress: "0xCurveRouter",
+        },
+      ])
       const estimateTransactionSpy = vi.spyOn(liquidationService as any, "estimateTransaction")
 
       await expect(liquidationService.estimateLiquidation(mockSigner, account, 50n)).rejects.toMatchObject({
@@ -1893,13 +1897,15 @@ describe("TestLiquidationHarness - Best RPC Provider", () => {
     })
 
     it("should reject split routes when the split recovered sum is lower than debt value", async () => {
-      mockRouterService.getBestRoute.mockResolvedValue({
-        route,
-        amount: 700n * DECIMALS,
-        priceImpact: liquidationConfig.limits.maxPriceImpact + 1,
-        routerType: "curve",
-        routerAddress: "0xCurveRouter",
-      })
+      mockRouterService.getBestRoute.mockResolvedValue([
+        {
+          route,
+          amount: 700n * DECIMALS,
+          priceImpact: liquidationConfig.limits.maxPriceImpact + 1,
+          routerType: "curve",
+          routerAddress: "0xCurveRouter",
+        },
+      ])
       mockRouterService.getBestSplitCurveRoutes.mockResolvedValue({
         route1: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 350n * DECIMALS },
         route2: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 400n * DECIMALS },
@@ -1917,13 +1923,15 @@ describe("TestLiquidationHarness - Best RPC Provider", () => {
     })
 
     it("should reject split routes when reported total does not equal the split sum", async () => {
-      mockRouterService.getBestRoute.mockResolvedValue({
-        route,
-        amount: 600n * DECIMALS,
-        priceImpact: liquidationConfig.limits.maxPriceImpact + 1,
-        routerType: "curve",
-        routerAddress: "0xCurveRouter",
-      })
+      mockRouterService.getBestRoute.mockResolvedValue([
+        {
+          route,
+          amount: 600n * DECIMALS,
+          priceImpact: liquidationConfig.limits.maxPriceImpact + 1,
+          routerType: "curve",
+          routerAddress: "0xCurveRouter",
+        },
+      ])
       mockRouterService.getBestSplitCurveRoutes.mockResolvedValue({
         route1: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 300n * DECIMALS },
         route2: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 400n * DECIMALS },
@@ -1935,13 +1943,15 @@ describe("TestLiquidationHarness - Best RPC Provider", () => {
     })
 
     it("should accept split routes when their recovered sum covers debt value", async () => {
-      mockRouterService.getBestRoute.mockResolvedValue({
-        route,
-        amount: 700n * DECIMALS,
-        priceImpact: liquidationConfig.limits.maxPriceImpact + 1,
-        routerType: "curve",
-        routerAddress: "0xCurveRouter",
-      })
+      mockRouterService.getBestRoute.mockResolvedValue([
+        {
+          route,
+          amount: 700n * DECIMALS,
+          priceImpact: liquidationConfig.limits.maxPriceImpact + 1,
+          routerType: "curve",
+          routerAddress: "0xCurveRouter",
+        },
+      ])
       mockRouterService.getBestSplitCurveRoutes.mockResolvedValue({
         route1: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 400n * DECIMALS },
         route2: { route, info: { ...account, collateralBalance: 50n * DECIMALS }, amount: 380n * DECIMALS },

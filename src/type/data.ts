@@ -388,6 +388,17 @@ export type RouteEvaluationResult = {
 }
 
 /**
+ * A fully-resolved routing candidate (custom Curve/Pendle or Enso) ready to be
+ * estimated. `getBestRoute` returns these ordered by `amount` (highest first) so
+ * the caller can try the best one and fall back to the next on estimateGas failure.
+ */
+export type RouteCandidate = RouteEvaluationResult & {
+  routerType: RouterType
+  routerAddress: string
+  pendleData?: PendlePTToSYQuote
+}
+
+/**
  * Result of a Pendle route evaluation
  */
 export type PendleRouteResult = {

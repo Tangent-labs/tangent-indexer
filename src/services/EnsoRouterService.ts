@@ -1,4 +1,4 @@
-import { AddressLike } from "ethers"
+import { AddressLike, Wallet } from "ethers"
 
 import { liquidationConfig } from "../config/liquidation_config.js"
 
@@ -16,7 +16,7 @@ export type EnsoRouteRequest = {
   tokenIn: AddressLike
   tokenOut: AddressLike
   fromAddress: AddressLike
-  receiver: AddressLike
+  receiver: Wallet
   minAmountOut?: bigint
   slippageBps?: bigint
 }
@@ -33,7 +33,7 @@ export class EnsoRouterService {
     const url = new URL(liquidationConfig.enso.baseUrl)
     url.searchParams.set("chainId", "1")
     url.searchParams.set("fromAddress", fromAddress.toString())
-    url.searchParams.set("receiver", receiver.toString())
+    url.searchParams.set("receiver", await receiver.getAddress())
     url.searchParams.set("tokenIn", tokenIn.toString())
     url.searchParams.set("tokenOut", tokenOut.toString())
     url.searchParams.set("amountIn", amountIn.toString())
@@ -44,7 +44,6 @@ export class EnsoRouterService {
       url.searchParams.set("slippage", slippageBps.toString())
     }
     url.searchParams.set("routingStrategy", "router")
-
     try {
       const response = await fetch(url, {
         method: "GET",

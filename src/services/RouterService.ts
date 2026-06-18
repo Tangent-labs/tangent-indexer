@@ -1,4 +1,4 @@
-import { AddressLike, Interface, JsonRpcProvider, ZeroAddress } from "ethers"
+import { AddressLike, Interface, JsonRpcProvider, ZeroAddress, Wallet } from "ethers"
 import { PENDLE_POOLS as PendlePools } from "@tangent/defi-resources"
 
 import ICurveRouterAbi from "../abis/ICurveRouter.json" with { type: "json" }
@@ -17,6 +17,7 @@ import {
   PendlePTToSYQuote,
   QuotePTToTokenOut,
   QuotePTToTokenParams,
+  RouteCandidate,
   RouteEvaluationResult,
   RouterType,
   SuccessRoutes,
@@ -82,17 +83,17 @@ export class RouterService {
   // ============================================
 
   /**
-   * Get the best route for a liquidation, automatically selecting Curve or Pendle
+   * Get the best route for a liquidation, automatically selecting Curve or Pendle.
+   *
+   * Returns ALL viable candidates (custom Curve/Pendle + Enso) ordered by quoted
+   * `amount` (highest first). The caller estimates the best one and falls back to
+   * the next on an estimateGas revert, so a route that quotes well but reverts on
+   * execution no longer blocks the liquidation.
    */
-  public async getBestRoute(
-    info: LiquidationUserFullInfo,
-    rpcIndex: number = 0,
-    receiver?: AddressLike,
-    slippageBps: bigint = 0n
-  ): Promise<RouteEvaluationResult & { routerType: RouterType; routerAddress: string; pendleData?: PendlePTToSYQuote }> {
+  public async getBestRoute(info: LiquidationUserFullInfo, rpcIndex: number = 0, receiver?: Wallet, slippageBps: bigint = 0n): Promise<RouteCandidate[]> {
     // Check the custom router
     const routerType = this.getRouterType(info.collatToken)
-    const customRoutePromise =
+    const customRoutePromise: Promise<RouteCandidate> =
       routerType === "pendle"
         ? this._getBestPendleRoute(info, rpcIndex).then((result) => ({
             ...result,
@@ -112,10 +113,11 @@ export class RouterService {
     // let's run it .
     const [customRoute, ensoRoute] = await Promise.all([customRoutePromise, ensoRoutePromise])
 
-    if (ensoRoute && ensoRoute.amount >= customRoute.amount) {
-      return ensoRoute
-    }
-    return customRoute
+    // Keep only candidates that actually produced a route, ordered by quote (highest first).
+    const candidates: RouteCandidate[] = [customRoute, ensoRoute].filter((c): c is RouteCandidate => c !== null && c.route !== null)
+
+    candidates.sort((a, b) => (b.amount > a.amount ? 1 : b.amount < a.amount ? -1 : 0))
+    return candidates
   }
 
   /**
@@ -144,7 +146,7 @@ export class RouterService {
   public async buildEnsoRouterCallData(
     info: LiquidationUserFullInfo,
     minAmountOut: bigint,
-    receiver: AddressLike
+    receiver: Wallet
   ): Promise<{ routerCall: string; routerAddress: string }> {
     const addresses = await getAddressesJson()
     const route = await this.ensoRouterService.getRoute({
@@ -170,7 +172,7 @@ export class RouterService {
     info: LiquidationUserFullInfo,
     tokenOut: string,
     fromAddress: AddressLike,
-    receiver: AddressLike,
+    receiver: Wallet,
     slippageBps: bigint
   ): EnsoRouteRequest {
     return {
@@ -185,7 +187,7 @@ export class RouterService {
 
   private async _getEnsoRoute(
     info: LiquidationUserFullInfo,
-    receiver: AddressLike,
+    receiver: Wallet,
     slippageBps: bigint
   ): Promise<(RouteEvaluationResult & { routerType: "enso"; routerAddress: string }) | null> {
     const addresses = await getAddressesJson()
