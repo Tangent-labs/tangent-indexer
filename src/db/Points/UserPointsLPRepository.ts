@@ -82,7 +82,8 @@ export class UserPointsLPRepository extends AbstractRepository {
               where: {
                 block_id: { gt: startBlock, lte: endBlock },
               },
-              orderBy: { block_id: "asc" },
+              // prevents mismatch when replaying the indexer
+              orderBy: [{ block_id: "asc" }, { id: "asc" }],
             },
           },
         },
