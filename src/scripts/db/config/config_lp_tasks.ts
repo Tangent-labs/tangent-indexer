@@ -9,6 +9,7 @@ export const PTS_PER_DAY_TO_SECONDS_RATE = {
   15: 0.00017361,
   30: 0.00034722,
   45: 0.00052083,
+  105: 0.00121528,
   125: 0.00144675,
 }
 export function LP_TASKS(addresses: AddressesJson, priceSources: Prisma.price_sourceCreateManyInput[], now: Date) {

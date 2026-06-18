@@ -1,5 +1,5 @@
-import * as dotenv from "dotenv"
 import { Prisma, PrismaClient } from "@prisma/client"
+import * as dotenv from "dotenv"
 import { getAddressesJson } from "../../../utils/jsonReader.js"
 
 dotenv.config()
@@ -21,7 +21,7 @@ const BOOTSTRAP_ACTIVE_BORROWERS = [
   },
 ]
 
-function normalizeMarketType(marketType: string): string {
+export function normalizeMarketType(marketType: string): string {
   const normalizedType = CONFIG_MARKET_TYPES[marketType]
   if (!normalizedType) {
     throw new Error(`Unknown configured market type: ${marketType}`)

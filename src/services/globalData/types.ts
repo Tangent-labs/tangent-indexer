@@ -154,6 +154,42 @@ export type PendlePriceApiResult = {
   }
 }
 
+export type BalancerPriceApiResult = {
+  data: {
+    poolGetPools: {
+      address: string
+      dynamicData: {
+        totalLiquidity: string
+        totalShares: string
+      }
+    }[]
+  }
+}
+
+export type SpectraPool = {
+  address: string
+  lpt: {
+    address: string
+    price: {
+      usd: number
+    }
+  }
+  ptPrice: {
+    usd: number
+  }
+}
+
+export type SpectraMarket = {
+  // top-level address is the PT (Principal Token) address
+  address: string
+  yt: {
+    address: string
+  }
+  pools: SpectraPool[]
+}
+
+export type SpectraApiResult = SpectraMarket[]
+
 // STAKE DAO
 
 type Address = string

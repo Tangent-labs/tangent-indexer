@@ -1,5 +1,7 @@
-import { PriceApiInfo, PriceApiResult, PriceApiError, CurverRegistry } from "../type/data.js"
+import axios from "axios"
+import { CurverRegistry, PriceApiError, PriceApiInfo, PriceApiResult, PriceSource } from "../type/data.js"
 import {
+  BalancerPriceApiResult,
   ConvexFxnApiReturn,
   CurveApiReturn,
   CurveFactoryStableNGApiReturn,
@@ -8,13 +10,15 @@ import {
   LlamaPriceApiResult,
   PendleApiReturn,
   PendlePriceApiResult,
+  SpectraApiResult,
   StakeDaoApiData,
   StakeDaoApiReturn,
 } from "./globalData/types.js"
-import axios from "axios"
 
 export const CURVE_API = "https://api.curve.finance/api"
 const PENDLE_PRICE_API = "https://api-v2.pendle.finance/core/v1/1/assets/prices"
+const BALANCER_GRAPHQL_API = "https://api-v3.balancer.fi/graphql"
+const SPECTRA_API = "https://api.spectra.finance/v1/mainnet/pools"
 const LLAMA_API = "https://coins.llama.fi/prices/current/"
 const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes in milliseconds
 
@@ -157,6 +161,116 @@ export class CallApiService {
     } catch (error) {
       const apiError: PriceApiError = {
         api: "PendlePriceApi",
+        reason: error instanceof Error ? error.message : "Unknown error",
+        httpCode: axios.isAxiosError(error) && error.response ? error.response.status : undefined,
+      }
+      return { prices: [], error: apiError }
+    }
+  }
+
+  async fetchBalancerApiPrices(addresses: string[]): Promise<PriceApiResult> {
+    if (!addresses?.length) {
+      return { prices: [] }
+    }
+
+    try {
+      // GraphQL query to get totalLiquidity and totalShares
+      const query = `
+        query GetPools($ids: [String!]!) {
+          poolGetPools(where: { idIn: $ids, chainIn: [MAINNET] }) {
+            address
+            dynamicData {
+              totalLiquidity
+              totalShares
+            }
+          }
+        }
+      `
+
+      // API call
+      const call = await axios.post<BalancerPriceApiResult>(BALANCER_GRAPHQL_API, {
+        query,
+        variables: { ids: addresses.map((a) => a.toLowerCase()) },
+      })
+
+      const prices: PriceApiInfo[] = []
+
+      // Iterates over all results if several LPs
+      for (const pool of call.data.data.poolGetPools) {
+        const totalLiquidity = Number(pool.dynamicData.totalLiquidity)
+        const totalShares = Number(pool.dynamicData.totalShares)
+        prices.push({
+          address: pool.address.toLowerCase(),
+          // 1LP = TotalLiquidity$ / TotalSupply
+          price: totalShares > 0 ? totalLiquidity / totalShares : 0,
+        })
+      }
+      return { prices }
+    } catch (error) {
+      const apiError: PriceApiError = {
+        api: "BalancerPriceApi",
+        reason: error instanceof Error ? error.message : "Unknown error",
+        httpCode: axios.isAxiosError(error) && error.response ? error.response.status : undefined,
+      }
+      return { prices: [], error: apiError }
+    }
+  }
+
+  async fetchSpectraApiPrices(sources: PriceSource[]): Promise<PriceApiResult> {
+    if (!sources?.length) {
+      return { prices: [] }
+    }
+
+    try {
+      // Do the call 1 time
+      const call = await axios.get<SpectraApiResult>(SPECTRA_API)
+
+      // Sort spectra tokens per market (batch LP, PT and YT)
+      const marketsByPt = new Map<string, (typeof call.data)[number]>()
+      for (const market of call.data) {
+        marketsByPt.set(market.address.toLowerCase(), market)
+      }
+
+      const prices: PriceApiInfo[] = []
+
+      // Iterate over all tokens
+      for (const source of sources) {
+        const ptAddress = source.reference?.toLowerCase()
+        // Shouldn't happen if seed is correct
+        if (!ptAddress) {
+          console.error("Link the token with it's PT in price_source")
+          continue
+        }
+        // Find the matching market
+        const market = marketsByPt.get(ptAddress)
+        if (!market) {
+          continue
+        }
+
+        const tokenAddress = source.address.toLowerCase()
+        const pool = market.pools?.[0]
+
+        let price: number | undefined
+        if (tokenAddress === market.address.toLowerCase()) {
+          // PT price
+          price = pool?.ptPrice.usd
+        } else if (pool && tokenAddress === pool.lpt.address.toLowerCase()) {
+          // LP token price
+          price = pool.lpt.price.usd
+        } else if (tokenAddress === market.yt.address.toLowerCase()) {
+          // YT hardcoded to 1
+          price = 1
+        }
+
+        if (price !== undefined) {
+          prices.push({ address: tokenAddress, price })
+        }
+      }
+
+      return { prices }
+    } catch (error) {
+      const apiError: PriceApiError = {
+        api: "SpectraPriceApi",
         reason: error instanceof Error ? error.message : "Unknown error",
         httpCode: axios.isAxiosError(error) && error.response ? error.response.status : undefined,
       }

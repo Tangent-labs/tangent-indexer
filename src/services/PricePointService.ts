@@ -80,6 +80,9 @@ export class PricePointService {
     const llamaPrice = priceSource.filter((p) => p.type === "llamaApi").map((p) => p.address.toLowerCase())
     const curvePriceSources = priceSource.filter((p) => p.type === "curveApi")
     const pendlePrice = priceSource.filter((p) => p.type === "pendleApi").map((p) => p.address.toLowerCase())
+    const balancerPrice = priceSource.filter((p) => p.type === "balancerApi").map((p) => p.address.toLowerCase())
+    // "spectraApi" is added to the PriceSourceType enum in @tangent/prisma-schema-shared; cast until the client is regenerated
+    const spectraPriceSources = priceSource.filter((p) => (p.type as string) === "spectraApi")
 
     if (llamaPrice.length > 0) {
       promises.set("Llama", this.callApiService.getLlamaPrice(llamaPrice))
@@ -121,6 +124,14 @@ export class PricePointService {
 
     if (pendlePrice.length > 0) {
       promises.set("Pendle", this.callApiService.fetchPendleApiPrices(pendlePrice))
+    }
+
+    if (balancerPrice.length > 0) {
+      promises.set("Balancer", this.callApiService.fetchBalancerApiPrices(balancerPrice))
+    }
+
+    if (spectraPriceSources.length > 0) {
+      promises.set("Spectra", this.callApiService.fetchSpectraApiPrices(spectraPriceSources))
     }
 
     // Add ERC4626 processing to the promises
