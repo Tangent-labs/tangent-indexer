@@ -1,4 +1,4 @@
-import { AddressLike, Interface, JsonRpcProvider, ZeroAddress, Wallet } from "ethers"
+import { AddressLike, Interface, JsonRpcProvider, ZeroAddress } from "ethers"
 import { PENDLE_POOLS as PendlePools } from "@tangent/defi-resources"
 
 import ICurveRouterAbi from "../abis/ICurveRouter.json" with { type: "json" }
@@ -90,7 +90,7 @@ export class RouterService {
    * the next on an estimateGas revert, so a route that quotes well but reverts on
    * execution no longer blocks the liquidation.
    */
-  public async getBestRoute(info: LiquidationUserFullInfo, rpcIndex: number = 0, receiver?: Wallet, slippageBps: bigint = 0n): Promise<RouteCandidate[]> {
+  public async getBestRoute(info: LiquidationUserFullInfo, rpcIndex: number = 0, receiver?: AddressLike, slippageBps: bigint = 0n): Promise<RouteCandidate[]> {
     // Check the custom router
     const routerType = this.getRouterType(info.collatToken)
     const customRoutePromise: Promise<RouteCandidate> =
@@ -146,7 +146,7 @@ export class RouterService {
   public async buildEnsoRouterCallData(
     info: LiquidationUserFullInfo,
     minAmountOut: bigint,
-    receiver: Wallet
+    receiver: AddressLike
   ): Promise<{ routerCall: string; routerAddress: string }> {
     const addresses = await getAddressesJson()
     const route = await this.ensoRouterService.getRoute({
@@ -172,7 +172,7 @@ export class RouterService {
     info: LiquidationUserFullInfo,
     tokenOut: string,
     fromAddress: AddressLike,
-    receiver: Wallet,
+    receiver: AddressLike,
     slippageBps: bigint
   ): EnsoRouteRequest {
     return {
@@ -187,7 +187,7 @@ export class RouterService {
 
   private async _getEnsoRoute(
     info: LiquidationUserFullInfo,
-    receiver: Wallet,
+    receiver: AddressLike,
     slippageBps: bigint
   ): Promise<(RouteEvaluationResult & { routerType: "enso"; routerAddress: string }) | null> {
     const addresses = await getAddressesJson()

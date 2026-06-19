@@ -427,7 +427,7 @@ export class LiquidationProcessService {
     let routerAddressForCall = routerAddress
     let data: string
     if (routerType === "enso") {
-      const ensoCall = await this.routerService.buildEnsoRouterCallData(normalizedAccount, minAmount, signer)
+      const ensoCall = await this.routerService.buildEnsoRouterCallData(normalizedAccount, minAmount, signerAddress)
       data = ensoCall.routerCall
       routerAddressForCall = ensoCall.routerAddress
     } else {
@@ -511,9 +511,10 @@ export class LiquidationProcessService {
   ): Promise<LiquidationEstimateInfo[]> {
     const providerIndex = rpcIndex ?? this.context.currentRpcIndex
     const provider = this.context.providers[providerIndex]
+    const signerAddress = await signer.getAddress()
 
     // Get all viable routing candidates (custom Curve/Pendle + Enso), ordered by quote (highest first).
-    const candidates = await this.routerService.getBestRoute(account, providerIndex, signer, slippageBps)
+    const candidates = await this.routerService.getBestRoute(account, providerIndex, signerAddress, slippageBps)
 
     if (!candidates.length) {
       throw new Error(`No route found for collateral: ${account.collatToken}`)
