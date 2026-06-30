@@ -182,6 +182,8 @@ export class OnChainVoteService {
     const taskIdPerGauge: { [key: string]: string } = {}
     const gaugeControllerIdPerControllerAddress: { [key: string]: number } = {}
 
+    const alreadyCheckedAccountGaugeKeys = new Set<string>()
+
     tasks.forEach((task) => {
       if (task.gaugePools) {
         const gp = task.gaugePools
@@ -194,6 +196,11 @@ export class OnChainVoteService {
 
         // Iterates over all gauge votes done on all pools
         gp.gauge_votes.forEach((gv) => {
+          // Skip duplicate (account, gauge) pairs caused by repeated VoteForGauge events
+          const accountGaugeKey = `${gv.user_address.toLowerCase()}|${gp.gauge_address.toLowerCase()}`
+          if (alreadyCheckedAccountGaugeKeys.has(accountGaugeKey)) return
+          alreadyCheckedAccountGaugeKeys.add(accountGaugeKey)
+
           const gaugeControllerId = paramInChainview.findIndex((p) => {
             return p.gaugeController === gaugeController
           })
