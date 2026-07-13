@@ -204,7 +204,12 @@ export class OnChainVoteService {
           }
 
           if (gaugeControllerId !== -1) {
-            paramInChainview[gaugeControllerId].accountGauges.push(accountGauge)
+            const isDuplicated = paramInChainview[gaugeControllerId].accountGauges.find((a) => {
+              return a.account === accountGauge.account && a.gauge === accountGauge.gauge
+            })
+            if (!isDuplicated) {
+              paramInChainview[gaugeControllerId].accountGauges.push(accountGauge)
+            }
           } else {
             paramInChainview.push({ gaugeController: gp.gauge_controller.controller_address, accountGauges: [accountGauge] })
           }
