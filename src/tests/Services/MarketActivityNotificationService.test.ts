@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { MarketActivityNotificationService } from "../../services/MarketActivityNotificationService.js"
 import { SortedEvents } from "../../services/events/UserMarketService.js"
+import { parseEther } from "ethers"
 
 describe("MarketActivityNotificationService", () => {
   const sendMessage = vi.fn().mockResolvedValue(true)
@@ -12,15 +13,31 @@ describe("MarketActivityNotificationService", () => {
   })
 
   const notifications = [
-    { eventName: "Deposit", amounts: ["Staked amount: 10"], event: { staked_amount: "10" } },
-    { eventName: "ZapDeposit", amounts: ["Staked amount: 11"], event: { staked_amount: "11" } },
-    { eventName: "DepositAndBorrow", amounts: ["Staked amount: 12", "Borrow amount: 22"], event: { staked_amount: "12", borrow_amount: "22" } },
-    { eventName: "ZapDepositAndBorrow", amounts: ["Staked amount: 13", "Borrow amount: 23"], event: { staked_amount: "13", borrow_amount: "23" } },
-    { eventName: "Withdraw", amounts: ["Withdrawn amount: 14"], event: { withdrawn_amount: "14" } },
-    { eventName: "Repay", amounts: ["Repaid amount: 15"], event: { repaid_amount: "15" } },
-    { eventName: "ZapRepay", amounts: ["Repaid amount: 16"], event: { repaid_amount: "16" } },
-    { eventName: "RepayAndWithdraw", amounts: ["Repaid amount: 17", "Withdrawn amount: 27"], event: { repaid_amount: "17", withdrawn_amount: "27" } },
-    { eventName: "ZapRepayAndWithdraw", amounts: ["Repaid amount: 18", "Withdrawn amount: 28"], event: { repaid_amount: "18", withdrawn_amount: "28" } },
+    { eventName: "Deposit", amounts: ["Staked amount: 10"], event: { staked_amount: parseEther("10") } },
+    { eventName: "ZapDeposit", amounts: ["Staked amount: 11"], event: { staked_amount: parseEther("11") } },
+    {
+      eventName: "DepositAndBorrow",
+      amounts: ["Staked amount: 12", "Borrow amount: 22"],
+      event: { staked_amount: parseEther("12"), borrow_amount: parseEther("22") },
+    },
+    {
+      eventName: "ZapDepositAndBorrow",
+      amounts: ["Staked amount: 13", "Borrow amount: 23"],
+      event: { staked_amount: parseEther("13"), borrow_amount: parseEther("23") },
+    },
+    { eventName: "Withdraw", amounts: ["Withdrawn amount: 14"], event: { withdrawn_amount: parseEther("14") } },
+    { eventName: "Repay", amounts: ["Repaid amount: 15"], event: { repaid_amount: parseEther("15") } },
+    { eventName: "ZapRepay", amounts: ["Repaid amount: 16"], event: { repaid_amount: parseEther("16") } },
+    {
+      eventName: "RepayAndWithdraw",
+      amounts: ["Repaid amount: 17", "Withdrawn amount: 27"],
+      event: { repaid_amount: parseEther("17"), withdrawn_amount: parseEther("27") },
+    },
+    {
+      eventName: "ZapRepayAndWithdraw",
+      amounts: ["Repaid amount: 18", "Withdrawn amount: 28"],
+      event: { repaid_amount: parseEther("18"), withdrawn_amount: parseEther("28") },
+    },
   ] as const
 
   it.each(notifications)("sends a $eventName notification with market name and action amounts", async ({ eventName, amounts, event }) => {

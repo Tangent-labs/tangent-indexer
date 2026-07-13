@@ -58,7 +58,7 @@ describe("RouterService Enso route validation", () => {
     expect(provider.estimateGas).not.toHaveBeenCalled()
   })
 
-  it("keeps the custom route when its quote is higher than Enso", async () => {
+  it("orders the custom route first when its quote is higher than Enso, with Enso as fallback", async () => {
     ensoRouterService.getRoute.mockResolvedValue({
       amountOut: 900n,
       tx: { to: routerAddress, data: routerCall },
@@ -70,9 +70,33 @@ describe("RouterService Enso route validation", () => {
       priceImpact: 0,
     })
 
-    const result = await service.getBestRoute(account, 0, receiver)
+    const result = await service.getBestRoute(account, 0, receiver as any)
 
-    expect(result.routerType).toBe("curve")
-    expect(result.amount).toBe(1000n)
+    expect(result).toHaveLength(2)
+    expect(result[0].routerType).toBe("curve")
+    expect(result[0].amount).toBe(1000n)
+    // Enso is still returned as a fallback candidate
+    expect(result[1].routerType).toBe("enso")
+    expect(result[1].amount).toBe(900n)
+  })
+
+  it("orders Enso first when its quote is higher than the custom route", async () => {
+    ensoRouterService.getRoute.mockResolvedValue({
+      amountOut: 1500n,
+      tx: { to: routerAddress, data: routerCall },
+    })
+    const service = new RouterService([provider as any], "0xCurve", "0xPendle", ensoRouterService as any)
+    vi.spyOn(service as any, "_getBestCurveRoute").mockResolvedValue({
+      route: { display: "curve", params: { routeAddresses: [], swapParamsFull: [] } },
+      amount: 1000n,
+      priceImpact: 0,
+    })
+
+    const result = await service.getBestRoute(account, 0, receiver as any)
+
+    expect(result).toHaveLength(2)
+    expect(result[0].routerType).toBe("enso")
+    expect(result[0].amount).toBe(1500n)
+    expect(result[1].routerType).toBe("curve")
   })
 })

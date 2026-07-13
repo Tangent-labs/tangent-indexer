@@ -25,7 +25,7 @@ export const liquidationConfig = {
   snapshotTolerance: Number(process.env.SNAPSHOT_TOLERANCE) || 0.01,
   queueRedis: process.env.LIQUIDATION_QUEUE_REDIS || "",
   queue: {
-    attempts: Number(process.env.LIQUIDATION_QUEUE_ATTEMPTS) || 10,
+    attempts: Number(process.env.LIQUIDATION_QUEUE_ATTEMPTS) || 50_000,
     backoff: {
       type: (process.env.LIQUIDATION_QUEUE_BACKOFF_TYPE as "fixed" | "exponential") || "fixed",
       delay: Number(process.env.LIQUIDATION_QUEUE_BACKOFF_DELAY) || 12_000, // 1 block time (12s)

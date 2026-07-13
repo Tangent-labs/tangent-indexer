@@ -44,7 +44,6 @@ export class EnsoRouterService {
       url.searchParams.set("slippage", slippageBps.toString())
     }
     url.searchParams.set("routingStrategy", "router")
-
     try {
       const response = await fetch(url, {
         method: "GET",
