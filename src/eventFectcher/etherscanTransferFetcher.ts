@@ -194,29 +194,3 @@ export const fetchContractCreationBlock = async (chainId: number, token: string)
   if (!Number.isInteger(blockNumber)) throw new Error(`Could not resolve the creation block of ${token}`)
   return blockNumber
 }
-
-/**
- * @notice Current chain head according to Etherscan.
- */
-export const fetchLatestBlock = async (chainId: number): Promise<number> => {
-  const result = await etherscan<string>(chainId, { module: "proxy", action: "eth_blockNumber" })
-
-  const blockNumber = parseInt(result, 16)
-  if (!Number.isInteger(blockNumber)) throw new Error(`Could not resolve the head block: ${JSON.stringify(result)}`)
-  return blockNumber
-}
-
-/**
- * @notice Current totalSupply of an ERC-20, per Etherscan.
- * @dev This is the supply *now*, not at a past block — only use it to reconcile a scan that ran
- * to chain head. Reconciling a historical snapshot needs an archive node (see fetchTotalSupplyAt).
- */
-export const fetchCurrentTokenSupply = async (chainId: number, token: string): Promise<bigint> => {
-  const result = await etherscan<string>(chainId, {
-    module: "stats",
-    action: "tokensupply",
-    contractaddress: token,
-  })
-
-  return BigInt(result)
-}

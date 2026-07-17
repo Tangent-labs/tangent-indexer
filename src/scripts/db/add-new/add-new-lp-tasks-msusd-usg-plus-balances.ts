@@ -52,7 +52,7 @@ async function main() {
 
   const balances = computeBalancesFromTransfers(logs)
 
-  const holders = [...balances.entries()].filter(([, amount]) => amount > 0n).sort(([, a], [, b]) => (b > a ? 1 : b < a ? -1 : 0))
+  const holders = [...balances.entries()].filter(([, amount]) => amount > 0n)
 
   console.log(`[4/6] ${logs.length} transfer(s) -> ${balances.size} address(es) touched, ${holders.length} holding`)
 
@@ -102,18 +102,15 @@ async function main() {
     })
     console.log(`[5/6] created price_source ${priceSource.id} and lp_task ${task.id}`)
 
-    // Read exclusions after any exclusion inserts would have happened, and before seeding:
-    // an address excluded *after* it has an open segment keeps earning forever, because being
-    // excluded is what stops UserPointsService from ever closing it.
-    const exclusions = new Set((await tx.lp_points_users_excluded.findMany()).map((u) => u.user.toLowerCase()))
-    const skipped = holders.filter(([address]) => exclusions.has(address))
+    const excludedUsers = new Set((await tx.lp_points_users_excluded.findMany()).map((u) => u.user.toLowerCase()))
+    const skipped = holders.filter(([address]) => excludedUsers.has(address))
     console.log(`      Skipped ${skipped.length} addresses among the holders : `)
 
     for (const [address, amount] of skipped) {
       console.log(`        skipping ${address} (${amount.toString()})`)
     }
 
-    const seeded = await seedInitialLpUserTasks(tx, task.id, balances, snapshotDate, exclusions)
+    const seeded = await seedInitialLpUserTasks(tx, task.id, balances, snapshotDate, excludedUsers)
     console.log(`[6/6] seeded ${seeded} lp_user_tasks segment(s) for task ${task.id}`)
 
     if (seeded !== holders.length - skipped.length) {
