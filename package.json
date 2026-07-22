@@ -35,6 +35,7 @@
     "db:actualize-views": "tsx src/scripts/actualize-views.ts",
     "db:add-market-lps-to-track": "tsx src/scripts/db/add-new/add-market-lps-to-tracked-erc20.ts",
     "db:add-morpho-lp-task": "tsx src/scripts/db/add-new/add-new-lp-tasks-morpho.ts",
+    "db:vote-tasks": "tsx src/scripts/db/add-new/add-vote-tasks.ts",
     "tangent:extract-liquidation-errors": "tsx src/scripts/utils/extract_liquidation_errors.ts",
     "dev:liquidation:check-prereqs": "tsx src/scripts/utils/check_liquidation_prereqs.ts",
     "dev:liquidation:reset": "npm run db:truncate && npm run db:add-market-lps-to-track && npm run db:empty-queue && npm run tangent:indexer-block & npm run tangent:indexer-block & npm run tangent:indexer-block & npm run tangent:indexer-block",
