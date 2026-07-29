@@ -80,6 +80,18 @@
       "marketType": "STAKEDAO_CRV_Vault"
     },
     {
+      "marketAddress": "0x7b1b38cad63B0715A0adFeEB75E46431b48E73B6",
+      "marketName": "msETH/WETH",
+      "collatAddress": "0xa4c567c662349BeC3D0fB94C4e7f85bA95E208e4",
+      "marketType": "STAKEDAO_CRV_Vault"
+    },
+    {
+      "marketAddress": "0x2b2962931433FE137fD17CF62Df4b9eC84a7dE00",
+      "marketName": "msETH/OETH",
+      "collatAddress": "0xB5b93dde9D87563184d31F3b7f85dd58404E2ee0",
+      "marketType": "STAKEDAO_CRV_Vault"
+    },
+    {
       "marketAddress": "0x849cf82e0ebcfeab8270cc5a3ea3b26cd481b754",
       "marketName": "USDC/fxUSD",
       "collatAddress": "0x5018be882dcce5e3f2f3b0913ae2096b9b3fb61f",
@@ -126,7 +138,9 @@
       "frxUSD_sDOLA": "0x385b0c21d2f93a76468f8e074ede3ef6f8ff13ce",
       "frxUSD_scrvUSD": "0xf31be70c9d9596b23088125345f044065b0bf886",
       "USDC_fxUSD": "0x35c62ac45ddf3079e2daa0b8957862a1800920da",
-      "reUSD_fxUSD": "0x9f162292bc39f194a3ca87e39700293bd9aa710a"
+      "reUSD_fxUSD": "0x9f162292bc39f194a3ca87e39700293bd9aa710a",
+      "msETH_WETH": "0x66d7753f2e72a5d64cee1d7ec4e1af2110f8185a",
+      "msETH_OETH": "0xb53b1e50643ba89e1be280d6e04186f90b698a81"
     },
     "USG": "0x970b2f2cec66f92de81dae6af363d1d135dd2f97"
   },
