@@ -36,6 +36,8 @@ import { getAddressesJson } from "../../utils/jsonReader.js"
 import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
 import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
 import { MORPHO_MARKETS } from "@tangent/defi-resources"
+import { RevenuesService } from "../../services/events/RevenuesService.js"
+import { RevenuesRepository } from "../../db/RevenuesRepository.js"
 
 dotenv.config()
 
@@ -56,6 +58,7 @@ async function main() {
     blockRepository,
     savingAccountService,
     predepositService,
+    revenuesService,
     setTransaction,
     addresses,
   } = await setUpIndexerBlockServices()
@@ -98,6 +101,8 @@ async function main() {
             if (!transferToWatch?.length) {
               throw new Error("ERC20 to track is not filled")
             }
+            // Add reward accumulator for rewards tracking
+            transferToWatch.push(addresses.utilities.rewardAccumulator)
             const transferLogs = await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch)
 
             const savingAccountsLogs = await getSavingAccountLogs(bestProvider, startBlock, endBlock, [
@@ -139,6 +144,8 @@ async function main() {
             const usgLps = await predepositService.getUsgLpKeys()
             const { addLiquidityEvents, addLiquEventsBlockIds } = userPointsService.parseAddLiquidity(transferLogs, usgLps)
 
+            const { checkpointIR, rewardCut, revenuesBlockIds } = await revenuesService.parseRevenuesEvents(logs, transferLogs, mapMarketIdAddresses)
+
             // Create a set with all block ID that we need to get the timestamp of
             const uniqueBlockIds = [
               ...new Set([
@@ -147,6 +154,7 @@ async function main() {
                 ...morphoEventsBlockIds,
                 ...savingAccountsBlockIds,
                 ...addLiquEventsBlockIds,
+                ...revenuesBlockIds,
                 "0x" + endBlock.toString(16),
               ]),
             ]
@@ -161,6 +169,8 @@ async function main() {
             const transferEventsRightDates = userPointsService.replaceDates<Prisma.transfer_eventsCreateManyInput>(mergedTransferEvents, blocks)
 
             const addLiquidityEventsRightDates = userPointsService.replaceDates<Prisma.add_liquidity_eventsCreateManyInput>(addLiquidityEvents, blocks)
+            const checkpointsIREvents = userPointsService.replaceDates<Prisma.checkpoint_irCreateManyInput>(checkpointIR, blocks)
+            const rewardCutEvents = userPointsService.replaceDates<Prisma.reward_notifiedCreateManyInput>(rewardCut, blocks)
 
             // Insert user points actions
             await userPointsService.insertEvents(transferEventsRightDates, addLiquidityEventsRightDates)
@@ -173,6 +183,8 @@ async function main() {
 
             // Save saving account events
             await savingAccountService.saveSavingAccountEvents(savingAccountsLogs, blocks)
+
+            await revenuesService.saveEvents(checkpointsIREvents, rewardCutEvents)
 
             // Update the last indexed block
             await blockRepository.storeEventBlock(endBlock, new Date(blocks.get(endBlock)! * 1000))
@@ -215,6 +227,7 @@ async function setUpIndexerBlockServices() {
   const erc20Repository = new ERC20Repository(prismaClient)
   const savingAccountRepository = new SavingAccountRepository(prismaClient)
   const predepositRepository = new PredepositCampaignRepository(prismaClient)
+  const revenuesRepository = new RevenuesRepository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
     blockRepository.setClient(dbTransaction)
@@ -226,6 +239,7 @@ async function setUpIndexerBlockServices() {
     erc20Repository.setClient(dbTransaction)
     savingAccountRepository.setClient(dbTransaction)
     predepositRepository.setClient(dbTransaction)
+    revenuesRepository.setClient(dbTransaction)
   }
 
   const addresses = await getAddressesJson()
@@ -240,6 +254,7 @@ async function setUpIndexerBlockServices() {
   const savingAccountService = new SavingAccountServices(savingAccountRepository, providers[0])
   const predepositService = new PredepositCampaignService(predepositRepository, blockRepository)
   const indexerExecutionLogService = IndexerExecutionLogService.fromClient(prismaClient)
+  const revenuesService = new RevenuesService(revenuesRepository)
 
   const telegramNotifierService = new TelegramNotifierService({
     botToken: process.env.TELEGRAM_BOT_TOKEN!,
@@ -268,6 +283,7 @@ async function setUpIndexerBlockServices() {
     blockRepository,
     savingAccountService,
     predepositService,
+    revenuesService,
     addresses,
     handleError,
     providers,

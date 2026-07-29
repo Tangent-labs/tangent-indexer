@@ -8,6 +8,7 @@ export const TRANSFER_TOPICS = {
   Withdrawn: ethers.id("Withdrawn(address,uint256)"),
   AddLiquidity: ethers.id("AddLiquidity(address,uint256[],uint256[],uint256,uint256)"),
   AddLiquidity2: ethers.id("AddLiquidity(address,uint256[2],uint256[2],uint256,uint256)"),
+  RewardNotified: ethers.id("RewardNotified(address,address,uint256,uint256,uint256)"), // Only for Reward accumulator
 }
 
 // Type Definition for Market Events
