@@ -92,6 +92,12 @@
       "marketType": "STAKEDAO_CRV_Vault"
     },
     {
+      "marketAddress": "0x4903f0d3698ddc5ca66040b235de0a2126a41437",
+      "marketName": "cbBTC/WBTC",
+      "collatAddress": "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+      "marketType": "STAKEDAO_CRV_Vault"
+    },
+    {
       "marketAddress": "0x849cf82e0ebcfeab8270cc5a3ea3b26cd481b754",
       "marketName": "USDC/fxUSD",
       "collatAddress": "0x5018be882dcce5e3f2f3b0913ae2096b9b3fb61f",
@@ -140,7 +146,8 @@
       "USDC_fxUSD": "0x35c62ac45ddf3079e2daa0b8957862a1800920da",
       "reUSD_fxUSD": "0x9f162292bc39f194a3ca87e39700293bd9aa710a",
       "msETH_WETH": "0x66d7753f2e72a5d64cee1d7ec4e1af2110f8185a",
-      "msETH_OETH": "0xb53b1e50643ba89e1be280d6e04186f90b698a81"
+      "msETH_OETH": "0xb53b1e50643ba89e1be280d6e04186f90b698a81",
+      "cbBTC_WBTC": "0xbc3066e81f4db2b55be8edde4d5c86ac979a5176"
     },
     "USG": "0x970b2f2cec66f92de81dae6af363d1d135dd2f97"
   },
