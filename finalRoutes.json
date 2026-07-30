@@ -1961,6 +1961,108 @@
           "display": "USG* >> USG-USDC* >> USDC >> USDC/USDT >> USDT >> WBTC/ETH/USDT >> ETH >> OETH/ETH >> OETH >> msETH/OETH >> msETH/OETH"
         }
       ],
+      "0x839d6bdedff886404a6d7a788ef241e4e28f4802": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 2, 3],
+              [1, 0, 4, 10, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "USG* >> USG-USDC* >> USDC >> WBTC/ETH/USDC >> WBTC >> WBTC/cbBTC >> WBTC/cbBTC"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 2, 3],
+              [1, 0, 4, 10, 2]
+            ]
+          },
+          "display": "USG* >> USG-frxUSD* >> frxUSD >> crvUSD/frxUSD >> crvUSD >> crvUSD/USDC >> USDC >> WBTC/ETH/USDC >> WBTC >> WBTC/cbBTC >> WBTC/cbBTC"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7",
+              "0xd51a44d3fae010294c616388b506acda1bfaae46",
+              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 2, 3],
+              [1, 0, 4, 10, 2]
+            ]
+          },
+          "display": "USG* >> USG-frxUSD* >> frxUSD >> crvUSD/frxUSD >> crvUSD >> crvUSD/USDT >> USDT >> WBTC/ETH/USDT >> WBTC >> WBTC/cbBTC >> WBTC/cbBTC"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x635EF0056A597D13863B73825CcA297236578595",
+              "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+              "0x8a4f252812dFF2A8636E4F7EB249d8FC2E3bd77f",
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802"
+            ],
+            "swapParamsFull": [
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 2, 3],
+              [0, 0, 4, 10, 2]
+            ]
+          },
+          "display": "USG* >> USG-frxUSD* >> frxUSD >> crvUSD/frxUSD >> crvUSD >> GHO/crvUSD >> GHO >> GHO/cbBTC/ETH >> cbBTC >> WBTC/cbBTC >> WBTC/cbBTC"
+        }
+      ],
       "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": [
         {
           "params": {
@@ -4148,6 +4250,110 @@
             ]
           },
           "display": "msETH/OETH >> msETH/OETH >> OETH >> OETH/ETH >> ETH >> WBTC/ETH/USDT >> USDT >> USDC/USDT >> USDC >> USG-USDC* >> USG*"
+        }
+      ]
+    },
+    "0x839d6bdedff886404a6d7a788ef241e4e28f4802": {
+      "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1": [
+        {
+          "params": {
+            "routeAddresses": [
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x97ba10115da528c113462ede9c20d7adc806d93f",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [1, 0, 1, 2, 3],
+              [0, 1, 1, 1, 2],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]
+            ]
+          },
+          "display": "WBTC/cbBTC >> WBTC/cbBTC >> WBTC >> WBTC/ETH/USDC >> USDC >> USG-USDC* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "0x7F86Bf177Dd4F3494b841a37e810A34dD56c829B",
+              "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [1, 0, 1, 2, 3],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2]
+            ]
+          },
+          "display": "WBTC/cbBTC >> WBTC/cbBTC >> WBTC >> WBTC/ETH/USDC >> USDC >> crvUSD/USDC >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "0xd51a44d3fae010294c616388b506acda1bfaae46",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7",
+              "0x390f3595bCa2Df7d23783dFd126427CCeb997BF4",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1"
+            ],
+            "swapParamsFull": [
+              [0, 1, 6, 1, 2],
+              [1, 0, 1, 2, 3],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2]
+            ]
+          },
+          "display": "WBTC/cbBTC >> WBTC/cbBTC >> WBTC >> WBTC/ETH/USDT >> USDT >> crvUSD/USDT >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG*"
+        },
+        {
+          "params": {
+            "routeAddresses": [
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0x839d6bDeDFF886404A6d7a788ef241e4e28F4802",
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
+              "0x8a4f252812dFF2A8636E4F7EB249d8FC2E3bd77f",
+              "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+              "0x635EF0056A597D13863B73825CcA297236578595",
+              "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E",
+              "0x13e12BB0E6A2f1A3d6901a59a9d585e89A6243e1",
+              "0xcacd6fd266af91b8aed52accc382b4e165586e29",
+              "0xefc056790bb19702b2164ec6ea6ba3ae01d81195",
+              "0xb1c2db5d6ca03fce73dbd304d320bf76c55ae1b1"
+            ],
+            "swapParamsFull": [
+              [0, 0, 6, 1, 2],
+              [1, 0, 1, 2, 3],
+              [0, 1, 1, 1, 2],
+              [1, 0, 1, 1, 2],
+              [0, 1, 1, 1, 2]
+            ]
+          },
+          "display": "WBTC/cbBTC >> WBTC/cbBTC >> cbBTC >> GHO/cbBTC/ETH >> GHO >> GHO/crvUSD >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG*"
         }
       ]
     },
