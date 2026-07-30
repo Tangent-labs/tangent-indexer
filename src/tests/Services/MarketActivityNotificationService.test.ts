@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { MarketActivityNotificationService } from "../../services/MarketActivityNotificationService.js"
+import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { SortedEvents } from "../../services/events/UserMarketService.js"
 import { parseEther } from "ethers"
 
 describe("MarketActivityNotificationService", () => {
-  const sendMessage = vi.fn().mockResolvedValue(true)
-  const service = new MarketActivityNotificationService({ sendMessage } as any)
+  const telegramNotifierService = new TelegramNotifierService({ botToken: "token", chatId: "chat" })
+  const sendMessage = vi.spyOn(telegramNotifierService, "sendMessage").mockResolvedValue(true)
+  const service = new MarketActivityNotificationService(telegramNotifierService)
 
   beforeEach(() => {
     sendMessage.mockClear()
@@ -45,19 +47,37 @@ describe("MarketActivityNotificationService", () => {
     ;(events[eventName] as any[]).push({
       ...event,
       market_id: 1n,
-      account: "0xaccount",
-      tx_hash: "0xtx",
+      account: "0x1234567890abcdef1234567890abcdef12345678",
+      tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678",
     })
 
     await service.sendNotifications(events, new Map([[1, "Test Market"]]))
 
     expect(sendMessage).toHaveBeenCalledTimes(1)
-    const message = sendMessage.mock.calls[0][0]
+    const [message, alreadyFormatted] = sendMessage.mock.calls[0]
+    expect(alreadyFormatted).toBe(true)
     expect(message).toContain(`Event: ${eventName}`)
-    expect(message).toContain("Market: Test Market (#1)")
-    expect(message).toContain("Account: 0xaccount")
-    expect(message).toContain("Transaction: 0xtx")
-    amounts.forEach((amount) => expect(message).toContain(amount))
+    expect(message).toContain("Market: Test Market \\(\\#1\\)")
+    expect(message).toContain("Account: [0x1234567890abcdef1234567890abcdef12345678](https://etherscan.io/address/0x1234567890abcdef1234567890abcdef12345678)")
+    expect(message).toContain("Transaction: [0xabcd\\.\\.\\.5678](https://etherscan.io/tx/0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678)")
+    amounts.forEach((amount) => expect(message).toContain(amount.replace(/\./g, "\\.")))
+  })
+
+  it("formats large amounts with thousands separators and at most 2 decimals", async () => {
+    const events = emptySortedEvents()
+    events.Deposit.push({
+      market_id: 1n,
+      account: "0xaccount",
+      staked_amount: parseEther("1432000.23").toString(),
+      tx_hash: "0xtx",
+      block_date: new Date(),
+      block_id: 1,
+    })
+
+    await service.sendNotifications(events, new Map([[1, "Test Market"]]))
+
+    const message = sendMessage.mock.calls[0][0]
+    expect(message).toContain("Staked amount: 1,432,000\\.23")
   })
 
   it("uses a market id fallback when a market name is unavailable", async () => {
@@ -73,7 +93,7 @@ describe("MarketActivityNotificationService", () => {
 
     await service.sendNotifications(events, new Map())
 
-    expect(sendMessage.mock.calls[0][0]).toContain("Market: Market #42 (#42)")
+    expect(sendMessage.mock.calls[0][0]).toContain("Market: Market \\#42 \\(\\#42\\)")
   })
 
   it("does not send notifications for event groups outside market activity scope", async () => {
