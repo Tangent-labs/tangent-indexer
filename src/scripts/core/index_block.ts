@@ -103,6 +103,8 @@ async function main() {
             }
             // Add reward accumulator for rewards tracking
             transferToWatch.push(addresses.utilities.rewardAccumulator)
+            // Add IRCalculator for CheckpointIR event
+            transferToWatch.push(addresses.utilities.irCalculator)
             const transferLogs = await fetchTransferLogs(bestProvider, startBlock, endBlock, transferToWatch)
 
             const savingAccountsLogs = await getSavingAccountLogs(bestProvider, startBlock, endBlock, [
@@ -144,7 +146,7 @@ async function main() {
             const usgLps = await predepositService.getUsgLpKeys()
             const { addLiquidityEvents, addLiquEventsBlockIds } = userPointsService.parseAddLiquidity(transferLogs, usgLps)
 
-            const { checkpointIR, rewardCut, revenuesBlockIds } = await revenuesService.parseRevenuesEvents(logs, transferLogs, mapMarketIdAddresses)
+            const { checkpointIR, rewardCut, revenuesBlockIds } = await revenuesService.parseRevenuesEvents(transferLogs, mapMarketIdAddresses)
 
             // Create a set with all block ID that we need to get the timestamp of
             const uniqueBlockIds = [

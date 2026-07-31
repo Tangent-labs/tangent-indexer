@@ -1,4 +1,4 @@
-import { Log, formatEther, id } from "ethers"
+import { Log, formatEther, formatUnits, id } from "ethers"
 
 import { TRANSFER_TOPICS } from "../../eventFectcher/erc20TransferEventFetcher.js"
 import { RevenuesRepository } from "../../db/RevenuesRepository.js"
@@ -19,6 +19,12 @@ function dayKey(date: Date) {
   return startOfUTCDay(date).getTime()
 }
 
+function endOfUTCDay(date: Date) {
+  const d = new Date(date.getTime())
+  d.setUTCHours(23, 59, 59, 999)
+  return d
+}
+
 export class RevenuesService {
   revenuesRepository: RevenuesRepository
 
@@ -27,7 +33,6 @@ export class RevenuesService {
   }
 
   async parseRevenuesEvents(
-    marketLogs: Log[],
     transferLogs: Log[],
     mapMarketIdAddresses: Map<string, number>
   ): Promise<{ checkpointIR: Prisma.checkpoint_irCreateManyInput[]; rewardCut: Prisma.reward_notifiedCreateManyInput[]; revenuesBlockIds: Set<number> }> {
@@ -42,21 +47,15 @@ export class RevenuesService {
     const checkpointIREvents: Prisma.checkpoint_irCreateManyInput[] = []
     const rewardNotifiedEvents: Prisma.reward_notifiedCreateManyInput[] = []
 
-    marketLogs.forEach((log) => {
-      const logTopic = log.topics[0]
-      uniqueBlockId.add(log.blockNumber)
-      if (id(CHECKPOINT_IR) === logTopic) {
-        const irEvent = parseCheckpointIR(log, mapMarketIdAddresses)
-        checkpointIREvents.push(irEvent)
-      }
-    })
-
     transferLogs.forEach((log) => {
       const logTopic = log.topics[0]
       uniqueBlockId.add(log.blockNumber)
       if (TRANSFER_TOPICS.RewardNotified === logTopic) {
         const rewardNotifiedEvent = parseRewardNotified(log, mapMarketIdAddresses, mapTokenIdAddresses)
         rewardNotifiedEvents.push(rewardNotifiedEvent)
+      } else if (id(CHECKPOINT_IR) === logTopic) {
+        const irEvent = parseCheckpointIR(log, mapMarketIdAddresses)
+        checkpointIREvents.push(irEvent)
       }
     })
     return { checkpointIR: checkpointIREvents, rewardCut: rewardNotifiedEvents, revenuesBlockIds: uniqueBlockId }
@@ -68,9 +67,13 @@ export class RevenuesService {
   }
 
   async computeRevenuesForRange(from: Date, today: Date) {
-    const tokenPrices = await this.revenuesRepository.getRewardTokenPrices(from, today)
+    from = startOfUTCDay(new Date(today.getTime() - DAY_MS))
+    today = endOfUTCDay(today)
+
+    const [tokenPrices, allTokens] = await Promise.all([this.revenuesRepository.getRewardTokenPrices(from, today), this.revenuesRepository.getRevenuesTokens()])
 
     const tokenPricesPerDate = new Map<number, Prisma.revenues_token_pricesCreateManyInput[]>()
+    const tokenDecimalsPerId = new Map(allTokens.map((t) => [Number(t.id), t.decimals]))
 
     tokenPrices.forEach((t) => {
       const key = dayKey(t.day)
@@ -87,7 +90,6 @@ export class RevenuesService {
     const yesterday = startOfUTCDay(new Date(today.getTime() - DAY_MS))
     const yesterdayKey = dayKey(yesterday)
 
-    const allTokens = await this.revenuesRepository.getRevenuesTokens()
     const tokensWithYesterdayPrice = new Set((tokenPricesPerDate.get(yesterdayKey) ?? []).map((p) => p.token_id.toString()))
     const missingTokens = allTokens.filter((t) => !tokensWithYesterdayPrice.has(t.id.toString()))
 
@@ -154,7 +156,7 @@ export class RevenuesService {
 
       // For D0, take the price of D-1 since D0 price isn't settled yet
       const pricesForDay = isToday ? tokenPricesPerDate.get(yesterdayKey) : tokenPricesPerDate.get(key)
-      const priceByTokenId = new Map((pricesForDay ?? []).map((p) => [p.token_id.toString(), p.price]))
+      const priceByTokenId = new Map((pricesForDay ?? []).map((p) => [p.token_id.toString(), p]))
 
       const irRevenueByMarket = new Map<string, number>()
       dayInterests.forEach((i) => {
@@ -169,7 +171,7 @@ export class RevenuesService {
         const price = priceByTokenId.get(r.token_id.toString())
         if (price === undefined) return
         const marketKey = r.market_id.toString()
-        const value = Number(formatEther(r.reward_cut)) * price
+        const value = Number(formatUnits(r.reward_cut, tokenDecimalsPerId.get(Number(price.token_id)))) * price.price
         rewardsRevenueByMarket.set(marketKey, (rewardsRevenueByMarket.get(marketKey) ?? 0) + value)
       })
 

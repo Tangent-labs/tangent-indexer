@@ -183,11 +183,11 @@ export class UserPointsService {
   sortPointsActionsLogs = (logs: Log[]) => {
     const transferEvents: Prisma.transfer_eventsCreateManyInput[] = []
     const uniqueBlockId: Set<number> = new Set()
-
+    const sigsToExclude = [TRANSFER_TOPICS.AddLiquidity, TRANSFER_TOPICS.AddLiquidity2, TRANSFER_TOPICS.CheckpointIR, TRANSFER_TOPICS.RewardNotified]
     logs.forEach((log) => {
       const logSignature = log.topics[0]
-      if (![TRANSFER_TOPICS.AddLiquidity, TRANSFER_TOPICS.AddLiquidity2].includes(logSignature)) {
-        let transferEvent: Prisma.transfer_eventsUncheckedCreateInput
+      if (!sigsToExclude.includes(logSignature)) {
+        let transferEvent: Prisma.transfer_eventsUncheckedCreateInput | undefined
         switch (logSignature) {
           case TRANSFER_TOPICS.Staked:
             transferEvent = parseStakeConvexEvent(log)

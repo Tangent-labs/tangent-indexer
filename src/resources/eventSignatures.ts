@@ -33,7 +33,7 @@ export const STAKED = "Staked(address,uint256)"
 export const WITHDRAWN = "Withdrawn(address,uint256)"
 
 export const VOTE_FOR_GAUGE = "VoteForGauge(uint256,address,address,uint256)"
-export const CHECKPOINT_IR = "CheckpointIR(address,uint256,unit256)"
+export const CHECKPOINT_IR = "CheckpointIR(address,uint256,uint256)"
 
 // Event signatures and topics
 export const EVENT_TOPICS = {
