@@ -48,6 +48,8 @@ describe("RevenuesService.computeRevenuesForRange", () => {
       getRewardTokenPrices: vi.fn().mockResolvedValue([{ day: yesterday, price: 0.5, token_id: 1n }]),
       getUSGMintedInterests: vi.fn().mockResolvedValue([{ block_date: today, market_id: 10n, interest: "2000000000000000000" }]),
       getRewardCuts: vi.fn().mockResolvedValue([{ block_date: today, market_id: 10n, token_id: 1n, reward_cut: "1000000000000000000" }]),
+      // yesterday is already closed out, so only today gets (re)computed
+      getDailyRevenues: vi.fn().mockResolvedValue([{ day: yesterday, ir_revenue: 0, rewards_revenue: 0 }]),
     })
 
     const service = new RevenuesService(repository)
@@ -69,6 +71,8 @@ describe("RevenuesService.computeRevenuesForRange", () => {
     const repository = buildRepository({
       getRewardTokenPrices: vi.fn().mockResolvedValue([]),
       getRewardCuts: vi.fn().mockResolvedValue([{ block_date: today, market_id: 10n, token_id: 1n, reward_cut: "1000000000000000000" }]),
+      // yesterday is already closed out, so only today gets (re)computed
+      getDailyRevenues: vi.fn().mockResolvedValue([{ day: yesterday, ir_revenue: 0, rewards_revenue: 0 }]),
     })
 
     const service = new RevenuesService(repository)
@@ -106,6 +110,8 @@ describe("RevenuesService.computeRevenuesForRange", () => {
       getUSGMintedInterests: vi.fn().mockResolvedValue([{ block_date: today, market_id: 20n, interest: "3000000000000000000" }]),
       // token_id 99n has no matching price row
       getRewardCuts: vi.fn().mockResolvedValue([{ block_date: today, market_id: 20n, token_id: 99n, reward_cut: "5000000000000000000" }]),
+      // yesterday is already closed out, so only today gets (re)computed
+      getDailyRevenues: vi.fn().mockResolvedValue([{ day: yesterday, ir_revenue: 0, rewards_revenue: 0 }]),
     })
 
     const service = new RevenuesService(repository)
@@ -127,6 +133,8 @@ describe("RevenuesService.computeRevenuesForRange", () => {
         { block_date: today, market_id: 20n, interest: "1000000000000000000" },
       ]),
       getRewardCuts: vi.fn().mockResolvedValue([{ block_date: today, market_id: 20n, token_id: 1n, reward_cut: "1000000000000000000" }]),
+      // yesterday is already closed out, so only today gets (re)computed
+      getDailyRevenues: vi.fn().mockResolvedValue([{ day: yesterday, ir_revenue: 0, rewards_revenue: 0 }]),
     })
 
     const service = new RevenuesService(repository)
