@@ -193,7 +193,7 @@ export function parseRepayEvent(log: Log, mapMarketIdPerAddress: Map<string, num
 }
 
 export function parseRepayAndWithdrawEvent(log: Log, mapMarketIdPerAddress: Map<string, number>): Prisma.repay_and_withdrawCreateManyInput {
-  const [repaidAmount, withdrawnAmount, debtShares] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "uint256"], log.data)
+  const [withdrawnAmount, repaidAmount, debtShares] = AbiCoder.defaultAbiCoder().decode(["uint256", "uint256", "uint256"], log.data)
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
     account: userAddress(log.topics[1]),
