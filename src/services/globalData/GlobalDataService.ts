@@ -10,7 +10,7 @@ import { chainView } from "../../utils/chainView.js"
 import GlobalDataChainview from "../../abis/GlobalDataChainview.json" with { type: "json" }
 import { NumMap } from "../../services/boost/types.js"
 import { bigIntToNumber } from "../../utils/formatting.js"
-import { defiLLamaFetchPrices } from "./DefiLLamaPriceFetcher.js"
+import { defiLLamaFetchPricesCurrent } from "./DefiLLamaPriceFetcher.js"
 import {
   APR_TYPE,
   ConvexFxnApiReturn,
@@ -37,6 +37,7 @@ import { WStableRepository } from "../../db/WStableRepository.js"
 import { AddressesJson } from "../../type/data.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
 import { CallApiService } from "../CallApiService.js"
+import { RevenuesService } from "../events/RevenuesService.js"
 
 const rewardTokens = [
   { symbol: "CRV", address: COMMON_ERC20S.CRV },
@@ -79,6 +80,7 @@ export class GlobalDataService {
   pegMonitoredTokenRepository: PegMonitoredTokenRepository
   provider: JsonRpcProvider
   callApiService: CallApiService
+  revenuesService: RevenuesService
 
   constructor(
     provider: JsonRpcProvider,
@@ -90,7 +92,8 @@ export class GlobalDataService {
     wStableRepository: WStableRepository,
     globalHistoryDataRepository: GlobalHistoryDataRepository,
     marketContractsRepository: MarketContractsRepository,
-    pegMonitoredTokenRepository: PegMonitoredTokenRepository
+    pegMonitoredTokenRepository: PegMonitoredTokenRepository,
+    revenueService: RevenuesService
   ) {
     this.provider = provider
     this.callApiService = callApiService
@@ -102,6 +105,7 @@ export class GlobalDataService {
     this.globalHistoryDataRepository = globalHistoryDataRepository
     this.marketContractsRepo = marketContractsRepository
     this.pegMonitoredTokenRepository = pegMonitoredTokenRepository
+    this.revenuesService = revenueService
   }
 
   async globalDataProcess() {
@@ -132,7 +136,7 @@ export class GlobalDataService {
     const tokenAddresses = [
       ...new Set([...rewardTokens.map((a) => a.address), ...markets.map((m) => m.collateral_address), ...monitoredAddresses, ...refAddresses]),
     ]
-    const prices = await defiLLamaFetchPrices(tokenAddresses)
+    const prices = await defiLLamaFetchPricesCurrent(tokenAddresses)
 
     const {
       formattedData: marketsData,
@@ -169,6 +173,8 @@ export class GlobalDataService {
       total_debt: marketsTotalBorrowed,
       total_tvl: marketsTotalDeposited + tvlsUSG + keepersTVL + wStablesTVL,
     }
+
+    await this.revenuesService.computeRevenuesForRange(now, now)
 
     await this.insertOrUpdateGlobalData(
       marketsData,
