@@ -531,7 +531,9 @@ export class GlobalDataService {
 
             fxnData.rewardCoins.forEach((rewardCoin, i) => {
               const key = rewardTokens.find((rewardToken) => rewardToken.address.toLowerCase() === rewardCoin.address.toLowerCase())!.symbol
-              projectedAPR[key] = fxnData.rewardAprs[i] * ((100 - rewardCut) / 100)
+              // Convex can list the same reward token several times (e.g. two FXN distributors on USDC/fxUSD):
+              // accumulate instead of assigning, otherwise the last entry (possibly 0) overwrites the real APR.
+              projectedAPR[key] = (projectedAPR[key] ?? 0) + fxnData.rewardAprs[i] * ((100 - rewardCut) / 100)
             })
           } else {
             console.error("No ConvexFXN API data ")
