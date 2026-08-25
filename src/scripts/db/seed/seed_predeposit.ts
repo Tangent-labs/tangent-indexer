@@ -1,13 +1,35 @@
 import { PrismaClient } from "@prisma/client"
-import { parseEther } from "ethers"
+import { JsonRpcProvider, parseEther } from "ethers"
 import { AddressesJson } from "../../../type/data.js"
 import { TransactionPrisma } from "../../../type/prisma.js"
+import { fetchLpCoins } from "../../../utils/lpCoins.js"
 
-export async function seedPredeposit(prisma: PrismaClient | TransactionPrisma, addresses: AddressesJson) {
+export async function seedPredeposit(prisma: PrismaClient | TransactionPrisma, addresses: AddressesJson, provider: JsonRpcProvider) {
+  const usgUsdc = addresses.lps["USG-USDC"].toLowerCase()
+  const usgFrxUsd = addresses.lps["USG-frxUSD"].toLowerCase()
+
+  // The coin order is fixed at pool creation, it drives which side of an LP event is USG
+  // and which decimals each amount uses, so it is read on chain rather than assumed
+  const [usgUsdcCoins, usgFrxUsdCoins] = await Promise.all([fetchLpCoins(provider, usgUsdc), fetchLpCoins(provider, usgFrxUsd)])
+
   const lps = await prisma.usg_lp_keys.createManyAndReturn({
     data: [
-      { lp_name: "USG-USDC", lp_address: addresses.lps["USG-USDC"].toLowerCase() },
-      { lp_name: "USG-frxUSD", lp_address: addresses.lps["USG-frxUSD"].toLowerCase() },
+      {
+        lp_name: "USG-USDC",
+        lp_address: usgUsdc,
+        token_0: usgUsdcCoins.token0,
+        token_0_decimals: usgUsdcCoins.token0Decimals,
+        token_1: usgUsdcCoins.token1,
+        token_1_decimals: usgUsdcCoins.token1Decimals,
+      },
+      {
+        lp_name: "USG-frxUSD",
+        lp_address: usgFrxUsd,
+        token_0: usgFrxUsdCoins.token0,
+        token_0_decimals: usgFrxUsdCoins.token0Decimals,
+        token_1: usgFrxUsdCoins.token1,
+        token_1_decimals: usgFrxUsdCoins.token1Decimals,
+      },
     ],
   })
 

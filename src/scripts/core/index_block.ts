@@ -27,7 +27,7 @@ import { getSavingAccountLogs } from "../../eventFectcher/savingAccountEventFetc
 
 import { indexerConfig } from "../../config/indexer_config.js"
 import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
-import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
+import { SavingAccountServices } from "../../services/globalData/SavingAccountServices.js"
 import { PredepositCampaignService } from "../../services/PredepositCampaignService.js"
 import { MarketActivityNotificationService } from "../../services/MarketActivityNotificationService.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
@@ -36,8 +36,10 @@ import { getAddressesJson } from "../../utils/jsonReader.js"
 import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
 import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
 import { MORPHO_MARKETS } from "@tangent/defi-resources"
-import { RevenuesService } from "../../services/events/RevenuesService.js"
+import { RevenuesService } from "../../services/globalData/RevenuesService.js"
 import { RevenuesRepository } from "../../db/RevenuesRepository.js"
+import { LiquidityService } from "../../services/globalData/LiquidityService.js"
+import { LiquidityRepository } from "../../db/LiquidityRepository.js"
 
 dotenv.config()
 
@@ -59,6 +61,7 @@ async function main() {
     savingAccountService,
     predepositService,
     revenuesService,
+    liquidityService,
     setTransaction,
     addresses,
   } = await setUpIndexerBlockServices()
@@ -91,7 +94,7 @@ async function main() {
             mapMarketNamesById = loadedMarketNamesById
 
             // Fetch all User market logs
-            const logs = await getEthLogs(bestProvider, startBlock, endBlock, marketAddresses, [])
+            const marketLogs = await getEthLogs(bestProvider, startBlock, endBlock, marketAddresses, [])
 
             const transferToWatch = await userPointsService.getERC20ToTrack()
 
@@ -132,7 +135,7 @@ async function main() {
             const savingAccountsBlockIds = savingAccountsLogs.map((log) => log.block_id)
             // Parse events with their proper topics and group all user events to update active borrowers
             const { activeBorrowActions, sortedAndParsedEvents, blockIds, users, debtSharesCheckpoints } = userMarketService.sortUserMarketLogs(
-              logs,
+              marketLogs,
               mapMarketIdAddresses
             )
             // Recomposer transfer events for debt tasks
@@ -144,7 +147,10 @@ async function main() {
             const { transferEvents: morphoTransferEvents, morphoEventsBlockIds } = userPointsService.sortMorphoCollateralLogs(morphoLogs)
 
             const usgLps = await predepositService.getUsgLpKeys()
-            const { addLiquidityEvents, addLiquEventsBlockIds } = userPointsService.parseAddLiquidity(transferLogs, usgLps)
+            const { addLiquidityEvents, addLiquEventsBlockIds, removeLiquidityEvents, tokenExchangeEvents } = userPointsService.parseLiquidityEvents(
+              transferLogs,
+              usgLps
+            )
 
             const { checkpointIR, rewardCut, revenuesBlockIds } = await revenuesService.parseRevenuesEvents(transferLogs, mapMarketIdAddresses)
 
@@ -168,14 +174,21 @@ async function main() {
             marketActivityEvents = hydratedWithCorrectDates.sortedParsedEvents
 
             const mergedTransferEvents = transferEvents.concat(debtTransferEvents).concat(morphoTransferEvents)
-            const transferEventsRightDates = userPointsService.replaceDates<Prisma.transfer_eventsCreateManyInput>(mergedTransferEvents, blocks)
 
+            const transferEventsRightDates = userPointsService.replaceDates<Prisma.transfer_eventsCreateManyInput>(mergedTransferEvents, blocks)
             const addLiquidityEventsRightDates = userPointsService.replaceDates<Prisma.add_liquidity_eventsCreateManyInput>(addLiquidityEvents, blocks)
             const checkpointsIREvents = userPointsService.replaceDates<Prisma.checkpoint_irCreateManyInput>(checkpointIR, blocks)
             const rewardCutEvents = userPointsService.replaceDates<Prisma.reward_notifiedCreateManyInput>(rewardCut, blocks)
+            const tokenExchangeEventsRightDates = userPointsService.replaceDates<Prisma.token_exchangeCreateManyInput>(tokenExchangeEvents, blocks)
+            const removeLiquidityEventsRightDates = userPointsService.replaceDates<Prisma.remove_liquidityCreateManyInput>(removeLiquidityEvents, blocks)
 
-            // Insert user points actions
-            await userPointsService.insertEvents(transferEventsRightDates, addLiquidityEventsRightDates)
+            // Insert liquidity events ( transfer, add, remove, swap )
+            await liquidityService.insertEvents(
+              transferEventsRightDates,
+              addLiquidityEventsRightDates,
+              removeLiquidityEventsRightDates,
+              tokenExchangeEventsRightDates
+            )
 
             // Insert user events
             await userMarketService.insertEvents(hydratedWithCorrectDates.sortedParsedEvents)
@@ -230,6 +243,7 @@ async function setUpIndexerBlockServices() {
   const savingAccountRepository = new SavingAccountRepository(prismaClient)
   const predepositRepository = new PredepositCampaignRepository(prismaClient)
   const revenuesRepository = new RevenuesRepository(prismaClient)
+  const liquidityRepository = new LiquidityRepository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
     blockRepository.setClient(dbTransaction)
@@ -242,6 +256,7 @@ async function setUpIndexerBlockServices() {
     savingAccountRepository.setClient(dbTransaction)
     predepositRepository.setClient(dbTransaction)
     revenuesRepository.setClient(dbTransaction)
+    liquidityRepository.setClient(dbTransaction)
   }
 
   const addresses = await getAddressesJson()
@@ -257,6 +272,7 @@ async function setUpIndexerBlockServices() {
   const predepositService = new PredepositCampaignService(predepositRepository, blockRepository)
   const indexerExecutionLogService = IndexerExecutionLogService.fromClient(prismaClient)
   const revenuesService = new RevenuesService(revenuesRepository)
+  const liquidityService = new LiquidityService(liquidityRepository)
 
   const telegramNotifierService = new TelegramNotifierService({
     botToken: process.env.TELEGRAM_BOT_TOKEN!,
@@ -280,6 +296,7 @@ async function setUpIndexerBlockServices() {
     blockService,
     voteEnventService,
     activeBorrowersService,
+    liquidityService,
     setTransaction,
     marketContractsRepository,
     blockRepository,

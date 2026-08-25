@@ -2,28 +2,11 @@ import { Log, formatEther, formatUnits, id } from "ethers"
 
 import { TRANSFER_TOPICS } from "../../eventFectcher/erc20TransferEventFetcher.js"
 import { RevenuesRepository } from "../../db/RevenuesRepository.js"
-import { defiLLamaFetchPricesHistorical, getPriceInfos } from "../globalData/DefiLLamaPriceFetcher.js"
+import { defiLLamaFetchPricesHistorical, getPriceInfos } from "./DefiLLamaPriceFetcher.js"
 import { Prisma } from "@prisma/client"
 import { parseCheckpointIR, parseRewardNotified } from "../../eventFectcher/revenuesEvents.parser.js"
 import { CHECKPOINT_IR } from "../../resources/eventSignatures.js"
-
-const DAY_MS = 24 * 60 * 60 * 1000
-
-function startOfUTCDay(date: Date) {
-  const d = new Date(date.getTime())
-  d.setUTCHours(0, 0, 0, 0)
-  return d
-}
-
-function dayKey(date: Date) {
-  return startOfUTCDay(date).getTime()
-}
-
-function endOfUTCDay(date: Date) {
-  const d = new Date(date.getTime())
-  d.setUTCHours(23, 59, 59, 999)
-  return d
-}
+import { DAY_MS, dayKey, endOfUTCDay, startOfUTCDay } from "../../utils/date.js"
 
 export class RevenuesService {
   revenuesRepository: RevenuesRepository
@@ -67,10 +50,13 @@ export class RevenuesService {
   }
 
   async computeRevenuesForRange(from: Date, today: Date) {
-    from = startOfUTCDay(new Date(today.getTime() - DAY_MS))
-    today = endOfUTCDay(today)
+    const rangeStart = startOfUTCDay(from)
+    const rangeEnd = endOfUTCDay(today)
 
-    const [tokenPrices, allTokens] = await Promise.all([this.revenuesRepository.getRewardTokenPrices(from, today), this.revenuesRepository.getRevenuesTokens()])
+    const [tokenPrices, allTokens] = await Promise.all([
+      this.revenuesRepository.getRewardTokenPrices(rangeStart, rangeEnd),
+      this.revenuesRepository.getRevenuesTokens(),
+    ])
 
     const tokenPricesPerDate = new Map<number, Prisma.revenues_token_pricesCreateManyInput[]>()
     const tokenDecimalsPerId = new Map(allTokens.map((t) => [Number(t.id), t.decimals]))
@@ -124,17 +110,17 @@ export class RevenuesService {
 
     // Retrieve revenues events getUSGMintedInterests and getRewardCuts
     const [usgMintedInterests, rewardCuts] = await Promise.all([
-      this.revenuesRepository.getUSGMintedInterests(from, today),
-      this.revenuesRepository.getRewardCuts(from, today),
+      this.revenuesRepository.getUSGMintedInterests(rangeStart, rangeEnd),
+      this.revenuesRepository.getRewardCuts(rangeStart, rangeEnd),
     ])
 
     // Retrieve revenues of each day between from and today
-    const alreadyComputedDays = await this.revenuesRepository.getDailyRevenues(from, today)
+    const alreadyComputedDays = await this.revenuesRepository.getDailyRevenues(rangeStart, rangeEnd)
     const computedDaysKeys = new Set(alreadyComputedDays.map((d) => dayKey(d.day)))
 
-    const todayKey = dayKey(today)
+    const todayKey = dayKey(rangeEnd)
     const days: Date[] = []
-    for (let t = startOfUTCDay(from).getTime(); t <= todayKey; t += DAY_MS) {
+    for (let t = startOfUTCDay(rangeStart).getTime(); t <= todayKey; t += DAY_MS) {
       days.push(new Date(t))
     }
 

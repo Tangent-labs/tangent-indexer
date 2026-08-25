@@ -8,6 +8,10 @@ export const TRANSFER_TOPICS = {
   Withdrawn: id("Withdrawn(address,uint256)"),
   AddLiquidity: id("AddLiquidity(address,uint256[],uint256[],uint256,uint256)"),
   AddLiquidity2: id("AddLiquidity(address,uint256[2],uint256[2],uint256,uint256)"),
+  TokenExchange: id("TokenExchange(address,int128,uint256,int128,uint256)"),
+  RemoveLiquidity: id("RemoveLiquidity(address,uint256[],uint256[],uint256)"),
+  RemoveLiquidityOne: id("RemoveLiquidityOne(address,int128,uint256,uint256,uint256)"),
+  RemoveLiquidityImbalance: id("RemoveLiquidityImbalance(address,uint256[],uint256[],uint256,uint256)"),
   RewardNotified: id("RewardNotified(address,address,uint256,uint256,uint256)"), // Only for Reward rewardAccumulator
   CheckpointIR: id("CheckpointIR(address,uint256,uint256)"), // Only for IRCalculator
 }

@@ -14,6 +14,7 @@ prisma/migrations
 /src/addresses.json
 /src/config/credentials-gDrive.json
 .liquidation_errors.log
+prod.sql
 
 .local
 .claude

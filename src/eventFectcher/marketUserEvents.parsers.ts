@@ -105,6 +105,74 @@ export function parseAddLiquidity2(log: Log, lpId: bigint, lpAmount: string): Pr
   }
 }
 
+export function parseRemoveLiquidity(log: Log, lpId: bigint): Prisma.remove_liquidityCreateManyInput {
+  const [tokenAmounts, , ,] = AbiCoder.defaultAbiCoder().decode(["uint256[]", "uint256[]", "uint256"], log.data)
+
+  const provider = userAddress(log.topics[1])
+
+  return {
+    usg_lp_id: lpId,
+    provider: provider.toLowerCase(),
+    token0_amount: tokenAmounts[0].toString(),
+    token1_amount: tokenAmounts[1].toString(),
+    block_date: new Date(), // placeholder
+    block_id: Number(log.blockNumber),
+    tx_hash: log.transactionHash,
+  }
+}
+
+export function parseRemoveLiquidityOne(log: Log, lpId: bigint): Prisma.remove_liquidityCreateManyInput {
+  const [tokenId, , coinAmount] = AbiCoder.defaultAbiCoder().decode(["int128", "uint256", "uint256", "uint256"], log.data)
+
+  const provider = userAddress(log.topics[1])
+  // Only the coin at `token_id` is withdrawn, the other side is untouched
+  const withdrawnIndex = Number(tokenId)
+
+  return {
+    usg_lp_id: lpId,
+    provider: provider.toLowerCase(),
+    token0_amount: withdrawnIndex === 0 ? coinAmount.toString() : "0",
+    token1_amount: withdrawnIndex === 1 ? coinAmount.toString() : "0",
+    block_date: new Date(), // placeholder
+    block_id: Number(log.blockNumber),
+    tx_hash: log.transactionHash,
+  }
+}
+
+export function parseRemoveLiquidityImbalance(log: Log, lpId: bigint): Prisma.remove_liquidityCreateManyInput {
+  const [tokenAmounts, , ,] = AbiCoder.defaultAbiCoder().decode(["uint256[]", "uint256[]", "uint256", "uint256"], log.data)
+
+  const provider = userAddress(log.topics[1])
+
+  return {
+    usg_lp_id: lpId,
+    provider: provider.toLowerCase(),
+    token0_amount: tokenAmounts[0].toString(),
+    token1_amount: tokenAmounts[1].toString(),
+    block_date: new Date(), // placeholder
+    block_id: Number(log.blockNumber),
+    tx_hash: log.transactionHash,
+  }
+}
+
+export function parseTokenExchange(log: Log, lpId: bigint): Prisma.token_exchangeCreateManyInput {
+  const [soldId, tokensSold, boughtId, tokensBought] = AbiCoder.defaultAbiCoder().decode(["int128", "uint256", "int128", "uint256"], log.data)
+
+  const buyer = userAddress(log.topics[1])
+
+  return {
+    usg_lp_id: lpId,
+    buyer: buyer.toLowerCase(),
+    sold_id: Number(soldId),
+    tokens_sold: tokensSold.toString(),
+    bought_id: Number(boughtId),
+    tokens_bought: tokensBought.toString(),
+    block_date: new Date(), // placeholder
+    block_id: Number(log.blockNumber),
+    tx_hash: log.transactionHash,
+  }
+}
+
 export function parseDepositEvent(log: Log, mapMarketIdPerAddress: Map<string, number>): Prisma.depositCreateManyInput {
   const [stakedAmount] = AbiCoder.defaultAbiCoder().decode(["uint256"], log.data)
 

@@ -5,7 +5,7 @@ import * as dotenv from "dotenv"
 import { PrismaClient } from "@prisma/client"
 
 import { RevenuesRepository } from "../../../db/RevenuesRepository.js"
-import { RevenuesService } from "../../../services/events/RevenuesService.js"
+import { RevenuesService } from "../../../services/globalData/RevenuesService.js"
 
 dotenv.config()
 
