@@ -2,7 +2,7 @@
 
 ## About The Project
 
-Here's the project that we use to index onChain data for Convergence protocol. The main aim is to compute and store in a database:
+Here's the project that we use to index onChain data for the Tangent protocol. The main aim is to compute and store in a database:
 
 - data that the Blockchain cannot compute.
 - data that tooks to much time to be retrieved fully onChain
@@ -116,7 +116,7 @@ flowchart TD
     G -->x[Save Market & Borrower Data in file]
     x --> H[Get liquidation data from chainview]
     F --> H
-    H --> L{Is alid?}
+    H --> L{Is valid?}
     L -->|No| D
     L -->|Yes| M[Analyze Liquidations]
     M --> N[Process Hard Liquidations]
@@ -140,17 +140,3 @@ flowchart TD
     style E fill:#bbf,stroke:#333,stroke-width:2px
     style I fill:#bbf,stroke:#333,stroke-width:2px
 ```
-
-## Snapshot Vote ( TODO )
-
-## Seeds
-
-`npm run tangent:feed-tokens`
-`npm run tangent:feed-tasks`
-
-Then deploy & context on contracts
-
-`npm run tangent:indexer-block`
-`npm run tangent:indexer-points`
-
-..
