@@ -2,7 +2,7 @@
 
 ## About The Project
 
-Here's the project that we use to index onChain data for Convergence protocol. The main aim is to compute and store in a database:
+Here's the project that we use to index onChain data for Tangent protocol. The main aim is to compute and store in a database:
 
 - data that the Blockchain cannot compute.
 - data that tooks to much time to be retrieved fully onChain
@@ -11,7 +11,7 @@ Here's the project that we use to index onChain data for Convergence protocol. T
 The Indexer is a Typescript project that:
 
 - Iterates indefinetly
-- Listens events on all the CVG contracts
+- Listens events on all TAN contracts
 - Computes data based on event reception
 - Stores events & computed data in a database
 - Can be clean and restarded from the beginning ( if we want to update it )
@@ -48,7 +48,7 @@ The Indexer is a Typescript project that:
   ```sh
   $ npm run clean
   ```
-- LAST_BLOCK_INDEXED && CONTRACT_CVG_CONTROL_TOWER are used only at the first run of index.ts. After that first execution, they will be registered & updated in the database
+- LAST_BLOCK_INDEXED is used only at the first run of index.ts. After that first execution, they will be registered & updated in the database
 
 ## Useful Commands
 
@@ -70,7 +70,7 @@ Create database tables from Prisma schema
 
 ## Liquidation Bot
 
-The Liquidation Bot is a critical component that monitors and processes liquidations in the Convergence protocol. It performs the following functions:
+The Liquidation Bot is a critical component that monitors and processes liquidations in USG protocol. It performs the following functions:
 
 1. **Parameter Collection**
 
@@ -140,17 +140,5 @@ flowchart TD
     style E fill:#bbf,stroke:#333,stroke-width:2px
     style I fill:#bbf,stroke:#333,stroke-width:2px
 ```
-
-## Snapshot Vote ( TODO )
-
-## Seeds
-
-`npm run tangent:feed-tokens`
-`npm run tangent:feed-tasks`
-
-Then deploy & context on contracts
-
-`npm run tangent:indexer-block`
-`npm run tangent:indexer-points`
 
 ..
