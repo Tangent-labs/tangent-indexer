@@ -37,7 +37,9 @@ import { WStableRepository } from "../../db/WStableRepository.js"
 import { AddressesJson } from "../../type/data.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
 import { CallApiService } from "../CallApiService.js"
-import { RevenuesService } from "../events/RevenuesService.js"
+import { RevenuesService } from "./RevenuesService.js"
+import { VolumeService } from "./VolumeService.js"
+import { DAY_MS } from "../../utils/date.js"
 
 const rewardTokens = [
   { symbol: "CRV", address: COMMON_ERC20S.CRV },
@@ -81,6 +83,7 @@ export class GlobalDataService {
   provider: JsonRpcProvider
   callApiService: CallApiService
   revenuesService: RevenuesService
+  volumeService: VolumeService
 
   constructor(
     provider: JsonRpcProvider,
@@ -93,7 +96,8 @@ export class GlobalDataService {
     globalHistoryDataRepository: GlobalHistoryDataRepository,
     marketContractsRepository: MarketContractsRepository,
     pegMonitoredTokenRepository: PegMonitoredTokenRepository,
-    revenueService: RevenuesService
+    revenueService: RevenuesService,
+    volumeService: VolumeService
   ) {
     this.provider = provider
     this.callApiService = callApiService
@@ -106,6 +110,7 @@ export class GlobalDataService {
     this.marketContractsRepo = marketContractsRepository
     this.pegMonitoredTokenRepository = pegMonitoredTokenRepository
     this.revenuesService = revenueService
+    this.volumeService = volumeService
   }
 
   async globalDataProcess() {
@@ -174,7 +179,10 @@ export class GlobalDataService {
       total_tvl: marketsTotalDeposited + tvlsUSG + keepersTVL + wStablesTVL,
     }
 
-    await this.revenuesService.computeRevenuesForRange(now, now)
+    await this.revenuesService.computeRevenuesForRange(new Date(now.getTime() - DAY_MS), now)
+
+    // Recompute D-1 one last time along with the running day
+    await this.volumeService.computeVolumesForRange(new Date(now.getTime() - DAY_MS), now)
 
     await this.insertOrUpdateGlobalData(
       marketsData,

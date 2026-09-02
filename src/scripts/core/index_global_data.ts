@@ -12,7 +12,7 @@ import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
 import { TotalSupplyRepository } from "../../db/TotalSupplyRepository.js"
 import { WStableRepository } from "../../db/WStableRepository.js"
 import { CallApiService } from "../../services/CallApiService.js"
-import { SavingAccountServices } from "../../services/events/SavingAccountServices.js"
+import { SavingAccountServices } from "../../services/globalData/SavingAccountServices.js"
 import { GlobalDataService } from "../../services/globalData/GlobalDataService.js"
 import { IndexerExecutionLogService } from "../../services/IndexerExecutionLogService.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
@@ -24,7 +24,9 @@ import { indexerConfig } from "../../config/indexer_config.js"
 import { MonitoringRepository } from "../../db/MonitoringRepository.js"
 import { MonitoringAlertService } from "../../services/MonitoringAlertService.js"
 import { RevenuesRepository } from "../../db/RevenuesRepository.js"
-import { RevenuesService } from "../../services/events/RevenuesService.js"
+import { RevenuesService } from "../../services/globalData/RevenuesService.js"
+import { VolumeRepository } from "../../db/VolumeRepository.js"
+import { VolumeService } from "../../services/globalData/VolumeService.js"
 
 dotenv.config()
 
@@ -104,6 +106,7 @@ function setUpIndexerGlobalData() {
   const globalHistoryDataRepository = new GlobalHistoryDataRepository(prismaClient)
   const pegMonitoredTokenRepository = new PegMonitoredTokenRepository(prismaClient)
   const revenuesRepository = new RevenuesRepository(prismaClient)
+  const volumeRepository = new VolumeRepository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
     erc20Repository.setClient(dbTransaction)
@@ -116,6 +119,7 @@ function setUpIndexerGlobalData() {
     globalHistoryDataRepository.setClient(dbTransaction)
     pegMonitoredTokenRepository.setClient(dbTransaction)
     revenuesRepository.setClient(dbTransaction)
+    volumeRepository.setClient(dbTransaction)
   }
 
   const globalDataService = new GlobalDataService(
@@ -129,7 +133,8 @@ function setUpIndexerGlobalData() {
     globalHistoryDataRepository,
     marketContractsRepository,
     pegMonitoredTokenRepository,
-    new RevenuesService(revenuesRepository)
+    new RevenuesService(revenuesRepository),
+    new VolumeService(volumeRepository)
   )
   const totalSupplyRepo = new TotalSupplyRepository(prismaClient)
   const savingAccountService = new SavingAccountServices(savingAccountRepository, provider)

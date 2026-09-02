@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { RevenuesService } from "../../services/events/RevenuesService.js"
+import { RevenuesService } from "../../services/globalData/RevenuesService.js"
 import { RevenuesRepository } from "../../db/RevenuesRepository.js"
 
 import { defiLLamaFetchPricesHistorical } from "../../services/globalData/DefiLLamaPriceFetcher.js"

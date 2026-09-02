@@ -116,7 +116,7 @@ flowchart TD
     G -->x[Save Market & Borrower Data in file]
     x --> H[Get liquidation data from chainview]
     F --> H
-    H --> L{Is alid?}
+    H --> L{Is valid?}
     L -->|No| D
     L -->|Yes| M[Analyze Liquidations]
     M --> N[Process Hard Liquidations]
@@ -140,5 +140,3 @@ flowchart TD
     style E fill:#bbf,stroke:#333,stroke-width:2px
     style I fill:#bbf,stroke:#333,stroke-width:2px
 ```
-
-..

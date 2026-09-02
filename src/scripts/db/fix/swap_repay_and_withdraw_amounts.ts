@@ -7,6 +7,7 @@ const SWAP_SQL = `
   UPDATE events.repay_and_withdraw
   SET repaid_amount = withdrawn_amount,
       withdrawn_amount = repaid_amount
+      WHERE id <= 82
 `
 
 async function main() {

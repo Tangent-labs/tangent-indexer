@@ -7,7 +7,11 @@ import { ERC20Repository } from "../../db/ERC20Repository.js"
 import {
   parseAddLiquidity,
   parseAddLiquidity2,
+  parseRemoveLiquidity,
+  parseRemoveLiquidityImbalance,
+  parseRemoveLiquidityOne,
   parseStakeConvexEvent,
+  parseTokenExchange,
   parseTransferEvent,
   parseWithdrawConvexEvent,
 } from "../../eventFectcher/marketUserEvents.parsers.js"
@@ -164,11 +168,6 @@ export class UserPointsService {
     await this.userPointsRepository.computeUserPoints(blockDates.get(startBlock)!, blockDates.get(endBlock)!)
   }
 
-  insertEvents = async (transferEvents: Prisma.transfer_eventsCreateManyInput[], addLiquidityEvents: Prisma.add_liquidity_eventsCreateManyInput[]) => {
-    await this.userPointsRepository.insertTransfers(transferEvents)
-    await this.userPointsRepository.insertAddLiquidity(addLiquidityEvents)
-  }
-
   replaceDates<T extends { block_date: string | Date; block_id: number }>(events: T[], blockInfos: Map<number, number>): T[] {
     events.forEach((event) => {
       ;(event as any).block_date = new Date(blockInfos.get(event.block_id)! * 1_000)
@@ -183,7 +182,16 @@ export class UserPointsService {
   sortPointsActionsLogs = (logs: Log[]) => {
     const transferEvents: Prisma.transfer_eventsCreateManyInput[] = []
     const uniqueBlockId: Set<number> = new Set()
-    const sigsToExclude = [TRANSFER_TOPICS.AddLiquidity, TRANSFER_TOPICS.AddLiquidity2, TRANSFER_TOPICS.CheckpointIR, TRANSFER_TOPICS.RewardNotified]
+    const sigsToExclude = [
+      TRANSFER_TOPICS.AddLiquidity,
+      TRANSFER_TOPICS.AddLiquidity2,
+      TRANSFER_TOPICS.CheckpointIR,
+      TRANSFER_TOPICS.RewardNotified,
+      TRANSFER_TOPICS.TokenExchange,
+      TRANSFER_TOPICS.RemoveLiquidity,
+      TRANSFER_TOPICS.RemoveLiquidityImbalance,
+      TRANSFER_TOPICS.RemoveLiquidityOne,
+    ]
     logs.forEach((log) => {
       const logSignature = log.topics[0]
       if (!sigsToExclude.includes(logSignature)) {
@@ -216,9 +224,11 @@ export class UserPointsService {
     return parseMorphoCollateralLogs(logs)
   }
 
-  parseAddLiquidity(logs: Log[], usgLpKeys: Prisma.usg_lp_keysCreateManyInput[]) {
+  parseLiquidityEvents(logs: Log[], usgLpKeys: Prisma.usg_lp_keysCreateManyInput[]) {
     const uniqueBlockId: Set<number> = new Set()
     const addLiquidityEvents: Prisma.add_liquidity_eventsCreateManyInput[] = []
+    const removeLiquidityEvents: Prisma.remove_liquidityCreateManyInput[] = []
+    const tokenExchangeEvents: Prisma.token_exchangeCreateManyInput[] = []
 
     logs.forEach((log, i) => {
       const logTopic = log.topics[0]
@@ -240,9 +250,33 @@ export class UserPointsService {
           }
           uniqueBlockId.add(log.blockNumber)
         }
+      } else if ([TRANSFER_TOPICS.RemoveLiquidity, TRANSFER_TOPICS.RemoveLiquidityOne, TRANSFER_TOPICS.RemoveLiquidityImbalance].includes(logTopic)) {
+        const usgKey = usgLpKeys.find((usgLp) => usgLp.lp_address?.toLowerCase() === log.address.toLowerCase())
+
+        if (usgKey) {
+          const lpId = BigInt(usgKey?.id!)
+
+          if (TRANSFER_TOPICS.RemoveLiquidity === logTopic) {
+            removeLiquidityEvents.push(parseRemoveLiquidity(log, lpId))
+          } else if (TRANSFER_TOPICS.RemoveLiquidityOne === logTopic) {
+            removeLiquidityEvents.push(parseRemoveLiquidityOne(log, lpId))
+          } else if (TRANSFER_TOPICS.RemoveLiquidityImbalance === logTopic) {
+            removeLiquidityEvents.push(parseRemoveLiquidityImbalance(log, lpId))
+          }
+          uniqueBlockId.add(log.blockNumber)
+        }
+      } else if (TRANSFER_TOPICS.TokenExchange === logTopic) {
+        const usgKey = usgLpKeys.find((usgLp) => usgLp.lp_address?.toLowerCase() === log.address.toLowerCase())
+
+        if (usgKey) {
+          const lpId = BigInt(usgKey?.id!)
+
+          tokenExchangeEvents.push(parseTokenExchange(log, lpId))
+          uniqueBlockId.add(log.blockNumber)
+        }
       }
     })
-    return { addLiquidityEvents, addLiquEventsBlockIds: Array.from(uniqueBlockId) }
+    return { addLiquidityEvents, addLiquEventsBlockIds: Array.from(uniqueBlockId), removeLiquidityEvents, tokenExchangeEvents }
   }
 
   async recomposeDebtTransferEvents(

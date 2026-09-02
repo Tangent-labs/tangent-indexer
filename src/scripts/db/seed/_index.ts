@@ -30,7 +30,7 @@ async function main() {
     // Insert the points Votes tasks
     await seedVoteTasks(tx as TransactionPrisma)
     // Insert USG LP for mapping them with AddLiquidity during predeposit campaign
-    await seedPredeposit(tx as TransactionPrisma, addresses)
+    await seedPredeposit(tx as TransactionPrisma, addresses, provider)
     // Seed Keepers and WStables contracts
     await seedUSGContracts(tx as TransactionPrisma, addresses)
     // Seed peg monitored tokens (USD stables, ETH LSTs, wrapped BTC)
