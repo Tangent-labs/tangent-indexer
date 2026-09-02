@@ -4,7 +4,6 @@
 
 Here's the project that we use to index onChain data for Tangent protocol. The main aim is to compute and store in a database:
 
-
 - data that the Blockchain cannot compute.
 - data that tooks to much time to be retrieved fully onChain
 - historical data for BI
