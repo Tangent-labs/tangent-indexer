@@ -18,9 +18,10 @@ describe("MonitoringRepository", () => {
     expect(queryRaw).toHaveBeenCalledTimes(1)
 
     const query = (queryRaw.mock.calls[0][0] as TemplateStringsArray).join("?")
-    expect(query).toContain("SELECT DISTINCT ON (ps.market_id, LOWER(ps.borrower_address))")
-    expect(query).toContain("INNER JOIN global.active_borrowers ab")
-    expect(query).toContain("ORDER BY ps.market_id, LOWER(ps.borrower_address), ps.snapshot_timestamp DESC")
+    expect(query).toContain("FROM global.active_borrowers")
+    expect(query).toContain("CROSS JOIN LATERAL")
+    expect(query).toContain("ORDER BY s.snapshot_timestamp DESC")
+    expect(query).toContain("LIMIT 1")
     expect(query).toContain("FROM latest_position_snapshots ps")
     expect(query).not.toContain("target_snapshot")
     expect(query).not.toContain("snapshot_timestamp >=")
