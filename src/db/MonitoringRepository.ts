@@ -68,21 +68,29 @@ export class MonitoringRepository extends AbstractRepository {
         liquidation_threshold: number | null
       }[]
     >`
-      WITH latest_position_snapshots AS (
-        SELECT DISTINCT ON (ps.market_id, LOWER(ps.borrower_address))
-          ps.market_id,
-          ps.borrower_address,
-          ps.cr,
-          ps.distance_pct,
-          ps.liquidation_price,
-          ps.position_value_usd,
-          ps.user_debt,
-          ps.snapshot_timestamp
-        FROM global.position_snapshots ps
-        INNER JOIN global.active_borrowers ab
-          ON ab.market_id = ps.market_id
-          AND LOWER(ab.borrower_address) = LOWER(ps.borrower_address)
-        ORDER BY ps.market_id, LOWER(ps.borrower_address), ps.snapshot_timestamp DESC
+      WITH active AS (
+        SELECT DISTINCT market_id, LOWER(borrower_address) AS borrower_address
+        FROM global.active_borrowers
+      ),
+      latest_position_snapshots AS (
+        SELECT ps.*
+        FROM active ab
+        CROSS JOIN LATERAL (
+          SELECT
+            s.market_id,
+            s.borrower_address,
+            s.cr,
+            s.distance_pct,
+            s.liquidation_price,
+            s.position_value_usd,
+            s.user_debt,
+            s.snapshot_timestamp
+          FROM global.position_snapshots s
+          WHERE s.market_id = ab.market_id
+            AND s.borrower_address = ab.borrower_address
+          ORDER BY s.snapshot_timestamp DESC
+          LIMIT 1
+        ) ps
       )
       SELECT
         ps.market_id,
