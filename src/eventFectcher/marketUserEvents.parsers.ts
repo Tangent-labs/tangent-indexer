@@ -400,10 +400,10 @@ export function parseMigrateFromEvent(log: Log, mapMarketIdPerAddress: Map<strin
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
     account: userAddress(log.topics[1]),
-    collat_withdrawn: collatWithdrawn,
-    debt_removed: debtRemoved,
-    debt_repaid: debtRepaid,
-    debt_shares: debtShares,
+    collat_withdrawn: collatWithdrawn.toString(),
+    debt_removed: debtRemoved.toString(),
+    debt_repaid: debtRepaid.toString(),
+    debt_shares: debtShares.toString(),
     block_date: new Date(), // placeholder
     block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,
@@ -415,9 +415,9 @@ export function parseMigrateToEvent(log: Log, mapMarketIdPerAddress: Map<string,
   return {
     market_id: mapMarketIdPerAddress.get(log.address.toLowerCase())!,
     account: userAddress(log.topics[1]),
-    collat_added: collatAdded,
-    debt_added: debtAdded,
-    debt_shares: debtShares,
+    collat_added: collatAdded.toString(),
+    debt_added: debtAdded.toString(),
+    debt_shares: debtShares.toString(),
     block_date: new Date(), // placeholder
     block_id: Number(log.blockNumber),
     tx_hash: log.transactionHash,

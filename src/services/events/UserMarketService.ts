@@ -83,6 +83,8 @@ export class UserMarketService {
     await this.userEventsRepository.insertLiquidations(sortedParsedEvents.Liquidate)
     await this.userEventsRepository.insertSelfLiquidations(sortedParsedEvents.SelfLiquidate)
     await this.userEventsRepository.insertSeizeCollateral(sortedParsedEvents.SeizeCollateral)
+    await this.userEventsRepository.insertMigrateFrom(sortedParsedEvents.MigrateFrom)
+    await this.userEventsRepository.insertMigrateTo(sortedParsedEvents.MigrateTo)
   }
 
   replaceRightDates(sortedParsedEvents: SortedEvents, userActions: UserAction[], blockInfos: Map<number, number>) {

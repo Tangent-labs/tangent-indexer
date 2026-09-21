@@ -20,6 +20,26 @@ export function parseCheckpointIR(log: Log, mapMarketIdAddresses: Map<string, nu
   }
 }
 
+// All four arguments are unindexed, so everything is read from log.data.
+// Returns null when the market is unknown, rather than letting a bad FK abort the whole
+// indexing transaction.
+export function parseRewardPaid(log: Log, mapMarketIdAddresses: Map<string, number>): Prisma.reward_paidCreateManyInput | null {
+  const [marketAddress, user, rewardToken, reward] = AbiCoder.defaultAbiCoder().decode(["address", "address", "address", "uint256"], log.data)
+
+  const marketId = mapMarketIdAddresses.get(marketAddress.toLowerCase())
+  if (marketId === undefined) return null
+
+  return {
+    market_id: marketId,
+    account: user.toLowerCase(),
+    reward_token: rewardToken.toLowerCase(),
+    amount: reward.toString(),
+    block_date: new Date(), // placeholder
+    block_id: Number(log.blockNumber),
+    tx_hash: log.transactionHash,
+  }
+}
+
 export function parseRewardNotified(
   log: Log,
   mapMarketIdAddresses: Map<string, number>,

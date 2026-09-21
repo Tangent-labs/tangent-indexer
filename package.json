@@ -10,6 +10,7 @@
     "tangent:indexer-points-lp": "npm run build && node dist/scripts/points/index_points_lp.js",
     "tangent:indexer-points-votes": "npm run build && node dist/scripts/points/index_points_votes.js",
     "tangent:indexer-global-data": "npm run build && node dist/scripts/core/index_global_data.js",
+    "tangent:indexer-position-pnl": "npm run build && node dist/scripts/core/index_position_pnl.js",
     "tangent:monitoring-check": "npm run build && node dist/scripts/core/monitoring_check.js",
     "tangent:snapshot-prices": "npm run build && node dist/scripts/points/snapshot_prices.js",
     "tangent:liquidation-check": "npm run build && node dist/scripts/core/liquidation_check.js",

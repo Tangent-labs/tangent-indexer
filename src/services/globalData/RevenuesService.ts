@@ -4,7 +4,7 @@ import { TRANSFER_TOPICS } from "../../eventFectcher/erc20TransferEventFetcher.j
 import { RevenuesRepository } from "../../db/RevenuesRepository.js"
 import { defiLLamaFetchPricesHistorical, getPriceInfos } from "./DefiLLamaPriceFetcher.js"
 import { Prisma } from "@prisma/client"
-import { parseCheckpointIR, parseRewardNotified } from "../../eventFectcher/revenuesEvents.parser.js"
+import { parseCheckpointIR, parseRewardNotified, parseRewardPaid } from "../../eventFectcher/revenuesEvents.parser.js"
 import { CHECKPOINT_IR } from "../../resources/eventSignatures.js"
 import { DAY_MS, dayKey, endOfUTCDay, startOfUTCDay } from "../../utils/date.js"
 
@@ -18,7 +18,12 @@ export class RevenuesService {
   async parseRevenuesEvents(
     transferLogs: Log[],
     mapMarketIdAddresses: Map<string, number>
-  ): Promise<{ checkpointIR: Prisma.checkpoint_irCreateManyInput[]; rewardCut: Prisma.reward_notifiedCreateManyInput[]; revenuesBlockIds: Set<number> }> {
+  ): Promise<{
+    checkpointIR: Prisma.checkpoint_irCreateManyInput[]
+    rewardCut: Prisma.reward_notifiedCreateManyInput[]
+    rewardPaid: Prisma.reward_paidCreateManyInput[]
+    revenuesBlockIds: Set<number>
+  }> {
     const allRewards = await this.revenuesRepository.getRevenuesTokens()
     const mapTokenIdAddresses: Map<string, bigint> = new Map()
 
@@ -29,6 +34,7 @@ export class RevenuesService {
     const uniqueBlockId: Set<number> = new Set()
     const checkpointIREvents: Prisma.checkpoint_irCreateManyInput[] = []
     const rewardNotifiedEvents: Prisma.reward_notifiedCreateManyInput[] = []
+    const rewardPaidEvents: Prisma.reward_paidCreateManyInput[] = []
 
     transferLogs.forEach((log) => {
       const logTopic = log.topics[0]
@@ -36,17 +42,25 @@ export class RevenuesService {
       if (TRANSFER_TOPICS.RewardNotified === logTopic) {
         const rewardNotifiedEvent = parseRewardNotified(log, mapMarketIdAddresses, mapTokenIdAddresses)
         rewardNotifiedEvents.push(rewardNotifiedEvent)
+      } else if (TRANSFER_TOPICS.RewardPaid === logTopic) {
+        const rewardPaidEvent = parseRewardPaid(log, mapMarketIdAddresses)
+        if (rewardPaidEvent) rewardPaidEvents.push(rewardPaidEvent)
       } else if (id(CHECKPOINT_IR) === logTopic) {
         const irEvent = parseCheckpointIR(log, mapMarketIdAddresses)
         checkpointIREvents.push(irEvent)
       }
     })
-    return { checkpointIR: checkpointIREvents, rewardCut: rewardNotifiedEvents, revenuesBlockIds: uniqueBlockId }
+    return { checkpointIR: checkpointIREvents, rewardCut: rewardNotifiedEvents, rewardPaid: rewardPaidEvents, revenuesBlockIds: uniqueBlockId }
   }
 
-  async saveEvents(checkpointIR: Prisma.checkpoint_irCreateManyInput[], rewardDistributed: Prisma.reward_notifiedCreateManyInput[]) {
+  async saveEvents(
+    checkpointIR: Prisma.checkpoint_irCreateManyInput[],
+    rewardDistributed: Prisma.reward_notifiedCreateManyInput[],
+    rewardPaid: Prisma.reward_paidCreateManyInput[] = []
+  ) {
     await this.revenuesRepository.saveCheckpointIRs(checkpointIR)
     await this.revenuesRepository.saveRewardDistributed(rewardDistributed)
+    await this.revenuesRepository.saveRewardPaid(rewardPaid)
   }
 
   async computeRevenuesForRange(from: Date, today: Date) {

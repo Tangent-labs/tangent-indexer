@@ -152,7 +152,7 @@ async function main() {
               usgLps
             )
 
-            const { checkpointIR, rewardCut, revenuesBlockIds } = await revenuesService.parseRevenuesEvents(transferLogs, mapMarketIdAddresses)
+            const { checkpointIR, rewardCut, rewardPaid, revenuesBlockIds } = await revenuesService.parseRevenuesEvents(transferLogs, mapMarketIdAddresses)
 
             // Create a set with all block ID that we need to get the timestamp of
             const uniqueBlockIds = [
@@ -179,6 +179,7 @@ async function main() {
             const addLiquidityEventsRightDates = userPointsService.replaceDates<Prisma.add_liquidity_eventsCreateManyInput>(addLiquidityEvents, blocks)
             const checkpointsIREvents = userPointsService.replaceDates<Prisma.checkpoint_irCreateManyInput>(checkpointIR, blocks)
             const rewardCutEvents = userPointsService.replaceDates<Prisma.reward_notifiedCreateManyInput>(rewardCut, blocks)
+            const rewardPaidEvents = userPointsService.replaceDates<Prisma.reward_paidCreateManyInput>(rewardPaid, blocks)
             const tokenExchangeEventsRightDates = userPointsService.replaceDates<Prisma.token_exchangeCreateManyInput>(tokenExchangeEvents, blocks)
             const removeLiquidityEventsRightDates = userPointsService.replaceDates<Prisma.remove_liquidityCreateManyInput>(removeLiquidityEvents, blocks)
 
@@ -199,7 +200,7 @@ async function main() {
             // Save saving account events
             await savingAccountService.saveSavingAccountEvents(savingAccountsLogs, blocks)
 
-            await revenuesService.saveEvents(checkpointsIREvents, rewardCutEvents)
+            await revenuesService.saveEvents(checkpointsIREvents, rewardCutEvents, rewardPaidEvents)
 
             // Update the last indexed block
             await blockRepository.storeEventBlock(endBlock, new Date(blocks.get(endBlock)! * 1000))

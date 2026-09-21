@@ -84,6 +84,13 @@ export class RevenuesRepository extends AbstractRepository {
     })
   }
 
+  async saveRewardPaid(rewardPaid: Prisma.reward_paidCreateManyInput[]) {
+    if (!rewardPaid.length) return
+    await this.prismaClient.reward_paid.createMany({
+      data: rewardPaid,
+    })
+  }
+
   async saveRewardTokenPrices(tokenPrices: Prisma.revenues_token_pricesCreateManyInput[]) {
     await this.prismaClient.revenues_token_prices.createMany({
       data: tokenPrices,

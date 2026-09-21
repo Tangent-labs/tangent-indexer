@@ -1,5 +1,6 @@
-// Backfills CheckpointIR (from irCalculator) and RewardNotified (from rewardAccumulator) events since
-// April 1st 2026 by querying Etherscan directly, then stores them in checkpoint_ir / reward_notified.
+// Backfills CheckpointIR (from irCalculator), RewardNotified and RewardPaid (from rewardAccumulator)
+// events since April 1st 2026 by querying Etherscan directly, then stores them in
+// checkpoint_ir / reward_notified / reward_paid.
 import * as dotenv from "dotenv"
 import { id, Log } from "ethers"
 import { PrismaClient } from "@prisma/client"

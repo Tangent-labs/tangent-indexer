@@ -13,6 +13,7 @@ export const TRANSFER_TOPICS = {
   RemoveLiquidityOne: id("RemoveLiquidityOne(address,int128,uint256,uint256,uint256)"),
   RemoveLiquidityImbalance: id("RemoveLiquidityImbalance(address,uint256[],uint256[],uint256,uint256)"),
   RewardNotified: id("RewardNotified(address,address,uint256,uint256,uint256)"), // Only for Reward rewardAccumulator
+  RewardPaid: id("RewardPaid(address,address,address,uint256)"), // Only for Reward rewardAccumulator
   CheckpointIR: id("CheckpointIR(address,uint256,uint256)"), // Only for IRCalculator
 }
 
