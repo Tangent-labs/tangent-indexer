@@ -94,13 +94,22 @@ async function etherscan<T>(chainId: number, params: Record<string, string>): Pr
   throw new Error(`Etherscan failed after ${MAX_RETRIES} attempts: ${lastError}`)
 }
 
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+const topicAddress = (topic: string) => ethers.getAddress("0x" + topic.slice(26)).toLowerCase()
+
 function decodeTransfer(log: RawLog): TransferLog {
-  // Transfer(address indexed from, address indexed to, uint256 value)
-  return {
-    from: ethers.getAddress("0x" + log.topics[1].slice(26)).toLowerCase(),
-    to: ethers.getAddress("0x" + log.topics[2].slice(26)).toLowerCase(),
-    value: BigInt(log.data),
-    blockNumber: parseInt(log.blockNumber, 16),
+  const blockNumber = parseInt(log.blockNumber, 16)
+  const value = BigInt(log.data)
+  switch (log.topics[0]) {
+    // Convex reward pools: Staked(address indexed user, uint256 amount) is a mint, Withdrawn a burn,
+    // same as parseStakeConvexEvent / parseWithdrawConvexEvent in the live indexer.
+    case TRANSFER_TOPICS.Staked:
+      return { from: ZERO_ADDRESS, to: topicAddress(log.topics[1]), value, blockNumber }
+    case TRANSFER_TOPICS.Withdrawn:
+      return { from: topicAddress(log.topics[1]), to: ZERO_ADDRESS, value, blockNumber }
+    // Transfer(address indexed from, address indexed to, uint256 value)
+    default:
+      return { from: topicAddress(log.topics[1]), to: topicAddress(log.topics[2]), value, blockNumber }
   }
 }
 
@@ -108,7 +117,7 @@ function decodeTransfer(log: RawLog): TransferLog {
  * Fetch one block window, returning null if it hit Etherscan's 10k record cap
  * (i.e. the window is truncated and must be split).
  */
-async function fetchWindow(chainId: number, token: string, fromBlock: number, toBlock: number): Promise<RawLog[] | null> {
+async function fetchWindow(chainId: number, token: string, topic0: string, fromBlock: number, toBlock: number): Promise<RawLog[] | null> {
   const all: RawLog[] = []
 
   for (let page = 1; page <= MAX_PAGES; page++) {
@@ -118,7 +127,7 @@ async function fetchWindow(chainId: number, token: string, fromBlock: number, to
       address: token,
       fromBlock: String(fromBlock),
       toBlock: String(toBlock),
-      topic0: TRANSFER_TOPICS.Transfer,
+      topic0,
       page: String(page),
       offset: String(PAGE_SIZE),
     })
@@ -138,8 +147,8 @@ async function fetchWindow(chainId: number, token: string, fromBlock: number, to
  * Completeness matters more than speed here: a balance recomputed from a truncated log
  * set is wrong forever, and nothing downstream would notice.
  */
-async function fetchRange(chainId: number, token: string, fromBlock: number, toBlock: number): Promise<RawLog[]> {
-  const logs = await fetchWindow(chainId, token, fromBlock, toBlock)
+async function fetchRange(chainId: number, token: string, topic0: string, fromBlock: number, toBlock: number): Promise<RawLog[]> {
+  const logs = await fetchWindow(chainId, token, topic0, fromBlock, toBlock)
   if (logs !== null) return logs
 
   if (fromBlock >= toBlock) {
@@ -148,18 +157,24 @@ async function fetchRange(chainId: number, token: string, fromBlock: number, toB
 
   const mid = Math.floor((fromBlock + toBlock) / 2)
   console.log(`  window ${fromBlock}-${toBlock} hit the record cap, splitting at ${mid}`)
-  const left = await fetchRange(chainId, token, fromBlock, mid)
-  const right = await fetchRange(chainId, token, mid + 1, toBlock)
+  const left = await fetchRange(chainId, token, topic0, fromBlock, mid)
+  const right = await fetchRange(chainId, token, topic0, mid + 1, toBlock)
   return [...left, ...right]
 }
 
 /**
- * @notice Every ERC-20 Transfer emitted by `token` between `fromBlock` and `toBlock` (inclusive),
+ * @notice Every ERC-20 Transfer (or each of `topics`, e.g. Convex Staked/Withdrawn) emitted by `token` between `fromBlock` and `toBlock` (inclusive),
  * decoded and sorted by block.
  * @dev Sourced from the Etherscan V2 logs API rather than eth_getLogs, so it needs no archive node.
  * Requires ETHERSCAN_API_KEY.
  */
-export const fetchAllTransferLogs = async (chainId: number, token: string, fromBlock: number, toBlock: number): Promise<TransferLog[]> => {
+export const fetchAllTransferLogs = async (
+  chainId: number,
+  token: string,
+  fromBlock: number,
+  toBlock: number,
+  topics: string[] = [TRANSFER_TOPICS.Transfer]
+): Promise<TransferLog[]> => {
   // Etherscan silently treats an unparseable toBlock as "latest" and returns data anyway.
   // A caller that passes NaN would get head balances back believing they were snapshot balances,
   // and the totalSupply reconciliation would still pass — head balances against head supply.
@@ -174,7 +189,9 @@ export const fetchAllTransferLogs = async (chainId: number, token: string, fromB
   }
   if (fromBlock > toBlock) throw new Error(`fromBlock ${fromBlock} is after toBlock ${toBlock}`)
 
-  const raw = await fetchRange(chainId, token.toLowerCase(), fromBlock, toBlock)
+  // Etherscan takes a single topic0 per query, so each event type is its own scan.
+  const raw: RawLog[] = []
+  for (const topic0 of topics) raw.push(...(await fetchRange(chainId, token.toLowerCase(), topic0, fromBlock, toBlock)))
   const decoded = raw.map(decodeTransfer)
   decoded.sort((a, b) => a.blockNumber - b.blockNumber)
   return decoded
