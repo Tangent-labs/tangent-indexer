@@ -11,7 +11,7 @@ async function main() {
   const now = new Date((await provider.getBlock("latest"))!.timestamp * 1000)
 
   await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    await addPendle_LP_PT_YTTasks(tx, "sUSDe 05/02/26", now)
+    await addPendle_LP_PT_YTTasks(tx, "sUSG 26/11/26", now)
   })
 }
 
@@ -79,7 +79,7 @@ async function addPendle_LP_PT_YTTasks(prisma: TransactionPrisma, key: keyof typ
       action_type: "LP",
       protocol: "Pendle",
       token_address: ctx.MARKET.toLowerCase(),
-      point_rate: PTS_PER_DAY_TO_SECONDS_RATE[15],
+      point_rate: PTS_PER_DAY_TO_SECONDS_RATE[45],
       description: `Hold ${key} LP tokens`,
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-0/deposit",
       price_source_id: priceSources.find((p) => p.name.includes(`MARKET ${key}`))!.id!,
@@ -91,7 +91,7 @@ async function addPendle_LP_PT_YTTasks(prisma: TransactionPrisma, key: keyof typ
       action_type: "PT",
       protocol: "Pendle",
       token_address: ctx.PT.toLowerCase(),
-      point_rate: PTS_PER_DAY_TO_SECONDS_RATE[10],
+      point_rate: PTS_PER_DAY_TO_SECONDS_RATE[15],
       description: `Hold ${key} PT tokens`,
       url: "https://www.curve.finance/dex/ethereum/pools/factory-crvusd-1/deposit",
       price_source_id: priceSources.find((p) => p.name.includes(`PT ${key}`))!.id!,

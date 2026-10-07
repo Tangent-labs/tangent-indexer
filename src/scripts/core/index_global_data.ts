@@ -27,6 +27,8 @@ import { RevenuesRepository } from "../../db/RevenuesRepository.js"
 import { RevenuesService } from "../../services/globalData/RevenuesService.js"
 import { VolumeRepository } from "../../db/VolumeRepository.js"
 import { VolumeService } from "../../services/globalData/VolumeService.js"
+import { LiquidityRepository } from "../../db/LiquidityRepository.js"
+import { LiquidityService } from "../../services/globalData/LiquidityService.js"
 
 dotenv.config()
 
@@ -107,6 +109,7 @@ function setUpIndexerGlobalData() {
   const pegMonitoredTokenRepository = new PegMonitoredTokenRepository(prismaClient)
   const revenuesRepository = new RevenuesRepository(prismaClient)
   const volumeRepository = new VolumeRepository(prismaClient)
+  const liquidityRepository = new LiquidityRepository(prismaClient)
 
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
     erc20Repository.setClient(dbTransaction)
@@ -120,6 +123,7 @@ function setUpIndexerGlobalData() {
     pegMonitoredTokenRepository.setClient(dbTransaction)
     revenuesRepository.setClient(dbTransaction)
     volumeRepository.setClient(dbTransaction)
+    liquidityRepository.setClient(dbTransaction)
   }
 
   const globalDataService = new GlobalDataService(
@@ -134,7 +138,8 @@ function setUpIndexerGlobalData() {
     marketContractsRepository,
     pegMonitoredTokenRepository,
     new RevenuesService(revenuesRepository),
-    new VolumeService(volumeRepository)
+    new VolumeService(volumeRepository),
+    new LiquidityService(liquidityRepository)
   )
   const totalSupplyRepo = new TotalSupplyRepository(prismaClient)
   const savingAccountService = new SavingAccountServices(savingAccountRepository, provider)

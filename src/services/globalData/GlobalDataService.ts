@@ -39,6 +39,7 @@ import { getAddressesJson } from "../../utils/jsonReader.js"
 import { CallApiService } from "../CallApiService.js"
 import { RevenuesService } from "./RevenuesService.js"
 import { VolumeService } from "./VolumeService.js"
+import { LiquidityService } from "./LiquidityService.js"
 import { DAY_MS } from "../../utils/date.js"
 
 const rewardTokens = [
@@ -84,6 +85,7 @@ export class GlobalDataService {
   callApiService: CallApiService
   revenuesService: RevenuesService
   volumeService: VolumeService
+  liquidityService: LiquidityService
 
   constructor(
     provider: JsonRpcProvider,
@@ -97,7 +99,8 @@ export class GlobalDataService {
     marketContractsRepository: MarketContractsRepository,
     pegMonitoredTokenRepository: PegMonitoredTokenRepository,
     revenueService: RevenuesService,
-    volumeService: VolumeService
+    volumeService: VolumeService,
+    liquidityService: LiquidityService
   ) {
     this.provider = provider
     this.callApiService = callApiService
@@ -111,6 +114,7 @@ export class GlobalDataService {
     this.pegMonitoredTokenRepository = pegMonitoredTokenRepository
     this.revenuesService = revenueService
     this.volumeService = volumeService
+    this.liquidityService = liquidityService
   }
 
   async globalDataProcess() {
@@ -184,6 +188,8 @@ export class GlobalDataService {
     // Recompute D-1 one last time along with the running day
     await this.volumeService.computeVolumesForRange(new Date(now.getTime() - DAY_MS), now)
 
+    const lpHistory = await this.liquidityService.buildLpLiquidityRows(this.provider, now)
+
     await this.insertOrUpdateGlobalData(
       marketsData,
       totalSupplies,
@@ -192,6 +198,7 @@ export class GlobalDataService {
       usgGlobalInfos,
       oracleSanitySnapshots,
       pegSanitySnapshots,
+      lpHistory,
       now
     )
 
@@ -206,6 +213,7 @@ export class GlobalDataService {
     globalData: Prisma.usg_global_historyCreateInput,
     oracleSanitySnapshots: Prisma.oracle_sanity_snapshotsCreateManyInput[],
     pegSanitySnapshots: Prisma.peg_sanity_snapshotsCreateManyInput[],
+    lpHistory: Prisma.usg_lp_historyCreateManyInput[],
     now: Date
   ) {
     const NEW_ROWS_FREQUENCY = 10_000
@@ -234,6 +242,9 @@ export class GlobalDataService {
     } else {
       await this.pegKeeperRepository.insertNewPegKeepersHistory(keepersData)
     }
+
+    // USG LPS LIQUIDITY
+    await this.liquidityService.liquidityRepository.insertLpHistory(lpHistory)
 
     // WSTABLES TVL
 

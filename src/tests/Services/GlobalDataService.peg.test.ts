@@ -18,7 +18,8 @@ function buildService(): GlobalDataService {
     {} as any, // marketContractsRepository
     {} as any, // pegMonitoredTokenRepository
     {} as any, // revenuesService
-    {} as any // volumeService
+    {} as any, // volumeService
+    {} as any // liquidityService
   )
 }
 
