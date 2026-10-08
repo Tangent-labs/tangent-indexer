@@ -15,7 +15,7 @@ The Indexer is a Typescript project that:
 - Computes data based on event reception
 - Stores events & computed data in a database
 - Can be clean and restarded from the beginning ( if we want to update it )
-- Restart to the last block indexed if it's stopped
+- Restart to the last block indexed if it's stopped.
 
 ### Built With
 
