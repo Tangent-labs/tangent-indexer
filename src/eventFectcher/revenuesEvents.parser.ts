@@ -31,7 +31,8 @@ export function parseRewardNotified(
   )
 
   const marketId = mapMarketIdAddresses.get(marketAddress.toLowerCase())!
-  const tokenId = mapTokenIdAddresses.get(token.toLowerCase())!
+  const tokenId = mapTokenIdAddresses.get(token.toLowerCase())
+  if (tokenId === undefined) throw new Error(`RewardNotified: token ${token} missing from revenues_tokens, add it to seed_revenues_tokens`)
 
   return {
     market_id: marketId,

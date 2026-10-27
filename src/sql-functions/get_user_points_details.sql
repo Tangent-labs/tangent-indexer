@@ -108,6 +108,14 @@ AS $$
     FROM points.price_feeds pf
     WHERE pf.price_source_id = c.price_source_id
       AND pf.timestamp < c.seg_end
+      -- start at the last feed <= seg_start (index probe) instead of scanning the whole history
+      AND pf.timestamp >= COALESCE(
+        (SELECT max(pf0.timestamp)
+         FROM points.price_feeds pf0
+         WHERE pf0.price_source_id = c.price_source_id
+           AND pf0.timestamp <= c.seg_start),
+        '-infinity'::timestamp
+      )
   ) ps
   WHERE ps.next_ts IS NOT NULL
     AND ps.ts < c.seg_end
