@@ -1,4 +1,4 @@
-import { JsonRpcProvider } from "ethers"
+import { isAddress, JsonRpcProvider } from "ethers"
 import { chainView } from "../../utils/chainView.js"
 
 import BoostBalancesSnapshots from "../../abis/BoostBalancesSnapshots.json" with { type: "json" }
@@ -27,7 +27,14 @@ export class BoostService {
    */
   async updateBoosts() {
     // Fetch users that subscribed to boost computation
-    const users = (await this.boostRepository.getBoostSubscribers()).map((res) => res.user_address)
+    // Dedupe case-insensitively and drop invalid addresses, zero address and precompile/system addresses (0x00..0102)
+    const users = [
+      ...new Set(
+        (await this.boostRepository.getBoostSubscribers())
+          .map((res) => res.user_address?.toLowerCase())
+          .filter((address): address is string => !!address && isAddress(address) && BigInt(address) > 0xffffn)
+      ),
+    ]
 
     // Query the bc to get the balances we want to check
     const { timestamp, snapshot } = await this.getOnchainBalancesSnapshot(users)
@@ -68,16 +75,22 @@ export class BoostService {
    * @returns An array containing per user an array with all tokens we want to check and the balance of the user
    */
   async getOnchainBalancesSnapshot(users: string[]) {
-    // Take the onchain snapshot containing all balances for tracked token giving boost
+    // Users are passed as constructor args (32 bytes each), batch them to stay under the 49152 bytes initcode limit
+    const BATCH_SIZE = 1000
+    let timestamp = 0n
+    const snapshot: TokenBalancesForBoostOut[] = []
+    for (let i = 0; i === 0 || i < users.length; i += BATCH_SIZE) {
+      const results = await chainView<[string[], string[]], [bigint, TokenBalancesForBoostOut[]]>(
+        this.provider,
+        BoostBalancesSnapshots.abi,
+        BoostBalancesSnapshots.bytecode,
+        [SNAPSHOT_BOOST_TOKENS, users.slice(i, i + BATCH_SIZE)]
+      )
+      if (i === 0) timestamp = results[0]
+      snapshot.push(...results[1])
+    }
 
-    const results = await chainView<[string[], string[]], [bigint, TokenBalancesForBoostOut[]]>(
-      this.provider,
-      BoostBalancesSnapshots.abi,
-      BoostBalancesSnapshots.bytecode,
-      [SNAPSHOT_BOOST_TOKENS, users]
-    )
-
-    return { timestamp: results[0], snapshot: results[1] }
+    return { timestamp, snapshot }
   }
 
   /**

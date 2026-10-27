@@ -114,6 +114,10 @@ function setUpIndexerPointServices() {
   const setTransaction = (dbTransaction: TransactionPrisma): void => {
     blockRepository.setClient(dbTransaction)
     userEventsRepository.setClient(dbTransaction)
+    userPointsLPRepository.setClient(dbTransaction)
+    erc20Repository.setClient(dbTransaction)
+    notificationRepository.setClient(dbTransaction)
+    activeBorrowerRepository.setClient(dbTransaction)
   }
 
   const telegramNotifierService = new TelegramNotifierService({

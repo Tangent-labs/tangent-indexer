@@ -29,7 +29,10 @@ export const chainView = async <A extends any[], R>(
       throw new Error(`Network error: ${errorCode} , message: ${e.message || "-"}`)
     }
     dataError = e.data
+    // Revert without data (out of gas, node limits, inner call failure...): surface the real error
+    if (!dataError) throw e
   }
+  if (!dataError) throw new Error("ChainView Error: deployment did not revert, no data to decode")
 
   // decode data returned by the fake deployment
   const decoded = ChainViewInterface.parseError(dataError?.trim())
