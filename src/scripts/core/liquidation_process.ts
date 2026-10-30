@@ -7,6 +7,7 @@ import { ActiveBorrowersRepository } from "../../db/ActiveBorrowersRepository.js
 import { LiquidationBotLogRepository } from "../../db/LiquidationBotLogRepository.js"
 
 import { LiquidationBotLogService } from "../../services/LiquidationBotLogService.js"
+import { LiquidationCheckService } from "../../services/LiquidationCheckService.js"
 import { LiquidationContextService } from "../../services/LiquidationContextService.js"
 import { LiquidationProcessService } from "../../services/LiquidationProcessService.js"
 
@@ -382,7 +383,8 @@ export async function setUpLiquidationProcessServices() {
   const activeBorrowersRepository = new ActiveBorrowersRepository(prismaClient)
   const liquidationContextService = new LiquidationContextService(activeBorrowersRepository, context)
   liquidationContextService.minEthBalance = indexerConfig.minEthBalance
-  const liquidationProcessService = new LiquidationProcessService(context, routerService, liquidationBotService)
+  const liquidationCheckService = new LiquidationCheckService(activeBorrowersRepository, context)
+  const liquidationProcessService = new LiquidationProcessService(context, routerService, liquidationBotService, liquidationCheckService)
   const indexerExecutionLogService = IndexerExecutionLogService.fromClient(prismaClient)
 
   return {

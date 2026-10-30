@@ -282,6 +282,71 @@ describe("liquidation_process", () => {
       expect(mockLiquidationProcessService.executeSeizing).not.toHaveBeenCalled()
     })
 
+    it("should drop the job when the on-chain re-check finds the position healthy", async () => {
+      const checkService = {
+        getOnchainData: vi.fn().mockResolvedValue({ markets: [], accounts: [] }),
+        analyzeLiquidation: vi.fn().mockResolvedValue({ seizingList: [], liquidationList: [] }),
+      }
+      mockLiquidationProcessService.liquidationCheckService = checkService as any
+      const job = {
+        id: "stale",
+        data: {
+          account: "0xUser2" as AddressLike,
+          market: "0xMarket2" as AddressLike,
+          healthRatio: "0",
+          userDebt: (760n * DECIMALS).toString(),
+          positionValue: (1000n * DECIMALS).toString(),
+          collateralBalance: (1500n * DECIMALS).toString(),
+          collatToken: "0xToken2" as AddressLike,
+          type: "liquidation",
+          executionKey: TEST_EXECUTION_KEY,
+        },
+        attemptsMade: 5,
+      } as Job<SerializedLiquidationUserFullInfo>
+
+      await mockLiquidationProcessService.processJob(job, mockTelegramNotifierService, "wallet1")
+
+      expect(checkService.getOnchainData).toHaveBeenCalledTimes(1)
+      expect(mockLiquidationProcessService.executeLiquidation).not.toHaveBeenCalled()
+      expect(mockLiquidationProcessService.executeSeizing).not.toHaveBeenCalled()
+      expect(mockTelegramNotifierService.sendError).not.toHaveBeenCalled()
+    })
+
+    it("should liquidate with fresh on-chain data when still liquidatable", async () => {
+      const fresh = {
+        account: "0xUser2",
+        market: "0xMarket2",
+        healthRatio: 900n,
+        userDebt: 800n * DECIMALS,
+        positionValue: 900n * DECIMALS,
+        collateralBalance: 1200n * DECIMALS,
+      }
+      mockLiquidationProcessService.liquidationCheckService = {
+        getOnchainData: vi.fn().mockResolvedValue({ markets: [], accounts: [] }),
+        analyzeLiquidation: vi.fn().mockResolvedValue({ seizingList: [], liquidationList: [fresh] }),
+      } as any
+      const job = {
+        id: "refresh",
+        data: {
+          account: "0xUser2" as AddressLike,
+          market: "0xMarket2" as AddressLike,
+          healthRatio: "0",
+          userDebt: (760n * DECIMALS).toString(),
+          positionValue: (1000n * DECIMALS).toString(),
+          collateralBalance: (1500n * DECIMALS).toString(),
+          collatToken: "0xToken2" as AddressLike,
+          type: "liquidation",
+          executionKey: TEST_EXECUTION_KEY,
+        },
+        attemptsMade: 0,
+      } as Job<SerializedLiquidationUserFullInfo>
+
+      await mockLiquidationProcessService.processJob(job, mockTelegramNotifierService, "wallet1")
+
+      const call = (mockLiquidationProcessService.executeLiquidation as any).mock.calls[0]
+      expect(call[1]).toMatchObject({ ...fresh, type: "liquidation", executionKey: TEST_EXECUTION_KEY })
+    })
+
     it("should increase slippage modifier based on retry attempts", async () => {
       // Test multiple retry attempts to verify slippage increases
       const testCases = [
