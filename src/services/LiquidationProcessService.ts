@@ -22,17 +22,25 @@ import { parseEthersError } from "../utils/errorParser.js"
 import { liquidationConfig } from "../config/liquidation_config.js"
 import { RouterService } from "./RouterService.js"
 import { getAddressesJson } from "../utils/jsonReader.js"
+import { LiquidationCheckService } from "./LiquidationCheckService.js"
 
 export class LiquidationProcessService {
   errors: { action: string; message: string; market: string }[] = []
   context: LiquidationExecutionContext
   liquidationBotService?: LiquidationBotLogService
+  liquidationCheckService?: LiquidationCheckService
   routerService: RouterService
 
-  constructor(context: LiquidationExecutionContext, routerService: RouterService, liquidationBotService?: LiquidationBotLogService) {
+  constructor(
+    context: LiquidationExecutionContext,
+    routerService: RouterService,
+    liquidationBotService?: LiquidationBotLogService,
+    liquidationCheckService?: LiquidationCheckService
+  ) {
     this.context = context
     this.routerService = routerService
     this.liquidationBotService = liquidationBotService
+    this.liquidationCheckService = liquidationCheckService
   }
 
   private async saveLiquidationExecution(
@@ -645,7 +653,7 @@ export class LiquidationProcessService {
     currentBlock?: number
   ): Promise<void> {
     // Deserialize the job data (convert string BigInt values back to BigInt)
-    const action = this.deserializeLiquidationAction(job.data)
+    let action = this.deserializeLiquidationAction(job.data)
     const addresses = await getAddressesJson()
     const collateralName =
       addresses.markets.find((market) => market.marketAddress.toLowerCase() === action.market.toString().toLowerCase())?.marketName || "Unknown"
@@ -666,6 +674,23 @@ export class LiquidationProcessService {
       // Check if job was cancelled before processing
       if (signal?.aborted) {
         throw new Error(`Job cancelled before processing: ${signal.reason || "Unknown reason"}`)
+      }
+
+      // The job holds a snapshot from when it was queued: re-read the position so retries
+      // stop once it is healthy again and otherwise run on fresh collateral/debt/price.
+      if (this.liquidationCheckService) {
+        const userIn = { account: action.account, market: action.market }
+        const data = await this.liquidationCheckService.getOnchainData([provider], [action.market], [userIn], addresses.utilities.marketViewer)
+        if (!data) {
+          throw new Error(`Failed to refresh on-chain data for ${action.account} on ${action.market}`)
+        }
+        const { seizingList, liquidationList } = await this.liquidationCheckService.analyzeLiquidation(data, [userIn])
+        const fresh = seizingList?.[0] ?? liquidationList?.[0]
+        if (!fresh) {
+          console.log(`Position ${action.account} on ${collateralName} is no longer liquidatable, dropping job ${job.id}`)
+          return
+        }
+        action = { ...action, ...fresh, type: seizingList?.length ? "seizing" : "liquidation" }
       }
 
       if (action.type === "seizing") {
