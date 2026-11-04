@@ -1,27 +1,27 @@
 [
-    {
-        "person": "Seal",
-        "allocation": "5000",
-        "address": "0x363FAeEaE3aB75845AFC1CC6AbF1678300a1000E"
-    },
-    {
-        "person": "Robo",
-        "allocation": "5000",
-        "address": "0x75e70db620d5491f69526e22355236f65b46834e"
-    },
-    {
-        "person": "Slaash",
-        "allocation": "10000",
-        "address": "0x062fd5701f459d372C68495f789776D751377Ec3"
-    },
-    {
-        "person": "Egis",
-        "allocation": "17500",
-        "address": null
-    },
-    {
-        "person": "Luis",
-        "allocation": "10000",
-        "address": null
-    }
+  {
+    "person": "Seal",
+    "allocation": "5000",
+    "address": "0x363FAeEaE3aB75845AFC1CC6AbF1678300a1000E"
+  },
+  {
+    "person": "Robo",
+    "allocation": "5000",
+    "address": "0x75e70db620d5491f69526e22355236f65b46834e"
+  },
+  {
+    "person": "Slaash",
+    "allocation": "10000",
+    "address": "0x062fd5701f459d372C68495f789776D751377Ec3"
+  },
+  {
+    "person": "Egis",
+    "allocation": "17500",
+    "address": null
+  },
+  {
+    "person": "Luis",
+    "allocation": "10000",
+    "address": null
+  }
 ]

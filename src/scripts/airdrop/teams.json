@@ -1,0 +1,32 @@
+[
+  {
+    "member": "Trottoir",
+    "percentage": "25",
+    "address": "0xMaxou"
+  },
+  {
+    "member": "Wireshark",
+    "percentage": "25",
+    "address": "0xBrun"
+  },
+  {
+    "member": "Kulshrake",
+    "percentage": "15",
+    "address": "0xPd"
+  },
+  {
+    "member": "Kibo",
+    "percentage": "15",
+    "address": "0xZaza"
+  },
+  {
+    "member": "Yann",
+    "percentage": "15",
+    "address": "0xZazou"
+  },
+  {
+    "member": "Other",
+    "percentage": "5",
+    "address": "0xzdffenj"
+  }
+]

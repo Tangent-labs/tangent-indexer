@@ -78,7 +78,15 @@ async function main() {
   for (const { address, tan, ...balances } of readJson("recap.json")) {
     addWeight(allocations.cvgUsers, address, BigInt(tan))
     // Only keep non-zero CVG balances (holders, lockers, stakers, seed, ...)
-    setInfo("cvgUsers", address, Object.fromEntries(Object.entries(balances).filter(([, v]) => v !== "0").map(([k, v]) => [k, formatUnits(v as string, 18)])))
+    setInfo(
+      "cvgUsers",
+      address,
+      Object.fromEntries(
+        Object.entries(balances)
+          .filter(([, v]) => v !== "0")
+          .map(([k, v]) => [k, formatUnits(v as string, 18)])
+      )
+    )
   }
 
   try {
@@ -179,9 +187,7 @@ async function main() {
       address,
       tan: tan.toString(),
       tanFormatted: formatUnits(tan, 18),
-      details: Object.fromEntries(
-        Object.entries(details).map(([k, v]) => [k, { tan: formatUnits(v!, 18), ...infos[k as Category].get(address) }]),
-      ),
+      details: Object.fromEntries(Object.entries(details).map(([k, v]) => [k, { tan: formatUnits(v!, 18), ...infos[k as Category].get(address) }])),
     }))
 
   // Invalid addresses would break the merkle, flag them loudly
@@ -211,12 +217,14 @@ async function main() {
         unresolved,
       },
       null,
-      2,
-    ),
+      2
+    )
   )
 
   console.log(`${sorted.length} recipients (${belowMinimum} dropped below 1 TAN), ${formatUnits(distributedTotal, 18)} TAN distributed`)
-  console.log(`${unresolved.length} unresolved (${formatUnits(unresolvedTotal, 18)} TAN), DAO ${formatUnits(dao, 18)} TAN, team (by hand) ${formatUnits(TEAM, 18)} TAN`)
+  console.log(
+    `${unresolved.length} unresolved (${formatUnits(unresolvedTotal, 18)} TAN), DAO ${formatUnits(dao, 18)} TAN, team (by hand) ${formatUnits(TEAM, 18)} TAN`
+  )
 }
 
 main().catch((e) => {
