@@ -61,6 +61,7 @@ const rewardTokens = [
   { symbol: "YB", address: COMMON_ERC20S.YB },
   { symbol: "pmUSD", address: COMMON_ERC20S.pmUSD },
   { symbol: "BOLD", address: COMMON_ERC20S.BOLD },
+  { symbol: "SDT", address: COMMON_ERC20S.SDT },
 ]
 
 const MAX_VOLATILE_PEG_PRICE_TIMESTAMP_SKEW_SECONDS = 5 * 60
