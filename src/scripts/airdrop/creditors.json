@@ -1,0 +1,22 @@
+[
+    {
+        "person": "C2",
+        "allocation": "8000",
+        "address": "0xAAc0aa431c237C2C0B5f041c8e59B3f1a43aC78F"
+    },
+    {
+        "person": "Robo",
+        "allocation": "52000",
+        "address": "0x06232028c253dA3404cce43A4789dc802a62C846"
+    },
+    {
+        "person": "J",
+        "allocation": "20000",
+        "address": "0x3D2aE9729529f8E4027D19f3301186e8cC0CFAFf"
+    },
+    {
+        "person": "Nathan",
+        "allocation": "320000",
+        "address": "0xd2c46b4c28f4B7976d9f87687863c46Bb2f71Dbb"
+    }
+]
