@@ -232,9 +232,10 @@ async function main() {
         if (lpEvents && lpKeys && Object.values(lpEvents).some((list) => list.length)) {
           try {
             // Fresh repository on the plain client: the one bound to the committed transaction is unusable
-            const tokens = lpKeys.flatMap((lp) => [lp.token_0, lp.token_1]).filter((token): token is string => !!token)
-            const prices = await new LiquidityRepository(prismaClient).getLastPrices([...tokens, addresses.tokens.sUSG])
-            await marketActivityNotificationService.sendLpActivityNotifications(lpEvents, lpKeys, addresses.tokens.sUSG, prices)
+            // LP tokens, USG and sUSG are valued; the coins are only looked up for their display symbol
+            const tokens = lpKeys.flatMap((lp) => [lp.lp_address, lp.token_0, lp.token_1]).filter((token): token is string => !!token)
+            const prices = await new LiquidityRepository(prismaClient).getLastPrices([...tokens, addresses.tokens.USG, addresses.tokens.sUSG])
+            await marketActivityNotificationService.sendLpActivityNotifications(lpEvents, lpKeys, addresses.tokens.USG, addresses.tokens.sUSG, prices)
           } catch (error) {
             console.error("Error sending LP activity notifications:", error)
           }

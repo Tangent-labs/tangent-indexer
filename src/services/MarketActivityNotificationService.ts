@@ -15,6 +15,7 @@ export type LpActivityEvents = {
 export type UsgLpKey = {
   id: bigint | number
   lp_name: string
+  lp_address: string
   token_0: string | null
   token_0_decimals: number | null
   token_1: string | null
@@ -60,44 +61,80 @@ export class MarketActivityNotificationService {
     this.thresholds = thresholds
   }
 
-  async sendLpActivityNotifications(events: LpActivityEvents, usgLps: UsgLpKey[], susgAddress: string, prices: TokenPrices): Promise<void> {
+  /**
+   * @notice  Liquidity is valued with the LP price (LP minted on add, LP burned on remove) and swaps
+   *          with the USG side, so only USG, sUSG and the LP tokens need a price source.
+   */
+  async sendLpActivityNotifications(events: LpActivityEvents, usgLps: UsgLpKey[], usgAddress: string, susgAddress: string, prices: TokenPrices): Promise<void> {
     const lpsById = new Map(usgLps.map((lp) => [Number(lp.id), lp]))
-    // Coin `index` of the LP, valued with its last price; undefined when the LP or price is unknown
-    const coin = (lpId: bigint | number, index: number, amount: string | bigint) => {
+    const usg = usgAddress.toLowerCase()
+    const susg = susgAddress.toLowerCase()
+    const zero = ZeroAddress.toLowerCase()
+
+    // Coin `index` of the LP as a display label; the USD value is set only for USG, the one coin always priced
+    const coin = (lp: UsgLpKey, index: number, amount: string | bigint) => {
+      const token = (index === 0 ? lp.token_0 : lp.token_1)?.toLowerCase()
+      const decimals = index === 0 ? lp.token_0_decimals : lp.token_1_decimals
+      if (!token || decimals == null) return undefined
+      const quantity = Number(formatUnits(amount, decimals))
+      const usgPrice = token === usg ? prices.get(usg)?.price : undefined
+      const symbol = prices.get(token)?.name ?? shortenAddress(token)
+      return { label: `${formatNumber(quantity)} ${symbol}`, usd: usgPrice === undefined ? undefined : quantity * usgPrice }
+    }
+    const findLp = (lpId: bigint | number) => {
       const lp = lpsById.get(Number(lpId))
-      const token = (index === 0 ? lp?.token_0 : lp?.token_1)?.toLowerCase()
-      const decimals = index === 0 ? lp?.token_0_decimals : lp?.token_1_decimals
-      const price = token ? prices.get(token) : undefined
-      if (!lp || !price || decimals == null) {
-        console.warn(`LP activity alert skipped: no price/decimals for coin ${index} of LP #${lpId}`)
+      if (!lp?.token_0 || !lp.token_1 || lp.token_0_decimals == null || lp.token_1_decimals == null) {
+        console.warn(`LP activity alert skipped: LP #${lpId} has no coins/decimals in usg_lp_keys (run backfill_usg_lp_coins)`)
         return undefined
       }
-      const quantity = Number(formatUnits(amount, decimals))
-      return { lpName: lp.lp_name, label: `${formatNumber(quantity)} ${price.name}`, usd: quantity * price.price }
+      return lp
     }
 
     for (const swap of events.tokenExchange) {
-      const sold = coin(swap.usg_lp_id, swap.sold_id, swap.tokens_sold)
-      const bought = coin(swap.usg_lp_id, swap.bought_id, swap.tokens_bought)
-      if (!sold || !bought || sold.usd < this.thresholds.swap) continue
-      await this.sendActivity("Swap", sold.lpName, swap.buyer, swap.tx_hash, [`Sold: ${sold.label}`, `Bought: ${bought.label}`], sold.usd)
+      const lp = findLp(swap.usg_lp_id)
+      if (!lp) continue
+      const sold = coin(lp, swap.sold_id, swap.tokens_sold)!
+      const bought = coin(lp, swap.bought_id, swap.tokens_bought)!
+      const usd = sold.usd ?? bought.usd
+      if (usd === undefined) {
+        console.warn(`Swap alert skipped: no USG price or no USG coin in ${lp.lp_name}`)
+        continue
+      }
+      if (usd < this.thresholds.swap) continue
+      await this.sendActivity("Swap", lp.lp_name, swap.buyer, swap.tx_hash, [`Sold: ${sold.label}`, `Bought: ${bought.label}`], usd)
     }
 
     const liquidityEvents = [
-      ...events.addLiquidity.map((event) => ({ name: "AddLiquidity", event })),
-      ...events.removeLiquidity.map((event) => ({ name: "RemoveLiquidity", event })),
+      ...events.addLiquidity.map((event) => ({ name: "AddLiquidity", event, lpAmount: event.lp_amount })),
+      // The remove events do not carry the LP burned, it is the LP transfer to zero from the provider in the same tx
+      ...events.removeLiquidity.map((event) => {
+        const lpAddress = lpsById.get(Number(event.usg_lp_id))?.lp_address.toLowerCase()
+        const burn = events.transfers.find(
+          (transfer) =>
+            transfer.tx_hash === event.tx_hash &&
+            transfer.token_address.toLowerCase() === lpAddress &&
+            transfer.to.toLowerCase() === zero &&
+            transfer.from.toLowerCase() === event.provider.toLowerCase()
+        )
+        return { name: "RemoveLiquidity", event, lpAmount: burn?.amount }
+      }),
     ]
-    for (const { name, event } of liquidityEvents) {
-      const token0 = coin(event.usg_lp_id, 0, event.token0_amount)
-      const token1 = coin(event.usg_lp_id, 1, event.token1_amount)
-      if (!token0 || !token1) continue
-      const usd = token0.usd + token1.usd
+    for (const { name, event, lpAmount } of liquidityEvents) {
+      const lp = findLp(event.usg_lp_id)
+      if (!lp) continue
+      const lpPrice = prices.get(lp.lp_address.toLowerCase())?.price
+      if (lpPrice === undefined || lpAmount === undefined) {
+        console.warn(`${name} alert skipped: no LP price or LP amount for ${lp.lp_name} (tx ${event.tx_hash})`)
+        continue
+      }
+      // Curve LP tokens are 18 decimals
+      const usd = Number(formatEther(lpAmount)) * lpPrice
       if (usd < this.thresholds.liquidity) continue
-      await this.sendActivity(name, token0.lpName, event.provider, event.tx_hash, [token0.label, token1.label], usd)
+      const token0 = coin(lp, 0, event.token0_amount)!
+      const token1 = coin(lp, 1, event.token1_amount)!
+      await this.sendActivity(name, lp.lp_name, event.provider, event.tx_hash, [token0.label, token1.label], usd)
     }
 
-    const susg = susgAddress.toLowerCase()
-    const zero = ZeroAddress.toLowerCase()
     for (const transfer of events.transfers) {
       if (transfer.token_address.toLowerCase() !== susg) continue
       const isMint = transfer.from.toLowerCase() === zero
