@@ -116,72 +116,108 @@ describe("MarketActivityNotificationService", () => {
 
   describe("sendLpActivityNotifications", () => {
     const lpService = new MarketActivityNotificationService(telegramNotifierService, { swap: 1_000, liquidity: 1_000, susg: 1_000 })
+    const usg = "0xUSG"
     const susg = "0xSUSG"
-    const usgLps = [{ id: 1n, lp_name: "USG-sUSDC", token_0: "0xUSG", token_0_decimals: 18, token_1: "0xSUSDC", token_1_decimals: 6 }]
+    // USDC has no price source on purpose: only USG, sUSG and the LP token are priced
+    const usgLps = [{ id: 1n, lp_name: "USG-USDC", lp_address: "0xLP", token_0: "0xUSDC", token_0_decimals: 6, token_1: "0xUSG", token_1_decimals: 18 }]
     const prices = new Map([
-      ["0xusg", { price: 1, name: "USG" }],
-      ["0xsusdc", { price: 1.1, name: "sUSDC" }],
+      ["0xusg", { price: 0.99, name: "USG" }],
       ["0xsusg", { price: 1.05, name: "sUSG" }],
+      ["0xlp", { price: 2, name: "USG_USDC" }],
     ])
     const base = { block_date: new Date(), block_id: 1, tx_hash: "0xtx" }
     const empty = () => ({ addLiquidity: [], removeLiquidity: [], tokenExchange: [], transfers: [] }) as any
+    const transfer = (token: string, from: string, to: string, amount: string) => ({
+      ...base,
+      token_address: token,
+      from,
+      to,
+      amount: parseEther(amount).toString(),
+    })
 
-    it("alerts on swaps above the USD threshold only", async () => {
+    it("values swaps with the USG side, whichever side it is, above the threshold only", async () => {
       const events = empty()
-      const swap = (sold: string) => ({
+      const swap = (soldId: number, soldAmount: string, boughtAmount: string) => ({
         ...base,
         usg_lp_id: 1n,
         buyer: "0xbuyer",
-        sold_id: 0,
-        tokens_sold: parseEther(sold).toString(),
-        bought_id: 1,
-        tokens_bought: "1",
+        sold_id: soldId,
+        tokens_sold: soldAmount,
+        bought_id: 1 - soldId,
+        tokens_bought: boughtAmount,
       })
-      events.tokenExchange.push(swap("2000"), swap("999"))
+      // Sells 2000 USDC for 2000 USG ($1,980), then sells 2000 USG ($1,980), then a $990 swap
+      events.tokenExchange.push(
+        swap(0, "2000000000", parseEther("2000").toString()),
+        swap(1, parseEther("2000").toString(), "2000000000"),
+        swap(1, parseEther("1000").toString(), "1000000000")
+      )
 
-      await lpService.sendLpActivityNotifications(events, usgLps, susg, prices)
+      await lpService.sendLpActivityNotifications(events, usgLps, usg, susg, prices)
 
-      expect(sendMessage).toHaveBeenCalledTimes(1)
-      expect(sendMessage.mock.calls[0][0]).toContain("Event: Swap")
-      expect(sendMessage.mock.calls[0][0]).toContain("Value: $2,000")
+      expect(sendMessage).toHaveBeenCalledTimes(2)
+      expect(sendMessage.mock.calls[0][0]).toContain("Value: $1,980")
+      expect(sendMessage.mock.calls[0][0]).toContain("Sold: 2,000 0xusdc")
+      expect(sendMessage.mock.calls[1][0]).toContain("Sold: 2,000 USG")
     })
 
-    it("values a 6 decimals coin with its real price on add liquidity", async () => {
+    it("values add liquidity with the LP minted", async () => {
       const events = empty()
-      // 500 USG + 500 sUSDC @ 1.1 = $1,050
       events.addLiquidity.push({
         ...base,
         usg_lp_id: 1n,
         provider: "0xprovider",
-        lp_amount: "1",
-        token0_amount: parseEther("500").toString(),
-        token1_amount: "500000000",
+        lp_amount: parseEther("600").toString(),
+        token0_amount: "1000000",
+        token1_amount: "0",
       })
 
-      await lpService.sendLpActivityNotifications(events, usgLps, susg, prices)
+      await lpService.sendLpActivityNotifications(events, usgLps, usg, susg, prices)
 
       expect(sendMessage).toHaveBeenCalledTimes(1)
-      expect(sendMessage.mock.calls[0][0]).toContain("Value: $1,050")
-      expect(sendMessage.mock.calls[0][0]).toContain("500 sUSDC")
+      expect(sendMessage.mock.calls[0][0]).toContain("Event: AddLiquidity")
+      expect(sendMessage.mock.calls[0][0]).toContain("Value: $1,200")
+    })
+
+    it("values remove liquidity with the LP burned by the provider in the same tx", async () => {
+      const events = empty()
+      events.removeLiquidity.push({ ...base, usg_lp_id: 1n, provider: "0xProvider", token0_amount: "0", token1_amount: "0" })
+      events.transfers.push(transfer("0xlp", "0xprovider", ZeroAddress, "700"), transfer("0xlp", "0xsomeoneelse", ZeroAddress, "9999"))
+
+      await lpService.sendLpActivityNotifications(events, usgLps, usg, susg, prices)
+
+      expect(sendMessage).toHaveBeenCalledTimes(1)
+      expect(sendMessage.mock.calls[0][0]).toContain("Event: RemoveLiquidity")
+      expect(sendMessage.mock.calls[0][0]).toContain("Value: $1,400")
     })
 
     it("alerts on sUSG mints and burns but ignores other tokens", async () => {
       const events = empty()
-      const transfer = (token: string, from: string, to: string) => ({ ...base, token_address: token, from, to, amount: parseEther("2000").toString() })
-      events.transfers.push(transfer("0xsusg", ZeroAddress, "0xuser"), transfer("0xSUSG", "0xuser", ZeroAddress), transfer("0xother", ZeroAddress, "0xuser"))
+      events.transfers.push(
+        transfer("0xsusg", ZeroAddress, "0xuser", "2000"),
+        transfer("0xSUSG", "0xuser", ZeroAddress, "2000"),
+        transfer("0xother", ZeroAddress, "0xuser", "2000")
+      )
 
-      await lpService.sendLpActivityNotifications(events, usgLps, susg, prices)
+      await lpService.sendLpActivityNotifications(events, usgLps, usg, susg, prices)
 
       expect(sendMessage).toHaveBeenCalledTimes(2)
       expect(sendMessage.mock.calls[0][0]).toContain("Event: sUSG Mint")
       expect(sendMessage.mock.calls[1][0]).toContain("Event: sUSG Burn")
     })
 
-    it("skips events whose token has no price", async () => {
+    it("skips liquidity events when the LP has no price", async () => {
       const events = empty()
-      events.removeLiquidity.push({ ...base, usg_lp_id: 1n, provider: "0xprovider", token0_amount: parseEther("5000").toString(), token1_amount: "0" })
+      events.addLiquidity.push({
+        ...base,
+        usg_lp_id: 1n,
+        provider: "0xprovider",
+        lp_amount: parseEther("5000").toString(),
+        token0_amount: "0",
+        token1_amount: "0",
+      })
 
-      await lpService.sendLpActivityNotifications(events, usgLps, susg, new Map([["0xusg", { price: 1, name: "USG" }]]))
+      await lpService.sendLpActivityNotifications(events, usgLps, usg, susg, new Map([["0xusg", { price: 1, name: "USG" }]]))
 
       expect(sendMessage).not.toHaveBeenCalled()
     })
