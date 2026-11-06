@@ -47,6 +47,8 @@ export class TelegramNotifierService {
           headers: {
             "Content-Type": "application/json",
           },
+          // A hung Telegram API must never keep the indexer process alive
+          timeout: 10_000,
         }
       )
 

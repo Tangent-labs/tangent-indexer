@@ -50,6 +50,24 @@ export class LiquidityRepository extends AbstractRepository {
     return feed ? Number(feed.price_usd) : undefined
   }
 
+  /**
+   * @notice  Latest USD price and display name per token address, keyed lowercased.
+   *          Tokens without a price source or feed are absent from the map.
+   */
+  async getLastPrices(addresses: string[]): Promise<Map<string, { price: number; name: string }>> {
+    const sources = await this.prismaClient.price_source.findMany({
+      where: { address: { in: addresses.map((address) => address.toLowerCase()) } },
+      include: { last_price_feeds: true },
+    })
+    const prices = new Map<string, { price: number; name: string }>()
+    for (const source of sources) {
+      if (source.last_price_feeds && !prices.has(source.address.toLowerCase())) {
+        prices.set(source.address.toLowerCase(), { price: Number(source.last_price_feeds.price_usd), name: source.name })
+      }
+    }
+    return prices
+  }
+
   async insertLpHistory(rows: Prisma.usg_lp_historyCreateManyInput[]) {
     if (rows.length > 0) {
       await this.prismaClient.usg_lp_history.createMany({
