@@ -29,7 +29,7 @@ import { indexerConfig } from "../../config/indexer_config.js"
 import { SavingAccountRepository } from "../../db/SavingAccountRepository.js"
 import { SavingAccountServices } from "../../services/globalData/SavingAccountServices.js"
 import { PredepositCampaignService } from "../../services/PredepositCampaignService.js"
-import { MarketActivityNotificationService } from "../../services/MarketActivityNotificationService.js"
+import { LpActivityEvents, MarketActivityNotificationService, UsgLpKey } from "../../services/MarketActivityNotificationService.js"
 import { TelegramNotifierService } from "../../services/TelegramNotificationServices.js"
 import { fetchBlockTimestamps } from "../../utils/getLastBlock.js"
 import { getAddressesJson } from "../../utils/jsonReader.js"
@@ -80,6 +80,7 @@ async function main() {
         const currentBlock = await bestProvider.getBlockNumber()
         let marketActivityEvents: SortedEvents | undefined
         let mapMarketNamesById = new Map<number, string>()
+        let lpActivity: { events: LpActivityEvents; usgLps: UsgLpKey[] } | undefined
 
         console.log(`indexing : ${startBlock} <-----------------> ${endBlock} (current: ${currentBlock} rpc#${bestProviderIndex})`)
         await prismaClient.$transaction(
@@ -152,6 +153,17 @@ async function main() {
               usgLps
             )
 
+            // Only captured here, prices are read and alerts sent after the commit so they never fail indexing
+            lpActivity = {
+              events: {
+                addLiquidity: addLiquidityEvents,
+                removeLiquidity: removeLiquidityEvents,
+                tokenExchange: tokenExchangeEvents,
+                transfers: transferEvents,
+              },
+              usgLps: usgLps as UsgLpKey[],
+            }
+
             const { checkpointIR, rewardCut, revenuesBlockIds } = await revenuesService.parseRevenuesEvents(transferLogs, mapMarketIdAddresses)
 
             // Create a set with all block ID that we need to get the timestamp of
@@ -214,6 +226,17 @@ async function main() {
             await marketActivityNotificationService.sendNotifications(marketActivityEvents, mapMarketNamesById)
           } catch (error) {
             console.error("Error sending market activity notifications:", error)
+          }
+        }
+        const { events: lpEvents, usgLps: lpKeys } = lpActivity ?? {}
+        if (lpEvents && lpKeys && Object.values(lpEvents).some((list) => list.length)) {
+          try {
+            // Fresh repository on the plain client: the one bound to the committed transaction is unusable
+            const tokens = lpKeys.flatMap((lp) => [lp.token_0, lp.token_1]).filter((token): token is string => !!token)
+            const prices = await new LiquidityRepository(prismaClient).getLastPrices([...tokens, addresses.tokens.sUSG])
+            await marketActivityNotificationService.sendLpActivityNotifications(lpEvents, lpKeys, addresses.tokens.sUSG, prices)
+          } catch (error) {
+            console.error("Error sending LP activity notifications:", error)
           }
         }
       } else {
@@ -282,7 +305,11 @@ async function setUpIndexerBlockServices() {
     botToken: process.env.TELEGRAM_BOT_TOKEN!,
     chatId: process.env.TELEGRAM_MARKET_ACTIVITY_CHAT_ID || process.env.TELEGRAM_CHAT_ID!,
   })
-  const marketActivityNotificationService = new MarketActivityNotificationService(marketActivityTelegramNotifierService)
+  const marketActivityNotificationService = new MarketActivityNotificationService(marketActivityTelegramNotifierService, {
+    swap: Number(process.env.ALERT_MIN_SWAP_USD ?? 1_000),
+    liquidity: Number(process.env.ALERT_MIN_LIQUIDITY_USD ?? 1_000),
+    susg: Number(process.env.ALERT_MIN_SUSG_USD ?? 1_000),
+  })
 
   return {
     prismaClient,
