@@ -123,6 +123,12 @@
       "marketType": "STAKEDAO_CRV_Vault"
     },
     {
+      "marketAddress": "0xb4edf0dd81b2ad31703b61da098401d0c83607bf",
+      "marketName": "crvUSD/ETH/CRV",
+      "collatAddress": "0x4eBdF703948ddCEA3B11f675B4D1Fba9d2414A14",
+      "marketType": "STAKEDAO_CRV_Vault"
+    },
+    {
       "marketAddress": "0x849cf82e0ebcfeab8270cc5a3ea3b26cd481b754",
       "marketName": "USDC/fxUSD",
       "collatAddress": "0x5018be882dcce5e3f2f3b0913ae2096b9b3fb61f",

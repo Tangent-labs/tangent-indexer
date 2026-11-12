@@ -1003,7 +1003,7 @@
               [0, 0, 4, 10, 2]
             ]
           },
-          "display": "USG* >> USG-frxUSD* >> frxUSD >> crvUSD/frxUSD >> crvUSD >> crvUSD/ETH/CRV >> ETH >> ETH+/ETH >> ETH+ >> ETH+/WETH >> ETH+/WETH"
+          "display": "USG* >> USG-frxUSD* >> frxUSD >> crvUSD/frxUSD >> crvUSD >> crvUSD/WETH/CRV >> ETH >> ETH+/ETH >> ETH+ >> ETH+/WETH >> ETH+/WETH"
         },
         {
           "params": {
@@ -1831,7 +1831,7 @@
               [0, 0, 0, 0, 0]
             ]
           },
-          "display": "USG* >> USG-frxUSD* >> frxUSD >> crvUSD/frxUSD >> crvUSD >> crvUSD/ETH/CRV >> WETH >> msETH/WETH >> msETH/WETH"
+          "display": "USG* >> USG-frxUSD* >> frxUSD >> crvUSD/frxUSD >> crvUSD >> crvUSD/WETH/CRV >> WETH >> msETH/WETH >> msETH/WETH"
         },
         {
           "params": {
@@ -1933,7 +1933,7 @@
               [0, 0, 4, 10, 2]
             ]
           },
-          "display": "USG* >> USG-frxUSD* >> frxUSD >> crvUSD/frxUSD >> crvUSD >> crvUSD/ETH/CRV >> WETH >> msETH/WETH >> msETH >> msETH/OETH >> msETH/OETH"
+          "display": "USG* >> USG-frxUSD* >> frxUSD >> crvUSD/frxUSD >> crvUSD >> crvUSD/WETH/CRV >> WETH >> msETH/WETH >> msETH >> msETH/OETH >> msETH/OETH"
         },
         {
           "params": {
@@ -2445,7 +2445,7 @@
               [0, 0, 0, 0, 0]
             ]
           },
-          "display": "USG* >> USG-frxUSD* >> frxUSD >> crvUSD/frxUSD >> crvUSD >> crvUSD/ETH/CRV >> WETH >> CVX/ETH >> CVX/ETH"
+          "display": "USG* >> USG-frxUSD* >> frxUSD >> crvUSD/frxUSD >> crvUSD >> crvUSD/WETH/CRV >> WETH >> CVX/ETH >> CVX/ETH"
         },
         {
           "params": {
@@ -2470,7 +2470,7 @@
               [0, 0, 0, 0, 0]
             ]
           },
-          "display": "USG* >> USG-USDC* >> USDC >> USDC/crvUSD >> crvUSD >> crvUSD/ETH/CRV >> WETH >> CVX/ETH >> CVX/ETH"
+          "display": "USG* >> USG-USDC* >> USDC >> USDC/crvUSD >> crvUSD >> crvUSD/WETH/CRV >> WETH >> CVX/ETH >> CVX/ETH"
         },
         {
           "params": {
@@ -3880,7 +3880,7 @@
               [0, 1, 1, 1, 2]
             ]
           },
-          "display": "ETH+/WETH >> ETH+/WETH >> ETH+ >> ETH+/ETH >> ETH >> crvUSD/ETH/CRV >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG*"
+          "display": "ETH+/WETH >> ETH+/WETH >> ETH+ >> ETH+/ETH >> ETH >> crvUSD/WETH/CRV >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG*"
         },
         {
           "params": {
@@ -4786,7 +4786,7 @@
               [0, 0, 0, 0, 0]
             ]
           },
-          "display": "msETH/WETH >> msETH/WETH >> WETH >> crvUSD/ETH/CRV >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG*"
+          "display": "msETH/WETH >> msETH/WETH >> WETH >> crvUSD/WETH/CRV >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG*"
         },
         {
           "params": {
@@ -4890,7 +4890,7 @@
               [0, 1, 1, 1, 2]
             ]
           },
-          "display": "msETH/OETH >> msETH/OETH >> msETH >> msETH/WETH >> WETH >> crvUSD/ETH/CRV >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG*"
+          "display": "msETH/OETH >> msETH/OETH >> msETH >> msETH/WETH >> WETH >> crvUSD/WETH/CRV >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG*"
         },
         {
           "params": {
@@ -5414,7 +5414,7 @@
               [0, 0, 0, 0, 0]
             ]
           },
-          "display": "CVX/ETH >> CVX/ETH >> WETH >> crvUSD/ETH/CRV >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG*"
+          "display": "CVX/ETH >> CVX/ETH >> WETH >> crvUSD/WETH/CRV >> crvUSD >> crvUSD/frxUSD >> frxUSD >> USG-frxUSD* >> USG*"
         },
         {
           "params": {
@@ -5439,7 +5439,7 @@
               [0, 0, 0, 0, 0]
             ]
           },
-          "display": "CVX/ETH >> CVX/ETH >> WETH >> crvUSD/ETH/CRV >> crvUSD >> USDC/crvUSD >> USDC >> USG-USDC* >> USG*"
+          "display": "CVX/ETH >> CVX/ETH >> WETH >> crvUSD/WETH/CRV >> crvUSD >> USDC/crvUSD >> USDC >> USG-USDC* >> USG*"
         },
         {
           "params": {
