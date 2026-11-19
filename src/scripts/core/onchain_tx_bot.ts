@@ -9,6 +9,8 @@ import { INDEXER_EXECUTION_NAMES } from "../../type/indexerExecution.js"
 
 dotenv.config()
 
+const IR_RC_INTERVAL_MIN = Number(process.env.IR_RC_INTERVAL_MIN ?? 5)
+
 async function main() {
   const { addresses, onchainTxBotService, indexerExecutionLogService } = await setup()
 
@@ -26,9 +28,16 @@ async function main() {
     // Verify profits of pegkeepers and trigger the rebalancing if needed
     await onchainTxBotService.updatePegKeepers(onchainData.profits, keeperAddresses, keeperNames)
 
-    // Computes a relative variation computation between the current and next IR and Reward cut.
-    // If the variation is greater than a threshold, we update them.
-    await onchainTxBotService.updateIRAndRC(onchainData.irsAndRcs, addresses.markets, addresses.utilities.irCalculator, addresses.utilities.rewardAccumulator)
+    // IR/RC is not urgent: evaluate at most once every IR_RC_INTERVAL_MIN minutes.
+    const lastIrRcRun = await indexerExecutionLogService.getLatestSuccessFinishedAt(INDEXER_EXECUTION_NAMES.IR_RC_UPDATE)
+    if (lastIrRcRun && Date.now() - lastIrRcRun.getTime() < IR_RC_INTERVAL_MIN * 60_000) {
+      return
+    }
+
+    // Checkpoints IR / Reward cut when the change passes the absolute + relative thresholds and gas is acceptable.
+    await indexerExecutionLogService.run(INDEXER_EXECUTION_NAMES.IR_RC_UPDATE, () =>
+      onchainTxBotService.updateIRAndRC(onchainData.irsAndRcs, addresses.markets, addresses.utilities.irCalculator, addresses.utilities.rewardAccumulator)
+    )
   })
 }
 

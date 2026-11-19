@@ -13,6 +13,7 @@ export const INDEXER_EXECUTION_NAMES = {
   MONITORING_CHECK: "monitoring_check",
   ONCHAIN_TX_BOT: "onchain_tx_bot",
   PEG_KEEPER_UPDATE: "peg_keeper_update",
+  IR_RC_UPDATE: "ir_rc_update",
   PREDEPOSIT: "predeposit_script",
   POINTS_LP: "points_lp_indexer",
   POINTS_VOTES: "points_votes_indexer",
