@@ -286,6 +286,7 @@ export const monitoringModuleConfig: MonitoringConfig = {
       [INDEXER_EXECUTION_NAMES.SNAPSHOT_PRICES]: buildIndexerHealthConfig("SNAPSHOT_PRICES"),
       [INDEXER_EXECUTION_NAMES.ONCHAIN_TX_BOT]: buildIndexerHealthConfig("ONCHAIN_TX_BOT", hourlyIndexerDefaults),
       [INDEXER_EXECUTION_NAMES.PEG_KEEPER_UPDATE]: buildIndexerHealthConfig("PEG_KEEPER_UPDATE", hourlyIndexerDefaults),
+      [INDEXER_EXECUTION_NAMES.IR_RC_UPDATE]: buildIndexerHealthConfig("IR_RC_UPDATE", hourlyIndexerDefaults),
       [INDEXER_EXECUTION_NAMES.PREDEPOSIT]: buildIndexerHealthConfig("PREDEPOSIT", eventDrivenIndexerDefaults),
       [INDEXER_EXECUTION_NAMES.POINTS_LP]: buildIndexerHealthConfig("POINTS_LP", dailyBatchIndexerDefaults),
       [INDEXER_EXECUTION_NAMES.POINTS_VOTES]: buildIndexerHealthConfig("POINTS_VOTES", dailyBatchIndexerDefaults),

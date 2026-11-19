@@ -13,8 +13,22 @@ import { TelegramNotifierService } from "./TelegramNotificationServices.js"
 
 const pegKeepersKnowErrors = ["Regulator ban", "peg unprofitable"]
 
-const relativeVariationIR = 25
-const relativeVariationRC = 25
+// Checkpoint only if BOTH: |delta| >= min absolute (percentage points) AND relative delta >= min relative (%).
+// Absolute floor kills noise on small values (0.2% -> 0.4% is +100% but only 0.2pp).
+const IR_MIN_ABS_PP = 0.5
+const IR_MIN_REL_PCT = 25
+const RC_MIN_ABS_PP = 1
+const RC_MIN_REL_PCT = 25
+// Skip IR/RC checkpoints during gas spikes; override with MAX_GAS_PRICE_GWEI.
+const MAX_GAS_PRICE_GWEI = Number(process.env.MAX_GAS_PRICE_GWEI ?? 1.2)
+
+/** last/next as fractions (0.05 = 5%). */
+export function shouldCheckpoint(last: number, next: number, minAbsPP: number, minRelPct: number) {
+  const absPP = Math.abs(next - last) * 100
+  if (absPP < minAbsPP) return false
+  if (last === 0) return true
+  return (absPP / (Math.abs(last) * 100)) * 100 >= minRelPct
+}
 
 const addLiquidityTopic = "0x189c623b666b1b45b83d7178f39b8c087cb09774317ca2f53c2d3c3726f222a2"
 const removeLiquidityTopic = "0x3631c28b1f9dd213e0319fb167b554d76b6c283a41143eb400a0d1adb1af1755"
@@ -142,37 +156,22 @@ export class OnchainTxBotService {
     const rcToCheckpoint = []
 
     for (let i = 0; i < irsAndRcs.length; i++) {
-      const market = markets[i]
-      const irAndRc = irsAndRcs[i]
-
-      let relativeChangeIR = 0
-      const lastIR = Number(formatEther(irAndRc.lastIR))
-      let newIR = Number(formatEther(irAndRc.newIR))
-
-      if (lastIR === 0 && newIR === 0) {
-        relativeChangeIR = 0
-      } else {
-        newIR = newIR === 0 ? 0.000001 : newIR
-        relativeChangeIR = Math.abs(((lastIR - newIR) * 100) / newIR)
+      const { lastIR, newIR, lastRC, newRC } = irsAndRcs[i]
+      if (shouldCheckpoint(Number(formatEther(lastIR)), Number(formatEther(newIR)), IR_MIN_ABS_PP, IR_MIN_REL_PCT)) {
+        irToCheckpoint.push(markets[i])
       }
-
-      let relativeChangeRC = 0
-      const lastRC = Number(formatUnits(irAndRc.lastRC, 5))
-      let newRC = Number(formatUnits(irAndRc.newRC, 5))
-
-      if (lastIR === 0 && newIR === 0) {
-        relativeChangeRC = 0
-      } else {
-        newRC = newRC === 0 ? 0.000001 : newRC
-        relativeChangeRC = Math.abs(((lastRC - newRC) * 100) / newRC)
+      if (shouldCheckpoint(Number(formatUnits(lastRC, 5)), Number(formatUnits(newRC, 5)), RC_MIN_ABS_PP, RC_MIN_REL_PCT)) {
+        rcToCheckpoint.push(markets[i])
       }
+    }
 
-      if (relativeChangeIR > relativeVariationIR) {
-        irToCheckpoint.push(market)
-      }
-      if (relativeChangeRC > relativeVariationRC) {
-        rcToCheckpoint.push(market)
-      }
+    if (irToCheckpoint.length === 0 && rcToCheckpoint.length === 0) return
+
+    const { gasPrice } = await this.provider.getFeeData()
+    const gasGwei = Number(formatUnits(gasPrice ?? 0n, "gwei"))
+    if (gasGwei > MAX_GAS_PRICE_GWEI) {
+      console.log(`Gas ${gasGwei.toFixed(2)} gwei > ${MAX_GAS_PRICE_GWEI} gwei, skipping IR/RC checkpoints`)
+      return
     }
 
     if (irToCheckpoint.length !== 0) {
